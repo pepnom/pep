@@ -1,0 +1,17 @@
+
+# try to parse palindromes
+# this is a lot messier than I was thinking.
+
+ read; 
+ put; clear; add "c*"; push; 
+ pop; pop;
+ "c*c*" { 
+    swap; ++; 
+    (==) { 
+      --; swap; clear; 
+      add "pal*"; push;
+      get; ++; get; --; put;
+    } 
+ } 
+ # not complete
+

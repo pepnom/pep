@@ -1,0 +1,6 @@
+
+** un llenguatge paregut amb "sed" http://sed.sf.net 
+
+
+
+

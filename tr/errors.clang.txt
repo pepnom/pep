@@ -1,0 +1,12 @@
+
+Test results for translating pep scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.c.pss
+Language: clang
+Date: Wed 20 Jul 2022 03:23:48 PM AEST
+Tests 1st gen: 126
+Errors 1st gen: 0
+Time Taken 1gen: 36
+Tests 2nd gen: 0
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 

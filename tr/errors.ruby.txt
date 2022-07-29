@@ -1,0 +1,12 @@
+
+Test results for translating pep scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.ruby.pss
+Language: ruby
+Date: Sat 18 Sep 2021 11:55:56 PM AEST
+Tests 1st gen: 118
+Errors 1st gen: 0
+Time Taken 1gen: 31
+Tests 2nd gen: 118
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 

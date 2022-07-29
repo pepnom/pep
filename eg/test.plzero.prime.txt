@@ -1,0 +1,59 @@
+
+{ 
+  This pl/0 file is to test the pep script plzero.pss
+  which checks the syntax of a pl/0 program and outputs
+  the program in a standard format.
+
+  pl/0 is language designed by N.Wirth for teaching the 
+  design of compilers.
+
+  The program below calculates prime numbers
+  Some code has no purpose, it is just there to check the parser
+}
+
+  const 
+    max = 100, min = 0, length = 2;
+  var 
+    arg, ret, time ;
+
+  { a procedure just to test parsing structures }
+  PROCEDURE busyWork;
+  const worker = 1, two=2 ,three=3;
+  var simple, simon, says;
+  begin if (a+b)*c-1+55/3 = 5+x then
+    write x; 
+  ? x; ? y; ?z  
+  end ;
+  procedure isPrime;
+  var i, display;
+  begin
+    ret := 1;
+    i := 2;
+    while i < arg do
+    begin
+      if arg / i * i = arg then
+      begin
+        ret := 0;
+        i := arg
+      end;
+      i := i + 1
+    end
+  end;
+
+  procedure primes;
+  begin
+    arg := 2;
+    while arg < max do
+    begin
+      call isPrime;
+      if ret = 1 then write arg;
+      arg := arg + 1
+    end
+  end;
+
+  { main program }
+  begin
+    arg := 16;
+    call isPrime; 
+    call primes 
+  end .

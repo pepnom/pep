@@ -1,0 +1,106 @@
+#*
+
+  This script is an attempt to create a pl/0 parser/compiler
+  in the parse script language. It just recognises pl/0 constant
+  and variable declarations.
+
+  * the pl/0 grammar in wsn/ebnf form
+  -------
+   program = block "." .
+   block = [ "const" ident "=" number {"," ident "=" number} ";"]
+        [ "var" ident {"," ident} ";"]
+        { "procedure" ident ";" block ";" } statement .
+
+   statement = [ ident ":=" expression | "call" ident 
+              | "?" ident | "!" expression 
+              | "begin" statement {";" statement } "end" 
+              | "if" condition "then" statement 
+              | "while" condition "do" statement ].
+
+   condition = "odd" expression |
+               expression ("="|"#"|"<"|"<="|">"|">=") expression .
+   expression = [ "+"|"-"] term { ("+"|"-") term}.
+   term = factor {("*"|"/") factor}.
+   factor = ident | number | "(" expression ")".
+  ,,,
+
+*#
+
+ # a constant declaration rule in Wirths ebnf grammar
+ # constdec =  "const" ident "=" number {"," ident "=" number} ";" .
+ # the script below factors out the {} repetition construct.
+
+  read;
+
+  [:alpha:] { 
+    while [:alpha:]; 
+    # keywords in pl/0
+    "const","var","if","then","while","do","begin","end" { 
+      put; add "*"; push; .reparse
+    }
+    put; clear; add "ident*"; 
+    push; .reparse 
+  }
+
+  [0-9] { 
+    while [0-9]; put; clear; add "number*"; 
+    push; .reparse 
+  }
+  # literal tokens
+  ",","=",";" { put; add "*"; push; }
+
+  # catch illegal characters here.
+  clear;
+
+parse>
+
+# ----------------------
+# 2 tokens
+
+  pop; pop;
+
+  "var*ident*" {
+    clear; add "varset*"; push; .reparse
+  }
+
+  "varset*;*" {
+     clear; add "vardec*"; push; .reparse
+  }
+  
+  "conset*;*" {
+     clear; add "constdec*"; push; .reparse
+  }
+
+# ----------------------
+# 3 tokens
+  pop;
+
+  "varset*,*ident*" {
+    clear; add "varset*"; push; .reparse
+  }
+
+# ----------------------
+# 4 tokens
+
+  pop;
+
+  "const*ident*=*number*" {
+    clear; add "conset*"; push; .reparse
+  }
+
+# ----------------------
+# 5 tokens
+  pop;
+  "conset*,*ident*=*number*" {
+    clear; add "conset*"; push; .reparse
+  }
+
+  push; push; push; push; push;
+
+  <eof> {
+    pop;
+    "constdec*","vardec*" { 
+      add " declaration \n"; print; clear; quit; 
+    }
+  }
+

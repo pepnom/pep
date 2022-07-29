@@ -1,0 +1,15 @@
+
+ ** example scripts
+
+
+  This directory contains some scripts which demonstrate the 
+  use of the stream-parser. The stream parser is able to do 
+  interesting things such as parse and translate itself (or
+  its own language. The basic purpose of the stream parser is to 
+  provide a text and stream based method for parsing and 
+  transforming "formal languages" (->wikisearch) as defined by
+  formal grammars or grammars in "backus-naur" format.
+
+  In particular, the file "check-syntax.txt" demonstrates how the 
+  stream parse language can be used to parse itself and check
+  for syntax errors in a given script. 

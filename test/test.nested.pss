@@ -1,0 +1,22 @@
+
+ #*
+
+   * http://bumble.sf.net/books/gh/gh.c  
+      for the source code for the pp executable
+   * http://bumble.sf.net/books/gh/asm.pp
+      source code for the assembler script
+
+   testing nested blocks
+ *#
+
+
+ #------------------------------------
+ # some error formats for testing the asm.pp parse/compile script
+
+ #------------------------------------
+ # good formats
+
+
+ # nested blocks
+
+ "nest" {  zero; [a-z] { add "xyz"; } }  

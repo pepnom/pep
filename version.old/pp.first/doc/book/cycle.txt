@@ -1,0 +1,57 @@
+
+  && a virtual machine cycle 
+
+ Each statement in a given script is -not- only executed
+ once. It is executed once for each cycle of  the program
+ and the number of cycles is determined by the number of 
+ characters in the input stream.
+
+ In some implementations an implicit @read operation will
+ be performed for each cycle of the engine but in other 
+ implementations no implicit read may be performed and each
+ script will have to include a read command at the beginning
+ of the script. If this is not done the script may loop
+ infinitely.
+
+ ** sed the stream editor
+
+ The concept of "cycles" is drawn directly from  the sed
+ language or tool (sed is a unix utility). In the sed language
+ each statement in a sed script is executed once for each -line-
+ in a given input stream. In other words there is a kind of
+ implicit "loop" which goes around the sed script. This loop in some
+ fictional programming language might look like:
+ -->
+  while more input lines
+  do
+    sed script
+  loop
+
+ --<
+ In the current parse-language the cycles are executed for each 
+ -character- in the input stream (as opposed to line).
+ 
+ These cycles are also the reason that an interpreter for the language
+ (see the "Parser.cpp" file and the "Program.cpp" file) cannot 
+ interpret the language in the normal line-at-a-time fashion. It would
+ be very slow, because the interpreter would have to parse the 
+ input script once for each character in the input stream, and there 
+ might be thousands or millions of characters in the input stream. 
+ A modern computer could probably do this without being excessively
+ slow, but a better approach is needed. The better approach is 
+ to "compile" the input script into some kind of array of instructions
+ (with jumps and tests included). This is what the Parser and Program
+ cpp classes do. 
+
+ ** shifting and reducing
+
+ There is one complicating factor which is the concept of multiple
+ shift-reduces during the "shift-reduce parsing2 (wikipedia) one cycle or
+ the interpreter. This concept has already been treated
+ within the @flag command documentation. Another tricky concept
+ is grammar rule precedence, in other words, which grammar rule 
+ shift-reduction should be applied first or with greater predence. In terms of any concrete
+ application the order of the script statements determines precedence.
+ 
+
+...

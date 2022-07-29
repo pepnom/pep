@@ -1,0 +1,6 @@
+
+PEP DOCUMENTATION
+
+  The main documentation file is ../pars-book.txt but 
+  there is other documentation scattered in various locations.
+  Many scripts in the eg/ and tr/ folders are well documented.

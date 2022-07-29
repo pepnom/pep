@@ -1,0 +1,43 @@
+
+  ** un directori de documentacio 
+
+  Aquest directori conte documentacio per un llenguatge
+  script que esta dissenyat per a implementar analitzadors
+  sintactics. De fet, aixo es una explicacio molt simplificada,
+  perque el llenguagte tambe pot ser utilizada per traduir
+  un format de text a un altre. 
+
+  Aquest llenguagte te similituds amb "sed" [->wikipedia] que
+  es un editor de fluxes de text. El llenguatge descrit aqui
+  tambe es un editor de fluxes de text pero funciona amb
+  caracters i no pas lineas de text
+ 
+  La majoria de documents estan escrits en angles. Si un document
+  tambe esta escrit en catala te un nom com "nomarxiu.ca.txt" i
+  ho podeu veure teclejant "nomarxiu.ca.txt.html" com una pagina
+  web.
+
+   D- "commands" file:commands.txt.html :
+      una llista de paraulas claus del llenguagte
+    - "maquina virtual" file:virtual-machine.txt.html :
+      descriu els components de la maquina virtual
+
+  ** Altres documents
+   
+    D- file:how-to-compile.txt.html:
+        com compilar el codi font del programa
+     - file:file-description.txt.html :
+        descriu els arxius de codi "c++" (->wikipedia:ca) que estan
+        pel directori file:/machine 
+     - file:language.txt.html :
+        una descripcio general del llenguagte
+     - file:script-trace.txt.html :
+        intenta demostrar com funciona el llenguatge i maquina virtual
+        junts.
+
+  
+  ** documentacio en html 
+
+  per visualitzar un document com una pagina web cal afegir ".html" al
+  final del nom de arxiu per exemple "nom.txt.html"
+

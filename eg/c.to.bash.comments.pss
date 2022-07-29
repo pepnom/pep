@@ -1,0 +1,15 @@
+
+# convert c comments to bash comments
+
+read;
+"/" { 
+   read; 
+   "//" { clear; add "# "; until "\n"; print; clear; } 
+   "/*" { 
+     clear; add "# "; until "*/"; clip; clip; 
+     replace "\n" "\n#";
+     print; clear;
+   } 
+ }
+ print;
+ clear;

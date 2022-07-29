@@ -1,0 +1,18 @@
+
+ && The stack structure in the virtual machine   
+
+  The 'virtual'-machine of the chomski language contains
+  a stack structure which is primarily intended to hold
+  the parse tokens during the parsing and transformation
+  of a text pattern or language. However, the stack 
+  could hold any other string data.  Each element of the
+  stack structure is a string buffer of unlimited size. 
+
+  The stack is manipulated using the @pop and @push commands.
+  When a value is popped off the stack, that value is appended
+  to the -front- of the @workspace buffer. If the stack is 
+  empty, then the pop command has no effect.
+
+  ** See also
+
+   @tape , @push , @pop , @workspace ,

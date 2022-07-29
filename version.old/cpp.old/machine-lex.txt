@@ -1,0 +1,96 @@
+#-- attempts to tokenise or to lexically analyse
+#-- a grammar file. The grammar is for a parsing machine
+
+#p;
+#l;
+#-- Under DOS is maybe necessary to remove the
+#-- final \r character
+# s/.$//;
+#-- Lines that begin with a hash in the grammar
+#-- file should be ignored as comments
+/^#/{
+ s/^/# Input Line:/;
+ p;
+ d;
+ i\
+ Ignored as comment
+}
+
+h;
+s/^/# Input Line:/;
+l;
+x;
+
+s/$/ /;
+: convertBars
+s/\("[^|"]*\)|/\1[:bar:]/;
+s,\(/[^|/]*\)|,\1[:bar:],;
+t convertBars
+
+s/"\([^"]*\)"/String:\1|/g;
+s,/\([^/]*\)/,Pattern:\1|,g;
+
+#-- Within a quoted string, special symbol characters
+#-- need to be converted
+:loopA 
+s/\(String:[^|;]*\);/\1[:semicolon:]/;
+s/\(String:[^|+]*\)+/\1[:plus:]/;
+s/\(String:[^|-]*\)-/\1[:minus:]/;
+s/\(String:[^ |]*\) /\1[:space:]/;
+s/\(String:[^{|]*\){/\1[:lbrace:]/;
+s/\(String:[^}|]*\)}/\1[:rbrace:]/;
+s/\(String:[^|\\]*\)\\/\1[:backslash:]/;
+t loopA
+
+:loopB
+s/\(Pattern:[^|;]*\);/\1[:semicolon:]/;
+s/\(Pattern:[^|+]*\)+/\1[:plus:]/;
+s/\(Pattern:[^|-]*\)-/\1[:minus:]/;
+s/\(Pattern:[^ |]*\) /\1[:space:]/;
+s/\(Pattern:[^{|]*\){/\1[:lbrace:]/;
+s/\(Pattern:[^}|]*\)}/\1[:rbrace:]/;
+s/\(Pattern:[^|\\]*\)\\/\1[:backslash:]/;
+t loopB 
+
+#-- Since an identifier is end-delimited by a space
+#-- we place a space in front of other tokens to avoid 
+#-- elision
+
+s/{/ {/g;
+s/}/ }/g;
+s/\([0-9][0-9]*\)/ \1/g;
+s/;/ ;/g;
+
+s/-/Minus-Sign|/g;
+s/+/Plus-Sign|/g;
+s/\([0-9][0-9]*\)/Digit:\1|/g;
+s/{/Left-Brace:|/g;
+s/}/Right-Brace:|/g;
+s/;/Semi-Colon:|/g;
+#s/\([a-zA-Z][a-zA-Z]*\)/Word:\1
+s/clear/Word:clear|/g;
+s/print/Word:print|/g;
+s/push/Word:push|/g;
+s/pop/Word:pop|/g;
+s/add/Word:add|/g;
+s/get/Word:get|/g;
+s/put/Word:put|/g;
+
+#-- Convert bars to new line characters, and
+#-- thus put each token on a new line. This technique
+#-- works with GNU sed version 4.0.8 and version 3.0.2
+s/ //g;
+#-- Convert special characters in quoted strings
+#-- back to their original form. We will leave the
+#-- brackets in their fake html entity form
+s/\[:space:\]/ /g;
+s/\[:lbrace:\]/{/g;
+s/\[:rbrace:\]/}/g;
+s/\[:backslash:\]/\\/g;
+s/\[:semicolon:\]/;/g;
+s/\[:plus:\]/+/g;
+s/\[:minus:\]/-/g;
+s/|/\
+/g;
+s/\[:bar:\]/|/g;
+p;

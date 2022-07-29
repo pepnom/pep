@@ -1,0 +1,23 @@
+
+ = the List test in the omski language =
+
+ The list test may be written as
+ :> :nouns.txt: { ... } 
+
+ The list test determines if the workspace matches any one
+ of a list of strings which are contained within a text
+ file. In the example given above the name of the text file
+ is "nouns.txt". If the "workspace;" was "dog" at the time
+ that the test was executed and the string "dog" was 
+ contained in the text file "nouns.txt", then the test would
+ return -true- and the instructions within the braces would
+ be executed. However if the word "dog" was not contained
+ in the text file then the test would return false, and 
+ the instructions within the braces would -not- be 
+ executed.
+
+ This test may be useful in a linguistic context, in order
+ to determine if a particular string is a noun, verb, 
+ or other part of speech.  
+
+ 

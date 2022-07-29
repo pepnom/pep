@@ -1,0 +1,50 @@
+
+#-- attempts to parse a tokenized grammar. The strategy will
+#-- will be basically shift-reduce.
+
+#-- delete blank lines
+/^[ \t]*$/d;
+#-- add the current line to the hold space
+H;
+x;
+#-- convert line breaks to the bar character
+s/\n/|/g;
+i\ --------------------------------
+p;
+
+
+#-- |STRING(x)|TERMINATOR
+#-- Grammar Rule: Command --> String Terminator;
+/|STRING([a-z][a-z]*)|TERMINATOR$/ {
+  s/|STRING([a-z][a-z]*)|TERMINATOR$/|COMMAND/;
+  i\ --------------------------------\
+  Reduce: Command --> String Terminator
+  p;
+}
+
+#-- Grammar Rule: Condition --> Slash String Slash;
+/|SLASH|STRING([a-z][a-z]*)|SLASH$/ {
+  s/|SLASH|STRING([a-z][a-z]*)|SLASH$/|CONDITION/; 
+  i\ --------------------------------\
+  Reduce: Condition --> Slash String Slash;
+  p;
+}
+
+
+#-- Grammar Rule: Block --> Left-Brace Command* Right-Brace;
+/|LEFT-BRACE\(|COMMAND\)*|RIGHT-BRACE$/ {
+  s/|LEFT-BRACE\(|COMMAND\)*|RIGHT-BRACE$/|BLOCK/;
+  i\ --------------------------------\
+  Reduce: Block --> Left-Brace Command* Right-Brace;
+  p;
+}
+
+#-- Grammar Rule: Command --> Condition Block; 
+/|CONDITION|BLOCK$/ {
+  s/|CONDITION|BLOCK$/|COMMAND/;
+  i\ --------------------------------\
+  Reduce: Command --> Condition Block; 
+  p;
+}
+
+x;

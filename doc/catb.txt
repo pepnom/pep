@@ -1,0 +1,68 @@
+Dear Mr Raymond,
+
+  A number of years ago I had an idea for an extended "sed" (stream editor)
+  language, that would parse and translate ("compile") complex free languages.
+  I implemented it at bumble.sourceforge.net/books/pars/ . I wrote it in
+  plain c.  It is a strange beast, that seems useful and enjoyable to use. It
+  allows one to think about language, parsing and compiling in a natural
+  stream-oriented way. Its a simple virtual machine, an "assembly" language
+  format, and a script language. It reads, parses and compiles itself and is
+  almost as simple as "sed". The syntax is very similar to sed but the
+  semantics are a bit different (the script cycle is character-by-character
+  instead of line-by-line, for example).
+   
+  The pep interpreter seems to work well and it has a useful debugger/ script
+  viewer. Also, pep scripts can be translated into other languages.  So I
+  decided to write to people who seem to know about these things, hoping that
+  someone would see this unpolished gem for what it is. 
+
+  * an example of a basic pep script is 
+  >> read; get; put; clear; (eof) { get; print; }
+  This reverses the input stream.
+
+  I have written a few pep scripts that seem show off the potential of this
+  mini-language. Here are some basic examples
+
+  http://bumble.sourceforge.net/books/pars/eg/palindrome.pss
+   scans the input for palindromes and reports the results.
+
+  http://bumble.sourceforge.net/books/pars/eg/exp.tolisp.pss
+   This converts (very) simple arithmetic expressions into a lisp-like
+   syntax with operator precedence.
+
+  http://bumble.sourceforge.net/books/pars/eg/json.check.pss
+
+  http://bumble.sourceforge.net/books/pars/compile.pss
+   This is a script (written in the parse-script language)
+   which implements the parse-script language.  Well... at
+   the very beginning I had to "bootstrap" the language using
+   a program written in the "assembly" format. This is
+   http://bumble.sourceforge.net/books/pars/asm.pp But any
+   additions to the language syntax are now made to the
+   "compile.pss" script which compiles itself into a new
+   "asm.pp". So in a bash shell I do
+
+    ---
+      pep -f compile.pss compile.pss > asm.new.pp; 
+      cp asm.new.pp asm.pp
+   ,,,
+
+   http://bumble.sourceforge.net/books/pars/tr/translate.go.pss
+
+     This is a script which compiles pep scripts into standalone "go" 
+     source code. Similar translators exist for java, ruby, python, and
+     c.
+
+   http://bumble.sourceforge.net/books/gh/eg/plzero.pss
+     This script parses and pretty prints PL/0 (a toy pascal like
+     language) source code
+
+   If you think this idea is interesting, it would be great if you could
+   spare the time to review it and/or let other people know about it. 
+   The project is open-source. Thanks for reading!
+
+    regards
+
+    Matthew Bishop
+    Sept 2021
+

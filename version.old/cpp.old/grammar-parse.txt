@@ -1,0 +1,325 @@
+
+#-- Attempts to parse a tokenized grammar. The strategy will
+#-- will be basically shift-reduce. This may be a parser parser
+#-- Attributes of each token are also maintained and
+#-- transformed according to attribute rules. This allows 
+#-- the script to act as a compiler as well.
+#-- 
+#-- El programa recibe un arroyo de texto
+#-- 
+
+
+#-- delete blank lines
+/^[ ]*$/d;
+#-- delete comment lines comming from the lexer
+/^#/ { 
+ i\
+
+ p;d; 
+}
+
+/:/!s/$/:/;
+/|/!s/^/|/;
+#-- add the current line to the hold space
+H;
+x;
+#-- convert line breaks 
+s/\n//g;
+s/|/\
+|/g;
+#-- Insert the attribute section marker
+
+i\
+--------------------------------
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+
+
+
+: loop
+
+
+#-- Grammar Rule: Rule-Set  --> Rule-Set Rule 
+/|Rule-Set:\([^|]*\)|Rule:\([^|]*\)$/ {
+  s/|Rule-Set:\([^|]*\)|Rule:\([^|]*\)$/|Rule-Set:\1(-newline-)\2/;
+  i\ --------------------------------\
+  Reduce: Rule-Set  --> Rule-Set Rule 
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+#-- Grammar Rule: Rule-Set  --> Rule 
+/|Rule:\([^|]*\)$/ {
+
+  s/|Rule:\([^|]*\)$/|Rule-Set:\1/; 
+  i\
+  --------------------------------\
+  Reduce: Rule-Set  --> Rule
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+#-- Grammar Rule: Rule  --> Rule-Left-Side Rule-Right-Side Block 
+/|Rule-Left-Side:\([^|]*\)|Rule-Right-Side:\([^|]*\)|Block:\([^|]*\)$/ {
+  s=|Rule-Left-Side:\([^|]*\)|Rule-Right-Side:\([^|]*\)|Block:\([^|]*\)$=|Rule:\
+  (-newline-)\
+  /\2$/ {(-newline-)\
+    s/\2$/|#|\2 \1/;(-newline-)\
+    s/|#|\\([^:;]*\\):/\1:-:/;\
+    \3\
+    i\\ Reduce: (-newline-)\
+    p;(-newline-)\
+  \}(-newline-)\
+  =;
+
+  s/\n//g;
+
+  #-- Get rid of bars
+  : whileB
+  s/\(Reduce:[^;(]*\)(-bar-)/\1 /;
+  t whileB
+
+  i\ --------------------------------\
+  Reduce: Rule  --> Rule-Left-Side Rule-Right-Side Semi-Colon
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+#-- Grammar Rule: Rule  --> Rule-Left-Side Rule-Right-Side Semi-Colon 
+/|Rule-Left-Side:\([^|]*\)|Rule-Right-Side:\([^|]*\)|Semi-Colon:\([^|]*\)$/ {
+  s=|Rule-Left-Side:\([^|]*\)|Rule-Right-Side:\([^|]*\)|Semi-Colon:\([^|]*\)$=|Rule:\
+  (-newline-)\
+  /\2$/ {(-newline-)\
+    s/\2$/\1/;(-newline-)\
+    i\\ Reduce: (-newline-)\
+    p;(-newline-)\
+  \}(-newline-)\
+  =;
+
+  s/\n//g;
+
+  #-- Get rid of bars
+  : whileB
+  s/\(Reduce:[^;(]*\)(-bar-)/\1 /;
+  t whileB
+
+  i\ --------------------------------\
+  Reduce: Rule  --> Rule-Left-Side Rule-Right-Side Semi-Colon
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+#-- Grammar Rule: Rule-Left-Side  --> Rule-Left-Side Identifier
+/|Rule-Left-Side:\([^|]*\)|Identifier:\([^|]*\)|$/ {
+  s/|Rule-Left-Side:\([^|]*\)|Identifier:\([^|]*\)$/|Rule-Left-Side:\1(-bar-)\2:/;
+  i\
+  --------------------------------\
+  Reduce: Rule-Left-Side --> Rule-Left-Side Identifier
+
+  p;
+}
+
+
+#-- Grammar Rule: Rule-Left-Side  --> Identifier Identifier
+/|Identifier:\([^|]*\)|Identifier:\([^|]*\)|$/ {
+  s/|Identifier:\([^|]*\)|Identifier:\([^|]*\)$/|Rule-Left-Side:(-bar-)\1:(-bar-)\2:/;
+  i\ --------------------------------\
+  Reduce: Rule-Left-Side --> Identifier Identifier
+
+  p; 
+}
+
+
+#-- Grammar Rule: Rule-Left-Side Arrow --> Identifier Arrow
+/|Identifier:\([^|]*\)|Arrow:\([^|]*\)$/ {
+  s/|Identifier:\([^|]*\)|Arrow:\([^|]*\)$/|Rule-Left-Side:(-bar-)\1:|Arrow:/;
+  i\ --------------------------------\
+  Reduce: Rule-Left-Side Arrow --> Identifier Arrow
+  p; 
+}
+
+#-- Grammar Rule: Rule-Right-Side --> Arrow Identifier
+/|Arrow:\([^|]*\)|Identifier:\([^|]*\)$/ {
+  s/|Arrow:\([^|]*\)|Identifier:\([^|]*\)$/|Rule-Right-Side:(-bar-)\2:\\([^(-bar-)]*\\)/;
+  i\
+  --------------------------------\
+  Reduce: Rule-Right-Side --> Arrow Identifier 
+
+  p; 
+  
+}
+
+#-- Grammar Rule: Rule-Right-Side --> Rule-Right-Side Identifier
+/|Rule-Right-Side:\([^|]*\)|Identifier:\([^|]*\)$/ {
+  s/|Rule-Right-Side:\([^|]*\)|Identifier:\([^|]*\)$/|Rule-Right-Side:\1(-bar-)\2:\\([^(-bar-)]*\\)/;
+  #-- remove newlines in the attribute
+  #: loopA
+  #s/\n\([^|\n]*|###\)/\1/;
+  #t loopA
+
+  i\
+  --------------------------------\
+  Reduce: Rule-Right-Side --> Rule-Right-Side Identifier 
+
+  p;
+}
+
+
+#-- Grammar Rule: Conditional-Substitution-Set --> 
+#--   Conditional-Substitution-Set Conditional-Substitution
+/|Conditional-Substitution-Set:\([^|]*\)|Conditional-Substitution:\([^|]*\)$/ {
+  s/|Conditional-Substitution-Set:\([^|]*\)|Conditional-Substitution:\([^|]*\)$/|Conditional-Substitution-Set:\1(-newline-)\2/;
+  i\
+  --------------------------------\
+  Reduce: Conditional-Substitution-Set --> Conditional-Substitution-Set \
+   Conditional-Substitution 
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+
+#-- Grammar Rule: Conditional-Substitution-Set --> 
+#--   Conditional-Substitution
+/|Conditional-Substitution:\([^|]*\)$/ {
+  s/|Conditional-Substitution:\([^|]*\)$/|Conditional-Substitution-Set:\1/;
+  i\
+  --------------------------------\
+  Reduce: Conditional-Substitution-Set --> Conditional-Substitution 
+
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+#-- Grammar Rule: Conditional-Substitution -->
+#--   Condition Left-Brace Substitution Right-Brace
+/|Condition:\([^|]*\)|Left-Brace:\([^|]*\)|Substitution:\([^|]*\)|Right-Brace:\([^|]*\)$/ {
+  s/|Condition:\([^|]*\)|Left-Brace:\([^|]*\)|Substitution:\([^|]*\)|Right-Brace:\([^|]*\)$/|Conditional-Substitution:\1 {(-newline-) \3(-newline-)}/;
+  i\
+  --------------------------------\
+  Reduce: Condition-Substitution --> Condition Left-Brace Substitution\
+          Right-Brace 
+  h;
+  s/(-bar-)/|/g;
+  s/(-newline-)/\
+/g;
+  p;
+  x;
+}
+
+
+#-- Grammar Rule: Block
+/|Left-Brace:\([^|]*\)|Substitution:\([^|]*\)|Right-Brace:\([^|]*\)$/ {
+    s/|Left-Brace:\([^|]*\)|Substitution:\([^|]*\)|Right-Brace:\([^|]*\)$/|Block:\2/;
+    i\
+    ---------------------------------------\
+    Reduce:  Block -->  Left-Brace Substitution Right-Brace;
+
+    p;
+}
+
+
+#-- Grammar Rule: Block
+/|Left-Brace:\([^|]*\)|Conditional-Substitution-Set:\([^|]*\)|Right-Brace:\([^|]*\)$/ {
+    s/|Left-Brace:\([^|]*\)|Conditional-Substitution-Set:\([^|]*\)|Right-Brace:\([^|]*\)$/|Block:\2/;
+    i\ --------------------------------\
+    Reduce:  Block --> \
+      Left-Brace Conditional-Substitution Right-Brace;
+
+    p;
+}
+
+
+#-- Grammar Rule: 
+#--   Substitution --> Identifier Replacement-Set Semi-Colon;
+/|Identifier:\([^|]*\)|Replacement-Set:\([^|]*\)|Semi-Colon:\([^|]*\)$/ {
+  s,|Identifier:\([^|]*\)|Replacement-Set:\([^|]*\)|Semi-Colon:\([^|]*\)$,|Substitution:s/\1:-:/\1:-:(-marker-)/;(-newline-)\2(-newline-)s/(-marker-)//;,;
+  i\ --------------------------------\
+  Reduce: Substitution --> Identifier Replacement-set Semi-Colon 
+
+  p;
+}
+
+#-- Grammar Rule: Condition --> Identifier Quoted-String;
+/|Identifier:\([^|]*\)|Quoted-String:\([^|]*\)$/ {
+  s#|Identifier:\([^|]*\)|Quoted-String:\([^|]*\)$#|Condition:/\1:-:\2/#;
+  i\ --------------------------------\
+  Reduce: Condition --> Identifier Quoted-String;
+
+  p;
+}
+
+
+#-- Grammar Rule: Replacement-Set --> Replacement-Set Attribute-Reference;
+/|Replacement-Set:\([^|]*\)|Attribute-Reference:\([^|]*\)$/ {
+  s=|Replacement-Set:\([^|]*\)|Attribute-Reference:\([^|]*\)$=|Replacement-Set:\1(-newline-)s/\\(\2:-:[^(-bar-)*\\)/\\(.*\\)/\\2 \\1/;=;
+  i\
+  --------------------------------\
+  Reduce: Replacement-Set --> Replacement-Set Attribute-Reference;
+  h; 
+  p; x;
+}
+
+#-- Grammar Rule: Replacement-Set --> Replacement-Set Quoted-String;
+/|Replacement-Set:\([^|]*\)|Quoted-String:\([^|]*\)$/ {
+  s=|Replacement-Set:\([^|]*\)|Quoted-String:\([^|]*\)$=|Replacement-Set:\1(-newline-)s/$/\2/;=;
+  i\
+  --------------------------------\
+  Reduce: Replacement-Set --> Replacement-Set Quoted-String;
+
+  p;
+}
+
+#-- Grammar Rule: Replacement-Set --> Assignment-Equals Quoted-String;
+/|Assignment-Equals:\([^|]*\)|Quoted-String:\([^|]*\)$/ {
+  s#|Assignment-Equals:\([^|]*\)|Quoted-String:\([^|]*\)$#|Replacement-Set:s/(-marker-)/\2(-marker-)/;#;
+  i\ --------------------------------\
+  Reduce: Replacement-Set --> Assignment-Equals Quoted-String;
+  h;
+  p; x;
+}
+
+#-- Grammar Rule: Replacement-Set --> Assignment-Equals Attribute-Reference;
+/|Assignment-Equals:\([^|]*\)|Attribute-Reference:\([^|]*\)$/ {
+  s=|Assignment-Equals:\([^|]*\)|Attribute-Reference:\([^|]*\)$=|Replacement-Set:s/(-marker-)/\2(-marker-)/;=;
+  i\ --------------------------------\
+  Reduce: Replacement-Set --> Assignment-Equals Attribute-Reference;
+  h;
+  p; x;
+}
+
+t loop
+
+x;

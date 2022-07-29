@@ -1,0 +1,9 @@
+
+== An Archive of script compilers
+
+  This folder contains old versions of the asm.pp and 
+  compile.pss files which basically compile parse-scripts
+  into an "assembler" format which can be loaded directly by
+  the 'pp' executable.
+
+

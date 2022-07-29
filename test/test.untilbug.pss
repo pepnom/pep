@@ -1,0 +1,28 @@
+ #*
+
+ reparse and the parse label:
+
+  Reparse and the parse label "parse>" are important for ensuring that
+  all shift-reductions take place. .reparse should be used in a 
+  testblock, where the test text is a series of tokens in the form
+   "token*token2*token3*"
+  reparse basically jumps back to the parse label (implemented as 
+  "parse>" currently). 
+
+  The example below corresponds to 2 grammar rules:
+    1. expressionset <- expression expression
+    2. expression <- term operator term 
+
+  If the 2nd test is matched by the workspace ("term*operator*term*")
+  then the 2nd reduction will take place. This may leave the stack
+  in the state "expression*expression*"
+  which means 
+
+  You may think that a simple solution would be to reverse the orders
+  of the 2 blocks and in this case that may work. But in many types
+  of grammars it will be impossible to find an order in which all
+  necessary reductions will take place: hence .reparse
+
+  *# read;
+
+

@@ -1,0 +1,13 @@
+
+Test results for translating pep scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.go.pss
+Language: golang
+Date: Sat 18 Jun 2022 10:57:54 PM AEST
+Tests 1st gen: 119
+Errors 1st gen: 1
+Time Taken 1gen: 77
+Tests 2nd gen: 51
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 
+[error] 'r; add "*"; push; (eof){ pop; t;t; }' 'abc' expected: 'c.to.bash.comments.pss' result: [c*c*] 

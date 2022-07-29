@@ -1,0 +1,91 @@
+
+# this is the wikipedia page that I made for "pep" in 2007
+# in case wikipedia decides to delete it.
+
+{{lowercase|chomski}}
+{{Infobox programming language
+|name = pep, pep virtual machine
+|paradigm = [[scripting language]]
+|year =  {{Start date and age|2007}}
+|designer = mj bishop
+|typing = none; all data is treated as a string
+|implementations = {{URL|bumble.sourceforge.net/books/pars/}}
+|influenced_by = [[Sed]], [[Awk]] 
+|operating_system = [[Cross-platform]]
+|website ={{URL|bumble.sourceforge.net/books/pars/}}
+}}
+'''pattern parsing virtual machine'''  (previously called 'chomski' after [[Noam Chomsky]]) and '''pep''' refer to both a [[command line]] computer language and utility (interpreter for that language) which can be used to parse and transform text patterns and ([[formal language|formal mathematical]]) languages. The utility reads input files character by character (sequentially), applying the operation which has been specified via the [[command line]] or a ''pep script'', and then outputs the line. It was developed from 2006 in the C language. Pep has derived a number of ideas and syntax elements from [[Sed]], a command line text stream editor.
+
+== Features ==
+
+The pattern-parser language uses many ideas taken from [[sed]], the Unix stream editor. For example, sed includes two virtual variables or [[data buffer]]s, known as the "pattern space" and the "hold space". These two variables constitute an extremely simple [[virtual machine]]. In the pep language this virtual machine has been augmented with several new buffers or [[Processor register|registers]] along with a number of commands to manipulate these buffers.
+
+The parsing virtual machine includes a [[Record (computer science)|tape]] [[data structure]] as well as a [[stack (data structure)]], along with a "workspace" (which is the equivalent of the sed "pattern space" and a number of other buffers of lesser importance. This virtual machine is designed specifically to be apt for the parsing of [[formal language]]s. This [[parsing]] process traditionally involves two phases; the [[lexical analysis]] phase and the [[formal grammar]] phase. During the lexical analysis phase as series of [[token (parsing)|token]]s are generated.  These tokens are then used as the input for a set of formal grammar rule. The chomski virtual machine uses the stack to hold these tokens and uses the tape structure to hold the attributes of these parse tokens. In a pep 
+script, these two phases, lexing and parsing, are combined in one 
+script file. A series of command words are used to manipulate the different data structures of the virtual machine.
+
+==Purpose and motivation==
+
+The purpose of the pep tool is to parse and transform text patterns. The text patterns conform to the rules provided in a formal language and include many context free languages. Whereas traditional Unix tools (such as [[awk]], [[sed]], [[grep]], etc.) process text one line at a time, and use regular expressions to search or transform text, the pep tool processes text one character at a time and can use [[context free grammars]] to transform (or [[wikt:compile|compile]]) the text. However, in common with the [[Unix philosophy]], the pep tool works upon plain [[text stream]]s, encoded according to the locale of the local computer, and produces as output another plain text stream, allowing the pep tool to be used as part of a standard pipeline.
+
+The motivation for the creation of the pp tool and the virtual machine was to allow the writing of parsing scripts, rather than having to resort to traditional parsing tools such as Lex and Yacc or their many variants 
+and improvements such as Antlr.
+
+==Usage==
+The following example shows a typical use of pep pattern parser, where the ''-e'' option indicates that the pattern parse expression follows:
+<source lang="console">
+$ pep -e 'read; "/"{ read; "*"{ until "*/"; clear; }} print; clear;' input.c > output.c
+</source>
+In the above script, C multiline comments ({{code|/* ... */}}) are deleted from the input stream.
+
+The pattern parser tool was designed to be used as a [[filter (Unix)|filter]] in a [[pipeline (Unix)|pipeline]]: for example,
+
+<source lang="console">
+$ generate.data | pep -e '"x"{clear;add "y";}print;clear;'
+</source>
+That is, generate the data, and then make the small change of replacing ''x'' with ''y''. However this functionality is not currently available because the ''pep'' tool also includes a comprehensive script viewer and debugger and so cannot read from piped standard input.
+
+Several commands can be put together in a file called, for example, ''substitute.pss'' and then be applied using the {{mono|-f}} option to read the commands from the file:
+
+<source lang="console">
+$ pep -f substitute.pss file > output
+</source>
+Besides substitution, other forms of simple processing are possible. For example, the following uses the accumulator-increment command {{mono|a+}} and {{mono|count}} commands to count the number of lines in a file:
+ 
+ <source lang="console">
+ $ pep -e '"\n" { a+;} clear; (eof) {count;print;}' textile
+ </source>
+ Complex "pep" constructs are possible, allowing it to serve as a simple, but highly specialised, [[programming language]]. pep has two flow control statements (apart from the test structures <code>(eof)</code>, <code>[class]</code>, <code>==</code> etc.), namely the {{mono|.reparse}} and {{mono|.restart}} commands, which jump back to the {{mono|parse>}} label (no other labels are permitted).
+
+ ==History==
+
+ The idea for the pep machine and language arose from the limitations of regular expression engines and sed which uses a ''line by line'' paradigm, and the limitations on parsing nested text patterns with regular expressions. Pep evolved as a natural progression from the [[grep]] and [[sed]] command. Development began approximately in 2006 and continues.<ref name="dev">Developer’s (M.J. Bishop) personal recollection</ref>
+
+ ==Limitations==
+
+ The pattern parsing script language is not a general purpose programming language. Like sed it is designed for a limited type of usage. The interpret and executable does not currently support [[unicode]] strings, since the implementation uses standard [[C (programming language)|C]] character arrays. However scripts can also be translated into other languages (such as java and 
+ javascript) which do support unicode text. Since the virtual machine behind the pattern parser language is considerably more complex that that of [[sed]] it is necessary to be able to debug scripts. This facility is currently provided within the 'pep' executable.
+
+ ==See also==
+
+ *[[awk]]
+ *[[sed]]
+ *[[antlr]]
+ *[[yacc]]
+ ==References==
+ {{reflist}}
+
+ ==External links==
+ * [http://bumble.sourceforge.net/books/pars/ Source code and executables for the pattern parsing language]
+ * [http://bumble.sourceforge.net/books/pars/eg/exp.tolisp.pss Translate arithmetic expressions to a lisp-like syntax]
+ * [http://bumble.sourceforge.net/books/pars/eg/json.parse.pss A demonstration of parsing and checking json syntax]
+ * [http://bumble.sourceforge.net/books/pars/compile.java.pss A pep script that translates pep scripts to compilable java code]
+ * [https://web.archive.org/web/20060208161216/http://sed.sourceforge.net/ Major sources for sed scripts, files, usage]
+
+ {{Unix commands}}
+
+ [[Category:Text-oriented programming languages]]
+ [[Category:Scripting languages]]
+ [[Category:Unix text processing utilities]]
+ [[Category:Free compilers and interpreters]]
+

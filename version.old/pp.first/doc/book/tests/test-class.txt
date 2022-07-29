@@ -1,0 +1,72 @@
+
+ = The class test =
+
+  The class text checks whether the @workspace buffer
+  matches any one of the characters or character classes
+  listing between the square braces.  A class test is written
+    :> [characters] { ...  }
+
+  For example, the following script will delete all vowels
+  from the input text
+  :> [aeiou] { clear; }  ![aeiou] { print; clear; }
+
+  The above script also demonstrates that the class tests
+  can be -negated- with a prefixed "!" character.
+
+  If the workspace is exactly any one of the characters contained
+  within the square braces then the test returns true and the 
+  instructions contained within the curly braces are executed and
+  if not, then not. 
+
+ ** Escaping characters
+
+   
+ ** Character classes
+
+  The class test also permits "character classes", for example
+   D- [-a]:
+     matches if the @workspace is any alphanumeric character
+    - [-n]:
+     matches if the workspace is a newline character
+    - [-r]:
+     matches if the workspace is an \r character
+    - [-t]:
+     matches if the workspace is a tab character
+    - [- ]:
+     matches if the workspace is any whitespace character
+     including <newline> characters
+    - [-s]:
+     matches if the workspace is any whitespace character
+     but excluding <newline> characters.
+    - [-:]:
+     matches if the workspace is a punctuation character
+    - [-1]:
+     matches if the workspace is a digit
+
+  These character classes may be combined within one class 
+  For example, the following script will print the workspace if
+  the workspace is either an alphanumeric character or a 
+  whitespace character
+
+   :> [-a- ] { print; }
+   
+ ** Not regular expressions
+
+  These class tests look similar to the class
+  tests found in "regular expression" definitions, but they are
+  different in a number of ways. For example, the normal unix
+  regular expression structure of "character ranges" is not 
+  supported. For example, in a unix regular expression system
+  (sed, grep, perl ...) the class [a-z] refers to any lower case
+  roman letter, and this is refered to as a class range. This
+  is not supported in the script language. The reason for this 
+  difference, is that the chomski language was designed with
+  international character sets in mind, and a range such as 
+  "a-z" requires a knowledge of the order of characters within 
+  the character encoding system, which may be obvious in the 
+  case of roman letters, but will not be obvious in other 
+  alphabetic systems. 
+
+ ** See also
+
+  @test-is , @test-list , @test-tape , @test-eof ,

@@ -1,0 +1,44 @@
+
+ = The tape test =
+
+ The tape test determines if the current element of 
+ the @tape structure is the same as the @workspace buffer.
+
+ The tape test is written
+  :> ==
+
+ ** The virtual machine
+
+  By looking at the virtual machine we can get a clearer idea of
+  how this test operates. Consider a machine which is in the 
+  following state:
+
+  -machine-
+  -workspace: 123
+  -stack    : variable* , equals* , number*
+  -tape     : x , =  , --> 123 , ... ,
+  -peep     : ;
+  -counter  :0
+
+  Now the interpreter encounters the statements 
+    :> == { print; }
+
+  The '==' test determines if the @workspace buffer holds exactly
+  the same value as the current tape cell. In the diagram above
+  the current tape cell is indicated by the presence of an arrow.
+  In the case the test returns true because the workspace has the 
+  same value and the @tape cell, and therefore the statement within
+  the braces is executed. The output will be
+   :> 123
+
+ ** Notes
+
+ This test was included original in order to parse the sed structure
+   :> s@old@new@g  or s/old/new/g or s%old%new%g
+ In other words, in sed, any character can be used to delimite the 
+ text in a substitue command.
+ In chomski, we could parse this with
+ -->
+   /s/ { clear; add 'substitute*'; push; 
+ --<
+

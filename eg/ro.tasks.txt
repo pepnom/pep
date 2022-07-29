@@ -1,0 +1,10 @@
+
+This folder contains some rosettacode.org tasks that should
+be doable with pep. I will try to write scripts accomplishing them
+and post them as a way to publish the language.
+
+
+http://www.rosettacode.org/wiki/Tokenize_a_string
+http://www.rosettacode.org/wiki/String_case
+http://www.rosettacode.org/wiki/Repeat_a_string
+http://www.rosettacode.org/wiki/Odd_word_problem

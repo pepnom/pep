@@ -1,0 +1,20 @@
+
+#*
+ testing begin-blocks which are similar to awk's begin rules
+ in that they are only executed once when the script starts.
+
+ They are useful for setting any configuration parameters for
+ the script (such as the stack token delimiter) or printing 
+ start-up messages.
+
+ The rest of the script has an implicit loop (with one iteration
+ for each character of the input stream.
+
+*#
+
+ begin {
+   add "starting script... \n";
+   print; clear;
+ }
+ read; print; 
+

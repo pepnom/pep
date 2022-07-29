@@ -1,0 +1,167 @@
+
+D:\machine\proj>c:\jdk1.1.8\bin\java Interpret 
+//-- script successfully parsed.
+import java.io.*;
+import java.util.*;
+//import Tape;
+//import Machine;
+
+public class SomeScript extends Object
+{
+
+  private static String NEWLINE =   System.getProperty("line.separator");
+  public static void main(String[] args) throws Exception
+  {
+    StringBuffer sbUsageMessage = new StringBuffer("");
+    sbUsageMessage.append("usage: java SomeScript ");
+    sbUsageMessage.append(NEWLINE);
+    InputStreamReader is = new InputStreamReader(System.in);
+    BufferedReader in = new BufferedReader(is);
+    Machine mm = new Machine();
+    StringBuffer sbErrors = new StringBuffer("");
+    StringBuffer sbPartial = new StringBuffer("");
+    boolean bReduction = false;
+    boolean bDebug = false;
+    char cCurrent;
+    int iCurrent = in.read();
+
+    while (iCurrent != -1)
+    {
+       cCurrent = (char)iCurrent;
+       mm.clear();
+       mm.add(new Character(cCurrent).toString());
+       mm.put();
+       if (bDebug)
+       {
+         System.out.println("character:" + cCurrent); 
+         System.out.println(mm.printState());
+       }
+       bReduction = true;
+       while (bReduction)
+       {
+          bReduction = false;
+          /*parses algebra*/
+          if ((mm.workspace().equals(".")))
+          {
+            System.out.println(mm.printState());
+          }
+          
+          if (mm.isSpace())
+          {
+            mm.put();
+            mm.clear();
+            mm.add("whitespace|");
+            mm.push();
+          }
+          
+          if (mm.isDigit())
+          {
+            mm.put();
+            mm.clear();
+            mm.add("digit|");
+            mm.print();
+            mm.push();
+          }
+          
+          if ((mm.workspace().equals(")")))
+          {
+            mm.put();
+            mm.clear();
+            mm.add("close-bracket|");
+            mm.push();
+          }
+          
+          if ((mm.workspace().equals("(")))
+          {
+            mm.put();
+            mm.clear();
+            mm.add("open-bracket|");
+            mm.push();
+          }
+          
+          if (mm.isLetter())
+          {
+            mm.put();
+            mm.clear();
+            mm.add("variable");
+            mm.push();
+          }
+          
+          if ((mm.workspace().equals("+")) ||
+          (mm.workspace().equals("-")) ||
+          (mm.workspace().equals("*")) ||
+          (mm.workspace().equals("/")))
+          {
+            mm.put();
+            mm.clear();
+            mm.add("op");
+            mm.push();
+          }
+          
+          mm.pop();
+          mm.pop();
+          if ((mm.workspace().equals("digit|digit|")))
+          {
+            mm.clear();
+            mm.get();
+            mm.incrementTape();
+            mm.get();
+            mm.decrementTape();
+            mm.put();
+            mm.clear();
+            mm.add("number|");
+            mm.push();
+            mm.pop();
+            mm.pop();
+          }
+          
+          if ((mm.workspace().equals("number|digit|")))
+          {
+            mm.clear();
+            mm.get();
+            mm.incrementTape();
+            mm.get();
+            mm.decrementTape();
+            mm.put();
+            mm.clear();
+            mm.add("number|");
+            mm.push();
+            mm.pop();
+            mm.pop();
+          }
+          
+          if ((mm.workspace().equals("variable|letter|")))
+          {
+            mm.clear();
+            mm.get();
+            mm.incrementTape();
+            mm.get();
+            mm.decrementTape();
+            mm.put();
+            mm.clear();
+            mm.add("variable|");
+            mm.push();
+            mm.pop();
+            mm.pop();
+          }
+          
+          if ((mm.workspace().equals("whitespace|space|")))
+          {
+            mm.clear();
+            mm.get();
+            mm.incrementTape();
+            mm.get();
+            mm.decrementTape();
+            mm.put();
+            mm.clear();
+            mm.add("whitespace|");
+            mm.push();
+            mm.pop();
+            mm.pop();
+          }
+          
+          mm.pop();       } //-- while reduction
+       iCurrent = in.read();
+     } //-- for each letter
+  } //-- main()
+} //-- SomeScript class

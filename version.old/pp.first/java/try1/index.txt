@@ -1,0 +1,78 @@
+
+    = A Java Implementation of Chomski =
+
+ ** Old Implementation
+
+   This code is an old implementation of the pp machine and
+   language
+
+
+ ** New Thoughts on This implementation
+
+  I first implemented the "chomski" or 'pp' parsing machine and language
+  language in the "java language" (->wikisearch) for several reasons.
+  Firstly, I wanted chomski to be a kind of "sed" stream editor
+  with unicode and "context free grammar" (->wikisearch) support.
+  Since java comes with unicode support built in this seemed to
+  be an easy path to take.
+
+  Secondly, the match between an "Object" and a virtual machine
+  seems very close and convenient. For example, each buffer or 
+  register of a "virtual machine" (->wikisearch) can be represented
+  by a member variable or field or attribute of an object. An
+  each instruction of the virtual machine can be represented by
+  a method of the object.
+  
+  This Java version could be updated to become an interpreting
+  version, and a gui could be written to allow the machine
+  to be inspected while it is running. This may be useful for
+  debugging scripts.
+
+ ** A Partial Implementation
+
+  This directory contains an early implementation of the 
+  stream parsing language and virtual machine. This java version
+  did not contains the commands "until" file:/machine/doc/until.txt.html
+  nor the "while" and "whilenot" commands. These commands are important
+  because they provide the ability to "tokenize" [->wikipedia] the input stream
+  more easily (the take the place of a traditional lexer such as "lex" [->wikipedia]).
+
+  This java version is not an interpreting version. That is to say, that the 
+  main class, when run using a particular script as input, will produce as 
+  output java source code, which in turn may be compiled to produce a program
+  which will carry out the instructions of the script. This is a somewhat 
+  cumbersome process and was one of the reasons which encouraged me to 
+  attempt to write an "interpreting" version in the c++ language. 
+
+** Running the Code
+
+  Its really not worthwhile running the code because it doesnt do
+  anything useful. The dir:../c implementation is much more complete
+  (although it also has some fatal bugs...)
+
+  In order to see the code working, one can use a command line such as
+    :> cat exp.txt | java Interpret 
+  and the user will see java source code in the standard output stream.
+  or on an ms-windows machine one could type
+    :> type exp.txt | java Interpret
+
+  To use the generated code the output must be captured to a file
+  with "cat exp.txt | java Interpret > Script.java" and then compiled
+  with "javac" [->wikipedia] along with the other classes which are 
+  contained in this directory.
+
+  ** Iincompatibilities
+
+      u- As mentioned this java version does not have the "until"
+         ... commands.
+       - This version uses the "|" character as a token seperator,
+         and adds the bar to the token automatically, which is not
+         desirable. In the dir:../c implementation of the chomski
+         machine, the "*" character is used
+       -;
+
+
+
+
+  
+  

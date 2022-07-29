@@ -1,0 +1,38 @@
+
+  = Documentation for the chomski language and interpreter =
+
+  
+  This directory contains documentation for the syntax and 
+  commands of the chomski language
+  
+  ** Some documents
+  
+   D- "commands" file:commands.txt.html :
+      contains a list of legal commands in the stream parse language
+      and other syntax structures.
+    - "virtual machine" file:virtual-machine.txt.html :
+      describes the elements of the virtual machine
+    - "one liners" file:one-line-scripts.txt.html :
+      contains a list of one line parser scripts, which may be
+      practical for understanding how the language works.
+    - doc:command-options.txt :
+       describes the command line options available to the "chomski"
+       language interpreter (a c implementation of the language)
+    - file:file-description.txt.html :
+       describes the c++ code files in the file:/machine directory
+    - file:language.txt.html :
+       a general description of the language
+    - file:script-trace.txt.html :
+       provides a "trace" of a script, showing the changes in the 
+       virtual machine as each statement is executed. This is a 
+       useful way to learn how the parse language works.
+    -
+    -
+
+
+ Click on the left hand menu to see various other documents
+ related to the chomski language and machine.
+
+  
+
+

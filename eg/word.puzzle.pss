@@ -1,0 +1,30 @@
+
+#*
+
+  Just an attempt to solve newspaper style word puzzles where there is 1
+  essential letter and 8 possible letters which can only be used once each. The
+  idea is to 'cat' a dictionary to this pep script, and determine if the word
+  conforms. 
+
+NOTES 
+  This is not peps forte, just curious if it is possible
+
+HISTORY
+
+  5 July 2022
+    Begun. seems difficult
+*#
+
+  read;
+
+  !"f".!"g".!"n".!"p".!"x".!"s".!"a".!"t".!"e" {
+    whilenot [:space:]; while [:space:]; clear; 
+  }
+
+  # essential letter
+  "e" {
+    clear; add "ess*"; push;
+  }
+
+
+

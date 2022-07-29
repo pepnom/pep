@@ -1,0 +1,107 @@
+
+
+read;
+
+/"/
+{
+  clear;
+  until '"';
+  !/"/
+  { 
+    clear; add 'unterminated quote?'; print; crash; 
+  }
+  clip;
+  put;
+  print;
+  clear;
+  add 'quoted-text*';
+  push;
+  add ' ';
+}
+
+![:space:]
+{
+  whilenot '[:space:]';
+
+  <www.>
+  <http://>
+  {
+   put;
+   clear;
+   add 'url*';
+   push;
+   add ' ';
+  }
+
+  /==/
+  {
+   put;
+   clear;
+   add 'title-marker*';
+   push;
+   add ' ';
+  }
+
+  !/ /
+  {
+    put;
+    clear;
+    add 'word*';
+    push;
+  }
+}
+
+[:space:]
+{
+  clear;
+}
+
+pop;pop;
+/quoted-text*url*/
+{
+   clear;
+   add '<a href="';
+   ++; get; --;
+   add '">';
+   get; 
+   add '</a>';
+   put;
+   print;
+   clear;
+   add 'link*';
+   push;
+   flag;
+}
+
+/url*word*/
+{
+   clear;
+   add '<a href="';
+   get; 
+   add '">';
+   get; 
+   add '</a> ';
+   ++; get; --;
+   put;
+   print;
+   clear;
+   add 'text*';
+   push;
+   flag;
+}
+
+/word*word*/
+{
+   clear;
+   get; 
+   add ' ';
+   ++; get; --;
+   put;
+   clear;
+   add 'text*';
+   push;
+   flag;
+}
+
+push;push;
+#print;#

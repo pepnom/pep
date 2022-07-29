@@ -1,0 +1,20 @@
+
+ DOCUMENT STRUCTURES
+ - no blankline
+ Introducing lists here with - dashes 
+
+ - apples
+ - an item may span more than
+   one line.
+ - a blank line should terminate the list
+
+ "pep" - www.pep.org
+ "makethespoon" www.makethespoon.org
+
+
+ * render this markdown style into latex
+ >> pep -f eg/mark.latex.pss
+
+
+ 
+ 

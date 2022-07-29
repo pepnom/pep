@@ -1,0 +1,43 @@
+JAVA PARSER MACHINE
+
+  The files in this folder will probably not be used now
+  (july 2020) because the script /books/pars/compile.java.pss
+  includes the java Machine class in its code.
+
+  A nearly complete java implementation of the parsing 
+  virtual machine object (but not a script interpreter or compiler).
+
+HISTORY
+
+ * july 2020
+   
+   rewrote compile.java.pss so that it doesnt require any 
+   external code.
+
+ * October 2019
+
+   wrote compile.java.pss which translates scripts into java.
+   This appears to be working for many scripts.
+
+ * August 2019
+  
+   a good c implementation is now available at /books/gh/object/gh.c
+   and accompanying files. A number of useful scripts (with file
+   extension .pss) have been written using this implementation.
+   Having reinspected the (9 years) old java code, it seems that the 
+   Machine java object is actually nearly complete and quite compatible
+   with the new "struct Machine" object written in c (which is located
+   at books/gh/object/machine.c). Also the methods for the java 
+   Machine object are similar to the methods in 
+   books/gh/object/machine.methods.c
+
+   This means that we can use a script very similar to 
+   compilable.c.pss to generate compilable java code using this 
+   Machine object.
+
+ * September 2010
+
+   Did a lot of new work on this project. A nearly complete
+   implementation is available, but its taken a long time.
+
+   Another older and less complete attempt is at /pp/java/try1/

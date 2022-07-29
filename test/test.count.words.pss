@@ -1,0 +1,8 @@
+
+# A script to print and count space delimited words
+
+ read;
+ [:alpha:] { while [:alpha:]; add "\n"; print; clear; a+; }
+ clear;
+ (eof) { add "words in file: "; count; add "\n"; print; clear; }
+

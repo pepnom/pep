@@ -1,0 +1,22 @@
+
+#*
+ testing the parse> and .reparse construct when compiling
+ with 
+   pp -f compilable.c.pss script > script.c
+   gcc -o script.exec -L. -lmachine -I. script.c
+ 
+ If we run this with
+   echo "abcabc" | test/comp.reparse.exec
+ the output should be, if reparse is working
+   >> a..bca..bc
+
+*#
+
+ read;
+
+ parse>
+
+ "a" { add "."; .reparse }
+ "a." { add "."; .reparse }
+ print; clear;
+

@@ -1,0 +1,26 @@
+
+ && How to compile the pp tool
+ -----------------------------------------
+
+ These instructions will most probably change as the c source
+ will be divided into small files for the sake of maintainability.
+ 
+-On an x86 computer-
+
+  a- download the "tiny c" http://fabrice.bellard.free.fr/tcc/  
+   - unzip the tiny c distribution in some folder
+   - download file:library.c and file:chomski.c and place the 
+     two files in the "tcc" folder (which was created when the tiny c
+     distribution was unzipped.
+   - compile with a command line such as 
+  :>  \tcc\tcc -I\tcc\include -L\tcc\lib chomski.c 
+   - The resulting executable is around 40k
+
+-On a non-x86 computer-
+
+  a- download file://library.c and file://chomski.c
+   - download or obtain a c compiler, for example the GNU c
+     compiler.
+   - compile the code. The exact proceedure I dont know because
+     I havent done it.
+

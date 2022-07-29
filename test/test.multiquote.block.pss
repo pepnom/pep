@@ -1,0 +1,7 @@
+
+read;
+[:space:] { clear; }
+[a-z] { while [a-z]; }
+
+"text", "other", "new" { add "\n"; print; } 
+clear;

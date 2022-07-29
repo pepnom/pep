@@ -1,0 +1,8 @@
+
+ This folder contains c code for a 'command' information look-up
+ table. This look-up table contains textual information about
+ all the commands which are available in the pp language. 
+
+ This code can be compiled just with 'make' and tested by
+ running the 'test' executable.
+

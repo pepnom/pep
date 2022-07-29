@@ -1,0 +1,231 @@
+
+** some digital philosophy.
+
+  The internet may be a "plain text" [->wikipedia], decentralised, "distributed database" [->wikipedia].
+  It has proved to be successful because the barriers to maintaining the database
+  are not high. Anybody with a text editor and a domain name can do it.
+  But the database has problems.
+  it is difficult to search it, or to do a "database query" [->wikipedia]. Google has 
+  provided a reasonably good solution, but not very good. XML was an attempt to
+  organize the database and prevent information being lost. But xml failed because it
+  is not oriented to distributed data and because it does not provide for a transition
+  from "HTML" [->wikipedia]. 
+
+  The bumble site has one or two aims. To write a virtual machine based scripting
+  language which provides the ability to parse and translate or "compile" [->wikipedia]
+  formal languages. In a sense, this language should be a kind of unix "sed" http://sed.sf.net
+  for "formal languages" [->wikipedia]. In other words, it should be text based and should
+  consume and "input stream" [->wikipedia] and produce an "output stream" [->wikipedia], thus
+  allowing it to form part of a normal stream pipeline as with other unix tools. 
+  
+  Once this language is written (see the file:/machine directory) an evident extension
+  becomes possible. The language can be used to define a text based "formal grammar" [->wikipedia]
+  language which will be capable of "parsing" [->wikipedia] and translating and
+  compiling. This language would look like this:
+  -->
+    quoted-text -> quote text quote
+    {
+      "<em>" $2 "</em>";
+    }
+  --<
+
+  The first line defined a formal grammar rule and the line or lines withing
+  the braces define the translation, transformation or compilation (depending
+  or the choice of terminology) or the "attributes" of the parsed input stream
+  (as opposed to the tokens). In the case above, the translation is into
+  html. This syntax will be familiar to users of "yacc" [->wikipedia] or other 
+  "compiler compilers" [->wikipedia]. the "$2" refers to the attribute of the 
+  second token on the right-hand-side of the grammar rule, namely "text".
+  Unlike other compiler compilers this system does not admit programming language
+  statements (for example the "c language" [->wikipedia] in yacc) but rather
+  is based on simple text transformations. However some functions need to be
+  provided, such as an "indent" function which allows for spacing text blocks.
+
+ ** universal naming
+
+  Programing languages must incorporate universal naming domains, or 
+  "name-spaces" [->wikipedia] in order to overcome problems of code-rewriting
+  and code configuration and installation. Each unit of code should be able to
+  locate all other units of code (functions, objects ...) apon which it
+  is dependent. The most obvious way to achieve this is to mimic
+  the device which has been successful on the web, the use of 
+  "domain names" [->wikipedia]. The "java programming language" [->wikipedia]
+  came close to implementing this with it package naming scheme, but
+  fell short.  All names within a domain need to
+  be unique. This concept is based on the idea that programming is essentially
+  a process of giving meaningful names to blocks of code, an idea that maybe
+  similar to "Donald Knuth" [->wikipedia]s concept of 
+  "literate programming" [->wikipedia]. This concept sustains that programming
+  is a process of communicating with other programmers using systems
+  parsable by digital devices. 
+
+  An example:
+  -->
+    * en.math.discreet.isPrime;
+
+    function en.math.discreet.factor(integer i)
+    {
+      if (isPrime(i))
+        { return i; }
+      ...
+    }
+  --<
+  The line beginning in "*" is a declaration of a "name" and
+  essentially allows the hypothetical compiler to find the 
+  name "isPrime". If the first line were omitted the compiler
+  should complain that the name "isPrime" is "unqualified" in
+  the sense that it does not exist within a domain.
+
+  Once the "compiler" [->wikipedia] has verified that the name "isPrime" has
+  been declared it can then proceed to find that code unit
+  (in this case a function in "procedural language" [->wikipedia]). It does
+  this firstly by searching in the local file structure of
+  the computer on which the compiler is running. The method
+  that should be used is the same as that implemented in the 
+  java language, namely, that it should search for the 
+  relevant file in the directory en/math/discreet/
+  and there if all goes well it should find a file called
+  "isPrime.source" in the same manner as the java compiler.
+  Unlike java, only one "classpath" [->wikipedia] should be allowed,
+  in order to prevent the irritating configuration problems which arise by permitting 
+  multiple classpaths.
+
+  If however the source file is not found in the correct subdirectory
+  then the compiler should use another strategy, which is the 
+  main innovation of the proposed system (although it is an idea
+  which is completely obvious). If the source file ("isPrime...")
+  is not found locally then the compiler should query a local
+  "code domain name server" in an identical manner to which a web-browser
+  queries a normal domain name server to resolve an internet domain
+  into an ip address. However in this case the compiler is querying
+  the cdns in order to resolve a code domain name ("en.math.discreet.isPrime")
+  in order to resolve that name into an internet "URL" [->wikipedia]
+  in order to obtain the source code for the code unit using the 
+  normal internet protocols (http, ftp). To be more specific,
+  the cdns will query one or more "root servers" or "dot servers" in order
+  to find the authoritarian server for the ".en" domain. (The "en" code
+  indicates that the code names are in the english language). Once the 
+  .en domain server address is obtained (an ip address), that server 
+  will be queried to find the authoritarian server for the ".en.math"
+  domain, and so on. Once the relevant URL is obtained for the 
+  "isPrime" code unit, then the code can be downloaded and compiled.
+  Note that this process uses "recursion" [->wikipedia], is the sense
+  that the source file for the "isPrime" function may well contain
+  references to other functions (using the same scheme described)
+  which in turn will have to be located, downloaded and compiled.
+  (in the case of the "isPrime" function, it is actually not likely
+  that it would need to call other functions). This naming and compiling 
+  scheme means that given a particular valid code name and internet connection,
+  it will always be possible to find and obtain automatically all 
+  dependencies for the given code unit. 
+
+  The system described has a number of benefits. Firstly many of 
+  configuration and installation problems which are currently 
+  experienced with software will be obviated: given an internet
+  connection and a valid code unit name, the compiler will be 
+  able to find, obtain, compile and execute automatically the 
+  task. Secondly, using this scheme programmers will be encouraged
+  to always be aware of what code already exists to achieve the
+  task which they are attempted to solve. Because all the 
+  available code will be linked using the domain system, search
+  engines will be able to efficiently "spider" and search 
+  existing code. Thirdly, the system will facilitate the 
+  creation of "aliases" for a given code unit in other languages
+  apart from english (or the language of the programmer). Under
+  this alias scheme there would exist several names for the 
+  same code unit (and code units would be ultimately designated
+  with a number rather than a series of characters). For example
+  :> en.math.discreet.isPrime
+  would be the same code unit as
+  :> de.math.nummer.istOrdnung
+  (with apologies for bad german). As can be seen, not just the 
+  code units but also the domain names would have aliases in
+  different languages. This idea springs from the concept that
+  a program in many ways in a communication between to 
+  human beings in a language which is also executable by a 
+  logic device. (see "literate programming" [->wikipedia]. And
+  in order to communicate with another human being it is
+  necessary to speak his or her language.
+
+ ** distributed data
+
+  A new data format is proposed which has similarities with xml but
+  is focussed more towards distributed non-centralized systems. like html
+  and xml it should be text based. Instead of using the xml 
+  "document type declaration" [->wikipedia] system
+  documents will be built up out of "objects". These objects can
+  also be imbedded in "normal" documents or HTML pages. An example
+  -->
+   <person>
+    <first-name>imma</first-name>
+    <last-name>garcia</last-name>
+   </person>
+  --<
+  This is an example of a "person" object. this object would have its
+  own "type" definition (in a manner similar to class definitions in
+  "object-oriented programming"). But in addition and using the ideas
+  already described for code domain names above, these objects in the 
+  proposed system would be part of a domain and alias system. In other
+  words the <person> object, in order to be properly defined would need
+  to be defined as below
+  -->
+   * en.physical.human.person
+    
+   person
+   {
+     text first-name;
+     text second-name;
+   } 
+  --<
+ 
+  I have employed a "syntax" [->wikipedia] very similar to that used for class 
+  declarations in object oriented programming languages, but other 
+  synaxes would be possible. An important idea, it that objects could be
+  included in other objects and reused, since the same universal domain
+  naming scheme would be used as for "code units". For example
+  -->
+    * en.business.company
+    * en.physical.human.person
+
+    company
+    {
+      text name;
+      person[] staff;
+    }
+  --<
+
+  In the example above the person object (or data format) has been
+  re-used in the company object, thus removing the need to redefine
+  a dataformat for people, and promoting standardization.
+  The above declaration or definition, defines a format as below 
+  -->
+  <company>
+   <name>bar rosas</name>
+   <person>
+    <first-name>imma</first-name>
+    <last-name>garcia</last-name>
+   </person>
+   <person>
+    <first-name>joan</first-name>
+    <last-name>pont</last-name>
+   </person>
+  </company>
+  --<
+
+  As can be seen the format promoted has some things
+  in common with xml. The advantage of this system is
+  that objects could be placed in HTML pages using the 
+  html "#" mechanism.
+  for example, the URL
+   http://www.site.net/employee#person*firstname
+  refers to a specific piece of data which has been 
+  rigourously defined (somebodys first name) but which
+  exists within an unrigourous html document.
+
+  
+  This system would allow data to be published in an
+  xml style format without losing the ease of use and
+  popularity of html. It also overcomes the problems of 
+  transition from html to xml. What xml overlooks is
+  that some data should not be marked up.... to be continued
+

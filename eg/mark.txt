@@ -1,0 +1,21 @@
+
+
+
+
+     sample "cap" 
+  
+   see the "palindrome.pss" file or the /tr folder.
+   " multiword quoted text""and" 
+   " no end quote 
+   """"   
+   Open the document   "mark.html.pss" or inspect pep.c 
+   <new>
+   www.glintbox.org /file.txt 
+   [[
+     /test.html 
+   ]]
+
+   end doc
+
+
+

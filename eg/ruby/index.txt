@@ -1,0 +1,4 @@
+
+EG RUBY FOLDER
+
+ This folder will contain ruby translation of scripts.

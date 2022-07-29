@@ -1,0 +1,239 @@
+
+#*
+ Very simple, impractical and flawed natural language parsing.
+
+ This script also demonstrates the sever limitations of trying
+ to parse natural language with the parse-machine. Actually
+ this machine was never designed to parse natural language.
+ 
+ Despite its limitations, it will accept sentences like
+  "the small dog eats fish." as a valid english sentence.
+
+STATUS
+  works in a limited way
+
+TESTING
+
+  * test the script with a phrase
+  >> pep -f eg/natural.language.pss -i "the small dog eats the fish."
+
+  * translate to ruby and test
+  >> pep.rbf eg/natural.language.pss -i "the big dog sleeps in the house."
+
+  This actually does
+  -----
+    pep -f tr/translate.ruby.pss eg/natural.language.pss \
+       > eg/ruby/natural.language.rb
+    echo "the big dog sleeps ..." | eg/ruby/natural.language.rb
+  ,,,
+
+PROBLEMS FOR HUMAN LANGUAGE PARSING 
+
+ATTRIBUTES NEEDED ....
+
+ In order to attempt to parse/translate natural human language 
+ it is necessary to add either an array of "attributes" to each 
+ tape-cell or else a semantic-attribute object. These attributes
+ would contain information such as "plural/singular", "masculine/feminine",
+ A simple attribute array would allow dealing with situations like 
+
+   "los tres amigos van al mercado" -->
+   "the three friends go to the market".
+ So:
+   "los"
+      is parsed as token="article*", tapecell="los", 
+      and attributes=plural+masculine (2 attributes)
+   "amigos"
+      is parsed as token="noun*", tapecell="amigos", 
+      and attributes=plural+masculine (2 attributes)
+   "van" 
+      is parsed as token="verb*", tapecell="van"
+      attributes=plural
+      In this case "van" can be masculine or feminine, so that 
+      attribute is not marked.
+
+  Then, when we try to reduce "article*noun*" to "nounphrase*" 
+  we see that we need to "match" each attribute. For example
+    "article(los)*noun(amigos)*" can be reduced to 
+    "nounphrase(los amigos)*" because
+     "los" has attributes "plural+masuline", and 
+     "amigos" has the same attributes. However, we cannot parse
+     "las amigos" because "las" has attributes "plural+feminine".
+     This means the "las amigos" is a grammatical error.
+
+  Also, consider the "unmarked" situation:
+    "ellas van al mercado" 
+    we have, 
+       "ellas" (attributes=plural+feminine)
+       "van"   (attributes=plural)
+    So, "van" has 1 less attribute, but the attribute it has (plural)
+    matches the subject of the sentence, so the phrase is legal.
+
+  Of course, the set of possible attributes varies from language to 
+  language (as a simple example, some languages have a "dual" number,
+  as well as singular and plural). But a simple solution may be to
+  create a "superset" of all possible attributes in all possible 
+  languages and then match them as required.
+
+  This schema requires extending the parse-machine to add the array
+  of attributes to each tapecell. But this simple array of attributes
+  also has severe limitations because of the semantic complexity of 
+  human language. 
+
+  Even better would be an attributes "object" (with heirarchical attributes)
+  attached to each tape-cell. This would go some way to dealing with 
+  the interdependance of semantics and grammar in human languages. 
+  
+AMBIGUOUS PARSING ....
+
+  Another complication is that words may be parsed in different ways,
+  such as verb or noun (eg "access", "ache"). This means that there
+  needs to be some way to order these different parsings, so that
+  each different parsing can be tried in turn.
+
+  At some stage I may try to extend the parse-machine in this way, to see how
+  effectively we can parse/translate human language.
+ 
+LOOK AHEAD ....
+
+  There is also a significant problem with "look-ahead" although one 
+  simple solution would be to require a full-stop at the end of 
+  sentences.
+
+HISTORY
+
+  13 march 2020 
+
+    Added some new words and sentence structures.
+
+  2019 began script
+
+*#
+ begin { 
+   add '
+    An attempt at basic natural language parsing. 
+    Use the following words in simple sentences: 
+
+     articles: the, this, her, his, a, one, some, 
+     preposition: up, in, at, on, with, under, to
+     adjectives: simple, big, small, blue, beautiful, small,
+     nouns: flower, tree, dog, house, horse, girl, fish, meat,
+     verbs: runs, eats, sleeps, is, grows, digs, sings
+
+    End the sentence with a full stop "."
+      eg: the small dog eats fish.
+      eg: the simple horse runs on the house .
+   .\n' ;
+   print; clear;
+ }
+ read;
+ [:alpha:] {
+   while [:alpha:]; 
+   put; 
+   "the","this","her","his","a","one","some" {
+     clear; add "article*"; push;
+     .reparse
+   }
+   "up","in","at","on","with","under","to" {
+     clear; add "preposition*"; push;
+     .reparse
+   }
+   "simple","big","small","blue","beautiful","small" {
+     clear; add "adjective*"; push;
+     .reparse
+   }
+   "flower", "tree", "dog", "house", "horse", "girl", "fish", "meat" {
+     clear; add "noun*"; push;
+     .reparse
+   }
+   "runs", "eats", "sleeps", "is", "grows","digs","sings" {
+     clear; add "verb*"; push;
+     .reparse
+   }
+   put; clear; add "<"; get; add ">";
+   add " Sorry, don't understand that word! \n";
+   print; clear; quit;
+ }
+
+ # use a full-stop to complete sentence
+ "." { put; clear; add "dot*"; push; }
+ # ignore every thing else
+ clear;
+
+parse>
+
+# 2 tokens
+
+ pop; pop;
+
+ "article*noun*" {
+   clear; 
+   get; add " "; ++; get; --; put; clear;
+   add "nounphrase*"; push;
+   .reparse
+ }
+
+ "verb*preposition*" {
+   clear; 
+   get; add " "; ++; get; --; put; clear;
+   add "verbphrase*"; push;
+   .reparse
+ }
+
+# 3 tokens
+
+ pop;
+
+ "noun*verb*dot*","nounphrase*verb*dot*",
+ "noun*verbphrase*dot*","nounphrase*verbphrase*dot*" {
+   clear;
+   get; add " "; ++; get; --; put; clear;
+   add "sentence*"; push;
+   .reparse
+ }
+
+ "article*adjective*noun*" {
+   clear;
+   get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+   add "nounphrase*"; push;
+   .reparse
+ }
+
+ # 4 tokens
+ pop; 
+
+ "nounphrase*verb*noun*dot*","noun*verb*noun*dot*",
+ "nounphrase*verb*nounphrase*dot*","noun*verb*nounphrase*dot*", 
+ "nounphrase*verbphrase*nounphrase*dot*","noun*verbphrase*nounphrase*dot*", 
+ "nounphrase*verbphrase*noun*dot*","noun*verbphrase*noun*dot*" {
+   clear;
+   get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+   add "sentence*"; push;
+   .reparse
+ }
+
+ push; push; push; push;
+
+ (eof) {
+   pop; pop; 
+   "sentence*" {
+      clear; 
+      add "It's an english sentence! \n("; get; add ") \n";
+      add "But it may not make sense! \n";
+      print; clear; quit;
+   }
+   "nounphrase*" {
+      clear; add "its a noun-phrase! ("; get; add ") \n";
+      print; clear; quit;
+   }
+   "verbphrase*" {
+      clear; add "its a verb-phrase! ("; get; add ") \n";
+      print; clear; quit;
+   }
+   push; push;
+   add "nope, not a sentence. \n"; print; clear; 
+   add "The parse stack was: \n  "; print; clear;
+   unstack; add "\n"; print; quit;
+ }
+
+

@@ -1,0 +1,66 @@
+
+TR FOLDER
+
+  This folder contains pep scripts that translate pep scripts into
+  other languages. Currently (sept 2021) the following languages have
+  robust translators: java, c (byte chars), ruby, python, go.
+  The translation scripts can be thoroughly tested using the 
+  "pep.tt" function in the helpers.pars.sh script. This tests the 
+  translation of a large number of short scripts using the data 
+  file tr/tr.test.txt
+
+  All the translators scripts create a standalone script (ruby, python) or
+  a compilable file (java, go). So the virtual machine (a class 
+  or structure with methods) is contained in the script/source code.
+  The exception is the c translator which requires the code 
+  in libmachine.a in order to compile a standalone executable.
+
+  The libmachine.a c library can be recompiled with functions in 
+  the helpers.pars.sh file.
+
+  The bash script helpers.pars.sh contains a number of functions 
+  which help to translate and run scripts in different languages.
+  Some examples:
+
+  * translate a pep script file to go, compile and run it with input
+  >> pep.gof eg/palindrome.pss "dogeeseseegod"
+  
+  A translation script can be used as follows:
+
+  * translate an inline script into python and run the script
+  ----
+    pep -f tr/translate.py.pss -i "r;t;t;d" > test.py
+    chmod a+x test.py; echo 'abcd' | ./test.py
+    # output is: aabbccdd
+  ,,,
+
+  * translate the json syntax checker into java and run it with input
+  >> pep -f tr/translate.java.pss eg/json.check.pss > Machine.java
+  >> javac Machine.java; echo "[1,2,true,[3,4]]" | java Machine
+
+  * make the python translator translate itself into python and run it
+  -----
+    pep -f tr/translate.py.pss tr/translate.py.pss > tr.py.py
+    chmod a+x tr.py.py; echo "r;[0-9]{d;}t;" | ./tr.py.py
+  ,,,,
+
+  * use the function in helpers.pars.sh to translate to go, compile and run
+  >> pep.gof palindrome.nospace.pss 'do geese see god'
+
+LANGUAGES TO DO
+
+  Finish swift, js.
+  Do Julia, rust, lisp, R
+
+STATUS
+
+  19 june 2022
+    The java, go, ruby, python, c and tcl translators are at a 
+    usable mainly bug-free level. working on the perl and js translators
+  Sept 2021
+    The python, java, c, ruby and go translators are reasonably bug-free and
+    can even translate 2nd generation scripts. The tcl translator
+    has some remnant bugs, but is close to finished. The other
+    translators are works in progress.
+
+

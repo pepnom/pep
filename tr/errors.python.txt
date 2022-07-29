@@ -1,0 +1,12 @@
+
+Test results for translating pep scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.py.pss
+Language: python
+Date: Mon 30 Aug 2021 12:01:04 AM AEST
+Tests 1st gen: 112
+Errors 1st gen: 0
+Time Taken 1gen: 27
+Tests 2nd gen: 79
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 

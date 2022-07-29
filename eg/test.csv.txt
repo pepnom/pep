@@ -1,0 +1,13 @@
+
+ name, quote
+ j.d.salinger , "' that kills me <yes>'"
+
+ only one field!
+ bob, things are looking up, ok,,
+ "escaped \"\" quotes, like this","another"
+ 'tricks, again
+
+ ,,,,
+ james, a quote
+
+ blank, a blank quote here, "ok thats right"

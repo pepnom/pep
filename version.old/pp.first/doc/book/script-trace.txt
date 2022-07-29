@@ -1,0 +1,246 @@
+
+ ** a trace of a script
+
+ The time has come to provide a comprehensive trace of a 
+ script to demonstrate how the virtual machine changes
+
+ here is the script
+ -->
+  /"/
+  {
+    put;
+    clear;
+    add "quote*";
+    push;
+  } 
+
+  /a/
+  /b/
+  {
+    put;
+    clear;
+    add "letter*";
+    push;
+  } 
+ --<
+ And here is the input stream (text)
+ :> "a","b"
+
+ ** the trace
+
+ -machine-
+ -stack:
+ -tape:-->, ...
+ -workspace:
+ -peep:"
+
+ -notes-
+   u- the @peep buffer contains the next character in the input stream
+      (in this case a quote character)
+    - the dots withing the @tape structure indicate that the tape is
+      an "infinite" array.
+    - the arrow in the first cell of the tape indicates that the 
+      @tape-pointer is currently pointing to that cell (since the 
+      tape pointer starts at zero.
+    - the @stack and @workspace are initially empty
+
+  
+ -machine-
+ -stack:
+ -tape:-->,...
+ -workspace:"
+ -peep:a
+
+ -notes- 
+  u- the peep buffer is a single character buffer and now contains the 
+     next character in from the input stream
+   - in each @cycle of the interpreter the peep character is -added- to
+     the end of the workspace so the workspace is now "
+
+ script statement:
+ :> /"/
+ This statement is a @test statement. It checks to see if the workspace
+ buffer is exactly the text withing the "/" characters. In this cas
+ the condition is true so the statements within the braces are executed
+ :> put;
+ 
+ This statement puts the contents of the @workspace buffer into the 
+ current element of the @tape data structure. The current element is
+ the element where the pointer is pointing. So the machine now looks like
+
+ -machine-
+ -stack:
+ -tape:--> ",...
+ -workspace:"
+ -peep:a
+
+ -notes- 
+  u- The first element of the tape now contains the character ", which
+     was the contents of the workspace. The workspace has -not- changed
+     because the @put operation does not delete or change in any
+     way the workspace
+   - also the tape pointer is still pointing to the first element 
+     because the put operation does not change the ":tape-pointer"
+
+ statement:
+ :> clear;
+ 
+ This statement simple clears the workspace buffer of all text
+ that is, sets it to a zero length string, so the machine now
+ looks like
+
+ -machine-
+ -stack:
+ -tape:--> ",...
+ -workspace:
+ -peep:a
+
+ next statement:
+ :> add "quote*";
+
+ This is also a straightforward statement, it simply
+ adds the given text to the workspace  buffer. So the 
+ machine is now
+
+ -machine-
+ -stack:
+ -tape:--> ",...
+ -workspace:quote*
+ -peep:a
+
+ -notes- 
+ u- the * character at the end of the text is important
+    because it indicates that what is being @add ed to the 
+    workspace is actually a token name.
+  - all statements or commands in the language -must- end 
+    with a semi-colon, unlike sed
+
+ next statement:
+ :> push;
+
+ The @push command pushes the contents of the workspace upto
+ and including the first star character onto the stack so the 
+ machine now looks like
+
+ -machine-
+ -stack:quote*
+ -tape: ",-->, ...
+ -workspace:
+ -peep:a
+
+ -notes-    
+  u- the workspace is now empty because the @push command
+     does change the workspace unlike the -put- command.
+   - The tape pointer is now pointing to the second item in 
+     the tape, because the push command automatically increments
+     the tape pointer.
+   - The @stack now has one element, namely the previous contents
+     of the workspace buffer.
+   - The @peep buffer is unchanged because no new charater will
+     be read from the input stream until all the script commands
+     have been processes.
+   - The character which is in the first element of the tape in
+     a sense "corresponds" to the first element of the stack, in the 
+     sense that the quote character is the -value- of the 
+     "parse token" [->wikipedia] namely "quote*". In general the stack
+     is for parse tokens that the tape is for values. But the 
+     machine can be used for any purpose which the script writer
+     desires.
+
+ -statement- :
+
+ :> /a/
+ This is another test, it checks to see if the workspace is
+ exactly the text "a" (no "regular expressions" [->wikipedia] are 
+ involved). In this case the answer is no.
+
+ -statement- :
+ :> /b/
+ another test and the result is once again false because 
+ the workspace currently empty.
+ ** a new cycle
+
+ so...
+ now the all the script statements have been processes (because
+ the second block of braces was skipped because the tests returned
+ false. Now begins a new ":cycle". This means that a new character
+ is read from the input stream into the @peep buffer and the 
+ previous peep character is added to the end of the workspace. Also
+ the interpreter starts processes the script from the beginning 
+ again.
+ 
+ so after the new cycle the machine now looks like
+
+ -machine-
+ -stack:quote*
+ -tape:",-->, ...
+ -workspace:a
+ -peep:"
+
+ The interpreter starts from the first script statement again.
+ :> /"/
+ This test now returns -false- because the workspace contains
+ an "a" character not a quote character. (The test is -not- performed
+ against the peep buffer, only the workspace buffer)
+ The test returns false and the brace block is skipped.
+
+ The next statement is:
+ :> /a/
+ another test, but this time it returns -true- because the workspace
+ -does- equal 'a'. The statements in the block are executed.
+ The next statement is
+ :> put;
+
+ The contents of the workspace are put into the element of the tape
+ where the tape pointer is pointing so the machine now is
+
+ -machine-
+ -stack:quote*
+ -tape:",-->a, ...
+ -workspace:a
+ -peep:"
+
+ The next statement:
+ :> clear;
+ results in the ":virtual-machine"
+
+ -machine-
+ -stack:quote*
+ -tape:",-->a, ...
+ -workspace:
+ -peep:"
+
+ and the next statment
+ :> add "letter*";
+ just adds the given text to the @workspace so the machine is now
+
+ -machine-
+ -stack:quote*
+ -tape:",-->a, ...
+ -workspace:letter*
+ -peep:"
+
+ -statement- :
+ :> push;
+ once again the contents of the workspace up to the first star
+ are pushed onto the stack to the machine is now
+ 
+ -machine-
+ -stack:quote*,letter*
+ -tape:",a,-->, ...
+ -workspace:
+ -peep:"
+
+ -notes-  
+  u- the tape pointer is incremented
+   - the workspace is deleted upto and including the first star
+     (in this case, all of it)
+   - the stack gets another element
+   - the @peep is unchanged because a new character is only
+     read at the beginning of a cycle or because of and 
+     explicit @read command.
+
+ ** and so on
+
+ ...
+

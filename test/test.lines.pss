@@ -1,0 +1,9 @@
+# -------
+# testing line counting
+
+ read; clear;
+ (eof) {
+   add "lines = "; ll; add "\n";
+   print; quit;
+  }
+

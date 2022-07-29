@@ -1,0 +1,11 @@
+
+#*
+HISTORY
+BUGS
+  The c translation doesnt work with this.
+*#
+
+# print lines containing the text pep
+r; E'\n' {put; replace "pep" ""; !(==) { swap; print; } clear; }
+
+

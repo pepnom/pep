@@ -1,0 +1,112 @@
+#* 
+
+  A script to translate the brainf*** language into plain
+  c
+
+  * bf commands
+  >> > p++ < p-- + *p++ - *p-- [] while *p > 0 . putchar , getchar
+
+NOTES
+
+  This script demonstrates pep/nom parsing and translating one of 
+  the simplest possible formal languages.
+
+  The script could be greatly reduced but error messages are 
+  printed with line and character number.
+
+  Hardly any parsing is required, just for []
+  I could put a line:char number message into the attribute for 
+  each [], and then use that message if the brackets are unbalanced.
+  This technique could be useful for other languages. This is 
+  because we dont need that tape-cell for anything else.
+
+
+HISTORY
+
+  14 july 2022
+    wrote this script.
+*#
+
+  read;
+  ">","<","+","-",",","." {
+    ">" { clear; add "p++;"; }
+    "<" { clear; add "p--;"; }
+    "+" { clear; add "*p++;"; }
+    "-" { clear; add "*p--;"; }
+    "," { clear; add "putchar(*p);"; }
+    "." { clear; add "getchar(*p);"; }
+    put; clear;
+    add "com*"; push; .reparse
+  }
+
+  "[","]" { 
+    put; add "*"; push; 
+    add "unbalanced bracket '"; --; get; add "' ";
+    add "near line:char "; lines; add ":"; chars; put; ++; clear; 
+    .reparse
+  }
+
+  # ignore any other character but parse as a dummy command
+  # so that the ignored char will end up in the output.
+  !"" {  
+    put; clear; add "// ignored character '"; get; add "'";
+    put; clear; add "com*"; push;
+  } 
+
+parse>
+
+  # for debugging, add % as a latex comment.
+  add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  pop; pop;
+
+  # brackets with nothing in them is really an error because 
+  # can create an infinite loop and does nothing anyway.
+  "[*]*" {
+    clear;
+    add "Empty bracket '[]' ";
+    add "near line:char "; lines; add ":"; chars; add "\n";
+    print; quit;
+  }
+
+  "com*com*","comset*com*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comset*"; push; .reparse
+  }  
+
+  pop;
+  "[*com*]*","[*comset*]*" {
+    # indent the braced code
+    clear; add "  "; ++; get; replace "\n" "\n  "; put;
+    clear; add "while (*p > 0) {\n";
+    get; --; add "\n}"; put;
+    clear; add "comset*"; push; .reparse
+  }
+
+  (eof) {
+    "com*","comset*" {
+      clear; 
+      add "/* code translated from bf language */\n\n";
+      add "/* by bumble.sf.net/books/pars/eg/brainf.toclang.pss */\n\n";
+      add "int *p = null;\n";
+      get; add "\n"; print; quit;
+    }
+    "[*comset*","[*com*" {
+      clear; get; add "\n"; print; quit;
+    }
+    "comset*]*","com*]*",E"]*]*" {
+      clear; ++; get; add "\n"; print; quit;
+    }
+    put;
+    add "
+   The bf code didnt parse well:
+   Legal bf commands are 
+     > p++ < p-- + *p++ - *p-- [] while *p > 0 . putchar , getchar
+   everything else is ignored. 
+   The input parsed as tokens:\n  "; print; clear;
+   get; add "\n"; 
+    print; quit;
+  }
+  push; push; push;
+

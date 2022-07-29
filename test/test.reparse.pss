@@ -1,0 +1,12 @@
+
+# testing compilation of the /reparse/ script function
+# reparse jumps back to the parse label which may be something like
+# ***--- or it could just be a "parse:" label to go straight into
+# the compiled program.
+
+  read;
+  parse> 
+  E"e" { clear; .reparse } 
+  add "x";
+  B"e" { clear; .restart }
+  # more

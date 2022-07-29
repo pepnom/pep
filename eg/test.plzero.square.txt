@@ -1,0 +1,24 @@
+
+{ 
+  This pl/0 file is to test the pep script plzero.pss
+  which checks the syntax of a pl/0 program and outputs
+  the program in a standard format.
+
+  pl/0 is language designed by N.Wirth for teaching the 
+  design of compilers.
+}
+
+  VAR x, squ;
+  PROCEDURE square;
+  BEGIN
+     squ:= x * x
+  END;
+  BEGIN
+     x := 1;
+     WHILE x <= 10 DO
+     BEGIN
+        CALL square;
+        ! squ;
+        x := x + 1
+     END
+  END.

@@ -1,0 +1,24 @@
+
+ && The tape in the chomski machine 
+
+ The tape structure in the @virtual-machine is an infinite
+ array of elements. Each of these elements is a string buffer
+ of infinite size. The elements of the tape structure may be 
+ accessed using the @increment , @decrement , @get and @put
+ commands. 
+
+ ** The tape and the stack
+
+ The tape structure in the virtual machine and the @stack
+ structure and designed to be used in tandem, and several
+ mechanisms have been provided to enable this. For example,
+ when a @pop operation is performed, the @tape-pointer is
+ automatically decremented, and when a @push operation is
+ performed then the tape pointer is automatically incremented.
+
+ Since the chomski language and machine have been designed
+ to carry out parsing and transformation operations on
+ text streams, the tape and stack are intended to hold
+ the values and tokens of the parsing process.
+ 
+

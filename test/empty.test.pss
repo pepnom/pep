@@ -1,0 +1,7 @@
+
+# just empty tests
+
+  read; clear;
+  "" { add "."; } 
+  print; clear;
+

@@ -1,0 +1,11 @@
+
+ ** A Ascii C implementation of the Pattern Parser tool  
+
+ This folder contains a c implementation of the 'pp' tool which uses
+ the standard c 'char' datatype for manipulating strings. For this reason
+ the version is not particularly useful for writing scripts which will
+ deal with text in foreign language encodings or modern encodings such as
+ utf-8. 
+
+ This implementation was largely working appart from a bug in the 
+ implementation of the 'pop' and 'push' commands.

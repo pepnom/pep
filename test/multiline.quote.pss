@@ -1,0 +1,11 @@
+#* 
+  just testing multiline arguments to the
+  "add" command
+*#
+
+read; "x" {
+  add ".\n";
+  add "1
+  23
+  4"; }
+print;clear;

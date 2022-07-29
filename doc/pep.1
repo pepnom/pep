@@ -1,0 +1,154 @@
+'\" t
+.\"     Title: pp
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 08/21/2019
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "PP" "1" "08/21/2019" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pep \- a stream editing pattern parser for context\-free languages
+.SH "SYNOPSIS"
+.sp
+\fBpep\fR [\fB\-shI\fR] [\fB\-i\fR \fI"input"\fR] [\fB\-e\fR \fIsnippet\fR] [\fB\-f\fR \fISCRIPTFILE\fR ] [\fB\-a\fR \fIFILE\fR] [\fIinputfile\fR]
+.sp
+\fBpep\fR [\fB\-h\fR] # Short help
+.SH "DESCRIPTION"
+.sp
+The \fIpep\fR pattern parser tool is designed to parse and translate (transform/compile) context\-free languages\&. For certain requirements it may be used as an alternative to sed(1) or lex(1) and awk(1)\&.
+.sp
+The pattern parser reads the input stream one character at a time and is capable of creating and parsing "tokens" which can then be manipulated and transformed\&. There is a close relation between \fIpep\fR code blocks and backus\-naur form (\fIbnf\fR or \fIebnf\fR) grammar rules\&.
+.SH "OPTIONS"
+.PP
+\fB\-f\fR \fIfile\fR
+.RS 4
+load program in script file
+.RE
+.PP
+\fB\-e\fR \fIsnippet\fR
+.RS 4
+add inline script commands to program
+.RE
+.PP
+\fB\-i\fR \fItext\fR
+.RS 4
+use
+\fItext\fR
+as the input stream for the parser
+.RE
+.PP
+\fB\-h\fR
+.RS 4
+print this help
+.RE
+.PP
+\fB\-I\fR
+.RS 4
+run in interactive mode (for script viewing and debugging)
+.RE
+.PP
+\fB\-a\fR \fIfile\fR
+.RS 4
+use
+\fIFILE\fR
+as script assembler\&.
+.RE
+.PP
+\fIinputfile\fR
+.RS 4
+The text file which is used as the input stream\&. 
+.RE
+.SH "EXAMPLES"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The simplest possible usage is:
+pep \-e "r;t;d;" \-i "abcabc"
+This copies stdin to to \*(Aqstdout\*(Aq
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The same as above with long command names
+pep \-e "read;print;clear;" \-i "abcabc"
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sed(1), awk(1), lex(1), yacc(1)
+.fi
+.if n \{\
+.RE
+.\}
+.SH "BUGS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\*(Aqpep\*(Aq is still in an experimental phase so bugs 
+will exist\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "AUTHOR"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+M\&.J\&.Bishop (mjbishop@fastmail\&.com)
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SOURCE CODE"
+.sp
+git: https://github\&.com/somewhere
+.SH "COPYRIGHT"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pep is free software\&. The license is compatible with sourceforge\*(Aqs
+licensing requirements\&.
+.fi
+.if n \{\
+.RE
+.\}

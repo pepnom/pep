@@ -1,0 +1,7 @@
+
+  && The 'machine' folder
+  -----------------------
+  
+  This folder contains a 'machine' object written in the c
+  programming language. The machine contains a stack and a 
+  tape.

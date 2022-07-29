@@ -1,0 +1,25 @@
+123456abcdefghijklmnop
+
+add
+  : escape \: here :add
+  : thats right :
+  'space and' 
+  : 'that is'
+  'one' 'two' 'three'
+  112233445566
+# A "!text \" and \" test"  stream for pp
+\" "!@#$%^&*;/;/;
+!!!!
+/* 
+  c style comments /*
+  on many lines *()&^%%$#$#;;;;;
+  one two
+*/
+/ff/ {
+  exit; pop; push;
+}
+/* multiline
+   comment
+*/
+'new quote'  'again   :'
+

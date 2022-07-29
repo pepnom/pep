@@ -1,0 +1,324 @@
+
+
+#parses algebra#
+#- this script was written before the "until"
+   "while" and "whilenot" commands were invented
+   which are commands which greatly simplify the 
+   process of "tokenizing" an input stream. In this
+   script, the tokenizing process was written into
+   the grammer rules resulting in verbosity -#
+
+
+
+[:space:] 
+{
+  put; clear;
+  add 'whitespace*'; 
+  push;  
+}
+
+
+[:digit:]
+{
+  put; clear;
+  add 'numeral*'; 
+  push;  
+}
+
+
+/)/ {
+  put; clear;
+  add 'close-bracket*';
+  push;
+}
+
+/(/ {
+  put; clear;
+  add 'open-bracket*';
+  push;
+}
+
+/;/ {
+  put; clear;
+  add 'semi-colon*';
+  push;
+}
+
+[:letter:] {
+  put;
+  clear;
+  add 'word*';
+  push;
+}
+
+
+/+/
+/-/
+/*/
+/\//
+{
+  put;
+  clear;
+  add 'operand*';
+  push;
+}
+
+[:unicode:] {
+  put;
+  clear;
+  add 'character*';
+  push;
+}
+
+pop; pop;
+
+/numeral*numeral*/
+{
+  clear; get;
+  ++; get; --;
+  put;
+  clear;
+  add 'numeral*';
+  push;
+  pop; pop;
+}
+
+
+/numeral*open-bracket*/
+{
+  clear;
+  add 'term*open-bracket*';
+  push; push;
+  pop; pop;
+}
+
+/numeral*close-bracket*/
+{
+  clear;
+  add 'term*close-bracket*';
+  push; push;
+  pop; pop;
+}
+
+/numeral*whitespace*/
+{
+  clear;
+  add 'term*whitespace*';
+  push; push;
+  pop; pop;
+}
+
+/numeral*operand*/
+{
+  clear; 
+  add 'term*operand*';
+  push; push;
+  pop; pop;
+}
+
+/numeral*word*/
+{
+  clear; 
+  add 'term*word*';
+  push; push;
+  pop; pop;
+}
+
+/numeral*semi-colon*/
+{
+  clear; 
+  add 'term*semi-colon*';
+  push; push;
+  pop; pop;
+}
+
+# -------------------------- #
+/word*word*/
+{
+  clear; get;
+  ++; get; --;
+  put;
+  clear;
+  add 'word*';
+  push;
+  pop; pop;
+}
+
+/word*open-bracket*/
+{
+  clear;
+  add 'term*open-bracket*';
+  push; push;
+  pop; pop;
+}
+
+/word*close-bracket*/
+{
+  clear;
+  add 'term*close-bracket*';
+  push; push;
+  pop; pop;
+}
+
+/word*whitespace*/
+{
+  clear; 
+  add 'term*whitespace*';
+  push; push;
+  pop; pop;
+}
+
+/word*operand*/
+{
+  clear; 
+  add 'term*operand*';
+  push; push;
+  pop; pop;
+}
+
+/word*numeral*/
+{
+  clear; 
+  add 'term*numeral*';
+  push; push;
+  pop; pop;
+}
+
+/word*semi-colon*/
+{
+  clear; 
+  add 'term*semi-colon*';
+  push; push;
+  pop; pop;
+}
+
+# -------------------------- #
+/semi-colon*whitespace*/
+{
+  clear; 
+  add 'semi-colon*';
+  push;
+  pop; pop;
+}
+
+
+/operand*whitespace*/
+{
+  clear; 
+  add 'operand*';
+  push;
+  pop; pop;
+}
+
+/term*whitespace*/
+{
+  clear; 
+  add 'term*';
+  push;
+  pop; pop;
+}
+
+
+/open-bracket*whitespace*/
+{
+  clear; 
+  add 'open-bracket*';
+  push;
+  pop; pop;
+}
+
+/close-bracket*whitespace*/
+{
+  clear; 
+  add 'close-bracket*';
+  push;
+  pop; pop;
+}
+
+
+/whitespace*whitespace*/
+{
+  clear; get;
+  ++; get; --;
+  put;
+  clear;
+  add 'whitespace*';
+  push;
+  pop; pop;
+}
+push;push;
+
+
+pop;pop;pop;pop;pop;
+
+
+/open-bracket*term*operand*term*close-bracket*/
+{
+  clear;
+  get; ++; get; ++; get; ++; get; ++; get;
+  --; --; --; --; 
+  put;
+  clear;
+  add 'term*';
+  pop; pop;  
+}  
+
+push; push; push; push; push;
+
+
+pop;pop;pop;pop;
+
+/term*operand*term*semi-colon*/
+{
+  clear; 
+  get; ++; get; ++; get; ++; get; 
+  --; --; --; 
+  put;
+  print;
+  clear;
+  add 'expression*';
+  push;
+}
+
+push; push; push;push;
+
+pop; pop;
+/term*semi-colon*/
+{
+  clear; 
+  add 'expression*';
+  push;
+  get; ++; get;
+  --; 
+  put;
+  print;
+  clear;
+}
+
+push;push;
+
+pop; pop;
+/whitespace*expression*/
+{
+  clear; 
+  ++; get; --;
+  put; clear;
+
+  add 'expression*';
+  push;
+}
+
+/expression*whitespace*/
+{
+  clear; 
+  ++; get; --;
+  put; clear;
+
+  add 'expression*';
+  push;
+}
+
+push;push;
+
+
+

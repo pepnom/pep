@@ -1,0 +1,15 @@
+
+  = The ends-with test =
+
+  The 'ends with' test checks whether the workspace ends
+  with a given string. This test is written
+   
+   :> (string_ { ... }
+
+  
+
+  ** See also
+
+   @test-is , @test-list , @test-tape , @test-eof 
+
+  

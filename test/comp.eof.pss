@@ -1,0 +1,7 @@
+# testing eof test compilation with compilable.c.pss
+
+read;
+(eof) {
+  add "<< end of input stream reached! \n";
+  print;
+}

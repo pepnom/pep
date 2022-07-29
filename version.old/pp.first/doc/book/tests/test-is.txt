@@ -1,0 +1,39 @@
+
+  ** the test structure
+
+ The script language contains a structure to perform a 
+ test based on the content of the workspace and to
+ execute commands depending on the result of that test.
+ An example of the syntax is
+ -->
+   /ocean/
+   {
+     add " blue";
+     print;
+   }
+ --<
+
+ In the script above, if the @workspace buffer 
+ is the text "ocean" then the commands within
+ the braces are executed and if not, then not. The test
+ structure is a simple string equivalence test, there 
+ are -no- regular expressions and the workspace buffer 
+ must be -exactly- the text which is written between
+ the // characters or else the test will fail, or 
+ return false, and the commands within the braces will
+ not be executed.
+
+ This command is clear influenced by the "sed" http://sed.sf.net
+ stream editor command which has a virtually identical syntax
+ except for some key elements. In sed regular expressions are 
+ supported and in sed the first opening brace must be on the 
+ same line as the test structure.
+
+ There is also another test structure in the script language 
+ which checks to see if the workspace buffer -begins- with the 
+ given text and the syntax looks like this
+  :> <ocean> { add ' blue'; print; }
+
+ This syntax is visually not very pleasant and its design
+ goes against the simplicity which I was attempting to
+ obtain in writing the parse script language.  

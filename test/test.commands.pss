@@ -1,0 +1,239 @@
+
+ #*
+   This file contains some valid (and invalid) statements in the 
+   pattern script language. This can be used in conjuction with
+   the pp executable and the 'asm.pp' assembler script, which is 
+   responsible for parsing and compiling the current format.
+   
+   * http://bumble.sf.net/books/gh/gh.c  
+      for the source code for the pp executable
+   * http://bumble.sf.net/books/gh/asm.pp
+      source code for the assembler script
+
+
+   * see if all the commands are parsed correctly
+   >> pp -f t.commands.pss -i "text"
+   
+   This should produce sensible error messages if there is 
+   a problem with the syntax
+
+   * debug how the script commands are compiled by asm.pp
+   >> pp -Ia asm.pp test.commands.pss
+
+     This will run the program in interactive mode. Then type 'rr'
+     to run the assembler on the commands to see if they parse 
+     correctly. 
+
+ *#
+
+ #------------------------------------
+ #*
+
+  Some syntax errors  in the parse script language 
+  All of the following errors are (or should be) detected by
+  the compiling program "asm.pp". To test the compiler, the 
+  error lines should be uncommented one at a time and tested with
+     >> pp -f test.commands.pss inputFile
+ 
+  It is also possible to test an error on the command line with
+    >> pp -e "some syntax error" inputFile
+
+ *#
+
+ # missing semi-colon between valid commands  all simple commands in the
+ # parse-script language must end with a semi-colon. the "parse>" parse label
+ # and ".reparse" and ".restart" instructions are exceptions to this rule.
+ # This is because parse> is a marker, not a command, and .reparse and
+ # .restart is compiled to a jump (which affects the virtual machine
+ # instruction pointer only.  add print ;
+
+ # missing semi-colon between valid commands  
+ # add "text" clear;
+
+ # missing semi-colon before a closing brace
+ # "\n" { read }
+
+ # while [:alpha:] clear;
+
+ # a superfluous parameter for a valid command
+ # print "abc" ;
+
+ # incorrect parameter type (list instead of quoted text)
+ # add [abcd] ;
+
+ # incorrect head of a brace block (a command instead of a test)
+ # clear { 
+
+ # empty brace block
+ # "empty" { }
+
+ # semi-colon immediately after a brace.
+ # "bad colon" {; }
+
+ # double semicolons
+ # "two colons" ;;
+
+ # unterminated multiline comment
+ #  #* ....
+
+ # multiline quotes ...
+ add "
+  some more 
+  text ";
+
+ #------------------------------------
+ # valid syntax 
+ # The formats below are (or should be) correctly compiled by the 
+ # program "asm.pp" (asm.pp is run automatically when the -f or -e 
+ # switches are given to the pp executable.
+
+
+ # begin-blocks 
+ begin { add "starting script ... \n"; print; clear; }
+
+ # using parse> and .reparse
+ parse>
+
+   "expression*expression*" { 
+      clear; add "expressionset*"; push; 
+      .reparse
+   }
+
+   "term*operator*term*" { 
+      clear; add "expression*"; push; 
+      .reparse
+   }
+
+ # test if the workspace begins with the text "un"
+ B"un" { add "begins with 'un'"; }
+
+ # test if the workspace ends with the text "ly"
+ E"ly" { add "begins with 'ly'"; }
+
+ # replace is the only command (currently 2019) that uses 2 parameters
+ replace "this" "that"; 
+
+ # test if the end-of-file flag is in the "peep" register.
+ (eof) { add "end of stream"; }
+
+ # test if the current tape cell has the same text as the workspace
+ (==) { add "tapecell == workspace\n"; }
+
+ #*
+
+ reparse and the parse label:
+
+  Reparse and the parse label "parse>" are important for ensuring that
+  all shift-reductions take place. .reparse should be used in a 
+  testblock, where the test text is a series of tokens in the form
+   "token*token2*token3*"
+  reparse basically jumps back to the parse label (implemented as 
+  "parse>" currently). 
+
+  The example below corresponds to 2 grammar rules:
+    1. expressionset <- expression expression
+    2. expression <- term operator term 
+  If the 2nd test is matched by the workspace ("term*operator*term*")
+  then the 2nd reduction will take place. This may leave the stack
+  in the state "expression*expression*" which means that the 1st bnf
+  rule applies. Without /reparse/ the first rule would not be applied
+  to the stack, and the stack would not be properly reduced.
+
+  You may think that a simple solution would be to reverse the orders
+  of the 2 blocks and in this case that may work. But in many types
+  of grammars it will be impossible to find an order in which all
+  necessary reductions will take place: hence .reparse
+  *#
+
+
+ #--------------
+ # restart
+   
+ "a" { clear; .restart }
+
+ #--------------------------------
+ # simple instructions
+
+ add "\"";
+ add 'single';
+ add 'esc\'aped' ;
+ add "double"; a "short"; 
+ add "d esc\"aped" ;
+
+ # white space is irrelevant, so commands can span multiple lines 
+ add 
+   "quote next line";
+
+ # white space is also irrelevant between tokens
+ add"text";
+
+ # every command has an abbreviated form which is 1 letter
+ clip ;k; clop;K; clear; d ;
+
+ # no parameter commands with abbreviated forms
+ print; t; pop; p; push; P; 
+ put; G; get; g; 
+ swap ; x; 
+ ++; >;  -- ; <  ;
+ read ; r;
+
+ # commands which take one parameter
+ until "ABCD"; R 'abcd' ;
+ until 'usingle' ;
+ while [:alpha:]; w [a-z]; while [abcd] ;
+ whilenot [:space:]; W [:digit:]; whilenot [a-c];
+
+ count; n ; a+;+; a-; -;
+ zero; 0;
+ cc;c; ll; l;
+ escape "*" ; ^ '$' ;
+ unescape "#" ; v '@' ; 
+ quit; q;  write ;s;
+ nop; o;
+ # state; S; 
+
+ #---------------
+ # now to test some block commands
+
+ "block" {  nop; zero; }
+ "singleblock" { count; }  
+ (eof) { print; } 
+ (eof) { print; clear; } 
+ (eof) { add "end of stream"; }
+ (==) { add "tapecell == workspace\n"; }
+
+ #---------------
+ # class test brace blocks
+
+ [a-z] { add "text"; print; } 
+ [:alnum:] { print; } 
+
+ # negated class test
+ ![aeiou] { add "<< not a vowel \n"; print; clear; } 
+
+ #----------------------------
+ # nested blocks
+
+ "nest" {  zero; [a-z] { add "xyz"; } }
+ [:alphanum:] {  nop; [abc] { add "1st 3"; "a" { print; } } }
+
+ #--------------------------------
+ # multiline blocks
+
+ "multi" { 
+   add "lines";
+   print;
+ }
+ 
+ # block with multiple equals test
+ "new","old" { 
+   add "either new or old";
+   print;
+ }
+ 
+ (eof)
+ {
+   add "braces anywhere";
+ }
+
+

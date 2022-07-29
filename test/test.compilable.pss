@@ -1,0 +1,57 @@
+
+# A test script to see if compiling to c code is working
+# (see compile.ccode.pss).
+
+  read;
+ 
+  # character class test block
+  [:space:] { nop; nop; }
+  # negated character class test block
+  ![:space:] { nop; nop; }
+  # nested and negated character class test block
+  ![:alnum:] { nop; nop; [:alpha:] { nop; nop; }}
+  # range test
+  [m-z] { push; pop; push; }
+  # negated range test
+  ![m-z] { push; pop; push; }
+  # list test block
+  [xyz] { push; pop; push; }
+  # negated list test block
+  ![mnop] { push; pop; push; }
+  # error empty class/range/list
+  # while [];
+  # one letter character list
+  while [x];
+  while [abcde];
+  while [a-z]; 
+  whilenot [:alnum:];
+  # eof test 
+  (eof) { nop; g; G; clip; }
+  # tape == workspace 
+  (==) { nop; B"ba" { p; P; p; P; }}
+
+  # end test
+  E"abc" { nop; clip; }
+  # nested end test
+  E"a" { nop; B"ba" { p; P; p; P; }}
+
+  # begin test
+  B"abc" { nop; clip; }
+  # nested begin test
+  B"a" { nop; B"ab" { clip; }}
+
+  # quotesets 
+  "set","array","list" { nop; print; }
+  # nested quotesets 
+  "x","y" { "z","zz" { pop; push; } }
+  # nested equals test
+  "abc" { nop; "efg" { add "nested"; } clip; }
+  replace "old" "NEW";
+
+  # equals test
+  "abc" { pop; push; add '== test'; print; clear; }
+  # class tests
+  #[a-z] { add 'class test'; push; pop;  }
+  #[:alnum:] { add 'class test'; }
+
+  print; clear;

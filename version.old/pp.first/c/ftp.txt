@@ -1,0 +1,6 @@
+
+cd /home/groups/b/bu/bumble/htdocs/machine/c
+put chomski.c
+put chomski.exe
+put library.c
+put wiki.chom

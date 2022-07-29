@@ -1,0 +1,910 @@
+
+#*
+
+ mark.html.pss
+ 
+OVERVIEW 
+
+ See http://bumble.sf.net/books/pars/pars-book.html for 
+ an example of a booklet file translated into html.
+
+ This script explores the possibilities of transforming text documents
+ in a kind of 'mark-down' format into other formats. The script parses 
+ the document as a heirarchy of elements (in a "bottom-up" fashion)
+ rather than just applying regular expressions to patterns.
+
+ The trick in writing the grammar for this kind of transformation is 
+ not to have too many token types, to reduce the number of brace
+ blocks and grammar rules required.
+
+STATUS
+
+  The grammar in mark.latex.pss is probably better than this.
+  It includes list syntax.
+
+PLAIN TEXT DOCUMENT FORMAT
+
+ This section documents (yet another) markdown-style format which I
+ personally use. I dont claim this document format is superior to any other
+ markdown-style format, its just that I like it and have used it for a long
+ time.
+
+ No numbers are allowed in section headings, basically because the 
+ machine doesnt have any regular expression matching.
+
+ * An example of the type of document is this file:
+ ----
+  ==* document title
+  UPPERCASE LINES ARE TOP LEVEL HEADINGSF 
+    Content of the first section.
+  UPPERCASE WITH FOUR DOTS ....
+    2nd Level Heading 
+
+  * code lines begin with >>
+  >> cat doc.txt | sort | uniq
+
+  Floating images with text can be placed in the document like this
+  text [[ /img/n.jpg "caption text" >> ]]
+  Links begin with http:// or https:// or just /
+  code blocks are enclosed in ---- ,,, on their own lines
+  lines beginning with a star are for emphasis or as a 
+  description of a following code line (a recipe).
+  "book folder" /books/  a link with a display text
+  'asm.pp' a local file.
+
+ ,,,,
+
+USES
+
+  This script could become the basis and template for a nice
+  document formatter. Multiple output formats are possible eg
+  LaTeX, html, manpage, pandoc, real markdown, wikipedia format, rtf?
+
+  I tried to make a unix man page from an asciidoc document with
+  a2x and it made me go via xsltproc and various other bits of 
+  ridiculous cruft. Whats more, it converted from asciidoc to xml
+  and then to a man page and took about 30 seconds for a tiny document.
+
+  So maybe this script can do better than that.
+
+IDEAS 
+  
+  Another approach, which may be more maintainable, would be to 
+  separate this script into a number of smaller scripts, each of which
+  recognise a particular text structure and transform that structure
+  into html/latex. For example, one script might recognise "links" and
+  filenames, another might recognise headings, another lists and so on.
+
+  Implement lists in the format
+  @- first item
+   - second item
+   - third
+  (empty line is the end of the list)
+
+  Also definition lists like this:
+   -D* title of 1st:
+      Description of the first item
+   - title of 2nd item: 
+      Description again.
+   - third
+
+  I would like to support the following table format in this script.
+
+  ---------
+    == different shells
+    ..
+    .. csh - a shell with a c like syntax
+    .. ksh - the korn shell 
+    .. dash - a 'sh' implementation
+    .. sh - an old shell
+    .. fish - a simple non-compatible shell
+    ..
+  ,,,
+
+  Use "mark" and "go" to build a table of contents from the headings
+  in the first tape cell.
+
+  implemented a "starline*" token. also: "nl/starline/nl/codeline/nl/"
+
+TESTING 
+
+  * convert a text document to html and print to stdout 
+  >> pep -f eg/mark.html.pss pars-book.txt
+
+  * convert the script to java and test 
+  -------
+   pep -f compile.java.pss eg/mark.html.pss > Machine.java
+   javac Machine.java
+   cat pars-book.txt | java Machine
+  ,,,,
+
+BUGS
+
+ needs to be thoroughly examined and debugged.
+
+HISTORY
+ 
+ 16 june 2022
+
+   Java translation working.
+
+ 27 july 2020
+
+   working on the bugs in translate.java.pss so that the script 
+   can properly execute this script. So far it can transform it 
+   well up to a certain point, and then exits with no output!
+
+ 4 july 2020
+
+   script has reached a good quality. Has embedded css styles.
+   subheadings working. no tables yet.
+
+ 1 july 2020
+   Need to totally rethink and rewrite. deleting all except
+   tokenisation, then build up script with one structure at 
+   a time. Eliminate all unnecessary tokens.
+   
+   Made a lot of progress by incrementally adding structures. added 
+   multiline quotes """ ... """ which can be used in images
+   [[ ... ]] etc. Made links, and images.
+
+   Images, links and basic headings work. Along with codelines and 
+   blocks. Need to do subheadings.
+
+ 17 june 2020
+
+   Dont do line by line parsing (except for
+   headings, codelines, starlines). 
+   
+   Get rid of newline unnecessary tokens as soon as possible
+
+   Could use "transmogrification" in images [[ ]] to safely get
+   rid on nl* newline tokens, eg:
+   -----
+     "[[*file*", "[[*link*" {
+       # turn 'file*' into 'image.file*' and 'link*' into 'image.link*'
+       replace "[[*" "[[*image."; push; push; .reparse 
+     }
+   ,,,,
+   But this script doesn't use that technique.
+
+ 16 june 2020
+
+   Would also like to implement lists.
+
+   revising again. I think in order to simplify, we can remove the "space*"
+   token. All words will be separated by only one space.
+   Also, need a better way to get rid of tokens
+
+ 15 june 2020
+
+   Revising this to remove unnecessary newline "nl*" tokens and to 
+   try to simplify the logic. Also, will try to methodically view 
+   different text parsing. we can try, for example
+     >> pep -f eg/mark.html.pss -i '"link text" www.google.com'
+   as a way to test structures of text and how it is parsed/transcribed.
+
+ 24 Feb 2020
+
+   Starting to make an image marker eg: [[/images/screenshot.png >>]
+   This needs to start the line it is on.
+
+   Revisiting this and doing more work to see if I can markup
+   a starline*codeline* token sequence as a table. I dont think
+   that all the nl* newline tokens are really necessary, mainly the
+   ones that preceed other tokens on the stack. eg nl*starline*
+   seems unnecessary. We could reduce this to just starline*.
+   This kind of parsing and translating seems much more feasible to
+   me now, especially making use of the pep -I interactive debugger.
+   After all, a big complex sed script is just as confusing for
+   the uninitiated.
+
+ 14 sept 2019
+
+  tried to implement starline for emphasis.
+
+ 9 september 2019
+
+  Doing more work on this. I will not try to parse sections and
+  subsections. I will just subsume headings into lines. and 
+  output html. Very basic html output is working.
+
+ 26 august 2019
+
+  A bit more work. This does not seem easy to do. Mainly because
+  of newline problems, and also, lots of different token types
+  that need to be resolved into text. eg link, uword, word, mixword
+  quoted text, utext, uword, ...
+
+ 23 august 2019
+
+  Started this script. Made quite a bit of progress. It is necessary
+  to write a lot of rules, but the coding is straightforward and 
+  it seems easy to debug. We can adapt this script to output different
+  formats.
+
+  I realised that I would like syntax like this (now implemented)
+
+   * combine begin and ends tests into quotesets.
+   >> B"http", B"www.", E".txt", E".c" { ... }
+
+ 
+*#
+
+  begin {
+    # make room for document title, and table of contents
+    # mark "toc"; add "toc*"; push; 
+    # mark "title"; add "title*"; push; 
+    nop;
+  }
+
+  read;
+
+  [\n] { 
+    put; clear; 
+    # just for debugging.
+    # add "line: "; lines; add "\n"; print; clear;
+    count;
+    # check counter as flag. If set, then dont generate newline
+    # tokens.
+    "0" { clear; add "nl*"; push; .reparse }
+  }
+
+  [\r] { clear; .restart }
+  # space includes \n\r so we can't use the [:space:] class
+  [ \t] { while [ \t]; clear; .reparse }
+
+  # cant really use ' because then we can't write "can't" for example
+  '"' { 
+    # check for multiline syntax """
+    while ["];
+    !'"' { put; clear; add "word*"; push; .reparse }
+    whilenot ["\n]; 
+    # check for multiple """ for multiline quotes
+    (eof) { put; clear; add "text*"; push; .reparse }  
+    read;
+    # one double quote on line.
+    [\n] { put; clear; add "text*"; push; .reparse }  
+    # closing double quote.
+    put; clear; add "quoted*"; push; .reparse 
+  }
+
+  # [[ ]] >> << are parse as words (space delimited)
+
+  # everything else is a word
+  # all the logic in the word* block could just be here.
+  !"" { 
+    whilenot [:space:]; put;  
+    # the subsection marker
+    "...." { clear; add "4dots*"; push; .reparse }
+    clear;
+    add "word*"; push; .reparse 
+  }
+
+# end of the lexing phase of the script
+# start of the parse/compile/translate phase
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+#*
+   A list of tokens types:
+     codeline text word quoted file >> << [[ ]] link nl
+*#
+
+#-----------------
+# 1 token
+
+  pop; 
+
+  #(eof).!"end*" {
+  #}
+
+  "word*" {
+
+    clear; get; 
+    # no numbers in headings!
+    [A-Z] { 
+      clear; add "utext*"; push; .reparse 
+    }
+    # the subheading marker
+    #"...." { clear; add "4dots*"; push; .reparse }
+    # emphasis or explanation line marker 
+    #"*" { clear; add "star*"; push; .reparse }
+    # image markers
+    "[[" { add "*"; push; .reparse }
+    "]]" { add "*"; push; .reparse }
+    # the code line marker, and float right marker
+    ">>" { 
+      # convert to html entities
+      clear; add "&gt;&gt; "; put; clear; 
+      add ">>*"; push; .reparse
+    }
+    # the float left marker
+    "<<" { 
+      clear; add "&lt;&lt; "; put; clear; 
+      add "<<*"; push; .reparse 
+    }
+
+    # multiline quotes
+    '"""' { 
+      clear; until '"""'; 
+      !E'"""' { 
+        put; clear; add "text*"; push; .reparse 
+      }
+      clip; clip; clip;
+      put; clear; add "quoted*"; push; .reparse 
+    }
+
+    # multiline codeblocks start with --- on a newline
+    B"---".[-] { 
+      clear; pop; 
+      "nl*" {  
+        clear; until ',,,'; 
+        !E',,,' { 
+          put; clear; add "text*"; push; .reparse 
+        }
+        clip; clip; clip;
+        replace ">" "&gt;"; replace "<" "&lt;";
+        put; clear; 
+        add '<pre class="code-line">'; get; add '</pre>'; put; clear;
+        # discard extra ,,,,
+        while [,]; clear;
+        add "codeline*"; push; .reparse 
+      }
+      push; add "word*"; push; .reparse
+    }
+
+    # starline starts with a star 
+    '*' { 
+      clear; add "&otimes; "; put; clear; pop; 
+      "nl*" {
+        clear; 
+        # clear leading whitespace
+        while [ \t]; clear;
+        add "<em class='code-description'>";
+        whilenot [\n]; add "</em>"; put; clear;
+        add "emline*"; push; .reparse
+      }
+      push; add "word*"; push; .reparse
+    }
+
+    # document title is marked up by ==* at start of line 
+    '==*' { 
+      clear; pop; 
+      "nl*" {
+        clear; 
+        # clear leading whitespace
+        while [ \t]; clear;
+        add "<h1 class='doc-title'>";
+        whilenot [\n]; add "</h1>"; put; clear;
+        add "text*"; push; .reparse
+      }
+      push; add "word*"; push; .reparse
+    }
+
+    # the code block begin marker. can't read straight to end marker 
+    #B"---".[-] { clear; put; add "---*"; push; .reparse }
+
+    B"http://",B"https://",B"www.",B"ftp://",B"sftp://" { 
+      clear; add "link*"; push; .reparse
+    }
+
+    # file names 
+    !"/" {
+      B"/",B"../",B"img/" {
+        E"/",E".c",E".txt",E".html",E".pss",E".pp",E".js",E".java",
+        E".tcl",E".py",E".pl",E".jpeg",E".jpg",E".png" {
+          clear; add "file*"; push; .reparse
+        }
+      }
+    }
+
+    # file names in single quotes, eg 'asm.pp'
+    B"'".E"'".!"'".!"''".!"'/'" {
+      clip; clop;
+      E"/",E".c",E".txt",E".html",E".pss",E".pp",E".js",E".java",
+      E".tcl",E".py",E".pl",E".jpeg",E".jpg",E".png" {
+        put; clear; add "file*"; push; .reparse
+      }
+    }
+
+    clear; add "word*"; 
+    # leave the wordtoken on the workspace.
+  }
+
+  # get rid of insignificant tokens at the end of the document
+  "[[*","<<*",">>*","quoted*" {
+    (eof) {
+      clear; add "word*"; 
+    }
+  }
+
+  # resolve links at the end of the document 
+  "link*" {
+    (eof) {
+      clear;
+      add "<a href='"; get; add "'>"; get; add "</a>"; 
+      put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # resolve file links at the end of the document 
+  "file*" {
+    (eof) {
+      clear;
+      add "<a href='"; get; add "'><em><tt>"; get; add "</em></tt></a>"; 
+      put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+#-----------------
+# 2 tokens
+  pop; 
+
+  # eliminate insignificant newlines and ellide words
+  # and upper case text
+  "nl*word*","nl*text*",
+  "emline*text*","emline*word*",
+  "text*utext*","word*utext*","utext*text*","utext*word*",
+  "word*word*","text*word*","text*text*","word*text*",
+  "quoted*text*", "quoted*word*" {
+    # check for pattern "file 'asm.pp' or folder '/books/'
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide upper case text 
+  "utext*utext*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "utext*"; push; .reparse
+  }
+
+  # ellide as text insignificant "]]" image end tokens 
+  "word*]]*","text*]]*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide multiple newlines 
+  "nl*nl*" {
+    clear; get; ++; get; --; add "<p>\n"; put; clear;
+    add "nl*"; push; .reparse
+  }
+
+  # codelines. nl*>>* should not occur in image markup
+  "nl*>>*" {
+    clear; 
+    # clear leading whitespace
+    while [ \t]; clear;
+    whilenot [\n]; 
+    replace ">" "&gt;"; replace "<" "&lt;";
+    put; clear;
+    add '<pre class="code-line">'; get; add '</pre>'; put; clear;
+    add "codeline*"; push; .reparse
+  }
+
+  # eliminate insignificant newlines at end of document
+  "word*nl*","text*nl*" {
+    (eof) {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # mark this up as a "recipe".
+  # sample: 
+  #   * description
+  #   >> sh code.to.exec
+  "emline*codeline*" {
+    clear; 
+    add '
+     <p />
+     <table width="60%" border="0">
+     <tr><td>'; 
+    get; add "</td></tr>\n";
+    add "<tr><td>"; ++; get; 
+    add "</td></tr>\n</table>\n";
+    --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  "word*codeline*","text*codeline*","quoted*codeline*" {
+    clear; get; add " ";  
+    add "\n<table><td>"; ++; get; 
+    add "</td></table>\n";
+    --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # a line of code at the start of the document
+  "codeline*" {
+    clear; 
+    add "<table><td>"; get; 
+    add "</td></table>\n";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # sample: tree www.abc.org  (also at the start of document)
+  "word*link*","text*link*","nl*link*" {
+    clear; get; add " ";  
+    add "<a href='"; ++; get; add "'>"; get; --; add "</a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # link at the start of document (only 1 token)
+  "link*" {
+    clear;
+    add "<a href='"; get; add "'>"; get; add "</a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # sample: condor /file.txt
+  "word*file*","text*file*","nl*file*" {
+    clear; get; add " ";  
+    add "<a href='"; ++; get; add "'><em><tt>"; get; --; add "</tt></em></a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # file link at start of document 
+  "file*" {
+    clear;
+    add "<a href='"; get; add "'><em><tt>"; get; add "</tt></em></a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  "quoted*file*","quoted*link*" {
+    clear; 
+    # remove quotes from quoted text 
+    get; clip; clop; put; clear;
+    add "<a href='"; ++; get; --; add "'>"; get; add "</a>"; 
+    put; clear; add "text*"; push; .reparse
+  }
+
+  # get rid of irrelevant ">>" tokens (ie not in image, nor at
+  # start of code line).
+  # image format: [[ /file.txt "caption" >> ]]
+  E">>*"{
+    !B"nl*".!B"quoted*".!B"file*".!B"link*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # ellide insignificant "<<" tokens (ie not in image markup)
+  B"<<*".!E"]]*" {
+    replace "<<*" "word*"; push; push; .reparse
+  }
+
+  # ellide insignificant "...." tokens (ie not in subsection heading)
+  B"4dots*".!E"nl*".!"4dots*" {
+    replace "4dots*" "word*"; push; push; .reparse
+  }
+
+  # ellide insignificant "...." tokens (ie not in subsection heading)
+  E"4dots*".!B"utext*".!B"uword*".!"4dots*" {
+    replace "4dots*" "word*"; push; push; .reparse
+  }
+
+  # eliminate newlines in image markup 
+  "[[*nl*" { 
+    clear; get; ++; get; --; put; clear;
+    add "[[*"; push; .reparse 
+  }
+  "nl*]]*" { 
+    clear; get; ++; get; --; put; clear;
+    add "]]*"; push; .reparse 
+  }
+
+  # get rid of insignificant "[[" image start tokens 
+  # image format: [[ /file.txt "caption" >> ]]
+  B"[[*".!"[[*" {
+    !E"file*".!E"link*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  #----------------------
+  # 3 tokens
+  pop;
+
+  # top level headings, all upper case on the line in the source document
+  "nl*utext*nl*","nl*uword*nl*" {
+    clear; get; 
+    # add a link so that table-of-contents works
+    add "<!-- - - - - - - - - - - - - - - - - - -->\n";
+    add "<a name='"; ++; get; add "'></a>\n"; 
+    add '<h3 class="section-heading">'; get; 
+    add ' <a href="#toc" title="table of contents" class="toc-link">(&uarr;)</a>';
+    add "</h3>\n"; --; put; clear;
+    # transfer nl value
+    ++; ++; get; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+  # eliminate newlines within image markup 
+  # this is important because nl*>>* is considered the
+  # start of a "codeline".
+  "[[*file*nl*","[[*link*nl*","link*quoted*nl*","file*quoted*nl*" { 
+    clip; clip; clip; push; push; .reparse 
+  }
+
+  # simple image format: [[ /path/file.jpg ]]
+  "[[*file*]]*","[[*link*]]*" {
+    clear; ++; add "<img src='"; get; add "' alt=''>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # incorrect image format: [[ /path/file.jpg word
+  # just becomes text. I probably should hyperlink the links
+  # but wont for now.
+  "[[*file*word*","[[*link*word*",
+  "[[*file*text*","[[*link*text*" {
+    clear; get; 
+    add " "; ++; get; add " "; ++; get; --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  #----------------------
+  # 4 tokens
+  pop;
+
+  # second level headings, eg SUBSECTION ....  
+  "nl*utext*4dots*nl*", 
+  "nl*uword*4dots*nl*" {
+    clear; get; 
+    # add a link so that table-of-contents works
+    add "<!-- - - - - - - - - - - - - - - - - - -->\n";
+    add "<a name='"; ++; get; add "'></a>\n"; 
+    add '<h4 class="sub-section-heading">'; get; 
+    add ' <a href="#toc" title="table of contents" class="toc-link">(&uarr;)</a>';
+    add "</h4>\n"; --; put; clear;
+    # transfer nl value
+    ++; ++; ++; get; --; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+ #*
+ Better html for images with captions
+ <div class=figure>
+ <p><img src="eiffel.jpg"
+ width="136" height="200"
+ alt="Eiffel tower">
+ <p>Scale model of the
+ Eiffel tower in
+ Parc Mini-France
+ </div>
+ *#
+
+  # image format with caption: [[ /path/file.jpg "caption" ]]
+  "[[*file*quoted*]]*","[[*link*quoted*]]*" {
+    clear;  
+    add "<div class='figure-right'><p><img src='"; ++; get; 
+    add "' alt=''><p>"; ++; get;
+    add "</div>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with float: [[ /path/file.jpg >> ]]
+  "[[*file*>>*]]*","[[*link*>>*]]*" {
+    clear; add "<img class='float-right' src='"; 
+    ++; get; add "' alt=''></div>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with float: [[ /path/file.jpg >> ]]
+  "[[*file*<<*]]*","[[*link*<<*]]*" {
+    clear; add "<img class='float-left' src='"; 
+    ++; get; add "' alt=''>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  #----------------------
+  # 5 tokens
+  pop;
+
+  # image format with caption and float: [[ /path/file.jpg "caption" >> ]]
+  "[[*file*quoted*>>*]]*","[[*link*quoted*>>*]]*" {
+    clear;  
+    add "<div class='figure-right'><p><img src='"; ++; get; 
+    add "' alt=''><p>"; ++; get; add "</div>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with caption and float: [[ /path/file.jpg "caption" >> ]]
+  "[[*file*quoted*<<*]]*","[[*link*quoted*<<*]]*" {
+    clear;  
+    add "<div class='figure-left'><p><img src='"; ++; get; 
+    add "' alt=''><p>"; ++; get; add "</div>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  push; push; push; push; push;
+
+  (eof) {
+    add "\n<!-- Html generated by ";
+    add "bumble.sf.net/books/parse/eg/mark.html.pss --> \n"; print; clear;
+    # workspace should be empty
+    !"" { 
+      put; clear; 
+      add "<!-- Workspace not empty at <eof> ! "; get; add " -->\n";  
+      print;
+    }
+
+    add "<!-- Token stack was: "; print; clear;
+    unstack; print; stack; clear; 
+    add " -->\n"; print; clear; 
+    # pop; 
+    pop; 
+    "word*","text*","link*","file*","quoted*","emline*","nl*" {
+      clear; 
+      add '
+
+ <!DOCTYPE html>
+ <html>
+ <head>
+
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="generator" content="bumble.sf.net/books/pars/eg/mark.html.pss">
+    <meta name="author" content="mjb ~ http://bumble.sf.net">
+    <meta name="revision" content="">
+    <title>...</title>
+
+    <style>
+    /* 
+     *  a style sheet for an html book */
+    body 
+      { margin-left: 5%; margin-right: 5%; }
+    h1.doc-title 
+      { color: lightslategray; text-align: center; font-size: large; } 
+    h3.section-heading { 
+      border: 1px solid grey; margin-left: -1em; 
+      border-radius: 1em;
+      box-shadow: black 0.5em 0.5em 0.3em;
+    }
+    h4.sub-section-heading { 
+      border: 1px dotted grey; 
+      border-radius: 1em;
+      font-style: italic; font-variant: small-caps;
+    }
+
+    ul.top-menu
+     { padding: 1px .2em; margin-left: 0; border-bottom: 4px solid gray; }
+    ul.top-menu li
+     { list-style: none; margin: 0; display: inline; }
+    ul.top-menu li a {
+      padding: 1px 0.2em; margin-left: 0.1em; border: 1px solid gray;
+      border-radius: 6px;
+      border-bottom: none; text-decoration: none;
+    }
+    ul.top-menu li a:hover { 
+      background-color: silver; 
+    }
+
+    PRE.code-line 
+      { margin-right: 7em; margin-left: 2em; font-size: normal; }
+
+    EM.comment 
+      { font-size: medium; }
+
+    EM.code-description
+      { font-weight: normal; border-bottom: 1px solid lightgrey; width: 90% }
+
+    EM.code-description:before
+    /*  { content:"&gt;" } */
+
+    SPAN.big-quote
+      { font-size: xlarge; }
+
+    TABLE.definition-table
+      { width: 40%; float: right; border: 1px solid silver; border-collapse: collapse; }
+
+    .definition-table td
+      { border: 1px solid silver; padding: 0 .5em 0 .5em; }
+    .definition-table th 
+      { border: 1px solid silver; }
+    .definition-table caption
+      { font-style: oblique; font-weight: bold; }
+
+    DIV#toc
+      { float: right; border: 2px dashed gray; margin-left: 1em }
+    #toc ul 
+      { list-style-type: none;
+        margin: 0 0 0 0; padding-left: 1em; border: 2px dashed white; }
+    #toc li
+      { } 
+    #toc li a 
+      { color: darkslategray; text-decoration: none; } 
+    #toc li a:hover 
+      { color: black; text-decoration: underline; } 
+    #toc h4
+      { font-variant: small-caps; padding-left: 0.5em }
+
+    /* the link on each heading which leads back to the table of contents */
+    A.toc-link
+     { text-decoration: none; color: lightblue; text-align: right; }
+    A:hover.toc-link
+     { background-color: lightgray; }  
+
+    dl.document-info-list
+     { width: 40%; font-size: small }
+    dl.document-info-list dt 
+     { float: left; padding-right: 1em; text-align: right;
+       background: whitesmoke; margin-bottom: 3px; }
+    dl.document-info-list dd
+     { background: whitesmoke; margin-bottom: 3px; font-family: courier, monospace; }
+
+
+    dl.weblist
+     { margin-left: 1em; padding-left: 1em; border-left: 4px solid lightgrey; }
+    dl.weblist dd
+     { margin-left: 0; padding-left: 1em; font-style: oblique }
+    dl.weblist a
+     { color: gray; text-decoration: none; }
+
+    /* an element which floats to the right */
+    .float-right { 
+       float: right; width: 30%; 
+       margin: 0 0 .5em .5em; padding: .5em;
+       background-color: white; border: 1px solid #666;
+    }
+
+    /* an element which floats to the left */
+    .float-left { 
+       float: left; width: 30%; 
+       margin: 0 0 .5em .5em; padding: .5em;
+       background-color: white; border: 1px solid #666;
+    }
+
+    div.figure-left {
+      float: left;
+      width: 30%;
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: thin silver solid;
+      margin: 0.5em;
+      padding: 0.5em;
+    }
+
+    div.figure-right {
+      float: right;
+      width: 30%;
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: thin silver solid;
+      margin: 0.5em;
+      padding: 0.5em;
+    }
+
+   </style>
+   </head>
+   <body>
+     <a name="toc"></a>
+     <ul class="top-menu">
+     <li><a href="/books/pars/" title="Pep">Pep home</a></li>
+     <li><a href="/books/pars/eg/" title="Pep examples">Pep example scripts</a></li>
+     <li><a href="/books/pars/pars-book.txt">Text Doc</a> </li>
+     </ul>
+
+   ';
+   get;
+
+      add "\n</body></html>\n"; add "\n"; print; 
+    }
+  }

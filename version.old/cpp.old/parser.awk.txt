@@ -1,0 +1,20 @@
+BEGIN {
+  FS = ":"; 
+  sTokens = "";
+  sAttributes = "";
+};
+
+!/^#/ {
+ print "Input line: " $0;
+ sTokens = sTokens $1;
+ sAttributes = sAttributes $2;
+ print "Token Stack ........";
+ print sTokens;
+ print "Attribute List .....";
+ print sAttributes;
+
+ if (sTokens ~ /|plus-sign|identifier$/) 
+ { 
+   sub(/identifier$/, "ID", sTokens);
+ }
+}

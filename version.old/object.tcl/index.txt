@@ -1,0 +1,14 @@
+
+ == /books/pars/object.tcl folder
+
+This folder contains the beginning of an implementation of the parsing virtual
+machine in the tcl language that will be used in conjuntion with the
+parse-script "compile.tcl.pss" or "translate.tcl.pss"
+  
+  * usage  
+  ---
+   pp -f translate.tcl.pss eg/exp.tolisp.pss > object.tcl/test.tcl
+   cd object.tcl; echo "a+b*c+(a-4)" | ./test.tcl
+  ,,,
+
+

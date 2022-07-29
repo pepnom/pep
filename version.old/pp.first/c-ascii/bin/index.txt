@@ -1,0 +1,6 @@
+
+ = Binaries for the Chomski interpreter =
+
+ This folder contains executable files for
+ MS Windows file:chomski.exe and Linux file:chomski
+

@@ -1,0 +1,322 @@
+#*
+
+  This script attempts to parse a "markdown"-like syntax (this script header is
+  an example of the document format) and to transform it into LaTeX source
+  code. The script runs on on the "pep" parsing machine which is implemented
+  at http://bumble.sf.net/books/pars/ . There are other ways, which may seem
+  better or more straight-forward of achieving this. The ANTLR parsing system
+  can be used to right grammars that can parse markdown like structures, or 
+  just regular expressions can be used. But this is a good exercise for the 
+  parse machine, and more complex structures can be recognised than with plain
+  regular expressions.
+
+  This is an attempt at a clean-slate implementation of the "mark" scripts. But
+  this one will first generate LaTeX output
+
+  Required tokens are, at least: 
+    >>* ---* codeline* codeblock* link* file* quoted* emline* uutext* 
+    uuword* nl* word* text* star* [[* (for images)
+    We dont actually need heading* and subheading* tokens because they get
+    transpiled (into LaTeX) as soon as they are seen in the document.
+
+STATUS
+
+  A work in progress. The document parses as text, but not all structures
+  are recognised. This file contains an interesting way of resolving or 
+  removing parse tokens when they are no longer significant- it uses a 
+  negative approach such as...
+
+  ----
+    # remove insignificant codeblock* tokens
+    !"codeblock*".E"codeblock*".!B"emline*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  ,,,,
+
+  Another interesting idea: use the accumulator as a state marker when
+  parsing in codeblocks*. So if acc>0 then dont create uuword or other 
+  tokens.
+
+THIS DOCUMENT FORMAT
+
+  This is a document format I have used in many code and 
+  booklet files. It is a kind of markdown, with even less markup than
+  markdown. It would be useful to try to transform it to markdown.
+
+LATEX 
+
+  \begin{verbatim}...\end{verbatim}
+
+HISTORY 
+
+   2 june 2021
+    Much progress, a basic latex doc has been formed. Now to refine
+    and introduce new tokens. Have done sections, subsections, and 
+    codeblocks. Found an elegant way to eliminate insignificant tokens
+    using a "negative" logic.
+
+    Continuing to write this. The unstack;print;stack trick is 
+    very useful. Parsing and printing text with just upper case headings.
+    This seems a promising incremental way to parse
+
+   1 June 2021
+    Try the unstack trick at the parse label to debug token
+    reductions. I fixed the "stack" command in object/machine.interp.c
+    so that it updates the tape pointer.
+
+  23 April 2021
+    Continuing to work on the script and look for ways to 
+    simply debug it. I have come to the idea that ".reparse"
+    should also print the stack if a particular switch is set.
+    This would allow the stack reductions to be easily followed.
+
+  21 April 2021
+    Script begun. This is a second attempt.
+
+*#
+  
+  begin {
+    # create a dummy newline so that doc structures work even
+    # on the first line of the file/stream.
+    add "nl*"; push;
+  }
+
+  read;
+
+  ![:space:] {
+    whilenot [:space:]; put;
+    clear; add "word*"; push; .reparse 
+  }
+
+  # keep leading space in newline token?
+  [\n] { while [ ]; put; clear; add "nl*"; push; .reparse }
+  [\r\t ] { clear; .restart }
+
+parse>
+  # for debugging
+  add "line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+  # -------------
+  # 1 token
+  pop;
+
+  "nl*" { nop; }
+
+  # here we classify words into other tokens
+  "word*" {
+    clear; get; 
+    # no numbers in headings!
+    [A-Z] { clear; add "uuword*"; push; .reparse }
+
+    # at least three --- on a newline marks a code block start
+    B"---".[-] { clear; add "---*"; push; .reparse }
+
+    # >> on a newline marks a code block start
+    ">>" { add "*"; push; .reparse }
+
+    # star on newline marks emphasis, list or code description 
+    "*" { clear; add "star*"; push; .reparse }
+
+    # subheading marker
+    B"....".[.] { clear; add "4dots*"; push; .reparse }
+
+    clear; add "word*";
+  }
+
+  pop;
+  # -------------
+  # 2 tokens
+
+  # ellide text
+  "word*word*","text*word*",
+  "word*uuword*","text*uuword*","uutext*word*","uuword*word*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+
+  # remove insignificant nl* newline tokens. This may need more thought
+  #*
+  !"nl*".B"nl*".!E"---*".!E">>*".!E"star*".!E"uuword*".!E"uutext*" {
+    clear; get; ++; get; --; put; clear;
+    replace "nl*" ""; push; .reparse
+  }
+  *#
+
+  # We are using a dummy nl* token at the start of the doc, so the 
+  # codeblock* codeline* etc tokens are not able to be the first token
+  # of the document. So we can remove the !"codeblock*". clause.
+
+  # remove insignificant codeblock* tokens
+  E"codeblock*".!B"emline*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant codeline* tokens
+  E"codeline*".!B"emline*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant emline* tokens (not followed by codeblock/line)
+  # the logic is slightly diffferent because emline* is significant before
+  # other tokens, not after.
+  B"emline*".!E"nl*".!E"codeline*".!E"codeblock*" {
+    # clear; get; add " "; ++; get; --; put; clear;
+    replace "emline*" "text*"; push; push; .reparse
+  }
+
+  # remove insignificant 4dots* tokens
+  E"4dots*".!B"uutext*".!B"uuword*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant star* tokens
+  E"star*".!B"nl*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant ---* tokens
+  E"---*".!B"nl*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant >>* tokens
+  # lets assume that codelines cant start a document? Or lets
+  # generate a dummy nl* token at the start of the document to 
+  # make parsing easier.
+  # !">>*".E">>*".!B"nl*" {
+  E">>*".!B"nl*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide upper case text 
+  "uuword*uuword*","uutext*uuword*" {
+    clear; get; add " "; ++; get; --; put; 
+    clear; add "uutext*"; push; .reparse
+  }
+
+  # ellide multiple newlines 
+  "nl*nl*" {
+    clear; get; ++; get; --; put; clear;
+    add "nl*"; push; .reparse
+  }
+
+  # emphasis line (starts with *) 
+  "nl*star*" { 
+    clear; whilenot [\n]; put; clear;
+    add "\n \\emph{"; get; add "}"; put; clear;
+    add "emline*"; push; .reparse
+  }
+
+  # code line (starts with >>) 
+  "nl*>>*" { 
+    clear; whilenot [\n]; put; clear;
+    add "\n \\begin{verbatim} "; get;
+    add " \\end{verbatim} \n"; put; clear;
+    add "codeline*"; push; .reparse
+  }
+
+  # code block marker 
+  "nl*---*" { 
+    clear; until ",,,"; clip; clip; clip;
+    put; while [,]; clear;
+    add "\n \\begin{lstlisting}[breaklines] \n"; get;
+    add "\n \\end{lstlisting} \n"; put; clear;
+    add "codeblock*"; push; .reparse
+  }
+
+  # a code block with its preceding description
+  "emline*codeblock*" {
+    clear; get; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # a code line with its preceding description
+  # add some tabular LaTeX markup here.
+  "emline*codeline*" {
+    clear; get; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  pop;
+  # -------------
+  # 3 tokens
+
+  # top level headings, all upper case on the line in the source document
+  # dont need a "heading" token because we dont parse the document as a 
+  # heirarchy, we just render things as we find them in the stream.
+  "nl*uutext*nl*","nl*uuword*nl*" {
+    clear; 
+    # Check that heading is at least 4 chars
+    ++; get; --; clip; clip; clip; 
+    "" { 
+      add "nl*text*nl*"; push; push; push; .reparse
+    }
+    clear;
+    get; # newline
+    add '\\section{'; ++; get; --; add "}"; put; 
+    clear;
+    # transfer nl value
+    ++; ++; get; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+  # simple reductions 
+  "nl*text*nl*","nl*word*nl*","text*text*nl*" {
+    clear; get; ++; get; --; put; clear;
+    ++; ++; get; --; put; --; clear; # transfer newline value
+    add "text*nl*"; push; push; .reparse
+  }
+
+  pop;
+  # -------------
+  # 4 tokens
+
+  # sub headings, 
+  "nl*uutext*4dots*nl*","nl*uuword*4dots*nl*" {
+    clear; 
+
+    # Check that sub heading text is at least 4 chars ?
+    # yes but need to transfer 4dots and nl
+    # ++; get; --; clip; clip; clip; 
+    # "" { add "nl*text*nl*"; push; push; push; .reparse }
+
+    clear;
+    get; # newline
+    add '\\subsection{'; ++; get; --; add "}"; put; clear;
+    # transfer nl value
+    ++; ++; ++; get; --; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+  push; push; push; push;
+
+  (eof) {
+    pop; pop; pop;
+    "text*nl*","text*" {
+      clear; 
+      # make a valid LaTeX document
+      add "\\documentclass{article} \n";
+      add "\\usepackage{listings} \n";
+      add "\\lstset{basicstyle=\\ttfamily, numbers=left, frame=single} \n";
+      add "\\begin{document} \n";
+      get; 
+      add "\n\\end{document} \n";
+      print; clear;
+      add "\n\n Document parsed as text*!\n"; print; quit;
+    }
+
+    push; push; 
+    add "Document parsed unusually!\n";
+    add "Stack at line "; lines; add " char "; chars; add ": "; print; clear; 
+    unstack; print; stack; add "\n"; print; clear;
+    quit;
+
+  }

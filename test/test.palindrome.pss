@@ -1,0 +1,71 @@
+#*
+ A demonstration of parsing palindromes with the 
+ parse machine language. This looks much less elegant
+ than one would expect. A recursive palindrome recogniser
+ in c or forth is much more elegant.
+
+ Also, this doesnt really work because "aaabbbaaa" is
+ rejected as a palindrome. This is because it contains sub
+ palindromes "aa", "aaa", "bb", "bbb" etc
+ Added "pal*pal*pal*" and "pal*c*pal*" to a block test.
+ Had the idea to read all letter blocks (eg: "aaa" "bbb") in
+ one go instead of letter by letter.
+*#
+
+ read; 
+ [:space:] { clear; .reparse }
+ put; clear; add "c*"; push; 
+
+parse>
+
+ pop; pop;
+ "c*c*" { 
+    swap; ++; 
+    (==) { 
+      --; swap; 
+      clear; 
+      get; ++; get; --; put; clear;
+      add "pal*"; push;
+      .reparse  # also, catch EOF condition
+    } 
+    --; swap;
+ } 
+ push; push;
+
+ pop; pop; pop;
+
+ "pal*c*pal*",  
+ "pal*pal*pal*",  
+ "c*pal*c*",  
+ "c*c*c*" { 
+   swap; ++; ++;
+   (==) {
+     --; --; swap;
+     clear;
+     get; ++; get; ++; get; --; --; put; 
+     clear;
+     # print found palindromes
+     add "found palindrome: "; get; add "\n";  
+     print; clear;
+     add "pal*"; push;
+     .reparse
+   }
+   --; --; swap;
+ }
+
+ push; push; push;
+ 
+ (eof) {
+   pop; 
+   "pal*" { 
+     clear; 
+     add "characters read: "; cc; add "\n";
+     add "its a palindrome! ("; get; add ")\n";
+     print; 
+     clear; quit;
+   }
+   state;
+   clear; add "nope not a palindrome... \n"; print; quit;
+ }
+
+

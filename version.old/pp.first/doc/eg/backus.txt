@@ -1,0 +1,100 @@
+
+ # a script which turns backus-naur grammars into 
+   the parse-scripter
+
+   This is a 'self-referential script' in the sense 
+   that it uses the language to produce itself. For
+   example, the script takes grammar rules written
+   in the form
+    command: word semicolon;
+   (which is a kind of backus naur form)
+   and from that rule produces the scripts statements
+  
+   /word*semicolon*/
+   {
+     clear;
+     add 'command*';
+     push;
+   }
+  
+   The necessary "pop;" commands are not yet generated.
+   This script has not been tested.
+
+ #
+
+ [a]
+ {
+   while [a];
+   add "*";
+   put; clear;
+   add "word*";
+   push;
+ }
+
+ /:/
+ {
+   clear;
+   add "colon*";
+   push;
+ }
+ 
+ /;/
+ {
+   clear;
+   add "semi-colon";
+   push;
+ }
+
+ [ ]
+ {
+   clear;
+ }
+
+ pop; pop; 
+ /word*word*/
+ {
+   get;
+   ++; get; --;
+   put;
+   clear;
+   add "wordset*";
+   push;
+ }
+
+ /word*colon*/
+ /wordset*colon*/
+ {
+   clear;
+   add "left-side*colon*";
+   push; push;
+ }
+ 
+ /colon*word*/
+ {
+   ++;get;--;
+   put;
+   clear;
+   add "right-side*";
+   push;
+ }  
+
+ pop;
+ /left-side*right-side*semi-colon*/
+ {
+   add "/";
+   ++; get; --;
+   add "/";
+   newline;
+   add "  clear;";
+   newline;
+   add "  add '";
+   get;
+   add "';";
+   newline;
+   add "  push;";
+   newline;
+   add "}";
+   clear;
+   add "rule*";
+   push; 
+ }

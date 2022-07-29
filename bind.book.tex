@@ -1,0 +1,11 @@
+
+ %% This latex file should just create a bindable book with 8
+ %% logical pages per folio (i.e 2 physical A4 sheets).
+
+ %%Signatures with pdfpages
+    \documentclass[a4paper,10pt]{article}
+    \usepackage{pdfpages}
+    \begin{document}
+    \includepdf[pages=-,signature=8,landscape]{book.pdf}
+    \end{document}
+

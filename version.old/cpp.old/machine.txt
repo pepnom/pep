@@ -1,0 +1,100 @@
+
+# This tries to create a virtual machine, a virtual machine
+# which will be particular suited for the task of parsing
+# and compiling.
+#
+# The machine consists or a stack, a tape, and a work area.
+# The stack is manipulated with "push" and "pop", the tape with
+# "get" and "put", and the workarea is affected by the 
+# "clear" and "add" commands.
+#
+# Also, the machine includes a pointer which can be manipulated
+# explicitly with the "+1;" (etc) commands, and which is 
+# affected implicitly with the push and pop commands. In the following
+# text, the machine implements itself in the c language.
+#
+# get - places the contents of the current item of the tape into
+#       the work area. The current item of the tape is the item
+#       to which the pointer is currently pointing
+# put - writes the contents of the work-area to the current item
+#       of the tape.
+# push - 
+#   pushes the contents of the work-area onto the stack. Also
+#   the tape pointer is incremented by one.
+# pop -
+#   pops the last item of the stack into the work-area. The 
+#   tape pointer is decremented by one.
+# clear -    
+#   deletes the contents of the work-area.
+# add -
+#   adds the specified text to the text contained in the work-area.
+# +n -
+#   increments the tape pointer by n places.
+# -n -
+#   decrements the tape pointer by n places.
+#
+#
+# The tape of the virtual machine is conceived as suitable
+# for containing the "attributes" of the tokens as the grammar is being 
+# parsed. For example, the attribute of the "add" command is
+# the text which follows the command and which will be added to the 
+# work-area. The stack of the virtual machine is designed to hold the
+# tokens as the are encountered in the lexified input stream. 
+# This virtual machine is somewhat inspired by the stream-editor program
+# sed, which also can be viewed as a simple virtual machine. The 
+# machine is designed to allow the implementation of certain types 
+# of grammars and uses right-reduction parsing.
+
+
++1;
+pop; pop;
+
+/|Word|Semi-Colon/
+{
+  clear; 
+  get;
+  +1;
+  /pop/
+  {
+    clear;
+    add "pointer--;";
+    add "sWorkArea =";
+    add "aaTokenStack(pointer);";
+  }
+  put;
+  push;
+}
+
+pop;
+
+/|Word|String|Semi-Colon/
+{
+  clear;
+  get;
+  /add/
+  {
+    clear;
+    add "sWorkArea = sWorkArea +";
+    +1;
+    get;
+    -1;
+    add ";";
+    put; clear; put;
+  }
+
+  /print/
+  {
+    clear;
+    +1;
+  }
+
+}
+
+pop;
+
+/|Pattern|Left-Brace|Command-List|Right-Brace/
+{
+  clear;
+}
+
+

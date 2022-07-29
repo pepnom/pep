@@ -1,0 +1,635 @@
+
+#*
+
+ mark.html.pss
+ 
+OVERVIEW 
+
+ note: check for E"aaa" E"bbb" in compile.pss and throw an error
+
+ This script explores the possibilities of transforming text documents
+ in a kind of markdown format into other formats. The script parses 
+ the document as a heirarchy of elements (in a "bottom-up" fashion)
+ rather than just applying regular expressions to patterns.
+
+ The trick in writing the grammar for this kind of transformation is 
+ not to have too many token types, to reduce the number of brace
+ blocks and grammar rules required.
+
+MARKDOWNISH DOCUMENT FORMAT
+
+ This section documents (yet another) markdown-style format which I
+ personally use. I dont claim this document format is superior to any other
+ markdown-style format, its just that I like it and have used it for a long
+ time.
+
+ No numbers are allowed in section headings, basically because the 
+ machine doesnt have any regular expression matching.
+
+ * An example of the type of document is this file:
+ ----
+  && document title
+  UPPERCASE WORDS
+    1st Level Heading
+  UPPERCASE WITH FOUR DOTS
+    2nd Level Heading 
+  ** Two Stars
+    3rd Level Heading
+    
+  * code lines begin with >>
+  >>
+  Links begin with http:// or https:// or just /
+  code blocks are enclosed in ---- ,,, on their own lines
+  lines beginning with a star are for emphasis or as a 
+  description of a following code line (a recipe).
+
+USES
+  
+  I tried to make a unix man page from an asciidoc document with
+  a2x and it made me go via xsltproc and various other bits of 
+  ridiculous cruft. Whats more, it converted from asciidoc to xml
+  and then to a man page and took about 30 seconds for a tiny document.
+
+  So maybe this script can do better than that.
+
+IDEAS 
+
+  Use "mark" and "go" to build a table of contents from the headings
+  in the first tape cell.
+
+  implemented a "starline*" token. also: "nl/starline/nl/codeline/nl/"
+  Maybe this is feasible, eg resolve:
+  implement images with the same format used by booktolatex.cgi
+
+    emptyline nl lines nl emptyline -> paragraph
+    emptyline nl text nl emptyline -> paragraph
+
+  starline codeblock -> titlecodeblock ;
+  could also parse quoted-text.
+
+TESTING 
+
+  * convert a text document to html and print to stdout 
+  >> pep -f eg/mark.html.pss pars-book.txt
+
+BUGS
+
+HISTORY
+ 
+ 1 july 2020
+   Need to totally rethink and rewrite. deleting all except
+   tokenisation, then build up script with one structure at 
+   a time. Eliminate all unnecessary tokens.
+   
+   Made progress by incrementally adding structures. added 
+   multiline quotes """ ... """ which can be used in images
+   [[ ... ]] etc. Made links, and images.
+
+ 17 june 2020
+
+   New ideas. "----" doesnt have to start line but is a word.
+   Dont do line by line parsing (except for
+   headings, codelines, starlines). Get rid of newline
+   tokens as soon as possible, eg:
+   ----
+     "nl*text*","nl*word*",,"nl*file*","nl*link*",
+     "nl*heading*","nl*subheading*", 
+     "nl*codeline*","nl*codeblock*",
+     "nl*starline*","nl*[[*" {
+       clop; clop; clop; push;
+       # workspace should be clear now.
+       # transfer value
+       add "\n"; get; --; put; ++; .reparse
+     }
+   ,,,,
+
+   Use transmogrification in images [[ ]] to safely get
+   rid on nl* newline tokens, eg:
+   -----
+     "[[*file*", "[[*link*" {
+       # turn 'file*' into 'image.file*' and 'link*' into 'image.link*'
+       replace "[[*" "[[*image."; push; push; .reparse 
+     }
+
+   ,,,,
+
+   Now we can safely get rid of some newline tokens in images (
+   because newlines are not significant), and also use the new 
+   tokens to transmogrify captions "..." and location indicators
+   >> and << eg
+   ---- 
+     "image.file*quoted*","image.link*quoted*" {
+       # changed quoted into caption
+       push; clear; add "caption*"; push; .reparse
+     }
+
+     "image.file*nl*","image.link*nl*","caption*nl*" {
+       clip; clip; clip; push; .reparse
+     }
+
+   ,,,,
+
+ 16 june 2020
+
+
+   Would also like to implement lists.
+
+   In fact the whole "line by line" parsing below is dodgy because it
+   interfers with structures which can be multiline, such as images.
+   So I will remove the line* token as well.
+
+   revising again. I think in order to simplify, we can remove the "space*"
+   token. All words will be separated by only one space.
+   and also make "word*" just "text*" and "uword*" into "utext*"
+   Also, need to change [[ >> and ]] parsing (parse char by char, not as a 
+   word). Rename this to "mark.html.space.pss" and remove space tokens. 
+   Also, need a better way to get rid of tokens: eg
+   ------
+     parse> pop; pop;
+     # check that at least 2 tokens, that last is >> and 
+     # first is not newline. A ">>" is only significant if it starts the 
+     # line, so the block below just turns >> into a text* token if it
+     # doesnt start the line. Can do the same with * 
+     # but --- doesnt have to start the line nor does [[ image marker
+
+     # no!!! because >> and << are also the image float indicators
+     !">>*".E">>*".!B"nl*" {  
+       clear; get; add " "; ++; get; put; clear;
+       add "text*"; push; .reparse
+     }
+
+     !"star*".E"star*".!B"nl*" {  
+       clear; get; add " "; ++; get; put; clear;
+       add "text*"; push; .reparse
+     }
+   ,,,,
+
+ 15 june 2020
+
+   Revising this to remove unnecessary newline "nl*" tokens and to 
+   try to simplify the logic. Also, will try to methodically view 
+   different text parsing. we can try, for example
+     >> pp -f eg/mark.html.pss -i '"link text" www.google.com'
+   as a way to test structures of text and how it is parsed/transcribed.
+
+ 24 Feb 2020
+
+   Starting to make an image marker eg: [[/images/screenshot.png >>]
+   This needs to start the line it is on.
+
+   Revisiting this and doing more work to see if I can markup
+   a starline*codeline* token sequence as a table. I dont think
+   that all the nl* newline tokens are really necessary, mainly the
+   ones that preceed other tokens on the stack. eg nl*starline*
+   seems unnecessary. We could reduce this to just starline*.
+   This kind of parsing and translating seems much more feasible to
+   me now, especially making use of the pp -I interactive debugger.
+   After all, a big complex sed script is just as confusing for
+   the uninitiated.
+
+ 14 sept 2019
+
+  Implemented starline for emphasis, but it has problems.
+
+ 9 september 2019
+
+  I am still not convinced that this is practical. It may be better
+  just to use regular expressions.
+
+  Doing more work on this. I will not try to parse sections and
+  subsections. I will just subsume headings into lines. and 
+  output html. Very basic html output is working.
+
+ 26 august 2019
+
+  A bit more work. This does not seem easy to do. Mainly because
+  of newline problems, and also, lots of different token types
+  that need to be resolved into text. eg link, uword, word, mixword
+  quoted text, utext, uword, ...
+
+ 23 august 2019
+
+  Started this script. Made quite a bit of progress. It is necessary
+  to write a lot of rules, but the coding is straightforward and 
+  it seems easy to debug. We can adapt this script to output different
+  formats.
+
+  I realised that I would like syntax like this (now implemented)
+
+   * combine begin and ends tests into quotesets.
+   >> B"http", B"www.", E".txt", E".c" { ... }
+
+ 
+*#
+
+  read;
+
+  [\n] { 
+    put; clear; count;
+    # check counter as flag. If set, then dont generate newline
+    # tokens.
+    "0" { clear; add "nl*"; push; .reparse }
+  }
+
+  [\r] { clear; .restart }
+  # space includes \n\r so we can't use the [:space:] class
+  [ \t] { while [ \t]; clear; .reparse }
+
+  # cant really use ' because then we can't write "can't" for example
+  '"' { 
+    # check for multiline syntax """
+    while ["];
+    !'"' { put; clear; add "word*"; push; .reparse }
+    whilenot ["\n]; 
+    # check for multiple """ for multiline quotes
+    (eof) { put; clear; add "text*"; push; .reparse }  
+    read;
+    # one double quote on line.
+    [\n] { put; clear; add "text*"; push; .reparse }  
+    # closing double quote.
+    put; clear; add "quoted*"; push; .reparse 
+  }
+
+  # [[ ]] >> << are parse as words (space delimited)
+
+  # everything else is a word
+  # all the logic in the word* block could just be here.
+  !"" { whilenot [:space:]; put; clear; add "word*"; push; .reparse }
+
+# end of the lexing phase of the script
+# start of the parse/compile/translate phase
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+#*
+   A list of tokens types:
+     codeline text word quoted file >> << [[ ]] link nl
+*#
+
+#-----------------
+# 1 token
+
+  pop; 
+
+  #(eof).!"end*" {
+  #}
+
+  "word*" {
+
+    clear; get; 
+    # no numbers in headings!
+    #[A-Z]{ clear; add "uword*"; push; .reparse }
+    # the subheading marker
+    #"...." { clear; add "4dots*"; push; .reparse }
+    # emphasis or explanation line marker 
+    #"*" { clear; add "star*"; push; .reparse }
+    # image markers
+    "[[" { add "*"; push; .reparse }
+    "]]" { add "*"; push; .reparse }
+    # the code line marker, and float right marker
+    ">>" { 
+      # convert to html entities
+      clear; add "&gt;&gt; "; put; clear; 
+      add ">>*"; push; .reparse
+    }
+    # the float left marker
+    "<<" { 
+      clear; add "&lt;&lt; "; put; clear; 
+      add "<<*"; push; .reparse 
+    }
+
+    # multiline quotes
+    '"""' { 
+      clear; until '"""'; 
+      !E'"""' { 
+        put; clear; add "text*"; push; .reparse 
+      }
+      clip; clip; clip;
+      put; clear; add "quoted*"; push; .reparse 
+    }
+
+    # multiline codeblocks start with --- on a newline
+    B"---".[-] { 
+      clear; pop; 
+      "nl*" {  
+        clear; until ',,,'; 
+        !E',,,' { 
+          put; clear; add "text*"; push; .reparse 
+        }
+        clip; clip; clip;
+        put; clear; 
+        # discard extra ,,,,
+        while [,]; clear;
+        add "codeline*"; push; .reparse 
+      }
+      push; add "word*"; push; .reparse
+    }
+
+    # starline starts with a star 
+    '*' { 
+      clear; add "&otimes; "; put; clear; pop; 
+      "nl*" {
+        clear; 
+        # clear leading whitespace
+        while [ \t]; clear;
+        add "<em>";
+        whilenot [\n]; add "</em>"; put; clear;
+        add "emline*"; push; .reparse
+      }
+      push; add "word*"; push; .reparse
+    }
+
+    # the code block begin marker. can't read straight to end marker 
+    #B"---".[-] { clear; put; add "---*"; push; .reparse }
+
+    B"http://",B"https://",B"www.",B"ftp://",B"sftp://" { 
+      clear; add "link*"; push; .reparse
+    }
+
+    B"/" {
+      E"/",E".c",E".txt",E".html",E".pss",E".pp",E".js",E".java",
+      E".tcl",E".py",E".pl",E".jpeg",E".jpg",E".png" {
+        clear; add "file*"; push; .reparse
+      }
+    }
+
+    clear; add "word*"; 
+    # leave the wordtoken on the workspace.
+  }
+
+  # get rid of insignificant tokens at the end of the document
+  "[[*","<<*",">>*","quoted*" {
+    (eof) {
+      clear; add "word*"; 
+    }
+  }
+
+  # resolve links at the end of the document 
+  "link*" {
+    (eof) {
+      clear;
+      add "<a href='"; get; add "'>"; get; add "</a>"; 
+      put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # resolve file links at the end of the document 
+  "file*" {
+    (eof) {
+      clear;
+      add "<a href='"; get; add "'><em><tt>"; get; add "</em></tt></a>"; 
+      put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+#-----------------
+# 2 tokens
+  pop; 
+
+  # eliminate insignificant newlines and ellide words
+  "nl*word*","nl*text*",
+  "emline*text*","emline*word*",
+  "word*word*","text*word*","text*text*","word*text*",
+  "quoted*text*", "quoted*word*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide as text insignificant "]]" image end tokens 
+  "word*]]*","text*]]*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide multiple newlines 
+  "nl*nl*" {
+    clear; get; ++; get; --; add "<br/>\n"; put; clear;
+    add "nl*"; push; .reparse
+  }
+
+  # codelines. nl*>>* should not occur in image markup
+  "nl*>>*" {
+    clear; 
+    # clear leading whitespace
+    while [ \t]; clear;
+    whilenot [\n]; put; clear;
+    add "codeline*"; push; .reparse
+  }
+
+  # eliminate insignificant newlines at end of document
+  "word*nl*","text*nl*" {
+    (eof) {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # mark this up as a "recipe".
+  # sample: 
+  #   * description
+  #   >> sh code.to.exec
+  "emline*codeline*" {
+    clear; 
+    add "\n<table width=60% border=1><tr><td>"; get; add "</td></tr>\n";
+    add "<tr><td><pre><tt>"; ++; get; 
+    add "</tt></pre></td></tr>\n</table>\n";
+    --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  "word*codeline*","text*codeline*","quoted*codeline*" {
+    clear; get; add " ";  
+    add "\n<table><td><pre><tt>"; ++; get; 
+    add "</tt></pre></td></table>\n";
+    --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # a line of code at the start of the document
+  "codeline*" {
+    clear; 
+    add "<table><td><pre><tt>"; get; 
+    add "</tt></pre></td></table>\n";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # sample: tree www.abc.org  (also at the start of document)
+  "word*link*","text*link*","nl*link*" {
+    clear; get; add " ";  
+    add "<a href='"; ++; get; add "'>"; get; --; add "</a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # link at the start of document (only 1 token)
+  "link*" {
+    clear;
+    add "<a href='"; get; add "'>"; get; add "</a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # sample: condor /file.txt
+  "word*file*","text*file*","nl*file*" {
+    clear; get; add " ";  
+    add "<a href='"; ++; get; add "'><em><tt>"; get; --; add "</tt></em></a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # file link at start of document 
+  "file*" {
+    clear;
+    add "<a href='"; get; add "'><em><tt>"; get; add "</tt></em></a>"; 
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  "quoted*file*","quoted*link*" {
+    clear; 
+    # remove quotes from quoted text 
+    get; clip; clop; put; clear;
+    add "<a href='"; ++; get; --; add "'>"; get; add "</a>"; 
+    put; clear; add "text*"; push; .reparse
+  }
+
+  # get rid of irrelevant ">>" tokens (ie not in image, nor at
+  # start of code line).
+  # image format: [[ /file.txt "caption" >> ]]
+  E">>*"{
+    !B"nl*".!B"quoted*".!B"file*".!B"link*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  # ellide insignificant "<<" tokens (ie not in image markup)
+  B"<<*".!E"]]*" {
+    replace "<<*" "word*"; push; push; .reparse
+  }
+
+  # eliminate newlines in image markup 
+  "[[*nl*" { 
+    clear; get; ++; get; --; put; clear;
+    add "[[*"; push; .reparse 
+  }
+  "nl*]]*" { 
+    clear; get; ++; get; --; put; clear;
+    add "]]*"; push; .reparse 
+  }
+
+  # get rid of insignificant "[[" image start tokens 
+  # image format: [[ /file.txt "caption" >> ]]
+  B"[[*".!"[[*" {
+    !E"file*".!E"link*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  }
+
+  #----------------------
+  # 3 tokens
+  pop;
+
+  # eliminate newlines within image markup 
+  # this is important because nl*>>* is considered the
+  # start of a "codeline".
+  "[[*file*nl*","[[*link*nl*","link*quoted*nl*","file*quoted*nl*" { 
+    clip; clip; clip; push; push; .reparse 
+  }
+
+  # simple image format: [[ /path/file.jpg ]]
+  "[[*file*]]*","[[*link*]]*" {
+    clear; ++; add "<img src='"; get; add "' alt=''>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # incorrect image format: [[ /path/file.jpg word
+  # just becomes text. I probably should hyperlink the links
+  # but wont for now.
+  "[[*file*word*","[[*link*word*",
+  "[[*file*text*","[[*link*text*" {
+    clear; get; 
+    add " "; ++; get; add " "; ++; get; --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  #----------------------
+  # 4 tokens
+  pop;
+
+  # image format with caption: [[ /path/file.jpg "caption" ]]
+  "[[*file*quoted*]]*","[[*link*quoted*]]*" {
+    clear;  
+    add "<table><tr><td><img src='"; ++; get; 
+    add "' alt=''></td></tr>\n<tr><td>"; ++; get;
+    add "</td></tr></table>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with float: [[ /path/file.jpg >> ]]
+  "[[*file*>>*]]*","[[*link*>>*]]*" {
+    clear; add "<img class='float-right' src='"; 
+    ++; get; add "' alt=''>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with float: [[ /path/file.jpg >> ]]
+  "[[*file*<<*]]*","[[*link*<<*]]*" {
+    clear; add "<img class='float-left' src='"; 
+    ++; get; add "' alt=''>\n"; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  #----------------------
+  # 5 tokens
+  pop;
+
+  # image format with caption and float: [[ /path/file.jpg "caption" >> ]]
+  "[[*file*quoted*>>*]]*","[[*link*quoted*>>*]]*" {
+    clear;  
+    add "<table class='float-right'><tr><td><img src='"; ++; get; 
+    add "' alt=''></td></tr>\n<tr><td>"; ++; get;
+    add "</td></tr></table>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  # image format with caption and float: [[ /path/file.jpg "caption" >> ]]
+  "[[*file*quoted*<<*]]*","[[*link*quoted*<<*]]*" {
+    clear;  
+    add "<table class='float-left'><tr><td><img src='"; ++; get; 
+    add "' alt=''></td></tr>\n<tr><td>"; ++; get;
+    add "</td></tr></table>\n"; 
+    --; --; put;
+    clear; add "text*"; push; .reparse
+  }
+
+  push; push; push; push; push;
+
+  (eof) {
+    add "\n<!-- Html generated by ";
+    add "bumble.sf.net/books/parse/eg/mark.html.pss --> \n"; print; clear;
+    # workspace should be empty
+    !"" { 
+      put; clear; 
+      add "<!-- Workspace not empty at <eof> ! "; get; add " -->\n";  
+      print;
+    }
+
+    add "<!-- Token stack was: "; print; clear;
+    unstack; print; stack; clear; 
+    add " -->\n"; print; clear; 
+    pop; pop; 
+    "word*","text*","link*","file*","quoted*","emline*","nl*" {
+      clear; 
+      add "<html><body>\n"; get; 
+      add "\n</body></html>\n"; add "\n"; print; 
+    }
+  }

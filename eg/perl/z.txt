@@ -1,0 +1,129 @@
+use strict;
+  my %mm = (
+    size => 300,      # how many initial elements in tape/marks array
+    eof => 0,         # end of stream reached?
+    charsRead => 0,   # how many chars already read
+    linesRead => 1,   # how many lines already read
+    escape => "\\",
+    delimiter => "*", # push/pop delimiter (default "*")
+    counter => 0,     # a counter for anything
+    work => "",       # the workspace
+    stack => (),      # stack for parse tokens 
+    cell => 0,                # current tape cell
+    tape => (),       # a list of attribute for tokens 
+    marks => (),      # marked tape cells 
+    peep => getc(STDIN)
+  );
+  sub initMachine {
+    my $mm = shift;  # pointer to machine associative array
+    @{$mm->{"tape"}} = 100;
+    @{$mm->{"marks"}} = 100;
+    $mm->{"size"} = 100;
+  }
+  sub setInput {
+    my $mm = shift;   # pointer to the machine
+    my $newInput = shift; 
+    print "to be implemented";
+  }
+  sub readChar {
+    my $mm = shift;   # a pointer to the machine hash
+    if ($mm->{"eof"}) { exit; }
+    $mm->{"charsRead"} += 1;
+    if ($mm->{"peep"} == "\n") { $mm->{"linesRead"} += 1; }
+    $mm->{"work"} += $mm->{"peep"};
+    $mm->{"peep"} = getc(STDIN);
+    if (eof(STDIN)) { $mm->{"eof"} = 1; }
+  }
+  sub isInCategory {
+    my $m = shift;   # pointer to the machine
+    my $cat = shift; 
+  }
+  sub unescapeChar {
+    my $mm = shift;   # the machine
+    my $c = shift;
+    $mm->{"work"} =~ s/Q$mm->{"escape"}$c/$c/;
+  }
+  sub escapeChar {
+    my $mm = shift;   # the machine
+    my $c = shift;
+    $mm->{"work"} =~ s/$c/Q$mm->{"escape"}$c/;
+  }
+  sub countEscaped {
+    my $mm = shift;   # the machine
+    my $suffix = shift; 
+    my $count = 0;
+    my $s = $mm->{"work"};
+    $s =~ s/$suffix$//;
+    while ($s =~ /$mm->{"escape"}$/) {
+      $count += 1;
+      $s =~ s/$mm->{"escape"}$//;
+    }
+    return $count;
+  }
+  sub until {
+    my $mm = shift;   # the machine
+    my $suffix = shift; 
+    if ($mm->{"eof"}) { return; }
+    readChar($mm);
+    while (1) { 
+      if ($mm->{"eof"}) { return; }
+      if ($mm->{"work"} =~ /Q$suffix$/) { 
+        if (countEscaped(%mm, $suffix) % 2 == 0) { return; }
+      }
+      readChar($mm)
+    }
+  }  
+  sub increment {
+    my $mm = shift;   # the machine
+    $mm->{"cell"} += 1;
+    if ($mm->{"cell"} >= $#$mm->{"tape"}) { 
+      $#$mm->{"tape"} = $#$mm->{"tape"} + 40;
+      $#$mm->{"marks"} = $#$mm->{"marks"} + 40;
+      $mm->{"size"} = $#$mm->{"tape"};
+    }
+  }
+  sub popToken {
+    my $mm = shift;   # the machine, not local
+    if (!@{$mm->{"stack"}}) { return 0; }
+    $mm->{"work"} = pop(@{$mm->{"stack"}}) + $mm->{"work"};
+    if ($mm->{"cell"} > 0) { $mm->{"cell"} -= 1; }
+    return 1;
+  }
+  sub pushToken {
+    my $mm = shift;   # a pointer to the machine
+    if ($mm->{"work"} == "") { return 0; }
+    my $iFirst = index($mm->{"work"}, $mm->{"delimiter"});
+    if ($iFirst == -1 ) {
+      push(@{$mm->{"stack"}}, $mm->{"work"}); 
+      $mm->{"work"} = ""; return 1;
+    }
+    push(@{$mm->{"stack"}}, substr($mm->{"work"}, 0, $iFirst));
+    $mm->{"work"} = substr($mm->{"work"}, $iFirst+1, -1);
+    increment(%mm);
+    return 1;
+  }
+  sub printState {
+    my $mm = shift;   # the machine
+  }
+  sub goToMark {
+    my $mm = shift;   # the machine
+    my $mark = shift; 
+    for my $ii (0..$#$mm->{"marks"}) {
+      if ($mm->{"marks"}[$ii] eq $mark) {
+        $mm->{"cell"} = $ii; 
+        return;
+      }
+    }
+    print("bad mark $mark!");
+    exit();
+  }
+  sub parse {
+    my $mm = shift;  # a machine reference
+    my $s = shift;
+    print(" ");
+  } 
+my $restart = 0;
+initMachine(\%mm); 
+ while (!$mm{"eof"}) { 
+  $mm{'work'} = '';        # clear
+}

@@ -1,0 +1,5 @@
+# another test script
+
+ read;
+ [abcdef] { put; get; print; clear; }
+ print; clear;

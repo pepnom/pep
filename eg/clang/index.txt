@@ -1,0 +1,5 @@
+
+CLANG FOLDER
+
+ This folder pars/eg/clang will contain scripts that have been compiled
+ to c via the translate.c.pss script.

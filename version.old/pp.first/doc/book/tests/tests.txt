@@ -1,0 +1,14 @@
+
+  && Using tests in the pp tool
+
+ 
+EXAMPLES
+
+  * if the workspace is not empty, add a dot to the end of the workspace
+  >> !// { add '.'; }
+
+  * if the end of the input stream is reached print the message "end of file"
+  >> <> { add "end of file"; print; }
+
+  * if the workspace begins with 't' trim a character from the end
+  >> <t> { clip; }

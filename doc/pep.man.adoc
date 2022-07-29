@@ -1,0 +1,78 @@
+= pp(1)
+
+== Name
+
+pp - a stream editing pattern parser for context-free languages 
+
+== Synopsis
+
+*pp* [*-shI*] [*-i* _"input"_] [*-e* _snippet_]
+      [*-f* _SCRIPTFILE_ ] [*-a* _FILE_] [_inputfile_]
+
+*pp* [*-h*] # Short help
+
+== Description
+
+The 'pp' pattern parser tool is designed to parse and translate
+(transform/compile) context-free languages. It may be used as a partial
+alternative to sed(1) or lex(1) and awk(1).
+
+The pattern parser reads the input stream one character at a time
+and is capable of creating and parsing "tokens" which can then be
+manipulated and transformed. There is a close relation between 'pp'
+code blocks and backus-naur form ('bnf' or 'ebnf') grammar rules.
+
+== Options
+
+*-f* 'file':: load program in script file 
+
+*-e* 'snippet':: add inline script commands to program
+
+*-i* 'text':: use 'text' as the input stream for the parser 
+
+*-h*:: print this help 
+
+*-I*:: run in interactive mode (for script viewing and debugging)
+
+*-a* 'file':: use 'FILE' as script assembler. 
+
+//*--color* 'never'|'auto'|'always'::
+
+'inputfile'::
+ The text file which is used as the input stream. This will change 
+ in the future when we can pipe input to 'pp' with for example:
+ "cat file | pp -e "read;print;clear;"
+
+== Examples 
+
+// grep prints a colon +:+ divider after the file name since that makes it
+
+  The simplest possible usage is:
+  pp -e "r;t;d;" -i "abcabc"
+  This just prints the input stream (abcabc) to 'stdout'
+
+  The same as above with long command names
+  pp -e "read;print;clear;" -i "abcabc"
+
+== See also
+
+    sed(1), awk(1), lex(1), yacc(1)
+
+== Bugs 
+
+'pp' has not been extensively used (as of August 2019) so bugs
+will exist.
+
+== Author
+
+M.J.Bishop (mjbishop@fastmail.com)
+
+== Source code
+
+git: <https://github.com/somewhere>
+  
+== Copyright 
+
+pp is free software. The license is compatible with sourceforge's
+licensing requirements.
+

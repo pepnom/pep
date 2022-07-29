@@ -1,0 +1,94 @@
+
+/* 
+ *  a style sheet for an html book
+ *  see book-html.sh, */
+body 
+  { margin-left: 5%; margin-right: 5%; }
+h1.doc-title 
+  { color: lightslategray; text-align: center; font-size: large; } 
+h3.section-heading 
+  { border: 1px dotted white; margin-left: -1em; }
+h4.sub-section-heading 
+  { border: 1px solid black; font-variant: small-caps; }
+
+ul.top-menu
+ { padding: 1px .2em; margin-left: 0; border-bottom: 4px solid gray; }
+ul.top-menu li
+ { list-style: none; margin: 0; display: inline; }
+ul.top-menu li a
+ {
+   padding: 1px 0.2em; margin-left: 0.1em; border: 1px solid gray;
+   border-bottom: none; text-decoration: none;
+ }
+ul.top-menu li a:hover 
+  { background-color: whitesmoke; }
+
+PRE.code-line 
+  { margin-right: 7em; margin-left: 2em; font-size: normal; }
+
+EM.comment 
+  { font-size: medium; }
+
+EM.code-description
+  { font-weight: normal; border-bottom: 1px solid lightgrey; width: 90% }
+
+EM.code-description:before
+/*  { content:"&gt;" } */
+
+SPAN.big-quote
+  { font-size: xlarge; }
+
+TABLE.definition-table
+  { width: 40%; float: right; border: 1px solid silver; border-collapse: collapse; }
+
+.definition-table td
+  { border: 1px solid silver; padding: 0 .5em 0 .5em; }
+.definition-table th 
+  { border: 1px solid silver; }
+.definition-table caption
+  { font-style: oblique; font-weight: bold; }
+
+DIV#toc
+  { float: right; border: 2px dashed gray; margin-left: 1em }
+#toc ul 
+  { list-style-type: none;
+    margin: 0 0 0 0; padding-left: 1em; border: 2px dashed white; }
+#toc li
+  { } 
+#toc li a 
+  { color: darkslategray; text-decoration: none; } 
+#toc li a:hover 
+  { color: black; text-decoration: underline; } 
+#toc h4
+  { font-variant: small-caps; padding-left: 0.5em }
+
+/* the link on each heading which leads back to the table of contents */
+A.toc-link
+ { text-decoration: none; color: black; text-align: right; }
+A:hover.toc-link
+ { background-color: whitesmoke; }  
+
+dl.document-info-list
+ { width: 40%; font-size: small }
+dl.document-info-list dt 
+ { float: left; padding-right: 1em; text-align: right;
+   background: whitesmoke; margin-bottom: 3px; }
+dl.document-info-list dd
+ { background: whitesmoke; margin-bottom: 3px; font-family: courier, monospace; }
+
+
+dl.weblist
+ { margin-left: 1em; padding-left: 1em; border-left: 4px solid lightgrey; }
+dl.weblist dd
+ { margin-left: 0; padding-left: 1em; font-style: oblique }
+dl.weblist a
+ { color: gray; text-decoration: none; }
+
+/* an element which floats to the right */
+.float-right
+{ 
+   float: right; width: 50%; 
+   margin: 0 0 .5em .5em; padding: .5em;
+   background-color: white; border: 1px solid #666;
+}
+

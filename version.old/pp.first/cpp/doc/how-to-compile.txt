@@ -1,0 +1,49 @@
+
+ ** How to compile the language interpreter.
+
+ ** ms-windows
+
+ To compile on ms-windows I used the "bloodshed c++ compiler" http://www.bloodshed.net/devcpp.html 
+ mainly because this compiler makes the setting up of the 
+ "mingw" http://mingw.sf.net system easy.
+ It is necessary to use the "version 5 beta" of the compiler because the 
+ older version 4 does not (seem to) support
+ "stringstreams" http://www.cplusplus.com/reference/iostream/stringstream/stringstream.html and the
+  interpreter uses stringstreams. 
+
+ The files required to compile the interpreter are located at 
+ http://bumble.sf.net/machine/ and specifically are 
+  u- file:/machine/Machine.h
+   - file:/machine/Machine.cpp
+   - file:/machine/Instruction.h
+   - file:/machine/Instruction.cpp
+   - file:/machine/Tape.h
+   - file:/machine/Tape.cpp
+   - file:/machine/Program.h
+   - file:/machine/Program.cpp
+   - file:/machine/Parser.h
+   - file:/machine/Parser.cpp
+   - file:/machine/Parser.main.cpp
+   - file:/machine/Parser.dev
+
+ The names given to some of the classes are not very good. For example the 
+ file:/machine/Parser.h probably should be called "Compiler.h" etc
+
+ In order to compile using the bloodshed compiler, once the files have been
+ downloaded the file:/machine/Parser.dev file should be opened from the 
+ file-->openproject menu in the devcpp ide. This will cause the other files to be loaded in the   
+ compiler as well. Now the code can be compiled from one of the menus. The 
+ project is configured to produce an executable file called
+ "Parser.exe" (once again this is not a very good name, because the executable
+ does more than just parse: it parses, and interprets a script).
+
+ 
+ ** compiling on a unix type os with gcc
+
+ unfortunately I do not currently have access to a unix or linux machine with
+ gcc and so am not really sure of the procedure. I presume that a "make" file
+ would need to be written to compile the code, but I dont have any expertise
+ in that area.  
+
+
+ 

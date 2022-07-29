@@ -1,0 +1,10 @@
+
+** The pp.mono folder
+
+This folder contains a copy of the gh.c code as it was when
+the entire application (including machine and program objects) was
+in one c source file. This code is now out of date (august 2019)!
+
+See the code in the /books/gh/object/ folder for an up-to-date 
+implementation of the parsing virtual machine and interpreter.
+

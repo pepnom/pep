@@ -1,0 +1,52 @@
+
+ #*
+   This file contains some valid (and invalid) statements in the 
+   pattern script language. This can be used in conjuction with
+   the pp executable and the 'asm.pp' assembler script, which is 
+   responsible for parsing and compiling the current format.
+   
+   * http://bumble.sf.net/books/gh/gh.c  
+      for the source code for the pp executable
+   * http://bumble.sf.net/books/gh/asm.pp
+      source code for the assembler script
+
+   try: 
+   >> pp -a asm.pp -i t.commands.pss
+     This will run the program in interactive mode. Then type 'rr'
+     to run the assembler on the commands to see if they parse 
+     correctly. Hopefully soon (2019) it will be possible to type
+   >> pp -f t.commands.pss  
+     which will do the same thing.
+
+ *#
+
+ #------------------------------------
+ # some error formats for testing
+ # add print ;
+ # add "text" clear;
+
+ #------------------------------------
+ # good formats
+ while [:alpha:]; 
+ add "\"";
+ add 'single';
+ add 'esc\'aped' ;
+ add "double"; a "short"; 
+ add "d esc\"aped" ;
+ clip ;k; clop;K; clear; d ;
+ print; t; pop; p; push; P; 
+ put; G; get; g; 
+ swap ; x; 
+ ++; >;  -- ; <  ;
+ read ; r;
+ until "ABCD"; R 'abcd' ;
+ until 'usingle' ;
+ while [:alpha:]; 
+ whilenot [:space:];
+ count; n ; a+;+; a-; -;
+ zero; 0;
+ cc;c; ll; l;
+ escape "*" ; ^ '$' ;
+ unescape "#" ; v '@' ; 
+ state; S; quit; q;  write ;s;
+ nop; o;

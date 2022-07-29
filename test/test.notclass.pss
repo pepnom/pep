@@ -1,0 +1,7 @@
+
+# just testing notclasses  eg: ![a-z] { nop; }
+# test with: pp -f test.notclass.pss -i "AaBbCcDd"
+ read; ![a-z] { add ":not a-z"; }
+ add "\n"; print; clear;
+
+  

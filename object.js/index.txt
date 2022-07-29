@@ -1,0 +1,16 @@
+
+   && /books/pars/object.js folder
+
+This folder contains some old javascript pep code. It has been used
+to write the tr/translate.js.pss
+
+The tr/translate.js.pss translation script now contains the machine object
+within the output. 
+
+  * usage 
+  ---
+   pep -f translate.js.pss eg/exp.tolisp.pss > eg/javascript/test.js
+   cd eg/javascript/; echo "a+b*c+(a-4)" | node test.js
+  ,,,
+
+

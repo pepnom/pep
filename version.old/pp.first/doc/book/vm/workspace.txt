@@ -1,0 +1,27 @@
+
+  && The workspace buffer in the virtual machine 
+
+  The workspace buffer is a buffer within the virtual machine of 
+  the stream parsing language. In this buffer all of the text
+  transformation processed take place. For example, the commands
+  @clear, @add, @indent, @newline all affect the text in the 
+  workspace buffer.
+
+  The machine looks like this
+
+   -machine-
+   -workspace:
+   -stack:...,...,...,...
+   -tape:...,...,...,...,...,
+   -peep:
+   -counter:
+
+  The workspace buffer is analogeous to a processor register 
+  in a non-virtual cpu. In order to manipulate a value, it is
+  generally necessary to first load that value into a 
+  cpu register. In the same way, in order to manipulate some 
+  text in the chomski machine, it is necessary to first
+  load that text into the workspace buffer. This can be 
+  achieve with the @get, @pop, @read commands.
+ 
+

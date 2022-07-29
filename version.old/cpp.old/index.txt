@@ -1,0 +1,8 @@
+
+ ** The eg directory.
+
+ The code files in this directory are old version of 
+ what is now available in the file:/machine/ directory.
+
+
+

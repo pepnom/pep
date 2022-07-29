@@ -1,0 +1,279 @@
+
+#*
+
+ markzero.pss
+ 
+ This script explores the possibilities of transforming text documents
+ in a kind of markdown format into other formats. The script parses 
+ the document as a heirarchy of elements (in a "bottom-up" fashion)
+ rather than just applying regular expressions to patterns.
+
+ I am not sure if this is feasible, or if it will become tedious.
+
+MARKZERO DOCUMENT FORMAT
+
+ I dont claim this document format is particular good for any reason,
+ its just that I like it and have used it for a long time.
+
+ An example of the type of document is this file:
+  1st level headings are all uppercase
+  2nd level headings are all upper followed by 4 dots ....
+  3rd level headings are ** start a line 
+  code lines begin with >>
+  code blocks are enclosed in ---- ,,, on their own lines
+  
+USES
+  
+  I tried to make a unix man page from an asciidoc document with
+  a2x and it made me go via xsltproc and various other bits of 
+  ridiculous cruft. Whats more, it converted from asciidoc to xml
+  and then to a man page and took about 30 seconds for a tiny document.
+
+  So maybe this script can do better than that.
+
+GRAMMAR 
+
+ This script represents a LR (scan-from-left, parse-from-right)
+ bottom-up shift-reduce parse/translator.
+
+ The script implements the following grammar (described in Wirths EBNF syntax,
+ without the grouping (), optional [] or continuations {} symbols)
+
+ * script grammar
+ ---------
+
+ ,,,,
+
+TESTING 
+
+  * convert a doc 
+  >> pp -f eg/markzero.pss markzero.pss 
+
+  * make a stand-alone executable of this doc formatter
+  --------
+    pp -f compilable.c.pss eg/markzero.pss > markzero.c
+    gcc -o markzero.exec -Lbooks/gh/object -lmachine -Ibooks/gh/object
+  ,,,
+
+  * run the stand-alone executable with input from "stdin"
+  >> cat someDoc | ./markzero.exec
+
+LIMITATIONS
+
+  * no regular expressions, so this could be tedious!
+
+HISTORY
+ 
+ 23 august 2019
+
+   started this script. Made quite a bit of progress. It is necessary
+   to write a lot of rules, but the coding is straightforward and 
+   it seems easy to debug. We can adapt this script to output different
+   formats.
+
+   I realised that I would like syntax like this
+
+    * combine begin and ends tests into quotesets.
+    >> B"http", B"www.", E".txt", E".c" { ... }
+
+*#
+
+  read;
+  [A-Z] { put; clear; add "uletter*"; push; }
+  [a-z] { put; clear; add "letter*"; push; }
+  # 4 dots are used as subheading marker
+  "." { 
+    while [.]; 
+    "...." { put; clear; add "4dots*"; push; .reparse }
+    put; clear; add "punct*"; push; 
+  }
+
+  ">" { 
+    while [>]; 
+    ">>" { put; clear; add "4dots*"; push; .reparse }
+    put; clear; add "punct*"; push; 
+  }
+  [\n] { put; clear; add "nl*"; push; }
+  [\r] { clear; }
+  [:space:] { put; clear; add "space*"; push; }
+  !"" { put; clear; add "punct*"; push; }
+
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+#-----------------
+# 1 token
+
+  pop; 
+
+  pop;
+#-----------------
+# 2 tokens
+
+  "space*space*" {
+    clear; get; ++; get; --; put; clear;
+    add "space*"; push; .reparse
+  }
+
+  # trailing space is not needed, no??
+  "space*nl*" {
+    clear; ++; get; --; put; clear;
+    add "nl*"; push; .reparse
+  }
+
+  "nl*space*" {
+    clear; get; ++; get; --; put; clear;
+    add "nl*"; push; .reparse
+  }
+
+  "space*4dots*" {
+    clear; get; ++; get; --; put; clear;
+    add "4dots*"; push; .reparse
+  }
+
+  "uletter*uletter*",
+  "uletterset*uletter*" {
+    clear; get; ++; get; --; put; clear;
+    add "uletterset*"; push; .reparse
+  }
+
+  "uletter*space", "uletterset*space*" {
+    clear; get; ++; get; --; put; 
+    clear;
+    add "uword*"; push; .reparse
+  }
+
+  "uletter*nl", "uletterset*nl*" {
+    clear; add "uword*nl*"; push; push; .reparse
+  }
+
+  "uword*uword*" {
+    clear; get; ++; get; --; put; 
+    clear;
+    add "utext*"; push; .reparse
+  }
+
+  "space*utext*" {
+    clear; get; ++; get; --; put; clear;
+    add "utext*"; push; .reparse
+  }
+
+  "letter*letter*", "uletter*letter*", "letter*uletter*", 
+  "letterset*letter*", "letterset*uletter*" {
+    clear; get; ++; get; --; put; clear;
+    add "letterset*"; push; .reparse
+  }
+
+  "letter*space*", "letterset*space*" {
+    clear; get; ++; get; --; put; 
+    clear;
+    add "word*"; push; .reparse
+  }
+
+  "letter*nl", "letterset*nl*" {
+    clear; add "word*nl*"; push; push; .reparse
+  }
+
+  # mixwords are space delimited words which contain punctuation
+  "letter*punct", "letterset*punct*", 
+  "uletter*punct", "uletterset*punct*", "mixset*punct*",
+  "mixset*letter*", "mixset*uletter*" {
+    clear; get; ++; get; --; put; clear; 
+    add "mixset*"; push; .reparse
+  }
+
+  "mixset*nl*" {
+    clear; get; 
+    B"http://" {
+      clear; add "link*nl*"; push; push; .reparse
+    }
+    B"www." {
+      clear; add "link*nl*"; push; push; .reparse
+    }
+    # it would be nice to do
+    # E".txt", E".jpg", E".png" { ... } etc
+    # but I need to modify compile.pss to see how I can do this
+    # with quotesets
+    # trailing space, need to rethink this
+    E".txt " { clear; add "file*nl*"; push; push; .reparse }
+    E".c " { clear; add "file*nl*"; push; push; .reparse }
+    clear;
+    add "mixword*nl*"; push; push; .reparse
+  }
+
+  "mixset*space*" {
+    clear; get; ++; get; --; put; 
+    B"http://" {
+      clear; add "link*"; push; .reparse
+    }
+    B"www." {
+      clear; add "link*"; push; .reparse
+    }
+
+    # trailing space, need to rethink this
+    E".txt " { clear; add "file*"; push; .reparse }
+    E".c " { clear; add "file*"; push; .reparse }
+    clear;
+    add "mixword*"; push; .reparse
+  }
+
+  push;
+
+  # check for one token here, needs to be after 2 token reductions
+  (eof) {
+    "letter*", "letterset*" {
+      clear; add "word*"; push; .reparse
+    }
+    "uletter*", "uletterset*" {
+      clear; add "uword*"; push; .reparse
+    }
+  }
+
+  pop;
+#-----------------
+# 3 tokens
+
+  pop; 
+
+  "nl*utext*nl*", "nl*uword*nl*" {
+    clear; 
+    add "nl*heading*nl*"; 
+    push; push; push; .reparse
+  }
+
+  "uword*uword*nl*" {
+    clear; get; ++; get; --; put; 
+    clear;
+    add "utext*nl*"; push; push; .reparse
+  }
+
+#-----------------
+# 4 tokens
+
+  pop;
+
+  # subheadings
+  "nl*utext*4dots*nl*", "nl*uword*4dots*nl*" {
+    # no, need to get nl text here.
+    clear; 
+    add "nl*subheading*nl*"; 
+    push; push; push; .reparse
+  }
+
+  push; push; push; push;
+
+  (eof) {
+    pop; pop;
+    "document*" {
+      clear;  
+      add "Yes, its a markzero doc! \n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "no, its not a markzero document \n";
+    print; clear;
+    quit;
+  }

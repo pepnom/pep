@@ -1,0 +1,71 @@
+
+# the purpose of this file is to test the 
+# script pars/eg/history.pss which parses and transforms a 
+# bash history file with comments
+#
+#
+
+
+# whiptail creates dialog boxes
+# I dont think I managed to do anything useful with this.
+#1430736429
+man whiptail
+
+#1430736587
+# create a box
+whiptail --menu mm 20 20 20 a apple b box c cold 
+pp -f compile.pss compile.pss
+#1430736613
+echo $(whiptail --menu mm 20 20 20 a apple b box c cold)
+#1430736646
+n < whiptail --menu mm 20 20 20 a apple b box c cold
+#1430736661
+whiptail --menu mm 20 20 20 a apple b box c cold > n
+#1430736668
+whiptail --menu mm 20 20 20 a apple b box c cold | less
+#1430736761
+# a trick to get whiptail to return val
+echo $(whiptail --menu mm 20 20 20 a apple b box c cold 3>&1 1>&2 2>&3)
+
+# This is the humble bash history file. But the longer I use
+# linux and bash the more important this history file begins 
+# to appear to me. It contains a record of everything that I have
+# done on the laptop for at least a year. It is full of dross, but
+# also one or 2 gems. 
+
+rsync -rvuhi ~/sf/htdocs/books/ /media/rowantree/LEX-ORANGE8/sf/htdocs/books
+readom dev=/dev/sr0
+pwd
+
+hola
+ho
+books
+
+
+aa[ab]=cd
+#1430737073
+echo $aa[ab]
+#1430737081
+echo ${aa[ab]}
+#1430737086
+echo *
+#1430737154
+sudo shutdown -hP now
+#1430797938
+fot
+#1430823474
+hola
+# ho is a script for maintaining the hobart language day website
+# Its not very good, but is slightly less painful than maintaining the 
+# html files by hand.
+#1430823477
+ho
+#1430823718
+bk
+#1430824044
+gall.v
+#1430824045
+h
+#1430824849
+bashbook
+#1430824864

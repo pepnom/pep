@@ -1,0 +1,4 @@
+
+This folder attempts to separate out of the pep.c file into its
+component objects (such as struct Buffer, struct Tape,
+struct Machine, struct Program etc).

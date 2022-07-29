@@ -1,0 +1,5 @@
+
+ ** el directorio /machine/c 
+
+ contiene los comienzos de una implementacion de una
+ lengua basasa en una maquina virtual.

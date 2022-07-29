@@ -1,0 +1,87 @@
+
+ ** A 'C' implementation of the Pattern Parser tool  
+
+ This folder contains an implementation of an interpreter for a script language
+ . This language is designed for parsing and transforming plain text.
+
+ This code is still in a testing phase. Actually the push and 
+ pop commands have some fatal bugs which need to be fixed before
+ it can be used usefully. The application will be renamed from 'chomski'
+ to 'pp' and for this reason some of the documents may not be accurate.
+
+ Detailed documentation for the language and interpreter is 
+ available at http://bumble.sf.net/pp/doc/ 
+
+** Running a script
+
+ on a windows computer
+ u-
+  download the executable file:chomski.exe (or download file:library.c
+  and file:chomski.c and compile).
+  -
+  In a console window, type
+  :> echo abcdef | pp -s "put;plus;count;get;print;" 
+  -
+  To see other options for the interpreter, type 
+  :> pp 
+  -
+
+ on a unix computer
+ u-
+  Get the file file:/machine/c/bin/chomski 
+  -
+  change the permissions of the file with the command
+  :> chmod a+x chomski
+  -
+  In a console window, type, for example
+  :> echo abcdef | ./chomski -s "put;plus;count;get;print;" 
+  -
+
+** How to compile the code
+
+-On an x86 computer-
+
+  a- Download the  "tiny c" http://fabrice.bellard.free.fr/tcc/  or 
+     another c compiler such as gcc.
+   - Unzip the tiny c distribution in some folder
+   - Download file://library.c and file://chomski.c and place the 
+     two files in the "tcc" folder (which was created when the tiny c
+     distribution was unzipped.
+   - Compile with a command line such as 
+  :>  \tcc\tcc -I\tcc\include -L\tcc\lib chomski.c 
+   - The resulting executable is around 60k
+
+
+-On a non-x86 computer-
+
+  a- download file://library.c and file://chomski.c
+   - download or obtain a c compiler, for example the GNU c
+     compiler.
+   - compile the code. The exact proceedure I dont know because
+     I havent done it.
+
+** Script language syntax
+
+ For detailed documentation of the script language, virtual machine
+ and concepts see the doc:/machine/doc/ directory. 
+
+** what needs to be done on this implementation?
+
+  Debugging needs to be carried out.
+
+  u- Memory for the tape cells should be dynamically allocated
+   - Memory for the compiled script should be dynamically allocated
+     to avoid a script length limit.
+   - The code needs to use unicode characters and strings rather 
+     than the normal C character arrays. 
+   - Implement @replace command
+   - Add an interactive debugging mode,
+
+
+** Other implementations
+
+ Other implementations in  C++ and Java are available in
+ the doc:/pp/cpp/ and file:/pp/java/ folders respectively
+ but those implementations are less complete than the C implementation. 
+
+

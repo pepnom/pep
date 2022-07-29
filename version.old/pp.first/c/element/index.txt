@@ -1,0 +1,8 @@
+
+ ** The pp/c/element folder
+
+This folder contains a type and test file for an 'element'
+which is designed to contain a piece of text and form one
+cell in the 'file:../tape' type.
+
+

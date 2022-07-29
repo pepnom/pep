@@ -1,0 +1,26 @@
+clear;
+read;
+
+/+/
+{
+  add 'operator';
+  print;
+}
+/-/
+{
+  add 'operator';
+  print;
+}
+
+/gg/
+/hh/
+/ii/
+{
+  add ' error';
+  print;
+  indent;
+} 
+
+
+add '.';
+print;

@@ -1,0 +1,55 @@
+
+ = The end-of-input-stream test
+
+ This test returns true if the @peep character buffer
+ currently contains the <EOF> end of stream marker for
+ the input stream. The test is written
+  :>  <> { ... }
+
+ This test can be combined with other tests, for example
+   
+  :>   <> /horse/ { add ' and cart'; print; }
+  
+ That is, if the end of the input stream has been reached
+ or the workspace is equal to the text 'horse', then @add 
+ the text ' and cart' to the workspace and @print it.
+ 
+ ** The five tests
+
+ This test is one of the five tests available in the chomski
+ language, namely
+ 
+  D- @test-begins <string>:
+     checks if the workspace begins with a certain string.
+   - @test-list =file.name= :
+     tests if the workspace matches any one of the lines contained
+     within the text file 'file.name'.
+   - @test-tape == :
+     checks if the @workspace is exactly equal to the value of the
+     current element of the @tape .
+   - @test /string/ :
+     checks if the workspace is the same as the text 'string'.
+   -
+
+ ** Check for the start token
+
+  Consider the script below
+
+ -->
+  pop;
+  <> 
+  {
+    clear;
+    pop;
+    !/start-token*/
+      { clear; add "parse error"; print; crash; }
+  }
+ --<
+ 
+ The above script performs an important task in the writing
+ of any parser or "compiler" [->wikipedia]: it checks to see
+ if the "start token" of the grammer was reached in the 
+ parsing process. In other words it checks to see if the 
+ input was parsed correctly. This check -must- be carried
+ out right at the very end of the doc:input-stream.txt.html
+

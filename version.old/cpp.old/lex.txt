@@ -1,0 +1,15 @@
+#-- attempts to tokenise a simple language
+
+#p;
+
+s/\([a-z][a-z]*\)/STRING(\1)|/g;
+s/\//SLASH|/g;
+s/{/LEFT-BRACE|/g;
+s/}/RIGHT-BRACE|/g;
+s/;/TERMINATOR|/g;
+#-- Convert bars to new line characters, and
+#-- thus put each token on a new line. This technique
+#-- works with GNU sed version 4.0.8
+s/[\t ]//g;
+s/|/\
+/g;

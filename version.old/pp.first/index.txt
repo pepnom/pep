@@ -1,0 +1,18 @@
+
+    = A Java Implementation of The PP machine =
+
+ The pp machine is a virtual machine which should be good for
+ parsing and compiling. 
+
+ In Java the implementation should be simple. An array (or collection)
+ to implement program and data storage a few pointers, etc
+
+ ** New Thoughts on PP in Java 
+
+  Feb 2010. 
+   
+    It occurred to me that I could include  the code
+    within the machine.
+    
+
+

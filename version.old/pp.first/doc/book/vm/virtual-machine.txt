@@ -1,0 +1,62 @@
+
+  ** the virtual machine 
+
+  The "virtual machine" [->wikipedia] for the bumble language looks like this
+
+   -machine-
+   -stack:...,...,...,...
+   -tape:...,...,...,...,...,
+   -workspace:
+   -peep:
+   -counter:
+
+  The machine has four main elements
+   D- a @stack:
+      which can contain "parse tokens" [->wikipedia] if the language
+      is used for parsing or any other text data.
+    - a @tape:
+      which is an array of text data which is synchronized with the 
+      machine stack using a tape pointer. The tape is manipulated 
+      with the @get and @put commands
+    - a @tape-pointer :
+      This variable determines the current tape element which will
+      be used by @get and @put commands. The tape pointer is incremented
+      with the ++ command and decremented with the -- command.
+    - a @workspace buffer:
+      This is where all "text change" operations within the machine are 
+      carried out. It is similar in concept to a register within
+      a "cpu" [->wikipedia] or to the "Sed" [->wikipedia] stream editor
+      pattern space. The workspace is affected by various commands, 
+      such as @clear, @add, @indent, @get, @push, @pop etc
+    - a @peep character:
+      this character is not directly manipulable, but it constitutes
+      a very simple "look ahead" mechanism and is used by the 
+      @while and @whilenot commands
+    - a @counter :
+      This counter or "accumulator" is an integer variable which can
+      be incremented with the command @plus ,decremented with the 
+      command @minus ,and set to zero with the command @zero .
+
+ ** Language commands and the machine
+
+  Most of the commands in the script language affect the virtual machine.
+  For example, the -pop- command takes the last element off the stack
+  and appends it to the -front- of the workspace. We can see this
+  by looking at the virtual machine before and after a pop command.
+
+   -machine-
+   -stack: noun* , verb* , noun*
+   -tape: cat , hunts ,  bird , --> ,...,
+   -workspace: noun*
+   -peep: t
+
+  After the @pop command the machine will look like this 
+
+   -machine-
+   -stack: noun* , verb*
+   -tape: cat , hunts , --> bird ,...,...,
+   -workspace: noun*noun*
+   -peep: t
+
+ The stack is one element shorter and the workspace has changed
+

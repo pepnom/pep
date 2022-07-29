@@ -1,0 +1,7 @@
+
+ ** The pp/c/buffer/ folder
+
+This folder contains a type and test file for an 'buffer'
+which is designed to contain a piece of text and form one
+a member of the 'machine' type
+

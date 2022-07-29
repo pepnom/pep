@@ -1,0 +1,66 @@
+
+  && The virtual machine tape pointer 
+
+  The tape pointer in the chomski machine designates the current
+  element of the @tape data structure. The @get and the @put 
+  command will automatically use the current element of the 
+  tape structure. The value of the tape pointer can be changed 
+  with the @increment (++) and the @decrement (--) commands.
+
+  Consider the virtual machine diagram below
+
+   -machine-
+   -stack:...,...,...,...
+   -tape:...,...,...,...,-->...,
+   -workspace:
+   -counter:
+   -peep:
+
+  The arrow in the above diagram indicates the location (or value)
+  of the tape pointer. This pointer has the function of maintaining
+  the virtual machine stack and tape in a kind of syncronization.   
+  The "++" and "--" commands affect the tape pointer explicitly,
+  and the @push command and the @pop command of the stack affect
+  the tape pointer implicitly. The pop comand decrements the 
+  tape pointer by one and the push command increments the tape pointer 
+  by one.
+
+  If we regard the language and virtual machine as a method for 
+  parsing "formal languages" [->wikipedia] or in particular
+  "context free languages" [->wikipedia] then the stack will contain
+  the parse tokens for the input and the tape will contain the 
+  token values for the input. The tape pointer allows the script
+  writer to easily access the value for a particular 
+  "parse token" [->wikipedia] because the pointer keeps the two data
+  structures synchronized. After a particular "-pop" operation
+  the tape pointer will be pointing to the value for the token which
+  has just been placed in the "-workspace" buffer.
+ 
+  Consider the script fragment
+  -->
+   pop; #- decrements the tape pointer -#   
+   /variable*/
+   {
+     #- set the workspace to nothing -#
+     clear;
+     #- get the current value from the tape -#
+     get;
+     ...
+   }
+
+  --<
+  In the script above the "-get" command gets the value
+  from the tape to which the tape pointer is currently pointing.
+  Because the tape and stack are in sync that value will
+  be the value corresponding to the token which has just 
+  been popped into the workspace.
+
+ ** get and put
+
+ The get and put commands do -not- affect the tape pointer. it is
+ neither decremented nor incremented by these commands.
+
+  
+
+  
+

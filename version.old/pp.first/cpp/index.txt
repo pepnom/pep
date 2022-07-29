@@ -1,0 +1,329 @@
+
+
+    = An implementation of the parsing language in C++ =
+
+  
+** description
+
+This directory contains an incomplete implementation of
+a parsing language, or a "parsing stream editor". This language has
+a number of similarities with the -sed- steam editor. See the directory
+doc:/machine/doc/ for a detailed description of this language.
+
+The class "Parser" doc:Parser.cpp reads and parsers a script and compiles
+the script into an internal format. This compiled program is stored in the 
+class "Program" doc:Program.cpp .The Program class also has the capability
+to execute the compiled script. The Program class contains a "Machine"
+doc:Machine.cpp object. This object represents a virtual machine which
+has a number of internal "registers" or storage areas, as well as 
+a set of instructions. For a detailed description of this virtual
+machine see the document doc:/machine/doc/virtual-machine.txt.html .
+
+
+The class "Interpret" doc:Interpret.cpp , despite its name, does -not- 
+interpret a script. Instead it parses a script and generates C++ code
+which has the equivalent functionality. In other words the Interpret class
+provides a way for a script to be converted into an executable.
+Unfortunately, the implementation is not complete.
+
+This compiling version could be run on a ms-windows computer
+with a command such as
+ :> type script | interpret.exe > script.cpp
+
+The output file 'script.cpp' contains a c++ program which can be 
+compiled into an executable. In order to compile script.cpp the 
+files file://Machine.cpp file://Tape.cpp and various others which are 
+in this directory are necessary (your compiler should tell you which
+they are).
+
+The file "Parser.cpp" is incomplete in a number of ways. 
+Jumps after tests are not working properly in the case 
+of multiple tests. Negation of tests has not been implemented.
+The character "classes" do not seem to have been implemented.
+
+The file "Machine.cpp" is important because it implements the 
+virtual machine which is the core of the whole idea. This is 
+a machine with a tape and a stack which are syncronised, in
+the sense that there is a pointer into the tape which reduces or increases 
+depending on the stack "push" and "pop" operations. From a 
+"generative grammar" [->wikipedia] point of view, this parallel
+structure allows the parse tokens to have attributes. To explain: the
+stack is designed to hold each "token (parser)" [->wikipedia]
+and the tape is designed to hold the attributes of those tokens.
+ An example: if parsing an algebra the 
+token might be "OPERATOR" and the attribute might be "*" 
+(multiplies). (note, that for some reason parse tokens are often
+written in upper case but this is not reguired for the current system)
+so the machine actually allows shift-reduce parsing
+rather than recursive descent parsing. A reduction corresponds
+to several "pops" of the stack followed by a test operation
+(which looks like "/sometext/") and then followed by a "push"
+operation. For example, the script
+-->
+
+ pop;pop;pop;
+ /bracket*expression*bracket*/
+ {
+   clear;
+   add "term";
+   push;
+ }
+ push;push;push;
+
+--<
+
+This corresponds to the grammar rule: term --> bracket expression bracket,  and its 
+corresponding reduction in a shift-reduce parser/ compiler. As can be seen the 
+code fragment
+  :> /bracket|expression|bracket|/
+is a test or corresponds to an "if" statement in a normal programming language
+or using pseudo-code
+  :> if (workspace == "bracket|expression|bracket") ...
+This test is equivalent to the sed tests. Unlike sed, braces are always
+required after a test. Also, unlike sed, the test is for simple equality,
+regular expressions are not supported (and probably shouldnt be needed).
+
+The machine also contains a "workspace" where transformations
+are performed. for example the command
+  :> add 'text';
+adds the text 'text' to the workspace. The workspace is 
+a string buffer which can be manipulated with some basic commands.
+Another example
+  :> clear;
+clears the contents of the workspace. In other words after this
+command the workspace will contain nothing, or a string of zero
+length. Notice that all commands must be terminated in a semicolon (;)
+unlike sed which is more relaxed about this. The commands which
+affect the stack are
+ :> push, pop
+
+The commands which affect the tape are 
+ :> put, get
+
+The language uses the unix idiom of receiving input from standard input
+and sending output to stdout, in the same manner as sed. Also like sed,
+each command in the script is executed for each character in the input
+(whereas sed executes each command for each line of the input). This
+means that there is an implicit loop around the script.
+
+ ** grammar rules
+
+ The scripting language does not permit all "backus naur form" [->wikipedia]
+ grammar rules. For example the "kleene star" [->wikipedia] cannot be
+ directly implemented used the language. In other words the formal
+(generative)
+ grammar rule: "quoted-text --> quote character* quote"
+ does not have a direct implementation in the language. This is because 
+ test operations in the language do not include 
+ "regular expressions" [->wikipedia]. However these type of rules should usually be able 
+ to be "factored out" using a set of equivalent rules. For example
+
+   rule: quoted-text --> quote characterset quote;
+   rule: characterset --> characterset character;
+   rule: characterset --> character character;
+
+ There may be more than one way of factoring a given rule.
+
+ ** The virtual machine
+    
+    The language is based upon a "virtual machine" [->wikipedia] which 
+    has the following characteristics
+    The machine looks like this.
+
+    -machine-
+    -stack: token1, token2, token3   
+    -tape:  value1, value2, --> value3, ..., ...
+    -workspace: sometext
+    -peep: c
+
+
+      
+    D- a workspace:
+       This is where text manipulations take place and is similar to the 
+       sed stream-editor "pattern space". Is affected by the commands add,
+clear,
+       push, pop, indent among others.
+     - a peep character:
+       this is a single character buffer which contains the next character in the 
+       inputstream and is used by the commands such as "until", "while",
+       "whilenot". The character in the "peep" is added to the end of the
+       workspace when a new character is read from the input stream (and that 
+       new character is placed in the peephole. This buffer is not directly manipulable (unlike 
+       the workspace)
+     - a tape:
+       This is designed to contain the "attributes" of the parsed input stream
+       according to the rules of a formal language.
+       This tape is affected by the commands "put" and "get". The tape has
+       a pointer which is affected by the commands "++" and "--" which
+       increment and decrement the pointer respectively. note that the pointer
+       is also affected by the "push" and "pop" commands which act on 
+       the stack.
+     - a stack:
+       This stack is designed to contain the "parse tokens" [->wikipedia] of 
+       the formal language. but the stack can contain any text data. the 
+       stack is affected by the "push" and "pop" commands.
+     - a counter:
+       the machine will probably contain a counter or even a simple
+       arithmetic accumulator which will be useful for compilers or
+       translaters which need to perform arithmetic. An example 
+       of this is the need for a compiler to calculate memory address
+       offsets for jump and data allocation. this counter has
+       not been implemented yet.
+ 
+   The virtual machine is implemented by the file://Machine.cpp class. This
+   class implements the basic operations which the machine can
+   carry out, such as "push", "pop", "add", "clear", "print" etc. A version of this class was 
+   also written in java (file://Machine.java ) . This java version was
+   written first and does not contain some of the features of the c++
+   version. Also the java version is not an "interpreting" version. That
+   is, it generates java code which can then be compiled to execute the   
+   script. Also the java version does not support the "until" command nor
+   the "while" command. Also the java version does not support the "until"
+command nor
+   the "while" command.   
+
+
+ ** Language Commands
+
+  The philosophy followed in implementing these commands has been to
+  avoid anything unnecessary, in the sense of a "risc" [->wikipedia] system.
+  For this reason regular expressions have been avoided but may prove to
+  be necessary in the long run.
+
+  Comments may be including in scripts between two hash characters
+  like this: # a script comment #  
+  
+  D- crash:
+      exits the script without reading anything more from
+      standard input. equivalant to the sed command 'q'
+   - flag:
+      sets a flag in the virtual machine which can be used
+      to indicate that a "shift-reduce" [->wikipedia] operation has been
+      preformed and therefore another loop will need to be 
+      invoked. This is to ensure that all grammar rules are applied
+      during each cycle of the program. This subject required more
+      extensive explanation.
+   - print:
+      prints the workspace to the standard output stream (stdout). 
+      Equivalent to the sed command 'p'
+   - clear:
+      sets the workspace to a zero length string. Equivalent
+      to the sed command 
+      :> s/^.*$//;
+   - replace:
+      replaces a string in the workspace with another string. I
+      wanted to avoid implementing this command.
+   - read:
+      reads one more character from the stdin.
+   - push:
+      pushes one token from the workspace onto the stack.
+      see "push" file:/machine/doc/push.txt.html
+   - pop:
+      pops one token from the stack and adds it to the 
+      beginning of the stack and seperates it with the '|' bar
+      character (this implementation needs to be changed: no "bar"
+      character needs to be added- the script writer should include
+      a seperator character in token names) see
+      "pop" file:/machine/doc/pop.txt.html
+   - put:
+      puts the contents of the workspace into the current
+      item of the tape (as indicated by the tape pointer)
+   - get:
+      gets the current item of the tape and adds it to
+      the end of the workspace with NO seperator character
+   - ++: 
+      increments the tape pointer by one 
+   - --:
+      decrements the tape pointer by one.
+   - newline:
+      adds a newline to the workspace
+   - indent:
+      adds two spaces to each line of the workspace. 
+      This may be useful for formatting applications.
+   - clip:
+      removes the last character from the workspace
+   - state:
+      prints the current state of the virtual machine
+      to stdout. maybe useful for debugging
+   - add 'text':
+      adds text to the end of the workspace
+   - while 'text':
+      reads characters from stdin while ...
+   - whilenot 'text':
+      no explanation
+   - until 'text' 'nottext':
+      reads characters from stdin until the workspace
+      ends in the given text and does not end in the 
+      second given text. This maybe used for capturing
+      quoted strings etc.
+
+ ** language test structures
+   
+   D- /string/{ commands }:
+      if the workspace matches the string (literally, since regular
+      expressions are not supported) then execute the commands
+      contained in the braces. The braces are always required even
+      if only one command is contained in the block (unlike c or 
+      "sed" http://sed.sourceforge.net ). all commands must
+      end with a semicolon. 
+     - <text> { commands }:
+      if the workspace begins with the text execute the commands
+      contained within the braces, otherwise skip the commands.
+     
+ ** Example scripts
+ 
+   u- file "script/nn.txt":
+    This script doesnt do anything useful but shows the
+    syntax.
+    - file "script/exp.txt":
+    This script parses an algebraic expression such as that
+    contained in file://script/tt.txt 
+    - file "script/check-syntax.txt":
+    this script parses itself and checks for syntax errors
+
+    exp.txt was written before
+    the introduction of the "while", "until" ... commands. These
+    commands are designed to simplify scripts by providing 
+    some of the functionality which is normally provided by 
+    a "lexer" [->wikipedia]. For example parsing quoted text
+    is greately simplified by the "until" command.
+    An example
+    -->
+     /"/ { 
+        clear;
+        until '"' not '\"'; 
+        clip;
+        put;
+        clear;
+        add '*quoted-text';
+        push;
+        clear;
+     }
+     --<
+     This script parses quoted text, preserving the value of the
+     "attribute" (what is between the quotes), on the tape, and
+     pushing onto the token stack the token "quoted-text". The 
+     "not" extension of the "until" command allows for escaped
+     double quotes characters to be included in the quoted text. 
+     If the "until" command did not exist it would be necessary
+     to write a rather tedious list of grammar rules (and script
+     statements) to achieve the same thing. This is why 
+     traditional parsing and "compilers" [->wikipedia] are 
+     divided into lexers and parsers.
+ 
+** Compiling
+
+  The c++ code was compiled using the bloodshed compiler
+  (latest beta version). It has only been compiled on a ms-windows
+  computer because that is the only OS I have access to with
+  a compiler. The code can be compiled by loading the .dev file
+  in the compiler (by opening a project). I do not think that
+  the code contains any ms-windows specific code.
+    
+This explanation is incomplete.  
+
+una "pagina" file://index.ca.xhtml en catala.
+
+(the html is generated from the file "index.txt", the sed script
+file:/makehtml.txt , and the cgi script file:/text2html.txt )
+    

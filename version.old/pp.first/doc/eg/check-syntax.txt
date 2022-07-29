@@ -1,0 +1,174 @@
+
+#
+   checks the syntax of a script and prints error messages. Some of the aspects
+   of the script below are still to be implemented, for example allowing both "
+   and ' to be used to delimit quoted text.
+
+ -#
+
+#
+  The first section corresponds to what would be the 
+  "tokeniser" or lexer of a traditional parser/ compiler 
+#
+
+  /;/ { clear; add "*semi-colon"; push; }
+
+  /{/ { clear; add "*open-brace"; push; }
+
+  /}/ { clear; add "*close-brace"; push; }
+
+  # equals tests eg: /this/ 
+    instead of 'replace' I could implement the 'escape' command #
+  /\//
+  { clear; until "/" not "\/"; clip;
+    replace "\/" "/"; put; clear; add "test*"; push;
+  }
+
+  # begin tests (this syntax "<>" may be changed) --#
+  /</
+  { clear; until ">" not "\>"; clip; replace "\>" ">";
+    put; clear; add "*begin-test*"; push;
+  }
+
+  # quoted text #
+  /'/
+  {
+    clear; until "'" not "\'"; clip;
+    replace "\'" "'"; put; clear; add "quoted*";
+    push;
+  } 
+
+  /"/
+  {
+    clear; until '"' not '\"'; clip; replace '\"' '"';
+    put; clear; add "quoted*"; push;
+  } 
+
+  # comments #
+  /#/
+  { clear; until '#'; clip; put; clear; add "comment*"; push; } 
+
+  [a]
+  { while [a]; put; clear; add "*word"; push; }
+
+#--
+  now begins the traditional "parsing" section in which tokens 
+  are "shifted and reduced", and the attributes of those tokens
+  are transformed (or translated, or compiled, depending on the 
+  terminology used)
+--#
+
+  pop; pop;
+  /word*semi-colon*/
+  {
+    clear;
+    get;
+
+    #- multiple tests are treated as an "or" test, that is, if
+       one of the test is true that the block is executed -#
+    /add/
+    /while/
+    /whilenot/
+    /until/
+    /replace/
+    {
+      clear;
+      add "missing argument: the '";
+      #- get the name of the command from the tape and 
+         at it to the error message -#
+      get; 
+      add "' command requires at least one argument";
+      print;  
+    }
+  }
+
+  /word*word*/
+  {
+    clear;
+    add "Too many commands: '";
+    get; ++; add " "; get; add "' ";
+    add "A command must be followed by an argument (within quotes) ";
+    add "or by a semi-colon.";
+    print;
+  }
+
+  /open-brace*quoted-text*/
+  /close-brace*quoted-text*/
+  /semi-colon*quoted-text*/
+  {
+    clear;
+    add "badly placed argument: ";
+    add "all arguments (within quotes) must be preceded by a command";
+    print;
+  }
+
+  
+  /word*close-brace*/
+  /word*open-brace*/
+  /open-brace*close-brace*/
+  /open-brace*semi-colon*/
+  /quoted-text*open-brace*/
+  /quoted-text*close-brace*/
+  /test*semi-colon*/
+  /test*close-brace*/
+  /test*quoted-text*/
+  /begin-test*semi-colon*/
+  /begin-test*close-brace*/
+  /begin-test*quoted-text*/
+  {
+    #- syntax errors -#
+  }
+
+  /word*quoted-text*/
+  {
+    clear;
+    get;
+
+    /push/
+    /pop/
+    /get/
+    /put/
+    /indent/
+    /newline/
+    /clear/
+    /crash/
+    /clip/
+    /flag/
+    /read/
+    /++/
+    /--/  
+    {
+      clear;
+      add "incorrect argument: the '";
+      get;
+      add "' command does not (and cannot) have an argument ";
+      add " see http://bumble.sf.net/machine/doc/";
+      get;
+      add ".txt for more information about this command";
+      print;
+    }
+  }
+
+  push; push;
+  
+  pop; pop; pop;
+  /word*quoted-text*quoted-text*/
+  {
+    clear;
+    get;
+
+    /add/
+    /while/
+    /whilenot/
+    {
+      clear;
+      add "too many arguments: the '";
+      get;
+      add "' command only has one argument ";
+      print;
+    }
+  }
+  push; push; push; 
+ 
+ ... and more
+

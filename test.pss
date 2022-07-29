@@ -1,0 +1,10 @@
+    read; 
+    "\n" { 
+      while [ \t\r]; clear; 
+      !(eof) { read; "\n" { a+; }}
+    }
+    clear;
+    (eof) {
+      add "Paragraphs: "; count; add "\n";
+      print; quit;
+    }

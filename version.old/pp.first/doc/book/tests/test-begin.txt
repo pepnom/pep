@@ -1,0 +1,20 @@
+
+  && The Begins-with test 
+  -----------------------
+
+  The 'begins with' test checks whether the workspace begins
+  with a given string. This test is written
+   
+   >> <string> { ... }
+
+  
+EXAMPLES
+  
+  * save urls contained in a text
+  >> [:a:] { while [:a:]; <http://> { put; clear; }}
+
+SEE ALSO
+
+   test-is , test-list , test-tape , test-eof 
+
+  

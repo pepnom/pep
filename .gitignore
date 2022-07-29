@@ -1,0 +1,9 @@
+# ignore some existing files
+**/.out
+**/.log
+**/.aux
+**/.flp
+*.out
+*.log
+*.aux
+*.flp

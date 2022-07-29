@@ -1,0 +1,25 @@
+
+#-- A sample grammar file
+
+Command --> Identifier Semi-Colon
+{
+ Identifier "d"
+  { Command := \1 \2 "delete space"; }
+ Identifier "p"
+  { Command := \1 \2 "print space"; }
+}
+
+
+List --> Command Command;
+Condition --> Identifier Quoted-String;
+
+Command --> String Terminator
+{
+  String "/:;=\1 -->\2 ba{} ((/" 
+  {
+    Command:=  
+     "add to hold (space)" \1 "here and" 
+     "here" \2 \3;
+  }
+}
+

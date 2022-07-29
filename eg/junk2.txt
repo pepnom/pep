@@ -1,0 +1,1027 @@
+
+# the bash history file
+df
+sudo apt-get upgrade
+#1623302847
+man ruby
+# the venerable tcl
+# havent used it much.
+#1623302950
+tcl
+# duplicate timestamp with comment
+#1623302953
+tclsh
+tclsh
+#1623302965
+man 3tcl if
+#1623302973
+man 3TCL
+#1623302979
+man button
+#1623303225
+man 3TCL button
+#1623303410
+chmod a+x ofc.sh
+#1623303413
+ofc.sh
+#1623303416
+./ofc
+#1623303420
+./ofc.sh
+#1623303439
+rsync
+#1623303765
+source ~/.bashrc
+# can never remember how to use find
+#1623304524
+find . -iname "e"
+#1623304726
+f=$(find . | wc -l); echo $f
+#1623304748
+f=$(find . | wc -l); if $f > 3; then echo $f; fi
+#1623304992
+man find
+#1623305147
+echo **/*.txt
+#1623305278
+echo *.txt **/*.txt
+#1623329203
+basrhc
+#1623329234
+apt-cache search vim | less
+#1623329299
+which vim
+#1623329307
+get vim
+#1623329595
+get vim
+#1623334656
+sed '/navbar/ r navbar.html' t.root.index.html 
+#1623334720
+sed '/navbar/ r navbar.html' t.root.index.html 
+# this was for inserting the navbar into html as part of the makethespoon site.
+# remembering sed
+#1623334741
+sed '/navbar/,/end.nav/ r navbar.html' t.root.index.html 
+#1623334768
+sed '/navbar/,/end.nav/ {d; r navbar.html}' t.root.index.html 
+# more iterations here.
+# trial and error
+#1623334778
+sed '/navbar/,/end.nav/ {d; r navbar.html; }' t.root.index.html 
+#1623334787
+sed '/navbar/,/end.nav/ {d;r navbar.html; }' t.root.index.html 
+#1623334795
+sed '/navbar/,/end.nav/{d;r navbar.html; }' t.root.index.html 
+#1623334802
+sed '/navbar/,/end.nav/{d;r navbar.html;}' t.root.index.html 
+#1623328982
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/sf ~/
+#1623329087
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/.bashrc .
+#1623329095
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/.bash_history 
+#1623329126
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/.vimrc .
+#1623329142
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/.vim .
+#1623329154
+rsync -rvuhi /media/wworth/SSDTRION/rowantree/.viminfo .
+#1623334906
+sedbook
+#1623334915
+sedbook
+#1623373349
+stuff
+#1623373408
+chmod a+x *.sh
+#1623373410
+stuff
+#1623373480
+stuff
+#1623382827
+bashbook
+#1623383305
+echo **/*e*
+#1623383485
+echo **/*sitedev*
+#1623383495
+echo **/*sitedev* *sitedev*
+#1623383841
+bashbook
+#1623384182
+echo **/*site*/
+#1623384190
+echo **/*site*
+#1623385125
+man ls
+#1623423089
+bashbook
+#1623423591
+man date
+#1623423734
+man date
+#1623423860
+bashbook
+#1623426801
+diff co.12Jun2021.01H30M47S.AM co.12Jun2021.01H34M05S.AM 
+#1623426812
+man diff
+#1623426880
+diff -s co.12Jun2021.01H30M47S.AM co.12Jun2021.01H34M05S.AM 
+#1623426913
+diff -s co.12Jun2021.01H30M47S.AM co.12Jun2021.01H30M47S.AM 
+#1623427143
+man diff
+#1623463012
+apt-cache search rust
+#1623463017
+apt-cache search rust | less
+#1623463445
+get seamonkeh
+#1623463450
+get seamonkey
+#1623463498
+login
+#1623463595
+get sea-monkey
+#1623463610
+apt-cache search seamonkey
+#1623463621
+apt-cache search monkey
+#1623463659
+apt-cache search mONKEy
+#1623463667
+apt-cache search komposer
+#1623463679
+apt-cache search css
+#1623463688
+apt-cache search css | less
+#1623463819
+apt-cache search kompozer
+#1623463878
+apt-cache search seamonkey | less
+#1623463886
+apt-cache search seamonkey- | less
+#1623463909
+apt-cache search css | less
+#1623463923
+get aephea
+#1623463941
+aephea
+#1623463959
+sudo aephea
+#1623464085
+tar -xvf seamonkey-2.53.7.1.en-GB.linux-x86_64.tar.bz2 
+#1623464102
+unzip seamonkey-2.53.7.1.en-GB.linux-x86_64.tar.bz2 
+#1623464112
+open seamonkey-2.53.7.1.en-GB.linux-x86_64.tar.bz2 
+#1623464183
+unzip -h
+#1623464224
+bunzip -h
+#1623464228
+get bunzip
+#1623464251
+bzip2
+#1623464267
+bzip2 -kd seamonkey-2.53.7.1.en-GB.linux-x86_64.tar.bz2 
+#1623464300
+les -la
+#1623464515
+./seamonkey -help
+#1623464551
+get surfraw
+#1623464561
+man surfraw
+#1623464983
+get chrome
+#1623464990
+get chromium
+#1623465827
+chromium
+#1623467486
+python
+#1623467503
+python3
+#1623467639
+apt install python3-pip
+#1623467645
+sudo apt install python3-pip
+#1623467718
+pip install
+#1623467740
+apt-get updatae
+#1623467744
+apt-get update
+#1623467747
+sudo apt-get update
+#1623467880
+pip3 install geopy
+#1623467933
+rustlang
+#1623467891
+pip3 install geopandas
+#1623468006
+chmod a+x junk.py
+#1623468013
+python3 junk.py
+#1623468056
+python3 junk.py
+#1623468099
+python3 junk.py
+#1623468849
+chmod a+x geo.py
+#1623468856
+python3 geo.py
+#1623468902
+python3 geo.py
+#1623469373
+fortune 
+#1623469735
+fortune 
+#1623500102
+fortune
+#1623501408
+for f in *; do cp $f $f.txt; done
+#1623501438
+cat * | less
+#1623502088
+cat ofc.state.txt 
+#1623502135
+cat ofc.state.txt 
+#1623502544
+man ls
+#1623503300
+select f in $(cat index.html); do break; done
+#1623503337
+PS3="what";select f in $(cat index.html); do break; done
+#1623503354
+cat index.html
+#1623503383
+PS3="what";select f in $(cat index.new.txt); do break; done
+#1623508344
+apt-get search lynx
+#1623508354
+apt-cache search lynx
+#1623508359
+apt-cache search lynx | less
+#1623508406
+get elinks
+#1623508429
+elinks https://www.kickstartarts.org/rhythmz-bollywood
+#1623508444
+man elink
+#1623508446
+man elinks
+#1623508475
+elinks -dump https://www.kickstartarts.org/rhythmz-bollywood
+#1623508946
+elinks -dump https://www.eventbrite.com.au/e/childrens-unversity-ogoh-ogoh-workshop-tickets-155725825135?aff=ebdssbcitybrowse
+#1623508988
+elinks -dump https://www.eventbrite.com.au/e/childrens-unversity-ogoh-ogoh-workshop-tickets-155725825135?aff=ebdssbcitybrowse > eventbrite.ogoh.txt
+#1623538507
+elinks -dump https://www.vu.edu.au/study-at-vu/courses/browse-study-areas/all-courses-a-to-z > vu.edu.au.courses.txt
+#1623538514
+cat vu.edu.au.courses.txt 
+#1623538535
+cat vu.edu.au.courses.txt | less
+#1623538843
+sed 's/^ *[...]//' vu.edu.au.courses.txt | less
+#1623538866
+sed 's/^ *[\d\d\d]//' vu.edu.au.courses.txt | less
+#1623538903
+sed 's/^ *\[[0-9]..\]//' vu.edu.au.courses.txt | less
+#1623538923
+sed 's/^ *\[...\]//' vu.edu.au.courses.txt | less
+#1623538942
+sed 's/^.*\[...\]//' vu.edu.au.courses.txt | less
+#1623538951
+sed 's/^.*\[...\]/ /' vu.edu.au.courses.txt | less
+#1623538959
+sed 's/^.*\[...\]/  /' vu.edu.au.courses.txt | less
+#1623538979
+sed -i 's/^.*\[...\]/  /' vu.edu.au.courses.txt 
+#1623539042
+sed 's//' vu.edu.au.courses.txt | less
+#1623539450
+cat uni.courses.txt | uniq | less
+#1623539640
+sed '/^ *$/d' vu.edu.au.courses.txt | less
+#1623539659
+sed '/^ *$/d' uni.courses.txt | less
+#1623539673
+sed -i '/^ *$/d' uni.courses.txt | less
+#1623539702
+sed '/^.$/d' uni.courses.txt | less
+#1623539715
+sed -i '/^.$/d' uni.courses.txt | less
+#1623671724
+pep -f eg/mark.latex.pss -i " WHY "
+#1623671743
+pep -f eg/mark.latex.pss pars-book.txt
+#1623672056
+pdflatex
+#1623672017
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623672361
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623672367
+pdflatex test.tex
+#1623672064
+latexbook
+#1623673905
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623674015
+pep -f eg/mark.latex.pss pars-book.txt | pdflatex
+#1623674028
+pep -f eg/mark.latex.pss pars-book.txt | pdflatex | less
+#1623674059
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623674063
+pdflatex test.tex
+#1623674180
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623674183
+pdflatex test.tex
+#1623674465
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623674468
+pdflatex test.tex
+#1623674604
+pdflatex test.tex
+#1623674712
+pdflatex test.tex
+#1623674802
+pdflatex test.tex
+#1623674920
+pdflatex test.tex
+#1623675225
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623675228
+pdflatex test.tex
+#1623675434
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623675556
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623675567
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623675672
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623676101
+gh.u eg/mark.latex.pss
+#1623676890
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623676895
+pdflatex test.tex
+#1623676981
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623676986
+pdflatex test.tex
+#1623677061
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623677064
+pdflatex test.tex
+#1623677102
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623677104
+pdflatex test.tex
+#1623677268
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623677270
+pdflatex test.tex
+#1623677285
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623677408
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623677411
+pdflatex test.tex
+#1623677432
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623677609
+pdflatex test.tex
+#1623677972
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623677981
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623678055
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623678060
+pdflatex test.tex
+#1623678181
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623678183
+pdflatex test.tex
+#1623678216
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623678218
+pdflatex test.tex
+#1623678441
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623678465
+pdflatex test.tex
+#1623678479
+open test.pf
+#1623678542
+open test.pdf
+#1623678621
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623678629
+pdflatex test.tex
+#1623678636
+open test.pdf
+#1623678659
+pdflatex test.tex
+#1623678663
+open test.pdf
+#1623679038
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623679043
+pdflatex test.tex
+#1623679048
+open test.pdf
+#1623679532
+pep -f eg/mark.latex.pss pars-book.txt
+#1623679537
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623679542
+pdflatex test.tex
+#1623679625
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623679627
+pdflatex test.tex
+#1623679795
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623679798
+pdflatex test.tex
+#1623679962
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623679966
+pdflatex test.tex
+#1623679973
+open test.pdf
+#1623680218
+gh.u eg/mark.latex.pss
+#1623680242
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623680710
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623680714
+pdflatex test.tex
+#1623680720
+open test.pdf
+#1623680885
+open test.tex
+#1623725220
+vimdiff gh.c object/gh.c
+#1623725248
+vimdiff gh.c object/gh.c
+#1623725823
+rmdir bash-book.txt.x_files/
+#1623725949
+vimdiff helpers.old.sh helpers.pars.sh
+#1623726981
+open tr.java.pdf 
+#1623727252
+grep info *.h
+#1623727498
+pep -e "r;t;d;" -Ii "abc"
+#1623728310
+pep -f eg/natural.language.pss 
+#1623728327
+pep -f eg/natural.language.pss "the dog is good"
+#1623728338
+pep -f eg/natural.language.pss -i "the dog is good"
+#1623728352
+pep -f eg/natural.language.pss -i "the dog is small"
+#1623728801
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623729265
+cbook
+#1623729294
+man 3 toupper
+#1623758019
+pep -e "r; upper; t;d;" -i "abcd"
+#1623760162
+pep -e "r; uppe; t;d;" -i "abcd"
+#1623760172
+pep -e "r; t;d;" -i "abcd"
+#1623760199
+pep -e "r;t;d;" -i "abcd"
+#1623760219
+pep -f eg/json.check.pss -i "abcd"
+#1623760274
+pep -f eg/json.check.psis -i "abcd"
+#1623760429
+pep -e "r;t;d;" -i "abc"
+#1623760471
+pep -e "r;t;t;d;" -i "abc"
+#1623760521
+pep -e "r;upper;t;d;" -i "abc"
+#1623760772
+pep -e "r;t;d;" -Ii "abcd"
+#1623761102
+pep -e "r;t;t;d;" -i "abcd"
+#1623761124
+pep -f eg/json.check.pss -i "abcd"
+#1623761175
+pep -f eg/json.check.pss -i "[1,2]"
+#1623761187
+pep -f eg/json.check.pss -i "[1,2,-3.20e2]"
+#1623761217
+pep -Ie "r;upper;t;d;" -i "abcd"
+#1623761287
+pep -Ie "r;upper;t;d;" -i "abcdef"
+#1623761459
+pep -Ie "r;upper;t;d;" -i "abcdef"
+#1623761527
+pep -Ie "r;upper;t;d;" -i "abcdef"
+#1623761899
+pep -Ie "r;upper;t;d;" -i "abcdef"
+#1623762602
+pep -f compile.pss compile.pss | less
+#1623762804
+pep -f compile.pss compile.pss > asm.new.pp
+#1623762848
+pep -e "r;t;t;d;" -i "abcd"
+#1623762910
+pep -e "r;t;t;d;" -i "abcd"
+#1623762960
+pep -e "r;t;t;d;" -i "abcd"
+#1623762968
+pep -e "r;upper;t;d;" -i "abcd"
+#1623762981
+pep -e "r;cap;t;d;" -i "abcd"
+#1623763016
+pep -e "r;nochars;chars;t;d;" -i "abcd"
+#1623763025
+pep -e "r;chars;t;d;" -i "abcd"
+#1623763069
+pep -e "r;until ' ';cap; t;d;" -i "a word and another "
+#1623763510
+pep -e 'r; add "\\"; t; d;' -i "abcd"
+#1623763524
+pep -e 'r; add "\\\"; t; d;' -i "abcd"
+#1623763538
+pep -e 'r; add "\\"; t; d;' -i "abcd"
+#1623763543
+pep -e 'r; add "\"; t; d;' -i "abcd"
+#1623764446
+grep readc *
+#1623765071
+pep -e 'r; add "\""; t; d;' -i "abcd"
+#1623765087
+pep -e 'r; add "\\""; t; d;' -i "abcd"
+#1623765197
+pep -e 'r; add "\\""; t; d;' -iI "abcd"
+#1623765204
+pep -e 'r; add "\\""; t; d;' -Ii "abcd"
+#1623765260
+pep -e 'r; add "\\\\""; t; d;' -Ii 
+#1623765273
+pep -e 'r; add "\\\\""; t; d;' -Ii 'abcdefg'
+#1623765356
+pep -e 'r; until "e"; t; d;' -Ii 'abcdefg'
+#1623765412
+pep -e 'r; until "e"; t; d;' -Ii 'abcdefg'
+#1623765448
+pep -e 'r; until "e"; t; d;' -Ii 'ab\ecdefg'
+#1623766072
+pep -e 'r; until "e"; t; d;' -Ii 'ab\ecdefg'
+#1623766117
+pep -e 'r; until "e"; t; d;' -Ii 'ab\\ecdefg'
+#1623766170
+pep -e 'r; until "e"; t; d;' -Ii 'ab\\\ecd\\efeg'
+#1623766272
+pep -e 'r; until "\\"; t; d;' -Ii 'ab\ecdefg'
+#1623766341
+pep -e 'r; until "\\"; t; d;' -Ii 'ab\\ecdefg'
+#1623766437
+pep -e 'r; add "\\"; t; d;' -Ii 'abcd'
+#1623766457
+pep -e 'r; add "\\"; t; d;' -i 'abcd'
+#1623766711
+pep -f eg/mark.latex.pss pars-book.txt
+#1623766779
+pep -f eg/natural.language.pss -i "this is "
+#1623766799
+pep -f eg/json.check.pss -i "abc"
+#1623766808
+pep -f eg/json.check.pss -i "[1,2]"
+#1623766845
+pep -f eg/mark.latex.pss "why is that"
+#1623766879
+pep -f eg/mark.latex.pss -i "why is thaT"
+#1623766887
+pep -f eg/mark.latex.pss -i "why is thaT "
+#1623766901
+pep -f eg/mark.latex.pss -i "AND THIS IS "
+#1623766932
+pep -f eg/mark.latex.pss -i "AND THIS IS "
+#1623766954
+pep -f eg/mark.latex.pss pars-book.txt
+#1623767049
+pep -f eg/mark.latex.pss pars-book.txt
+#1623767202
+pep -f eg/mark.latex.pss pars-book.txt
+#1623767210
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623767293
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623767302
+pdflatex book.tex
+#1623767320
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623767323
+pdflatex book.tex
+#1623767369
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623767478
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623767483
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623767501
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623767603
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623767643
+pep -f eg/mark.latex.pss -I pars-book.txt 
+#1623767862
+pep -e 'r;until "e"; t;d;" -i "\\\eabcdef"
+#1623767872
+pep -e 'r;until "e"; t;d;' -i "\\\eabcdef"
+#1623767879
+pep -e 'r;until "e"; t;d;' -Ii "\\\eabcdef"
+#1623767942
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623768109
+pep -f eg/mark.latex.pss pars-book.txt
+#1623768121
+pep -f eg/mark.latex.pss pars-book.txt | less 
+#1623768298
+pep -f eg/mark.latex.pss index.txt
+#1623768483
+make vpp
+#1623768490
+man valgrind
+#1623768529
+valgrind pep
+#1623768589
+pep -f eg/mark.latex.pss index.txt
+#1623768609
+pep -f eg/mark.latex.pss index.txt > test.tex
+#1623768614
+pdflatex test.tex
+#1623768654
+pep -f eg/mark.latex.pss index.txt > test.tex
+#1623768656
+pdflatex test.tex
+#1623768662
+open test.pdf
+#1623768692
+pdflatex test.tex
+#1623768696
+open test.pdf
+#1623768714
+pep -f eg/mark.latex.pss pars-book.txt > test.tex
+#1623808431
+valgrind --tool=memcheck program_name
+#1623808440
+valgrind --tool=memcheck ./pep
+#1623808472
+valgrind --tool=memcheck ./pep -f eg/mark.latex.pss pars-book.txt
+#1623809238
+valgrind --tool=memcheck ./pep -f eg/mark.latex.pss pars-book.txt
+#1623809285
+pep -f eg/mark.latex.pss index.txt
+#1623809295
+pep -f eg/mark.latex.pss pars-book.txt
+#1623809322
+pep -f eg/mark.latex.pss -I pars-book.txt
+#1623809527
+pep -f 'r; until "abcxyz."; print; d;' "abc"
+#1623809533
+pep -f 'r; until "abcxyz."; print; d;' -i "abc"
+#1623809541
+pep -e 'r; until "abcxyz."; print; d;' -i "abc"
+#1623809554
+pep -e 'r; until "abcxyz."; print; d;' index.txt
+#1623809570
+pep -e 'r; until "abcxyz."; print; d;' pars-book.txt
+#1623809599
+pep -e 'r; until "23."; print; d;' pars-book.txt
+#1623809611
+pep -e 'r; until "test was"; print; d;' pars-book.txt
+#1623809648
+pep -e 'r; until "aa"; print; d;' pars-book.txt
+#1623809662
+pep -e 'r; until "aa"; print; d;' -i "bbaa"
+#1623809672
+pep -e 'r; until "aa"; print; d;' -i "bbggggg"
+#1623809680
+pep -e 'r; until "aa"; print; d;' -i "bbgggggaahh"
+#1623809707
+pep -e 'r; until "aa"; print; quit;' -i "bbgggggaahh"
+#1623809726
+pep -e 'r; until "aa"; print; quit;' pars-book.txt
+#1623809737
+pep -e 'r; until "abc"; print; quit;' pars-book.txt
+#1623809746
+pep -e 'r; until "abcxyz"; print; quit;' pars-book.txt
+#1623809755
+pep -e 'r; until "abcxyz."; print; quit;' pars-book.txt
+#1623809803
+pep -e 'r; until "131517"; print; quit;' pars-book.txt
+#1623809815
+pep -e 'r; until "13"; print; quit;' pars-book.txt
+#1623809837
+pep -e 'r; until "EXAM"; print; quit;' pars-book.txt
+#1623809884
+pep -e 'r; until "13"; print; quit;' pars-book.txt
+#1623809891
+pep -e 'r; until "13"; prinT; QUIt;' pars-book.txt
+#1623809905
+pep -e 'r; until "13"; quit;' pars-book.txt
+#1623809912
+pep -e 'r; until "13"; d;' pars-book.txt
+#1623809917
+pep -e 'r; until "13"; print; d;' pars-book.txt
+#1623809930
+pep -e 'r; until ""; print; quit;' pars-book.txt
+#1623809951
+pep -e 'r; until "DOCUMENT HI"; print; d;' pars-book.txt
+#1623809978
+pep -e 'r; until "CANDID"; print; d;' pars-book.txt
+#1623809996
+pep -e 'r; until "TAPE TEST"; print; d;' pars-book.txt
+#1623810037
+pep -e 'r; until "EXAM"; print; quit;' pars-book.txt
+#1623810046
+pep -e 'r; until "TAPE T"; print; quit;' pars-book.txt
+#1623810053
+pep -e 'r; until "TAPE TEST"; print; quit;' pars-book.txt
+#1623810063
+pep -e 'r; until "13"; print; quit;' pars-book.txt
+#1623810150
+iipep -e 'r; until "13"; prinT; QUIt;' pars-book.txt
+#1623810070
+pep -e 'r; until "13"; print; quit;' -I pars-book.txt
+#1623810722
+pep -e 'r; until "13"; print; quit;' -I pars-book.txt
+#1623810747
+pep -e 'r; until "13"; print; quit;' pars-book.txt
+#1623810788
+pep -f eg/mark.latex.pss pars-book.txt
+#1623810967
+pep -f eg/mark.latex.pss pars-book.txt 
+#1623810973
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623811011
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623811018
+pdflatex book.tex
+#1623811171
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623811177
+pdflatex book.tex
+#1623811188
+open book.pdf
+#1623811323
+pep -f eg/mark.latex.pss pars-book.txt | less
+#1623811412
+pep -f eg/mark.latex.pss pars-book.txt > book.tex
+#1623811418
+pdflatex book.tex
+#1623811429
+open book.pdf
+#1623830018
+pep.mb
+#1623830029
+pep.mb
+#1623830049
+open book.pdf
+#1623830626
+pep -f ../eg/natural.language.pss -i "abc"
+#1623889757
+stuff
+#1623892745
+pep -e "r;t;d;" -i "abc"
+#1623893027
+pep -e "r;t;d;" -i "abc"
+#1623893067
+export ASMPP=~/sf/htdocs/books/pars/
+#1623893071
+pep -e "r;t;d;" -i "abc"
+#1623893913
+pep -e "r;t;d;" -i "abc"
+#1623893924
+echo ASMPP
+#1623893928
+echo $ASMPP
+#1623894146
+peprc
+#1623894571
+pbook
+#1623894998
+pep -c
+#1623895002
+pep -C
+#1623896488
+pep -f translate.java.pss -i "r;t;d"
+#1623896604
+pep -f translate.java.pss -i "r;t;d"
+#1623896614
+pep -f translate.java.pss -i "r;t;d;"
+#1623896624
+pep -f translate.java.pss -i "r;t;d;" | less
+#1623896649
+pep -f translate.java.pss -i "r;t;d;" > Machine.java
+#1623896655
+javac Machine.java 
+#1623896697
+pep -f translate.java.pss -i "r;upper;d;" 
+#1623896709
+javabook
+#1623897023
+pep -f translate.tr.pss -i "r;upper;d;" 
+#1623897032
+pep -f translate.py.pss -i "r;upper;d;" 
+#1623915890
+whois makethespoon.com
+#1623926593
+echo $MANPATH
+#1623926602
+echo $PATH
+#1623927983
+peprc
+#1623928806
+which dict
+#1623928869
+echo $path
+#1623928875
+echo $PATH
+#1623935069
+pep.mb
+#1623935173
+echo ASMPP
+#1623935181
+echo $ASMPP
+#1623935274
+pep -e "r;d;" -i "abc"
+#1623935299
+echo $ASMPP
+#1623935319
+pep -e "r;d;" -i "abc"
+#1623935496
+pep -e "r;t;" -i "abc"
+#1623935832
+pep -e "r;t;" -i "abc"
+#1623935841
+pep -e "r;t;" -i "abc"
+#1623935936
+pep.lb
+#1623936007
+pep.mb
+#1623936015
+open book.pdf
+#1623936100
+pep.lb
+#1623936556
+texdoc listings
+#1623936646
+pep.lb
+#1623936654
+pep.lb
+#1623937505
+pep.mb
+#1623937520
+open book.pdf
+#1623937629
+pep.mb
+#1623937678
+open book.pdf
+#1623937791
+pep.mb
+#1623937823
+open book.pdf
+#1623937928
+pep.mb
+#1623937934
+open book.pdf
+#1623938425
+latexbook
+#1623938719
+pep.lb
+#1623979155
+sudo gparted
+#1623981635
+get pdftk
+#1623981667
+pdftk
+#1623981716
+ldd pdftk
+#1623981721
+sudo ldd pdftk
+#1623981731
+which pdftk
+#1623981736
+ldd /usr/bin/pdftk
+#1623981778
+get gch
+#1623981783
+get gcj
+#1623981793
+apt-cache search gcj
+#1623981825
+apt-cache search compile java
+#1623981830
+apt-cache search compile java | less
+#1623982010
+javac
+#1623982035
+apt-cache search gcj
+#1623982042
+apt-cache search javac 
+#1623982046
+apt-cache search javac  | less
+#1623982066
+apt-cache search java development  | less
+#1623982085
+apt-cache search java  | less
+#1623982102
+apt-cache search javac  | less
+#1623982123
+apt-cache search jdk  | less
+#1623982176
+get openjdk-11-jdk
+#1623982729
+apt-cache search brlcad  | less
+#1623982736
+apt-cache search cad  | less
+#1623985427
+man password
+#1623985434
+help password
+# examining partitions
+#1623979910
+sudo gparted
+#1623985519
+cat /etc/passwd
+#1623985530
+passwd
+#1623985443
+man passwd
+#1623985566
+sudo gparted
+#1623985490
+linuxbook
+# working on the pep script pars/eg/bash.history.pss
+#1623985838
+mv history.pss bash.history.pss
+#1623985932
+pep -f bash.history.pss ~/.bash_history 
+#1623985938
+pep -f bash.history.pss ~/.bash_history | less
+#1623986034
+pep -f bash.history.pss ~/.bash_history | less
+#1623986125
+pep -f bash.history.pss ~/.bash_history | less
+#1623987343
+pep -f bash.history.pss ~/.bash_history | less
+#1623987867
+pep -f bash.history.pss ~/.bash_history | less
+#1623988746
+pep -f bash.history.pss ~/.bash_history | less
+#1623988954
+pep -f bash.history.pss ~/.bash_history 
+#1623988969
+pep -f bash.history.pss ~/.bash_history | wc -l
+#1623988977
+pep -f bash.history.pss ~/.bash_history | less
+#1623989642
+pep -f bash.history.pss ~/.bash_history | less
+#1623989724
+pep -f bash.history.pss ~/.bash_history 
+#1623989731
+pep -f bash.history.pss ~/.bash_history | less
+#1623989873
+pep -f bash.history.pss ~/.bash_history | less
+#1623990201
+pep -f bash.history.pss ~/.bash_history | less
+#1623990357
+pep -f bash.history.pss ~/.bash_history > junk.txt
+#1624020854
+pep.pyff
+#1624020882
+pep.pyff bash.history.pss ~/.bash_history | less
+#1624021028
+pep.pyff bash.history.pss ~/.bash_history | less
+#1624021174
+pep.pyff bash.history.pss ~/.bash_history | less
+#1624021277
+pep.pyff bash.history.pss ~/.bash_history > junk.txt
+#1624021306
+pep -f bash.history.pss ~/.bash_history 
+# History file parsed and filtered by pars/eg/bash.history.pss 
+# 761 trivial commands (without preceding comments) were removed.

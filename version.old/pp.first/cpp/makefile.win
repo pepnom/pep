@@ -1,0 +1,45 @@
+# Project: Parser
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = Parser.o Instruction.o Machine.o Parser.main.o Program.o Tape.o $(RES)
+LINKOBJ  = Parser.o Instruction.o Machine.o Parser.main.o Program.o Tape.o $(RES)
+LIBS =  -L"C:/Dev-Cpp/lib"  
+INCS =  -I"C:/Dev-Cpp/include" 
+CXXINCS =  -I"C:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Dev-Cpp/include/c++/3.4.2"  -I"C:/Dev-Cpp/include" 
+BIN  = Parser.exe
+CXXFLAGS = $(CXXINCS)  
+CFLAGS = $(INCS)  
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before Parser.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "Parser.exe" $(LIBS)
+
+Parser.o: Parser.cpp
+	$(CPP) -c Parser.cpp -o Parser.o $(CXXFLAGS)
+
+Instruction.o: Instruction.cpp
+	$(CPP) -c Instruction.cpp -o Instruction.o $(CXXFLAGS)
+
+Machine.o: Machine.cpp
+	$(CPP) -c Machine.cpp -o Machine.o $(CXXFLAGS)
+
+Parser.main.o: Parser.main.cpp
+	$(CPP) -c Parser.main.cpp -o Parser.main.o $(CXXFLAGS)
+
+Program.o: Program.cpp
+	$(CPP) -c Program.cpp -o Program.o $(CXXFLAGS)
+
+Tape.o: Tape.cpp
+	$(CPP) -c Tape.cpp -o Tape.o $(CXXFLAGS)

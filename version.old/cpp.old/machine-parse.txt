@@ -1,0 +1,124 @@
+BEGIN {
+  FS = ":"; 
+  sTokens = "";
+  sAttributes = "";
+};
+
+!/^#/ && (NF > 0) {
+ print "";
+ print "======================";
+ print "Input line: " $0;
+ sTokens = sTokens "#" $1;
+ sAttributes = sAttributes "#" $2;
+ sAttributesOld = ""; 
+ print "Token Stack:";
+ print sTokens;
+ print "Attribute List:";
+ print sAttributes;
+
+while (sAttributes != sAttributesOld)
+{
+ sAttributesOld = sAttributes;
+ if (sTokens ~ /#Plus-Sign#Digit#Semi-Colon$/) 
+ { 
+   sAttributes = gensub(/##([^#]*)#$/, 
+     "#iPointer = iPointer + \\1;", "g",
+     sAttributes);
+
+   sub(/#Plus-Sign#Digit#Semi-Colon$/, "#Command", sTokens);
+   print "Reduce: Command --> Plus-Sign Digit Semi-Colon"
+ }
+
+ if (sTokens ~ /#Minus-Sign#Digit#Semi-Colon$/) 
+ { 
+   sAttributes = gensub(/##([^#]*)#$/, 
+     "#iPointer = iPointer - \\1;", "g",
+     sAttributes);
+   sub(/#Minus-Sign#Digit#Semi-Colon$/, "#Command", sTokens);
+   print "Reduce: Command --> Minus-Sign Digit Semi-Colon"
+ }
+
+ if (sTokens ~ /#Word#String#Semi-Colon$/) 
+ { 
+   if (sAttributes ~ /#add#([^#]*)#$/)
+   {
+     sAttributes = gensub(/#add#([^#]*)#$/,
+     "#sWorkArea = sWorkArea + \\1", "g", 
+     sAttributes);
+   }
+
+
+   sub(/#Word#String#Semi-Colon$/, "#Command", sTokens);
+   print "Reduce: Command --> Word String Semi-Colon"
+ }
+
+ if (sTokens ~ /#Word#Semi-Colon$/)
+ {
+   if (sAttributes ~ /#clear#$/)
+   {
+     sub(/#clear#$/, "#sWorkArea = \"\";", sAttributes);
+   }
+
+   if (sAttributes ~ /#put#$/)
+   {
+     sub(/#put#$/,
+       "#sWorkArea = \"\";",
+       sAttributes);
+   }
+
+   if (sAttributes ~ /#get#$/)
+   {
+     sub(/#get#$/, 
+       "#sWorkArea = \"\";", 
+       sAttributes);
+   }
+
+   if (sAttributes ~ /#print#$/)
+   {
+     sub(/#clear#$/, "#print sWorkArea;", sAttributes);
+   }
+
+   if (sAttributes ~ /#pop#$/)
+   {
+     sub(/#pop#$/, 
+       "#sWorkArea = stack[iPointer] + '|' + sWorkArea; iPointer--;",
+       sAttributes);
+   }
+
+   if (sAttributes ~ /#push#$/)
+   {
+     sub(/#push#$/, 
+       "#sWorkArea = stack[iPointer] + '|' + sWorkArea; iPointer++;",
+       sAttributes);
+   }
+
+   sub(/#Word#Semi-Colon$/, "#Command", sTokens);
+   print "Reduce: Command --> Word Semi-Colon";
+
+ } #--if word.semi-colon
+
+ if (sTokens ~ /#Command-List#Command$/) 
+ { 
+    sAttributes =gensub(/#([^#]*)#([^#]*)$/, "#\\1 \\2", "g", sAttributes);
+   #  print "attrib=" sAttributes;
+   sub(/#Command-List#Command$/, "#Command-List", sTokens);
+   print "Reduce: Command-List --> Command-List Command"; 
+ }
+
+ if (sTokens ~ /#Command$/) 
+ { 
+   sub(/#Command$/, "#Command-List", sTokens);
+   print "Reduce: Command-List --> Command"; 
+ }
+
+ if (sTokens ~ /#Pattern#Left-Brace#Command-List#Right-Brace$/) 
+ { 
+   sAttributes =gensub(/#([^#]*)##([^#]*)#$/, 
+     "#if (sWorkArea == \\1) \n {\\2}", "g", sAttributes);
+   sub(/#Pattern#Left-Brace#Command-List#Right-Brace$/,
+     "#Command", sTokens);
+   print "Reduce: Command --> Pattern Left-Brace Command-List Right-Brace";
+
+ }
+} #-- while
+} #-- main 

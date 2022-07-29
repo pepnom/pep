@@ -1,0 +1,31 @@
+
+  && The counter variable in the chomski machine 
+
+ The counter variable withing the chomski @virtual-machine
+ is an integer variable which may be incremented with the 
+ @plus command, decremented with the @minus command, and set
+ to zero with the @zero command. 
+ 
+ The counter variable may be used to count line numbers, 
+ character occurances, brace nesting depth or something else. For example, the
+ following script counts the number of ':' characters present
+ in a given input text stream and prints the result to 
+ <stdout>
+
+ -->
+  /:/
+   { plus; }
+  clear;
+  <>
+  {
+    add 'The number of ":" characters is ';
+    count;
+    print;
+  }
+ --<
+
+   
+ ** See also
+
+  @plus , @minus , @zero , @count  
+

@@ -1,0 +1,10 @@
+
+# sometimes its nice to preserve comments from the input scripts etc
+
+ read;
+ "a" {
+   # workspace was 'a'
+   print; print;
+ }
+ # print everything
+ print; clear;

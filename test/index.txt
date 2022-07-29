@@ -1,0 +1,7 @@
+
+This folder contains simple test scripts for the parsing
+machine and language to make sure that certain features
+are working correctly.
+
+See the files in /books/gh/object/ folder for the implementation of 
+the machine

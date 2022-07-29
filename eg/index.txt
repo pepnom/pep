@@ -1,0 +1,41 @@
+
+PEP EXAMPLES
+
+ This folder contains some example scripts in the pep script language. Scripts
+ have the file extension ".pss". These examples can be run using the 
+ interpreter and debugger ("pep") or by translating to java, c, go, python,
+ ruby etc and then (compiling and) running
+ 
+ The interpreter is implemented in c at /books/pars/object/pep.c The main
+ documentation file is "here" http://bumble.sf.net/books/pars/pars-book.txt 
+
+ * examples can be run with the interpreter by typing
+ >> pep -f eg/script.pss input-file 
+ * or 
+ >> pep -f eg/script.pss -i <input-text>
+
+ Examples can be translated into java,tcl,ruby,python,c,go by running
+ the translation script
+
+ * translate into go, compile and run
+ ---
+   pep -f tr/translate.go.pss eg/script.pss > eg/golang/script.go
+   cd eg/golang/; go build script.go
+   echo "<input>" | ./script
+
+ This folder to contains examples of the capabilities of the pattern parsing
+ machine, with notes about its
+ 
+SOME EXAMPLES
+
+  * eg/exp.tolisp.pss
+    converts basic arithmetic expressions to a lisp format 
+
+  * eg/json.check.pss
+    checks json text input for grammatical correctness
+
+  * eg/natural.language.pss
+    implements an extremely limited natural language parser.
+
+ [[ img/screenshot.png "caption or "title" >> ]]
+
