@@ -1,0 +1,73 @@
+
+## Compiling the pepnom system and scripts
+
+ This document is about the compiling the "pep" interpreter 
+ and also about compiling individual scripts both with the 
+ nomsf://compile.pss script as well as the nomsf://asm.pp 
+ *compiled compiler* as well as with the "translation" nomsf://tr
+ scripts.
+
+ * compile the pep interpreter with the tiny c compiler
+ ----
+  # run this in the parent directory of the "object" folder
+  dir=object
+  tcc -o pep \
+    $dir/pep.c $dir/tapecell.c $dir/tape.c $dir/buffer.c $dir/colours.c \
+    $dir/charclass.c $dir/command.c $dir/parameter.c $dir/instruction.c \
+    $dir/labeltable.c $dir/program.c $dir/machine.c $dir/exitcode.c \
+    $dir/machine.interp.c
+  echo "* compiled pep interpreter (executable is 'pep')"
+ ,,,,
+
+ This probably should be a "make" file, but this works.
+
+ 
+### THE COMPILER SYSTEM FOR PEPNOM
+
+  When a script is run with the *pep* interpreter (which is implemented
+  in plain C, because I didn't know "rust" www.rust-lang.org at the time)
+  the script (which should, but doesn't have to, have a file extension
+  *.pss* ) is actually "compiled" into a *script-assembly* format which 
+  can be loaded directly by the *pep* interpreter. 
+
+  This *compilation* process is carried out by another assembly-format
+  script called "asm.pp" nomsf://asm.pp . So *asm.pp* is actually where
+  the syntax of the *nom* language is defined. When I first implemented 
+  the *nom* language, I hand-coded this *asm.pp* file. However, once 
+  I had a (more or less) working asm.pp file, I could use it as a 
+  urbandict://bootstrap to write the nomsf://compile.pss nom compiler.
+
+  I believe that this is how all "self hosting" wp:self-hosting_(compilers) 
+  compilers are implemented. That is, 1st you need to implement a 
+  compiler for the language your are creating or defining in a different
+  language (either a "high level" google:"high level programming language"
+  language, or else an assembly language, or even machine code).
+
+  After you have created your initial compiler for the new language, you
+  can then use the new programming language to write a compiler for 
+  *itself*. At first, this concept seems strangely self-referential and 
+  circular, but it isn't.
+
+ 
+## CHANGING THE SYNTAX OF NOM
+
+  To change or add elements to the syntax of *nom* you can add the new
+  syntax to the file nomsf://compile.pss and then use it to 
+  *compile itself*, as follows
+
+  * use the pep interpreter to compile the compiler
+  >> pep -f compile.pss compile.pss > asm.new.pp
+
+  This creates a file *asm.new.pp* which is a compiling program in *pep
+  assembler format* and can be used directly by the *pep* interpreter to run
+  scripts. But it wont be used by the *pep* interpreter until you rename it
+  "asm.pp" . Before you rename the compiler assembler script, you should 
+  carefully make a backup of the original nomsf://asm.pp in case the 
+  new script assembler has errors in it. If you don't do this, you could 
+  be left without a working "bootstrap". (Of course you could always 
+  download a working "asm.pp" from http://bumble.sf.net/books/pars or elsewhere)
+
+
+
+  
+  

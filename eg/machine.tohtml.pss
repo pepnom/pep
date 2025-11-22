@@ -1,0 +1,1095 @@
+
+#*
+ABOUT 
+
+  This script is designed to convert a formatted text description of the
+  pep/nom machine into html. The input is a type of 'debug' output that is
+  produced by the pep interpreter and also by the translation scripts at
+  www.nomlang.org/tr/
+  
+  I intend to use these html diagrams of the machine as an aide to
+  explaining the pep machine, and eventually to also produce 
+  printed output.
+
+TOKENS
+  
+  literal tokens ()[]:>-/
+  number* a number
+  word* a word which is also delimited by the literal tokens 
+  reg* a machine text register
+  reglist* a list of machine registers with no header
+  machine* a set of registers with a header 
+  instruction* one (numbered) program instruction
+  mark* a  text mark on a tape cell
+  tapecell* one tape cell
+  tape* a list of tape cells with a header
+  tapelist* a list of tape cells with no header
+  prog* a set of instructions with a header
+  ilist* a list of instructions with no header
+
+NOTES
+
+  It may be nice to display the stack alongside the tape cells
+  to show how they correspond to each other. This is possible using 
+  the same techniques that are in tocfoot.tohtml.pss where a tapecell
+  at the beginning of the tape is used to hold a table of contents.
+
+  But in that case we also need to parse the stack string with the 
+  delimiter.
+
+HISTORY
+  22 aug 2025
+    more work on this in Boyaca. a full parse seems to be converting to
+    html. Now I need to make the output look good. Maybe put the 
+    program listing next to the machine and tape description.
+  21 aug 2025
+    A lot of grammar work on this, and many elements seem to 
+    be parsing well. One issue is just creating a nice html layout
+    for this. I can use parsing techniques to put the register
+    title above the register which may be better... so it would look like
+
+      stack   work   peep
+      -----   ----   ----
+      a*b*    text   F
+
+    But this isn't good when the stack or workspace gets big.
+    An alternative is to put the stack tokens next to the tape, but 
+    this is a bit trickier.
+
+  19 Aug 2025
+    started writing this script. Lots of progress. A grammar seems to 
+    be forming well and the help system is in place.
+
+*#
+
+  # check for an empty doc or help-word and trigger help if so
+  begin {
+    # reserve 2 tapes cells
+    mark "work"; ++; mark "head"; ++;
+    while [:space:]; clear;
+    (eof) {
+      # the usage topic of the help system. 
+      add "usage"; put; clear; 
+      add "help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be produced by the 
+    # printState() method of the translation scripts, nor by the pep
+    # interpreter in debug mode (with the -I switch).
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; whilenot [:space:];
+      swap; get; put; clear;
+      add "help*"; push; .reparse
+    }
+  } # end of beginblock
+
+  read;
+  "\n" { nochars; clear; }
+  # ignore space.
+  [:space:] { while [:space:]; clear; }
+  # ignore between ( and ) because it is descriptive only.
+  "(" { 
+    until ")"; 
+    !E")" {
+      clear; add "Incomplete description (...)"; put;
+      clear; add "error*"; push; .reparse
+    }
+    # marks after tape cells are written (m:here) or maybe 
+    # just 'here'
+    B"(m:" {
+      clop; clop; clop; clip; 
+      replace "&" "&amp;"; replace "<" "&lt;"; replace ">" "&gt;";
+      replace '"' "&quot;"; replace "'" "&apos;"; put;
+      clear; add "<td>&ldquo;"; get; add "&rdquo;</td>"; put;
+      clear; add "mark*"; push; .reparse
+    }
+    clear;
+  }
+  # ) by itself can be ignored because it is part of cell capacity
+  ")" { clear; }
+  "" { !(eof) { .restart } .reparse }
+  # literal tokens. '>' is used to indicate current tape cell
+  # [] are used to show cell or register contents or a parameter
+  ">",":","/" { put; add "*"; push; .reparse }
+  "-" {
+    while [-]; put; 
+    # 2 dashes is a machine instruction
+    "--" { clear; add "name*"; push; .reparse }
+    # dashes are used to indicate some headings
+    B"---" {
+      clear; add "-*"; push; .reparse
+    }
+    clear; add "word*"; push; .reparse
+  }
+  "[" {
+    until "]"; 
+    !E"]" {
+      clear; add "Incomplete value [...]"; put;
+      clear; add "error*"; push; .reparse
+    }
+    clip; clop;
+    # escape html entities
+    replace "&" "&amp;"; replace "<" "&lt;"; replace ">" "&gt;";
+    replace '"' "&quot;"; replace "'" "&apos;"; put; 
+    # a value can be in a tape or a parameter to a program instruction
+    # or the value of a register
+    clear; add "value*"; push; .reparse
+  }
+  [:digit:] {
+    while [:digit:]; put; 
+    clear; add "number*"; push; .reparse
+  }
+  # everything else is a word, but a tricky aspect is that 'stack'
+  # 'chars' etc can be an instruction or a register. Need to differentiate
+  # with context (such as preceding number: pattern)
+  ![:space:] {
+    whilenot [ \r\n\t\f:>(\[\]-]; put; lower;
+    #Acc:0 EOF:false Esc:\ Delim:* Chars:1 Lines:1
+    #Stack[a*b*] Work[] Peep[EOF}
+
+ 
+    # these are the names of machine registers and compiled command
+    # names (in the 'intermediate format' - a kind of assembler)
+    "add","clip","clop","clear","replace","upper","lower","cap",
+    "print","pop","push","unstack","stack","put","get","swap",
+    "++","--","mark","marktape","go","gotape","read","until",
+    "untiltape","while","whilenot","jump",
+    "jumptrue","jumpfalse","testis","testclass",
+    "testbegins","testends","testeof","testtape",
+    "count","a+","a-","zero","cc","ll","nochars","nolines",
+    "escape","unescape","echar","delim","state","quit","bail",
+    "write","writefile","appendfile","system","nop",
+    "acc","eof","esc","flag","delim","chars","lines",
+    "stack","work","peep" {
+      clear; add "name*"; push; .reparse
+    }
+    clear; get;
+    replace "&" "&amp;"; replace "<" "&lt;"; replace ">" "&gt;";
+    replace '"' "&quot;"; replace "'" "&apos;"; put;
+    clear; add "word*"; push; .reparse
+  }
+
+parse>
+   # watch the parse stack reduce as the script executes.
+   add "<!-- "; lines; add ":"; chars; add " "; print; clear;
+   unstack; print; stack; add " -->\n"; print; clear;
+
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allow implementing a help system
+  that can be triggered by an empty document or by help keywords
+ *#
+ "error*" {
+   # maybe get the parse stack here as well
+   clear; 
+   add "--machine.tohtml.pss-- (format a machine diagram)\n";
+   add "near line:"; lines; add " char:"; chars; add "\n";
+   get; add "\n try: /help for more information";
+   # indent the error message 
+   replace "\n" "\n  "; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   quit;
+ }
+
+ #*
+  Using a help* token to allow the script to document itself.
+  The swap commands below are used to save the help text in the tape
+  cell so that several or all help topics can be printed at once.
+
+ *#
+
+ "help*" {
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help","all" {
+     swap; add "
+   USAGE
+     pep -f machine.tohtml.pss machine.txt 
+     pep -f machine.tohtml.pss -i ' '
+
+     A nom script to format a pep machine description into an 
+     html diagram.
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All documents/input which begin with '/' are considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f machine.tohtml.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f machine.tohtml.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f machine.tohtml.pss -i /help
+       see the entire help.
+
+     pep -f machine.tohtml.pss -i /toperl | bash
+       translate this script to perl 
+       
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+     - /flaws: known limitations with how this script works 
+   ### About the input format 
+     - /format: show summary information about the input pep machine 
+         text format.
+   ### About testing this script
+     - /eg: show a test document
+     - /page.head: the html start and head tags with css style
+     - /page.foot: just finish the html page
+     - /eg.lines: prints a set of one-line documents that should 
+        be accepted by this html formatter script. These can be used by
+        other test words.
+     - /eg.bad.lines: a set of one-liners that should be rejected.
+     - /test.line: tests one random one-line document.
+     - /test.line.open: translates to html and opens in a browser. 
+     - /test.bad.line: tests one random one-line invalid input.
+     - /test: test the script with a document (and header and footer)
+     - /test.open: translate test input to html (with header and footer)
+        and open result in a browser. 
+
+     The 'test' and 'to' words need to be piped to bash to actually 
+     execute.
+
+   ### About translating this script
+
+     - /translate: show how to translate this script to another language
+     - /to<lang>: translate this script to some other language
+         using the nom translation scripts at www.nomlang.org/tr/ 
+          ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+          (eg: /toperl /tolua etc). Or latex/pdf/html 
+
+     Also see the /test.line help word for testing translated scripts
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /format: all information about the input format 
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (not) frequently asked questions about /eg/machine.tohtml.pss
+   
+     Q: What is the purpose of this script?
+     A: To produce a kind of html diagram of the pep text-register 
+        virtual machine.
+
+     Q: What on earth is a text-register virtual machine?
+     A: Its a logic machine (like a CPU) which is implemented in software
+        rather than hardware, but instead of have 16, 32, or 64 bit 
+        registers, it actually has 'string' registers.
+
+     Q: 'String'? As in, the stuff you tie packages with?
+     A: No, absolutely not. The computery 'string' which is a piece of 
+        human readable language text encoded into numbers.
+
+     Q: How complicated. Why would you call that a 'string'?
+     A: There is probably some historical explanation, but lets not get 
+        bogged down in nomenclature.
+
+     Q: Nomenclature? Now you are talking Latin?
+     A: Ok, 'naming', lets not worry about it. The virtual machine has bits 
+        of text in it instead of big or small numbers.
+
+     Q: So what would I use this virtual-machine thing for anyway?
+     A: Grammar.
+
+     Q: Grammar? Grammar is terribly dull.
+     A: Not so. Grammar is just a way of looking at patterns (in text).
+
+     Q: What format is this script parsing?
+     A: It is, again, a format I just made up to provide a nice readable
+        'debug' plain text output from the pep - parsing engine for patterns
+        text-register VM. I originally used this in the (c implementation)
+        of the pep interpreter to make sure that the machine was doing what
+        it was supposed to be doing. And then I used (almost) the same 
+        output format in the translator scripts (which are at 
+        www.nomlang.org/tr/ ) You can see the output format by using the 
+        '-I' (interactive) switch with the pep interpreter (a very useful
+        and impressive debugging tool), or you can see the similar output
+        from the nom translation scripts by using the nom://state command
+
+        You can see an example of the format by typing
+        something like *pep -f machine.tohtml.pss -i /eg* or you could view
+        a set of 1 line (partial) examples with the /eg.lines help word.
+        If you were using this script from a translation (eg rust, perl, lua)
+        then you might type *echo '/eg' | ./machinetohtml.lua* or, for the 
+        rust translation is would be *echo '/eg' | ./machinetohtmlrust*
+
+        But that depends on what name you gave to your translated script.
+        This explanation is really just to emphasise that the translations
+        of scripts act as *filters* that take input from <stdin> but the 
+        pep interpreter can't actually do that, which is odd, but reasonable.
+        It is reasonable because the pep interpreter actually uses <stdin>
+        to *compile* the script and I never worked out how to fork the <stdin>
+        if that is what I needed to do.
+     
+     Q: Does the format have a well-defined grammar?
+     A: Not really, but pep and nom can still parse it, sort of 'heuristically'.
+        Because I know the names of each register and instruction I can 
+        determine what is just a word and what is part of a program or 
+        a machine description. But it is not a 'clean' mathematical grammar. 
+        The text format was just designed to be easy to read and to make it
+        easy to see the state of the pep text-register machine. It is not 
+        a programming language or a data format like JSON or YAML. 
+        But writing a grammar in nom still seems worthwhile and useful for 
+        a few reasons: one learns about grammars for 'messy' formats; 
+        it makes it possible to create pretty-printed formats for compiled
+        nom programs; and in general it seems easier to maintain and 
+        modify the nom script than an equivalent sed or awk script, even
+        though the nom script is much much longer. Also, being able to 
+        visualise the state of the machine, before and after an instruction
+        seems a valuable learning tool for promoting the idea of nom.
+
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in the 'nom' language which is a 
+       manifestation of the pep:nom parsing system.
+
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   #*
+     The following is an example of output from the pep interpreter
+     with the -I (interactive) switch. This may be slightly different 
+     from the output from the printState method of the various 
+     translation scripts. One important difference is that there 
+     is no program listing from the translation script.
+   *#
+
+   "page.foot" {
+      swap; add '
+       </body>
+       </html>
+      ';
+      swap;
+   }
+
+   "page.head" {
+      swap; add '
+
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title></title>
+        <meta name="description" content="">
+        <style>
+         body {
+           /* font-family: Arial, sans-serif; */
+           margin: 0;
+           padding: 20px;
+         }
+         h1 { color: #333; }
+         .pep-machine, .pep-tape, .pep-program {
+           border-collapse: collapse; 
+           float: left; margin-right: 20px; margin-bottom: 30px;
+           border-radius: 5px;
+         }
+
+         .pep-tape, .pep-program {
+           overflow: hidden; /* key property */
+           border: 2px solid #bbb; /* light gray */
+           border-radius: 5px; 
+         }
+
+         /* Table Header Styles */
+         .pep-tape th, .pep-program th {
+           background-color: #f2f2f2; /* A light gray background color */
+           color: #666; 
+           font-weight: bold; /* Make the header text stand out */
+           letter-spacing: 0.5px; /* subtle spacing between letters */
+         }
+         .pep-machine th {
+           color: #666; /* gray  */
+           font-weight: bold; /* Make the header text stand out */
+           letter-spacing: 0.5px; /* subtle spacing between letters */
+         }
+
+         /* Hover effect on table rows */
+         pep-tape tr:hover, .pep-program tr:hover {
+           background-color: #f5f5f5;
+           transition: background-color 0.3s ease;
+         }
+
+         .pep-program td {
+           font-family: "Fira Code","Roboto Mono",monospace; 
+           padding: 2px;
+           border-radius: 2px;
+           overflow-x: auto; /* horizontal scrolling */
+         }
+
+         .pep-tape th, .pep-tape td {
+           border: 1px solid #ccc; /* light gray */
+           padding: 2px; padding-left: 5px; padding-right: 5px; 
+           empty-cells: show;
+           /* text-align: left; */
+         }
+         .pep-tape th {
+           background-color: #f2f2f2; /* Light gray */
+         }
+
+         /* prevent the next element wrapping around tables */
+         .clearfix::after {
+           content: "";
+           display: table;
+           clear: both;
+         }
+
+         .pep-machine td {
+           padding: 4px; text-align: center;
+           border: 1px solid #c0c0c0; 
+           border-radius: 3px;
+           /* A light border to define cells */
+         }
+
+         /* The "Sunken" Effect with box-shadow */
+         .pep-machine td {
+           background-color: #e0e0e0; /* gray */
+           border: none; 
+           box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2),    
+           /* Dark inner shadow (bottom and right) */
+           inset -2px -2px 5px rgba(255, 255, 255, 0.7); 
+           /* Light inner highlight (top and left) */
+         }
+
+         .pep-tape-size { 
+           text-align: center; font-style: italic;
+         }
+
+        </style>
+      </head>
+      <body>
+
+     ';
+     swap; 
+   }
+
+   "eg" {
+     swap; add '
+      Partial Program Listing (size:400 ip:0 cap:20000) 
+       0>   while [class:space] 
+       1:   clear
+       2:   testeof
+       3:   ++
+       4:   --
+       5:   replace [text:x]  [text:y]
+       6:   jump [int:0]
+       7:   add [text:dialog talk]
+       8:   push
+       9:   mark [text:here]
+       10:  testis [text:no]
+
+      --------- Machine State ----------- 
+      (Buff:0/39 +r:0) Stack[word*space*] Work[the <era>] Peep[EOF] 
+      Acc:324 Flag:FALSE Esc:\\ Delim:* Chars:132450 Lines:1862
+      --------- Tape -------------------- 
+      Tape Size: 500 
+         0/10 )  0  [within { and } >>>>] 
+         0/10 )  1  [:starting:] (m:first) 
+         0/10 )  2> ["the end delimiter"] 
+         0/10 )  3  [%^&* again] (m:here)
+         0/10 )  4  [] 
+         0/10 )  5  [] 
+     '; 
+     replace "\n      " "\n"; swap;
+   }
+
+   #*
+     The following is an example of output from the 'state' command 
+     of the rust translator (which calls the printState method)
+     the translators also list the marks against the tape cells.
+   *#
+   "eg.rust" {
+     swap; add '
+       --------- Machine State -------------
+       (input buffer:["d", "c"])
+       Stack[word*space*newline*space*] Work[found land] Peep[b]
+       Acc:234 EOF:false Esc:\ Delim:* Chars:12345 Lines:54
+       -------------- Tape -----------------
+       Tape Size: 100
+          0> [The accumulated history] (m:here)
+          1  [cumulous]
+          2  [] (m:second)
+          3  [xxxxx]
+     '; 
+     replace "\n      " "\n"; swap;
+   }
+
+   # This help word is standard so that a script like 
+   # /eg/nom.to.pss can call it and test any script
+   "eg.lines" {
+     swap; add '
+        # some machine registers
+        Acc:0 Esc:\\ 
+        Acc:0 Esc:\\ eof:true
+        Peep[n]
+        Flag:false delim:* acc:123
+        # with html entities
+        Work[text >> ]
+        Acc:0 EOF:false Esc:\\ Delim:* Chars:123 Lines:21
+        Stack[a*b*] Work[] Peep[EOF]
+        # the current program instruction
+        0> while [class:space]
+        # any instruction
+        12: pop
+        # a section heading
+        ---- machine -----
+        # current tape cell 
+        1> [abc]
+        # a series of tape cells (on one line)
+        2 [reason] 3> [logic] 4 [logos]
+        # the current tape cell with a mark
+        3> [word text] (m:here)
+        # tape cell with a mark
+        121 [text] (m:sound)
+        # tape cells with a mark
+        121 [text] (m:sound) 122> [ plato abc ]
+        # multiple tape cells with mark
+        --- tape --- 1> [a] 2 [b] (m:here) 3 [cc] 
+        # any tape cell
+        4 [big text]
+        # program with 2 instructions
+        --- partial program listing --- 1> add [>] 2: pop
+        # multiple tape cells with mark
+        stack [a*b*] work [this] peep [\\n]
+        # a current replace instruction.
+        2> replace [xyz] [abc] 
+     '; 
+     replace "\n       " "\n";
+     swap;
+   }
+
+   # Erroneous input that should be handled by the formatter 
+   "eg.bad.lines" {
+     swap; add "
+       # pep is not a register 
+       stack[] pep[x] 
+       #  
+     ";
+     swap;
+   }
+
+   "test.line" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) INPUT
+       doc=$(pep -f machine.tohtml.pss -i /eg.lines | \\
+         sed '/^ *#/d;/^ *$/d;/^</d;' | shuf -n 1) 
+       echo \"<em>input: $doc</em><br/>\"
+       pep -f machine.tohtml.pss -i \"$doc\" 
+       echo \"<em>input: $doc</em><br/>\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f machine.tohtml.pss -i /test.line | sed 's/^</#</' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # test a one line input and open in browser
+   "test.line.open" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) INPUT AND OPEN IN BROWSER
+       pep -f machine.tohtml.pss -i /test.line | sed '/^</d' | bash > test.html 
+       firefox test.html &
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f machine.tohtml.pss -i /test.line.open | sed '/^</d' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # tests one one-line invalid input with this script
+   "test.bad.line" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) INPUT
+       doc=$(pep -f machine.tohtml.pss -i /eg.bad.lines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"test-line: $doc\"
+       pep -f machine.tohtml.pss -i \"$doc\" 
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f machine.tohtml.pss -i /test.bad.line | sed 's/^</#</' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # tests debug machine input  with this script
+   "test" {
+     swap; add "
+       # TESTING INPUT from /eg with a header and footer.
+       pep -f machine.tohtml.pss -i /eg | sed '/^</d;' > test.txt
+       # echo \"<em>input: $doc</em>\"
+       pep -f machine.tohtml.pss -i /page.head
+       pep -f machine.tohtml.pss test.txt 
+       pep -f machine.tohtml.pss -i /page.foot
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f machine.tohtml.pss -i /test | sed '/^</d' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # test input and open the result in browser
+   "test.open" {
+     swap; add "
+       # TESTING INPUT AND OPEN IN BROWSER
+       pep -f machine.tohtml.pss -i /test | sed '/^</d' | bash > test.html 
+       firefox test.html &
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f machine.tohtml.pss -i /test.open | sed '/^</d' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # using /eg/nom.to.pss script which does translation 
+   B"to" {
+     clop; clop; put; clear;
+
+     add '
+      translator=${PEPNOM}/eg/nom.to.pss
+      if [ -f $translator ]; then
+        echo -e "[ok] Found translator script: $translator"
+      else
+        echo -e "
+         [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+         (maybe) set the $PEPNOM environment var
+         (or)    download the translator from www.nomlang.org/eg/ 
+         ";
+        exit 1;
+      fi
+      pep -f $translator -i "translate machine.tohtml.pss to '; get; add '" | bash
+      # RUN THIS WITH:  
+      #   pep -f machine.tohtml.pss -i /to'; get; add ' sed "s/^</#</" | bash
+      ';
+      replace "\n    " "\n";
+      print;
+      quit;
+   }
+
+   # how to translate this script to another language, 
+   "translate","tr","about","help" {
+     swap; add "
+
+    HOW TO TRANSLATE THIS SCRIPT
+
+      This script can be translated to other languages using nom 
+      translation scripts which are available at www.nomlang.org/tr/
+
+      current (aug 2025) translation languages:
+        all languages: all
+        code languages: 
+          rust|dart|perl|lua|go|java|javascript|ruby|
+          python|tcl|c
+        formats: html|pdf|latex
+
+      * translate to ruby with /eg/nom.to.pss
+      >> pep -f /eg/nom.to.pss -i 'translate machine.tohtml.pss to ruby' | bash
+
+      * translate itself to java with the help word '/to' (needs /eg/nom.to.pss)
+      >> pep -f machine.tohtml.pss -i /tojava | bash
+
+      * format the script as colourised pdf (needs xelatex) 
+      >> pep -f machine.tohtml.pss -i /topdf | bash
+
+      * translate 'by-hand' to rust, compile and run (needs 'rustc')
+      ---
+        pep -f tr/nom.torust.pss machine.tohtml.pss > machine.tohtml.rs
+        rustc -o texttohtml.exe texttohtml.rs
+        echo ' some *strong* text ' | ./texttohtml.exe 
+      ,,,
+
+     ";
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   B"flaw",B"fault","help" {
+     swap; add "
+    PEP MACHINE HTML SCRIPT FLAWS as of aug 2025: 
+      
+      - just started
+      - hard to know how strict to be, considering I made up the 
+        format myself.
+      - I need to make a nice looking html diagram.
+
+
+     ";
+     swap;
+   }
+
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f machine.tohtml.pss -i /words \n";
+     add "  to see valid help keywords";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ push;
+ # end of the error and help system.
+ # -------------------
+    
+ # -------------------
+ # 2 token parse reductions
+ pop; pop;
+
+ # programs 
+ "head*instruction*","prog*instruction*" {
+   clear; get; add "\n"; ++; get; --; add " "; put;
+   clear; add "prog*"; push; .reparse
+ }
+
+ # a list of instructions with no header "partial program listing" etc
+ "instruction*instruction*","ilist*instruction*" {
+   clear; get; add "\n"; ++; get; --; add "\n"; put;
+   clear; add "ilist*"; push; .reparse
+ }
+
+ # words: could be headers or instructions
+ # fix: separate into commands that take 1 parameter which
+ # become program instructions and also 'replace'
+ "word*value*","words*word*","word*word*","word*name*" {
+   clear; 
+   get; add " "; ++; get; --; put;
+   # check if it is the 'program' header
+   lower; "partial program listing","program listing" {
+     clear; 
+     add "<tr><th colspan='2'>"; get; add "</th></tr>"; put;
+     clear; add "head*"; push; .reparse
+   }
+   clear; add "words*"; push; .reparse
+ }
+
+ # the machine (without tape) 
+ "head*reg*","machine*reg*" {
+   clear; 
+   # error check for machine header
+   get; add "\n"; ++; get; --; put;
+   clear; add "machine*"; push; .reparse
+ }
+
+ # a list of registers with no header... this should not happen 
+ "reg*reg*","reglist*reg*" {
+   clear; 
+   # error check for machine header
+   get; add "\n"; ++; get; --; put;
+   clear; add "reglist*"; push; .reparse
+ }
+
+ # machine registers eg: Stack[a*b*]
+ "name*value*" {
+   clear; get; lower;
+   "stack","work","peep" {
+     clear; 
+     add "<th>"; get; add "</th>"; ++; 
+     add "<td>"; get; add "</td>"; --; put;
+     clear; add "reg*"; push; .reparse
+   }
+   clear; add "name*value*";
+ }
+
+ # tape cells eg: 1 [abc]
+ # marks may follow. This creates an empty cell for the mark which
+ # may be removed.
+ "number*value*" {
+   clear; 
+   add "<tr><td>"; get; add "</td>"; ++; 
+   add "<td>"; get; add "</td></tr>"; --; put;
+   clear; add "tapecell*"; push; .reparse
+ }
+
+ # a list of tapecells with no header 
+ "tapecell*tapecell*","tapelist*tapecell*" {
+   clear; get; add "\n"; ++; get; --; add " "; put;
+   clear; add "tapelist*"; push; .reparse
+ }
+
+ # the tape 
+ "head*tapecell*","tape*tapecell*" {
+   clear; get; add "\n"; ++; get; --; add " "; put;
+   clear; add "tape*"; push; .reparse
+ }
+
+ # this should actually not get used. See the rule just below.
+ "tapecell*mark*" {
+   clear; get; ++; add " "; get; --; put;
+   clear; add "tapecell*"; push; .reparse
+ }
+
+ # This is a dodgy way to parse 'marks' because they should be
+ # parsed as part of the tapecell, but I want to avoid look-ahead
+ # tokens. need to deal with </tr> here. 
+ "tape*mark*" {
+   clear; get; 
+   # remove the trailing </tr> to insert the mark in the current 
+   # tape row.
+   clip; clip; clip; clip; clip; clip;
+   #replace "<td></td></tr>" "";
+   ++; get; --; add "</tr>"; put;
+   clear; add "tape*"; push; .reparse
+ }
+
+ "tapelist*mark*" {
+   clear; get; 
+   # remove the trailing </tr> to insert the mark in the current 
+   # tape row.
+   clip; clip; clip; clip; clip; 
+   #replace "<td></td></tr>" "";
+   ++; get; --; add "</tr>"; put;
+   clear; add "tapelist*"; push; .reparse
+ }
+
+
+ # -------------------
+ # 3 tokens 
+ pop;
+
+ # the "tape size:500" indicator.
+ "words*:*number*"{
+   clear; get; lower;
+   B"tape size" { 
+     clear;
+     add "<tr><td colspan='3' class='pep-tape-size'>(size: "; ++; ++; get; --; --;
+     add ")</td></tr>"; put;
+     clear; add "tapecell*"; push; .reparse
+   }
+   clear; add "words*:*number*"; 
+ }
+ 
+ # header eg: --- machine state ---  or --- tape --- etc
+ "-*word*-*","-*words*-*"{
+   clear; 
+
+   add "<tr><th colspan='3'>"; ++; get; --; add "</th></tr>"; 
+   put; clear; ++; get; --; lower;
+   B"tape" {
+     clear; add "\n<tr><th>cell</th><th>text</th><th>mark</th></tr>";
+     swap; get; put;
+   }
+   clear; add "head*"; push; .reparse
+ }
+ 
+ #  
+ "-*head*-*" {
+   clear; ++; get; --; put; 
+   clear; add "head*"; push; .reparse
+ }
+ 
+ # registers eg: Delim:* or Acc:0 etc
+ "name*:*number*","name*:*word*" {
+   clear; get; lower; 
+   "acc","flag","esc","eof","delim","chars","lines" {
+     clear;
+     add "<th>"; get; add "</th>"; ++; ++; 
+     add "<td>"; get; add "</td>"; --; --; put;
+     clear; add "reg*"; push; .reparse
+   }
+   clear; add "name*:*number*";
+ }
+ 
+ # program instruction, 
+ "number*:*name*","number*>*name*" {
+   clear; 
+   # lets check here for valid non-parameter instructions.
+   # these are the names of compiled commands which do not take 
+   # any arguments.
+   ++; ++; get; --; --;
+   "clip","clop","clear","upper","lower","cap",
+   "print","pop","push","unstack","stack","put","get","swap",
+   "++","--","marktape","gotape","read","untiltape","testeof","testtape",
+   "count","a+","a-","zero","cc","ll","nochars","nolines",
+   "escape","unescape","state","quit","bail","write","nop" {
+      clear;
+      add "<tr><td>"; get; ++; get; E">" { clip; add "<strong>&gt;</strong>"; }
+      add "</td>"; ++; 
+      add "<td>"; get; add "</td></tr>"; --; --; put;
+      clear; add "instruction*"; push; .reparse
+   }
+   clear; add "number*:*name*";
+ }
+ 
+ # current tape cells eg: 1> [abc]
+ # this also creates an empty cell for the mark
+ "number*>*value*" {
+   clear; 
+   add "<tr><th class='pep-current-tapecell'>"; get; add "&gt;</th>"; ++; ++;
+   add "<th>"; get; add "</th></tr>"; --; --; put;
+   clear; add "tapecell*"; push; .reparse
+ }
+
+ # this is a tape cell capacity thing (in the pep c interpreter)
+ # which we dont care about for the html diagram.
+ "number*/*number*" {
+   clear; !(eof) { .restart } .reparse
+ }
+
+ # ------------------
+ # 4 tokens
+ pop;
+
+ # program instruction with 1 parameter and current instruction
+ "number*:*name*value*","number*>*name*value*" {
+   clear; 
+   ++; ++; get; --; --;
+   # don't require parameter (value* token)
+   "clip","clop","clear","upper","lower","cap",
+   "print","pop","push","unstack","stack","put","get","swap",
+   "++","--","marktape","gotape","read","untiltape","testeof","testtape",
+   "count","a+","a-","zero","cc","ll","nochars","nolines",
+   "escape","unescape","state","quit","bail","write","nop" {
+     clear; 
+     add "Strange program listing: "; ++; ++; get; --; --;
+     add " doesnt take a parameter value \n"; put;
+     clear; add "error*"; push; .reparse
+   }
+
+   # compiled pep commands that take one argument.
+   "add","mark","go","until","while","whilenot","jump",
+   "jumptrue","jumpfalse","testis","testclass",
+   "testbegins","testends","echar","delim","writefile","appendfile" {
+     clear;
+     add "<tr><td>"; get; ++; get; E">" { clip; add "&gt;"; }
+     add "</td>"; ++; 
+     add "<td>"; get; add " ["; ++; get; add "]</td></tr>"; --; --; --; put;
+     clear; add "instruction*"; push; .reparse
+   } 
+   # the literal token is in the tape cell so this trick should work
+   clear; add "number*"; ++; get; --; add "*name*value*";
+   # but what about >* ?
+ }
+ 
+
+ # ------------------
+ # 5 tokens
+ pop;
+
+ "number*:*name*value*value*","number*>*name*value*value*" {
+   clear; 
+   ++; ++; get; --; --;
+   # don't require parameter (value* token)
+   "clip","clop","clear","upper","lower","cap",
+   "print","pop","push","unstack","stack","put","get","swap",
+   "++","--","marktape","gotape","read","untiltape","testeof","testtape",
+   "count","a+","a-","zero","cc","ll","nochars","nolines",
+   "escape","unescape","state","quit","bail","write","nop" {
+     clear; 
+     add "Strange program listing: "; ++; ++; get; --; --;
+     add " takes no parameter value \n"; put;
+     clear; add "error*"; push; .reparse
+   }
+
+   # compiled pep commands that take one argument.
+   "add","mark","go","until","while","whilenot","jump",
+   "jumptrue","jumpfalse","testis","testclass",
+   "testbegins","testends","echar","delim","writefile","appendfile" {
+     clear; 
+     add "Strange program listing: "; ++; ++; get; --; --;
+     add " takes 1 parameter value not two\n"; put;
+     clear; add "error*"; push; .reparse
+   } 
+   "replace" {
+     clear;
+     add "<tr><td>"; get; ++; get; E">" { clip; add "<strong>&gt;</strong>"; }
+     add "</td>"; ++; 
+     add "<td>"; get; add " ["; ++; get; add "] ["; ++; get; 
+     add "]</td></tr>"; --; --; --; --; put;
+     clear; add "instruction*"; push; .reparse
+   } 
+   clear; add "number*:*name*value*value*";
+ }
+ 
+ 
+ (eof) {
+
+   # a pep machine description with no program listing.
+   "machine*tape*" {
+     clear; 
+     add "<!------- MACHINE -------->\n";
+     add "<table class='pep-machine'>\n"; get; add "\n</table>";
+     add "\n<!------- TAPE -------->\n";
+     add "\n<table class='pep-tape'>\n"; ++; get; --; 
+     add "</table>"; 
+     add "<div class='clearfix'></div>\n";
+     put;
+     clear; add "description*"; push; .reparse
+   }
+
+   # a full pep machine description with program listing.
+   "prog*machine*tape*" {
+     clear;
+     add "<!------- MACHINE -------->\n";
+     add "<table class='pep-machine'>\n"; ++; get; --; 
+     add "\n</table>\n";
+     add "\n<!------- TAPE -------->\n";
+     add "<table class='pep-tape'>\n"; ++; ++; get; --; --;
+     add "\n</table>";
+     add "\n<!------- PROGRAM -------->\n";
+     add "<table class='pep-program'>\n"; get; add "\n</table>\n";
+     add "<div class='clearfix'></div>\n";
+     put;
+     clear; add "description*"; push; .reparse
+   }
+
+   "ilist*","prog*","machine*","tape*","tapelist*" {
+     clear; 
+     add "<table style='td { border:2px dashed black }'>\n"; get; 
+     add "\n</table>\n"; print; quit;
+   }
+   # partial parsings
+   "reglist*","value*","mark*","tapecell*","reg*","instruction*" {
+     clear; 
+     add "<table style='border: 2px solid black'><tr>\n"; get; 
+     add "\n</tr></table>\n"; print; quit;
+   }
+   # full parsing 
+   "description*" {
+     clear; get; print; quit;
+   }
+   add " -- strange parse\n"; print; quit;
+
+ }
+ push; push; push; push; push;

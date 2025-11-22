@@ -1,0 +1,54 @@
+#* 
+  a script to translate the brainf*** language
+
+  > p++
+  < p--
+  + *p++
+  - *p--
+  [] while *p > 0
+  . putchar
+  , getchar
+
+  Hardly any parsing is required, just for []
+
+*#
+
+  read;
+  ">","<","+","-",",","." {
+    ">" { clear; add "p++;"; }
+    "<" { clear; add "p--;"; }
+    "+" { clear; add "*p++;"; }
+    "-" { clear; add "*p--;"; }
+    "," { clear; add "putchar(*p);"; }
+    "." { clear; add "getchar(*p);"; }
+    put; clear;
+    add "com*"; push; .reparse
+  }
+
+  "[","]" { put; add "*"; push; .reparse }
+
+  clear; 
+
+parse>
+  pop; pop;
+  "com*com*","comset*com*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comset*"; push; .reparse
+  }  
+
+  "[*com*]*","[*comset*]*" {
+    clear; add "while (*p > 0) {\n";
+    ++; get; --; add "}\n"; put;
+    clear; add "comset*"; push; .reparse
+  }
+
+  (eof) {
+    "com*","comset*" {
+      clear; add "Its good:\n\n";
+      get; add "\n"; print; quit;
+    }
+    add " nope\n"; quit;
+  }
+  push; push;
+
+

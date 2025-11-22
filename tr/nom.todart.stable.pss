@@ -1,0 +1,2603 @@
+
+#*
+
+ABOUT 
+
+  Translate nom to the dart language. This uses the 
+  new script organisation from /eg/nom.syntax.reference.pss
+
+  I am not sure how much error trapping I will retain here.  Hopefully this
+  will become a template for other new translation scripts.  I will call these
+  scripts nom.to<lang>.pss rather than translate.<lang>.pss
+
+NOTES
+
+  The advantages of these new translation scripts over the old
+  translate.<lang>.pss scripts is as follows:
+    - much better error checking, systematic, using an error token.
+    - all parsing is in a parse() method which allows the translator 
+      to be used from within other code of the same language.
+    - better tokenisation and better grammar
+    - If the language can execute a string as code (eg Perl) then these
+      scripts can also be used as nom interpreters.
+    - Better unicode class support with unicode category/script/block
+      names for classes (if the target language supports this in it 
+      regular expression engine.
+    - Better nom://read method which takes into account (hopefully) 
+      unicode grapheme clusters, again, if the target language supports
+      it
+    - A read method that should be able to read from stdin, a file 
+      or a string which also facilitates using the translator from
+      within code.
+
+  You need to install the 'characters' api with "dart pub get" 
+  after putting it into a pubspec.yaml file.
+
+  https://www.regular-expressions.info/unicode.html#category
+    important unicode regexp info for different languages. The 
+    unicode script names and properties which are included here 
+    were copied from this website.
+
+  When reading with until we stop at the end text, but not if 
+  it is escaped with the machine escape char (usually '\\' ?). 
+
+  After some research, it seems that I have to read one line at 
+  a time from a stream with LineSplitter, then read one Character 
+  (character api) at a time into the pep machine. 
+  Use await for to get one line from the stream. 
+  
+  I will probably 
+  use this technique for all the *modern* translation scripts
+  (which are called nom.to<lang>.pss , the old ones are called 
+  translate.<lang>.pss ) The reason for this is that reading from 
+  some kind of input-stream or file one line at a time seems 
+  better supported in most languages and maybe more efficient.
+  Also it gives me a chance to wrestle with unicode grapheme clusters
+  (combining marks, diacritics and what-not). But to the user of 
+  nom it will still appear that the nom://read command reads one 
+  (grapheme cluster, hopefully) at a time.
+
+  This translator escapes $ and \\ and double quotes all quoted text
+  at the tokenizing phase because it is less work. In some cases
+  I may have to unquote and unescape this text. Double and single quotes
+  are the same in Dart.
+
+  This script when finished should handle unicode grapheme clusters 
+  correctly because of the dart characters api. The other translators,
+  so far, do not.
+
+  Details to check. Quoting. escaping special sequences. Will "\n"
+  work in strings?
+
+  This uses a different grammar and organisation, with an error and help
+  system. The error and help system can be cut and paste into all the scripts
+
+  error checking is now quite systematic using the list of 
+  tokens. Especially in 2 token error sequences
+
+UNICODE CATEGORIES
+
+  Dart appears to support these categories, so here is a list.
+  If the translator supports unicode and grapheme clusters (and
+  dart seems to, through the 'characters' api), then it seems preferable 
+  to convert [:alnum:] [:alpha:] classes to the unicode categories 
+  below. 
+
+  So [:alpha:] would probably become \p{L} or \p{Letter}
+  So [:space:] might become \p{Z} or \p{Separator}
+
+  Apparently \P{L} (capital P) is the inverse set, ie any non-letter.
+  But \p{L} does not match grapheme clusters, see below for that.
+
+   * match any unicode character or grapheme cluster
+   >> \P{M}\p{M}*+ is the equivalent of \X
+   \X is the simplest way if the language supports it.
+
+    \p{L} or \p{Letter}: 
+       any kind of letter from any language.
+    \p{Ll} or \p{Lowercase_Letter}: 
+       a lowercase letter that has an uppercase variant.
+    \p{Lu} or \p{Uppercase_Letter}: 
+       an uppercase letter that has a lowercase variant.
+    \p{Lt} or \p{Titlecase_Letter}: a letter that appears at the start of a word when only the first letter of the word is capitalized.
+    \p{L&} or \p{Cased_Letter}: a letter that exists in lowercase and uppercase variants (combination of Ll, Lu and Lt).
+    \p{Lm} or \p{Modifier_Letter}: a special character that is used like a letter.
+    \p{Lo} or \p{Other_Letter}: a letter or ideograph that does not have lowercase and uppercase variants.
+    \p{M} or \p{Mark}: a character intended to be combined with another character (e.g. accents, umlauts, enclosing boxes, etc.).
+    \p{Mn} or \p{Non_Spacing_Mark}: a character intended to be combined with another character without taking up extra space (e.g. accents, umlauts, etc.).
+    \p{Mc} or \p{Spacing_Combining_Mark}: a character intended to be combined with another character that takes up extra space (vowel signs in many Eastern languages).
+    \p{Me} or \p{Enclosing_Mark}: a character that encloses the character it is combined with (circle, square, keycap, etc.).
+    \p{Z} or \p{Separator}: any kind of whitespace or invisible separator.
+    \p{Zs} or \p{Space_Separator}: a whitespace character that is invisible, but does take up space.
+    \p{Zl} or \p{Line_Separator}: line separator character U+2028.
+    \p{Zp} or \p{Paragraph_Separator}: paragraph separator character U+2029.
+    \p{S} or \p{Symbol}: math symbols, currency signs, dingbats, box-drawing characters, etc.
+    \p{Sm} or \p{Math_Symbol}: any mathematical symbol.
+    \p{Sc} or \p{Currency_Symbol}: any currency sign.
+    \p{Sk} or \p{Modifier_Symbol}: a combining character (mark) as a full character on its own.
+    \p{So} or \p{Other_Symbol}: various symbols that are not math symbols, currency signs, or combining characters.
+    \p{N} or \p{Number}: any kind of numeric character in any script.
+    \p{Nd} or \p{Decimal_Digit_Number}: a digit zero through nine in any script except ideographic scripts.
+    \p{Nl} or \p{Letter_Number}: a number that looks like a letter, such as a Roman numeral.
+    \p{No} or \p{Other_Number}: a superscript or subscript digit, or a number that is not a digit 0–9 (excluding numbers from ideographic scripts).
+    \p{P} or \p{Punctuation}: any kind of punctuation character.
+    \p{Pd} or \p{Dash_Punctuation}: any kind of hyphen or dash.
+    \p{Ps} or \p{Open_Punctuation}: any kind of opening bracket.
+    \p{Pe} or \p{Close_Punctuation}: any kind of closing bracket.
+    \p{Pi} or \p{Initial_Punctuation}: any kind of opening quote.
+    \p{Pf} or \p{Final_Punctuation}: any kind of closing quote.
+    \p{Pc} or \p{Connector_Punctuation}: a punctuation character such as an underscore that connects words.
+    \p{Po} or \p{Other_Punctuation}: any kind of punctuation character that is not a dash, bracket, quote or connector.
+    \p{C} or \p{Other}: invisible control characters and unused code points.
+    \p{Cc} or \p{Control}: an ASCII or Latin-1 control character: 0x00–0x1F and 0x7F–0x9F.
+    \p{Cf} or \p{Format}: invisible formatting indicator.
+    \p{Co} or \p{Private_Use}: any code point reserved for private use.
+    \p{Cs} or \p{Surrogate}: one half of a surrogate pair in UTF-16 encoding.
+    \p{Cn} or \p{Unassigned}: any code point to which no character has been assigned.
+
+UNICODE SCRIPT NAMES
+
+  Information from regular-expressions.info/unicode.html#script
+  A surprising useful website.
+
+  I am not sure if dart >= 2.4 supports these.
+  The JGsoft engine, Perl, PCRE, PHP, Ruby 1.9, Delphi can match Unicode scripts. 
+
+  * unicode script names
+  -----
+   \p{Common} \p{Arabic} \p{Armenian} \p{Bengali} \p{Bopomofo}
+   \p{Braille} \p{Buhid} \p{Canadian_Aboriginal} \p{Cherokee}
+   \p{Cyrillic} \p{Devanagari} \p{Ethiopic} \p{Georgian} \p{Greek}
+   \p{Gujarati} \p{Gurmukhi} \p{Han} \p{Hangul} \p{Hanunoo}
+   \p{Hebrew} \p{Hiragana} \p{Inherited} \p{Kannada} \p{Katakana}
+   \p{Khmer} \p{Lao} \p{Latin} \p{Limbu} \p{Malayalam} \p{Mongolian}
+   \p{Myanmar} \p{Ogham} \p{Oriya} \p{Runic} \p{Sinhala} \p{Syriac}
+   \p{Tagalog} \p{Tagbanwa} \p{TaiLe} \p{Tamil} \p{Telugu} \p{Thaana}
+   \p{Thai} \p{Tibetan} \p{Yi} 
+  ,,,,
+
+UNICODE BLOCKS
+
+  It appears that dart does not support blocks as a property name.
+
+  I would like for nom to support all these categories, scripts and 
+  blocks if the target translation language supports them. But in 
+  some cases it may be better for the translator to create 'ascii' 
+  regular expressions for the sake of speed.
+
+  It may be possible to omit underscores?
+
+  * a list of unicode block names
+  --------
+   \p{InBasic_Latin}: U+0000–U+007F
+   \p{InLatin-1_Supplement}: U+0080–U+00FF
+   \p{InLatin_Extended-A}: U+0100–U+017F
+   \p{InLatin_Extended-B}: U+0180–U+024F
+   \p{InIPA_Extensions}: U+0250–U+02AF
+   \p{InSpacing_Modifier_Letters}: U+02B0–U+02FF
+   \p{InCombining_Diacritical_Marks}: U+0300–U+036F
+   \p{InGreek_and_Coptic}: U+0370–U+03FF
+   \p{InCyrillic}: U+0400–U+04FF
+   \p{InCyrillic_Supplementary}: U+0500–U+052F
+   \p{InArmenian}: U+0530–U+058F
+   \p{InHebrew}: U+0590–U+05FF
+   \p{InArabic}: U+0600–U+06FF
+   \p{InSyriac}: U+0700–U+074F
+   \p{InThaana}: U+0780–U+07BF
+   \p{InDevanagari}: U+0900–U+097F
+   \p{InBengali}: U+0980–U+09FF
+   \p{InGurmukhi}: U+0A00–U+0A7F
+   \p{InGujarati}: U+0A80–U+0AFF
+   \p{InOriya}: U+0B00–U+0B7F
+   \p{InTamil}: U+0B80–U+0BFF
+   \p{InTelugu}: U+0C00–U+0C7F
+   \p{InKannada}: U+0C80–U+0CFF
+   \p{InMalayalam}: U+0D00–U+0D7F
+   \p{InSinhala}: U+0D80–U+0DFF
+   \p{InThai}: U+0E00–U+0E7F
+   \p{InLao}: U+0E80–U+0EFF
+   \p{InTibetan}: U+0F00–U+0FFF
+   \p{InMyanmar}: U+1000–U+109F
+   \p{InGeorgian}: U+10A0–U+10FF
+   \p{InHangul_Jamo}: U+1100–U+11FF
+   \p{InEthiopic}: U+1200–U+137F
+   \p{InCherokee}: U+13A0–U+13FF
+   \p{InUnified_Canadian_Aboriginal_Syllabics}: U+1400–U+167F
+   \p{InOgham}: U+1680–U+169F
+   \p{InRunic}: U+16A0–U+16FF
+   \p{InTagalog}: U+1700–U+171F
+   \p{InHanunoo}: U+1720–U+173F
+   \p{InBuhid}: U+1740–U+175F
+   \p{InTagbanwa}: U+1760–U+177F
+   \p{InKhmer}: U+1780–U+17FF
+   \p{InMongolian}: U+1800–U+18AF
+   \p{InLimbu}: U+1900–U+194F
+   \p{InTai_Le}: U+1950–U+197F
+   \p{InKhmer_Symbols}: U+19E0–U+19FF
+   \p{InPhonetic_Extensions}: U+1D00–U+1D7F
+   \p{InLatin_Extended_Additional}: U+1E00–U+1EFF
+   \p{InGreek_Extended}: U+1F00–U+1FFF
+   \p{InGeneral_Punctuation}: U+2000–U+206F
+   \p{InSuperscripts_and_Subscripts}: U+2070–U+209F
+   \p{InCurrency_Symbols}: U+20A0–U+20CF
+   \p{InCombining_Diacritical_Marks_for_Symbols}: U+20D0–U+20FF
+   \p{InLetterlike_Symbols}: U+2100–U+214F
+   \p{InNumber_Forms}: U+2150–U+218F
+   \p{InArrows}: U+2190–U+21FF
+   \p{InMathematical_Operators}: U+2200–U+22FF
+   \p{InMiscellaneous_Technical}: U+2300–U+23FF
+   \p{InControl_Pictures}: U+2400–U+243F
+   \p{InOptical_Character_Recognition}: U+2440–U+245F
+   \p{InEnclosed_Alphanumerics}: U+2460–U+24FF
+   \p{InBox_Drawing}: U+2500–U+257F
+   \p{InBlock_Elements}: U+2580–U+259F
+   \p{InGeometric_Shapes}: U+25A0–U+25FF
+   \p{InMiscellaneous_Symbols}: U+2600–U+26FF
+   \p{InDingbats}: U+2700–U+27BF
+   \p{InMiscellaneous_Mathematical_Symbols-A}: U+27C0–U+27EF
+   \p{InSupplemental_Arrows-A}: U+27F0–U+27FF
+   \p{InBraille_Patterns}: U+2800–U+28FF
+   \p{InSupplemental_Arrows-B}: U+2900–U+297F
+   \p{InMiscellaneous_Mathematical_Symbols-B}: U+2980–U+29FF
+   \p{InSupplemental_Mathematical_Operators}: U+2A00–U+2AFF
+   \p{InMiscellaneous_Symbols_and_Arrows}: U+2B00–U+2BFF
+   \p{InCJK_Radicals_Supplement}: U+2E80–U+2EFF
+   \p{InKangxi_Radicals}: U+2F00–U+2FDF
+   \p{InIdeographic_Description_Characters}: U+2FF0–U+2FFF
+   \p{InCJK_Symbols_and_Punctuation}: U+3000–U+303F
+   \p{InHiragana}: U+3040–U+309F
+   \p{InKatakana}: U+30A0–U+30FF
+   \p{InBopomofo}: U+3100–U+312F
+   \p{InHangul_Compatibility_Jamo}: U+3130–U+318F
+   \p{InKanbun}: U+3190–U+319F
+   \p{InBopomofo_Extended}: U+31A0–U+31BF
+   \p{InKatakana_Phonetic_Extensions}: U+31F0–U+31FF
+   \p{InEnclosed_CJK_Letters_and_Months}: U+3200–U+32FF
+   \p{InCJK_Compatibility}: U+3300–U+33FF
+   \p{InCJK_Unified_Ideographs_Extension_A}: U+3400–U+4DBF
+   \p{InYijing_Hexagram_Symbols}: U+4DC0–U+4DFF
+   \p{InCJK_Unified_Ideographs}: U+4E00–U+9FFF
+   \p{InYi_Syllables}: U+A000–U+A48F
+   \p{InYi_Radicals}: U+A490–U+A4CF
+   \p{InHangul_Syllables}: U+AC00–U+D7AF
+   \p{InHigh_Surrogates}: U+D800–U+DB7F
+   \p{InHigh_Private_Use_Surrogates}: U+DB80–U+DBFF
+   \p{InLow_Surrogates}: U+DC00–U+DFFF
+   \p{InPrivate_Use_Area}: U+E000–U+F8FF
+   \p{InCJK_Compatibility_Ideographs}: U+F900–U+FAFF
+   \p{InAlphabetic_Presentation_Forms}: U+FB00–U+FB4F
+   \p{InArabic_Presentation_Forms-A}: U+FB50–U+FDFF
+   \p{InVariation_Selectors}: U+FE00–U+FE0F
+   \p{InCombining_Half_Marks}: U+FE20–U+FE2F
+   \p{InCJK_Compatibility_Forms}: U+FE30–U+FE4F
+   \p{InSmall_Form_Variants}: U+FE50–U+FE6F
+   \p{InArabic_Presentation_Forms-B}: U+FE70–U+FEFF
+   \p{InHalfwidth_and_Fullwidth_Forms}: U+FF00–U+FFEF
+   \p{InSpecials}: U+FFF0–U+FFFF
+  ,,,,,
+
+DART REGEXP SYNTAX
+
+  https://perldoc.perl.org/perlrecharclass#Extended-Bracketed-Character-Classes
+    A link for categories in Perl
+
+  Dart categories, not sure if these work in unicode mode.
+
+  * digit, word, space and inverses, I think not unicode aware
+  >> \d, \w, \s, \D, \W, \S, .
+
+  These dont seem to be unicode aware in RegExp even when the 
+  unicode: true flag is set
+
+  - \w = [:alnum:]
+  - \d = [:digit:] 
+  - \s = [:space:]  (including newline)
+  
+
+  https://blog.0xba1.xyz/0522/dart-flutter-regexp/
+    good page about regex in dart.
+
+  All the characters below need to be escaped in while/whilenot 
+  and class tests, no?
+
+  * special regex chars.
+  >> \, ^, $, ?, *, +, <, >, [, ], {, }, ..
+
+  * matching unicode scripts in dart regexp
+  ----
+   RegExp exp = RegExp(r'(\p{Script=Greek})', unicode: true);
+   Iterable<RegExpMatch> matches;
+   matches = exp.allMatches('ΓβγΔδΕεζηΘθ');
+   for (Match m in matches) {
+     print('${m.group(1)}');
+   }
+  ,,,,,
+
+  * unicode category matching regexp since dart 2.4
+  ------
+   RegExp alpha = RegExp(r'\p{Letter}', unicode: true);
+   print(alpha.hasMatch("f")); // true
+   print(alpha.hasMatch("ת")); // true
+   print(alpha.hasMatch("®")); // false
+ ,,,,
+
+    If the unicode property name is wrong dart will throw exception
+    Unhandled exception:
+     FormatException: Invalid property name\p{Script=InBasic_Latin}
+
+DART SYNTAX
+
+  * remove element from list and return list (2 dots, cascade)
+  -----
+  void main() {
+    print(['a', 'b', 'c', 'd']..removeAt(2));
+  }
+  ,,,,
+
+  * get stdin lines
+  ----------
+    import 'dart:convert';
+    import 'dart:io';
+
+    void main() async {
+      await for (final line in stdin.transform(utf8.decoder).transform(const LineSplitter())) {
+        //do stuff with line or simply
+        print(line);
+      }
+    }
+
+    import 'dart:io';
+    import 'dart:convert';
+    import 'dart:async';
+    void main() async {
+      final file = File('file.txt');
+      Stream<String> lines = file.openRead()
+        .transform(utf8.decoder)       // Decode bytes to UTF-8.
+        .transform(LineSplitter());    // Convert stream to individual lines.
+      try {
+        await for (var line in lines) {
+          print('$line: ${line.length} characters');
+        }
+        print('File is now closed.');
+      } catch (e) {
+        print('Error: $e');
+      }
+    }
+  ,,,,,
+
+  * try catch with specific exception.
+  ------
+    try {
+    } on FormatException catch (fe) {
+      print(fe); return 1;
+    } catch (e) {
+    }
+  ,,,,,
+
+  * remove last 5 chars from string
+  ----
+    if (str != null && str.length >= 5) {
+     str = str.substring(0, str.length - 5);
+    }
+  ,,,,
+
+  * synchronous read
+  >> String? name = stdin.readLineSync(); 
+
+  * compile dart
+  >> dart compile exe prog.dart
+
+  * read utf8 stream one char at a time
+  ----
+   import 'dart:convert';
+   import 'dart:io';
+
+   main() {
+     // these threw an error for me, but probably doesnt matter
+     // stdin.echoMode = false;
+     // stdin.lineMode = false;
+     var subscription;
+     subscription = stdin
+       .map((List<int> data) {
+         if (data.contains(4)) {
+           // stdin.echoMode = true;
+           subscription.cancel();
+         }
+         return data;
+       })
+       .transform(utf8.decoder)
+       .map((String s) => s.toUpperCase()+":")
+       .listen(stdout.write);
+   }
+ ,,,,
+
+ * read file as stream
+ >> file.openRead() which returns a Stream<List<int>>
+
+ To read one char just dont call transform(const LineSplitter())
+
+ * read stdin as stream
+ ----
+ import 'dart:convert';
+ import 'dart:io';
+  void main() async {
+    await for (final line in 
+      stdin.transform(utf8.decoder).transform(const LineSplitter())) {
+      //do stuff with line or simply
+      stdout.write(line); // no line feed
+      print(line);
+    }
+  }
+ ,,,,
+
+  
+ * get file contents now
+ ----
+    File file = File('random_path.txt');
+    Future<String> contents = file.readAsString();
+    var value = await contents; // <- await gets value, or reth
+  ,,,,
+
+  * handle file stream errors
+  -----
+
+     final stream = File('does-not-exist')
+    .openRead()
+    .handleError((e) => print('Error reading file: $e'));
+    await for (final data in stream) {
+      print(data);
+    }
+
+  ,,,,
+
+ * read stdin one char at a time
+ ------
+   import 'dart:convert';
+   import 'dart:io';
+   main() {
+     // Stop your keystrokes being printed automatically.
+     stdin.echoMode = false;
+     // This will cause the stdin stream to provide the input as soon as it
+     // arrives, so in interactive mode this will be one key press at a time.
+     stdin.lineMode = false;
+     var subscription;
+     subscription = stdin.listen((List<int> data) {
+       // Ctrl-D in the terminal sends an ascii end of transmission character.
+       // http://www.asciitable.com/
+       if (data.contains(4)) {
+         // On my computer (linux) if you don't switch this back on the console
+         // will do wierd things.
+         stdin.echoMode = true;
+         // Stop listening.
+         subscription.cancel();
+       } else {
+         // Translate character codes into a string.
+         var s = LATIN1.decode(data);
+         // Capitalise the input and write it back to the screen.
+         stdout.write(s.toUpperCase());
+       }
+      });
+
+ }
+ ,,,,
+
+ * splitting on a character in string, maximum 4 in list
+ ---
+  var c = 'abracadabra'.characters;
+  var parts = c.split('a'.characters, 4).toList();
+ ,,,
+ 
+ * characters
+ >> return this!.characters.takeLast(n).string;
+
+ This sections just has some random notes about dart syntax and 
+ code.
+
+ * methods in string interp 
+ >> " x ${str.isNotEmpty} "
+
+ * List and methods
+ ----
+   final List<String> s = [];
+   var s = [''];
+   if (s.isEmpty ) ...
+   String last = s.last; 
+   s.removeLast()
+   s.toString();
+   s.add('newstring');
+ ,,,
+
+ * constructors, new is not necessary
+ ----
+  var p1 = new Point(2, 2);
+  var p2 = new Point.fromJson({'x': 1, 'y': 2});
+ ,,,,
+
+  * maps maybe better than 2 Lists ? no
+  >> static final Map<String, Logger> _cache = <String, Logger>{};
+
+ * create an input stream from a string
+ -------
+ import 'dart:io';
+  main() {
+    var input = "hello from dart";
+    var inputStream = new ListInputStream();
+    inputStream.onData = () {
+      print(new String.fromCharCodes(inputStream.read()));
+    };
+    inputStream.write(input.charCodes());
+  }
+  ,,,,,
+
+  * get the first character (Rune) of a string
+  >> '${mystring[0]}'
+  >> word.substring(0,1); 
+  But probably use characters api instead.
+
+ * loop through chars of string
+ -----
+   void main() {
+    String mystring = 'Hello World';
+    String search = ''; 
+    for (int i=0;i<mystring.length;i++){
+    search += mystring[i];
+    print(search);
+   } 
+  }
+ ,,,
+
+ * use characters api
+ >> var length = input.characters.length;
+
+ * remove last char from string
+ >> return text.characters.skipLast(1).toString();
+
+ * split on a character (string)
+ -------
+ List<String> splitEmojiSeparatedWords(String text, String separator) {
+  // Split returns an iterable, which we need to convert to a list.
+  return [...text.characters.split(separator.characters)]; 
+ ,,,,
+
+ * get first char of string
+ >> firstName.characters.first
+
+STATUS
+
+  7 apr 2025
+    many scripts working. /eg/text.tohtml.pss is working when
+    translated. stdin/string/file parsing working with minimal testing.
+    No file/string output. 
+
+DONE
+
+  - compile class matching into dart.
+  - while and whilenot code, how to match single character 
+    in peep
+  - make class parsing better (unicode script names and categories)
+  - push code, how to split off 1st token using characters.
+  - change the eof script block, need to do pop; pop etc
+    so that beginblocks will resolve with just a parselabel or comment.
+    Move to end of script.
+  - read code. read one character (unicode) from the input, from string
+    or file. only reading from stdin at the moment.
+
+
+TODO
+
+  - output write to string,stdout or file.
+  - test grapheme clusters in /tr/translate.unicode.test.txt
+
+TESTING 
+
+  The dart compiler strikes me as being slow, so the tests which
+  are in translate.test.txt and translate.unicode.test.txt will take
+  quite some time. But you can just start the 'pep.tt' function 
+  from any test block. see below.
+
+  * test with the function in helpers.pars.sh
+  >> pep.tt dart
+
+  * test but start at swap tests 
+  >> pep.tt dart blah '# swap'
+
+TOKENS 
+
+ This token list is pretty useful for thinking about 
+ sequences of tokens. Especially for error sequences.
+
+  Literal BE!<>{}(),.;
+  quoted*  text between "" or ''.  I will put "" around this and escape
+           all " at the time of tokenising. This is because I want \n \r
+           etc to work within strings. But it means I have to be careful
+           about other escape sequences. like $ etc. 
+  class*   eg [:space:] [abcd] [a-z] 
+  word*    eg: eof,reparse,==
+  begin*   the begin word
+  parselabel* 
+  command* eg: add clear print 
+  test*    eg: "x" [:space:] !B"a" B"a" E"a" !E"a"
+  ortest*  test*,*test*
+  andtest*  test*.*test*
+  statement* eg: clear; add "xx"; or "test" { ... }
+  statementset* a list of statements 
+  script*
+
+HISTORY
+
+  7 april 2025
+    String and file parsing also working but still outputting to 
+    stdout always.
+    There was a bug in this because \p{Separator} did not match
+    the newline \n . /eg/text.tohtml.pss seems to work now when
+    translated to dart.
+  5 april 2025
+    all first gen tests working with stdin input stdout output.
+    Can't find a simple way to read from stdin or string or file
+    as stream because of async issues.
+  4 april 2025
+    made a complicated looking (eof) block to reduce statementset/parselabel
+    combinations to scripts and then combine with begin blocks. I have 
+    to do this in 'reverse' (reducing 3 token combinations, before 2 token
+    etc). Also, surprisingly, in this situation 'push;push;pop;' is 
+    *not* the same as 'push;'
+  3 april 2025
+    lots of work. many 1st gen ascii tests working. classes are 
+    unicode aware with script names and unicode categories.
+    working on escapeChar and unescapeChar. These seem to be 
+    working. Walk through the workspace and count escape chars.
+  21 mar 2025
+    started based on /eg/nom.syntax.reference.pss and translate.java.pss
+    significant work.
+
+*#
+
+  read;
+
+  # sort-of line-relative character numbers 
+  [\n] { nochars; }
+  # ignore space except in quotes. but be careful about silent
+  # exit on read at eof
+  [:space:] { 
+     clear; (eof) { .reparse } !(eof) { .restart } 
+  }
+
+  # literal tokens, for readability maybe 'dot*' and 'comma*'
+  [<>}()!BE,.;] { put; add "*"; push; .reparse }
+  [{] { 
+    # line and char number to help with missing close brace 
+    # errors
+    clear;
+    add "line:"; lines; add " char:"; chars;
+    put; clear; add "{*"; push; .reparse
+  }
+
+  # parse (eof) etc as tokens? yes
+
+  # command names, need to do some tricks to parse ++ -- a+ etc
+  # here. This is because [:alpha:],[+-] etc is not a union set
+  # and while cannot do "while [:alpha:],[+-] etc
+
+  # subtle bug, [+-^0=] parses as a range!!! [a-z]
+  [:alpha:],[-+^0=] {
+
+    # a much more succint abbreviation code
+    "0" { clear; add "zero"; }
+    "^" { clear; add "escape"; }
+    # increment tape pointer ++ command
+    "+" { while [+]; }
+    # decrement tape pointer -- command
+    "-" { while [-]; }
+    # tape test (==)
+    "=" { while [=]; }
+
+    # for better error messages dont read ahead for the 
+    # above commands.
+    !"zero".!"escape".!B"+".!B"-".!B"=" {
+      while [:alpha:]; 
+    }
+
+    # parse a+ or a- for the accumulator
+    "a" { 
+      # while [+-] is bug because compile.pss thinks its a range class
+      # not a list class
+      while [-+]; "a+","a-" { put; }
+      "a" { clear; add "add"; }
+    }
+
+    # one letter command abbreviation expansions.
+    # 'D' doesn't actually work in compile.pss !
+    put; clear; add "#"; get; add "#";
+    replace "#k#" "#clip#"; replace "#K#" "#clop#";
+    replace "#D#" "#replace#"; replace "#d#" "#clear#"; 
+    replace "#t#" "#print#"; replace "#p#" "#pop#"; replace "#P#" "#push#"; 
+    replace "#u#" "#unstack#"; replace "#U#" "#stack#"; replace "#G#" "#put#"; 
+    replace "#g#" "#get#"; replace "#x#" "#swap#"; replace "#m#" "#mark#"; 
+    replace "#M#" "#go#"; replace "#r#" "#read#"; replace "#R#" "#until#"; 
+    replace "#w#" "#while#"; replace "#W#" "#whilenot#"; replace "#n#" "#count#"; 
+    replace "#c#" "#chars#"; replace "#C#" "#nochars#"; replace "#l#" "#lines#"; 
+    replace "#L#" "#nolines#"; replace "#v#" "#unescape#"; 
+    replace "#z#" "#delim#"; 
+    replace "#S#" "#state#"; replace "#q#" "#quit#"; replace "#s#" "#write#"; 
+    replace "#o#" "#nop#"; replace "#rs#" "#restart#"; replace "#rp#" "#reparse#"; 
+
+    # remove leading/trailing #
+    clip; clop; put;
+
+    # dont want to use this syntax anymore because we already have
+    # lines and 'l' or chars and 'c'
+    "ll","cc" { 
+      clear;
+      add '* The syntax "'; get; add '" for lines or chars';
+      add "  is no longer valid.\n";
+      add "  use 'chars' or 'c' for a character count \n";
+      add "  use 'lines' or 'l' for a line count \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    "+","-" { 
+      clear;
+      add '* This syntax "'; get; add '" which were 1 letter abbreviations\n';
+      add "  are no longer valid because.\n";
+      add "  it is silly to have 1 letter abbrevs for 2 letter commands.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    # writefile is also a command?
+    # commands parsed above
+    "a+","a-","zero","escape","++","--",
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","delim","quit", "write","nop" {
+      clear; add "command*"; push; .reparse
+    }
+
+    # words not commands == was parsed above
+    "parse","reparse","restart","eof","EOF","==" {
+      put; clear; add "word*"; push; .reparse
+    }
+
+    "begin" { put; add "*"; push; .reparse }
+
+    # lower case and check for command with error
+    lower; 
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","delim","quit", "write",
+    "zero","++","--","a+","a-","nop",
+    "begin","parse","reparse","restart" {
+      ++; put; --;
+      clear; 
+      add '* incorrect command "'; get; add '"\n'; 
+      add '- all nom commands and words are lower case \n';
+      add '  (except for EOF and abbreviations) \n';
+      add "- did you mean '"; ++; get; --; add "'?";
+
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    clear; add '* unknown word or command "'; get; add '"'; 
+    add "
+
+    - Valid nom commands are: 
+
+    add clip clop replace upper lower cap clear 
+    print state pop push unstack stack put get swap 
+    mark go read until while whilenot 
+    count zero chars lines nochars nolines 
+    escape unescape delim quit write (writefile ?) 
+    zero ++ -- a+ a- nop 
+    
+    - Valid nom words are 
+
+    parse reparse restart begin eof EOF == 
+
+    see www.nomlang.org/doc/commands/ \n";
+    
+    put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # single line comments
+  # no need to rethink
+  '#' {
+    (eof) { clear; .reparse }
+    read; 
+    # just delete empty comments
+    [#\n] { clear; .reparse }
+    # multiline comments this needs to go within '#'
+    "#*" {
+      # save the start line number for error messages
+      clear; 
+      add "line:"; lines; add " char:"; chars; put; clear; 
+      until "*#"; 
+      !E"*#" { 
+        clear; add '* unterminated multiline comment #*... \n  starting at '; 
+        get; put; clear; add "nom.error*"; push; .reparse
+      }
+      clip; clip; put; clear;
+      add "comment*"; push; .reparse 
+    }
+    clear; whilenot [\n]; put; 
+    clear; add "comment*"; push; .reparse
+  }
+
+  # quoted text 
+  # I will double quote all text and escape $ and \\ 
+  # double quotes and single quotes are the same in dart, no 
+  # difference.
+  '"' {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; 
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until '"'; 
+    !E'"',(eof) { 
+      clear; add '* unterminated quote (") or incomplete command starting at '; 
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later. must escape \\ first 
+    clip; unescape '"'; 
+    # bug! in object/machine.methods.c escape will reescape chars
+    # fix
+    # escape "\\"; 
+    escape '"'; escape "$"; put; 
+    clear; add '"'; get; add '"'; put; 
+    clear; add "quoted*"; push; .reparse 
+  }
+
+  # single quotes
+  "'" {
+    clear; 
+    # save start line/char of "'" for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "'"; 
+    !E"'",(eof) { 
+      clear; add '* unterminated quote (\') or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later . must escape "\\" first 
+    clip; unescape "'"; escape "\\"; escape '"'; escape "$"; put; 
+    clear; add '"'; get; add '"'; put; 
+    clear; add "quoted*"; push; .reparse 
+  }
+
+  # classes like [:space:] or [abc] or [a-z] 
+  # these are used in tests and also in while/whilenot
+  # The *until* command will read past 'escaped' end characters eg \]
+  # 
+
+  "[" {
+    clear; 
+    # just leave brackets eg [:etc:]
+    # save start line/char of '[' for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "]"; 
+    !E"]",(eof) { 
+      clear; 
+      add '* unterminated class [...] or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clip; put; 
+    
+    B":".E":".!":".!"::" { 
+      # see this for unicode categories in dart and regexp.
+      # https://stackoverflow.com/questions/15531928/matching-unicode-letters-with-regexp
+
+      clip; clop; put;
+      # no, no abbreviations, Unicode categories already have many
+      # abbreviations, I will use those. I will accept any unicode
+      # script/block/category. There are a lot.
+
+      # these are ctype classes which I include for historical reasons.
+      # but these will be translated to a unicode equivalent.
+      "alnum","alpha","ascii","word","blank",
+      "cntrl","digit","graph","lower","print",
+      "punct","space","upper","xdigit" {
+        # ascii graph print? todo
+        replace "alpha" "\\p{Letter}"; 
+        replace "upper" "\\p{Uppercase_Letter}"; 
+        replace "lower" "\\p{Lowercase_Letter}"; 
+        replace "alnum" "[\\p{Letter}\\p{Number}]";
+        replace "space" "\\s"; 
+        # replace "space" "\\p{Separator}"; 
+        # separator doesn't match \\n?
+        # replace "blank" "\\p{Separator}";  # synonym for space?
+        replace "blank" "\\s"; 
+        replace "xdigit" "[0-9a-fA-F]"; 
+        replace "digit" "\\p{Number}"; 
+        # fix: check definition of graph
+        replace "graph" "\\S"; 
+        replace "punct" "\\p{Punctuation}"; 
+        replace "cntrl" "\\p{Control}";  # ascii/latin1 control
+        put; clear; add "class*"; push; .reparse 
+      }
+
+     # unicode category names, the first is an abbreviation of the 
+     # second. It would be good to allow all lower case etc.
+
+     # allow writing spaces or dots instead of _  This is ok because 
+     # unicode script names dont have spaces or dots in them.
+     replace " " "_"; replace "." "_"; 
+     "L","Letter","Ll","Lowercase_Letter","Lu","Uppercase_Letter",
+     "Lt","Titlecase_Letter","L&","Cased_Letter","Lm","Modifier_Letter",
+     "Lo","Other_Letter","M","Mark","Mn","Non_Spacing_Mark",
+     "Mc","Spacing_Combining_Mark","Me","Enclosing_Mark",
+     "Z","Separator","Zs","Space_Separator","Zl","Line_Separator",
+     "Zp","Paragraph_Separator","S","Symbol","Sm","Math_Symbol",
+     "Sc","Currency_Symbol","Sk","Modifier_Symbol","So","Other_Symbol",
+     "N","Number","Nd","Decimal_Digit_Number","Nl","Letter_Number",
+     "No","Other_Number","P","Punctuation","Pd","Dash_Punctuation",
+     "Ps","Open_Punctuation","Pe","Close_Punctuation","Pi","Initial_Punctuation",
+     "Pf","Final_Punctuation","Pc","Connector_Punctuation","Po",
+     "Other_Punctuation","C","Other","Cc","Control","Cf","Format",
+     "Co","Private_Use","Cs","Surrogate","Cn","Unassigned" {
+       put; clear; add "\\p{"; get; add "}"; 
+       put; clear; add "class*"; push; .reparse 
+     }
+
+      # unicode script names
+      # If the name is wrong dart will throw exception
+      # Unhandled exception:
+      #  FormatException: Invalid property name\p{Script=InBasic_Latin}
+
+      "Common","Arabic","Armenian","Bengali","Bopomofo",
+      "Braille","Buhid","Canadian_Aboriginal","Cherokee",
+      "Cyrillic","Devanagari","Ethiopic","Georgian","Greek",
+      "Gujarati","Gurmukhi","Han","Hangul","Hanunoo",
+      "Hebrew","Hiragana","Inherited","Kannada","Katakana",
+      "Khmer","Lao","Latin","Limbu","Malayalam","Mongolian",
+      "Myanmar","Ogham","Oriya","Runic","Sinhala","Syriac",
+      "Tagalog","Tagbanwa","TaiLe","Tamil","Telugu","Thaana",
+      "Thai","Tibetan","Yi" {
+        clear; add "\\p{Script="; get; add "}"; put;
+        clear; add "class*"; push; .reparse 
+      }
+      # blocks
+
+      # unicode block names. These don't seem supported in dart 
+      # unicode regular expressions.
+      "InBasic_Latin","InLatin-1_Supplement","InLatin_Extended-A",
+      "InLatin_Extended-B","InIPA_Extensions","InSpacing_Modifier_Letters",
+      "InCombining_Diacritical_Marks","InGreek_and_Coptic","InCyrillic",
+      "InCyrillic_Supplementary","InArmenian","InHebrew","InArabic",
+      "InSyriac","InThaana","InDevanagari","InBengali","InGurmukhi",
+      "InGujarati","InOriya","InTamil","InTelugu","InKannada",
+      "InMalayalam","InSinhala","InThai","InLao","InTibetan","InMyanmar",
+      "InGeorgian","InHangul_Jamo","InEthiopic","InCherokee",
+      "InUnified_Canadian_Aboriginal_Syllabics","InOgham","InRunic",
+      "InTagalog","InHanunoo","InBuhid","InTagbanwa","InKhmer",
+      "InMongolian","InLimbu","InTai_Le","InKhmer_Symbols",
+      "InPhonetic_Extensions","InLatin_Extended_Additional",
+      "InGreek_Extended","InGeneral_Punctuation",
+      "InSuperscripts_and_Subscripts","InCurrency_Symbols",
+      "InCombining_Diacritical_Marks_for_Symbols","InLetterlike_Symbols",
+      "InNumber_Forms","InArrows","InMathematical_Operators",
+      "InMiscellaneous_Technical","InControl_Pictures",
+      "InOptical_Character_Recognition","InEnclosed_Alphanumerics",
+      "InBox_Drawing","InBlock_Elements","InGeometric_Shapes",
+      "InMiscellaneous_Symbols","InDingbats",
+      "InMiscellaneous_Mathematical_Symbols-A","InSupplemental_Arrows-A",
+      "InBraille_Patterns","InSupplemental_Arrows-B",
+      "InMiscellaneous_Mathematical_Symbols-B",
+      "InSupplemental_Mathematical_Operators",
+      "InMiscellaneous_Symbols_and_Arrows","InCJK_Radicals_Supplement",
+      "InKangxi_Radicals","InIdeographic_Description_Characters",
+      "InCJK_Symbols_and_Punctuation","InHiragana","InKatakana",
+      "InBopomofo","InHangul_Compatibility_Jamo","InKanbun",
+      "InBopomofo_Extended","InKatakana_Phonetic_Extensions",
+      "InEnclosed_CJK_Letters_and_Months","InCJK_Compatibility",
+      "InCJK_Unified_Ideographs_Extension_A","InYijing_Hexagram_Symbols",
+      "InCJK_Unified_Ideographs","InYi_Syllables","InYi_Radicals",
+      "InHangul_Syllables","InHigh_Surrogates",
+      "InHigh_Private_Use_Surrogates","InLow_Surrogates",
+      "InPrivate_Use_Area","InCJK_Compatibility_Ideographs",
+      "InAlphabetic_Presentation_Forms","InArabic_Presentation_Forms-A",
+      "InVariation_Selectors","InCombining_Half_Marks",
+      "InCJK_Compatibility_Forms","InSmall_Form_Variants",
+      "InArabic_Presentation_Forms-B","InHalfwidth_and_Fullwidth_Forms",
+      "InSpecials" {
+         add ":
+           Dart apparently does not support unicode block names in 
+           regular expressions. But it does support script names
+           (eg Greek, Gujarati, Han) and property names. Try to use a 
+           script name instead. ";
+         put; clear; add "nom.error*"; push; .reparse
+
+      }
+
+      clear; 
+      add "* Incorrect unicode character class, category or script name\n"; 
+      add ' 
+      Character classes are used in tests and the nom while 
+      and whilenot commands
+        eg: [:space:] { while [:space:]; clear; } 
+        or: [:Greek:] { while [:Greek:]; clear; } \n';
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # I am just passing classes through to the dart RegExp engine? no.
+    # but should escape special chars?
+    # \, ^, $, ?, *, +, <, >, [, ], {, }, ..
+
+    # restore brackets and escape
+    # escape '\\';  ??? yes or no
+    escape '^'; escape '$'; escape '?'; escape '*'; 
+    escape '+'; escape '<'; escape '>'; escape '['; 
+    # I think there is a bug in the pep interp, it doesn't 
+    # count escape chars. fix:
+    # escape ']';
+    escape '.'; escape '{'; escape '}'; put;
+    clear; add "["; get; add "]"; put;
+    clear; add "class*"; push; .reparse
+  }
+
+  !"" {
+    put; clear; 
+    add "* strange character found '"; get; add "'\n\n"; 
+    add "  see www.nomlang.org/doc/syntax for nom syntax documentation \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+
+ parse>
+  # watch the parse-stack resolve.  
+  # add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+   
+  # ----------------
+  # error trapping and help here
+  pop;
+
+  # parse help token for a topic, category of # topics or everthing. 
+  "nom.help*" {
+    # the topic or category to display help for is in the attribute
+    clear; swap; 
+
+    # a short list of commands and abbreviations 
+    "commands.shortlist","commands","all" {
+      swap; add "
+      # 'D' doesn't actually work in compile.pss !
+      nom abbreviations and commands: 
+
+        zero k clip K clop D replace d clear
+        t print p pop P push u unstack U stack G put g get x swap
+        m mark M go r read R until w while W whilenot n count c chars C nochars 
+        l lines L nolines v escape unescape z delim S state q quit s write
+        o nop .rs .restart .rp .reparse
+        (no abbreviations)
+        a+ a- ++ --
+
+          ";
+    }
+
+    # specific help for the add command 
+    "command.add","commands","all" {
+      swap; add "
+      add command:
+        add text to end of the workspace buffer
+        see: nomlang.org/doc/commands/nom.add.html
+      eg:
+        add ':tag:';     # correct
+        add [:space:];   # incorrect, cannot have class parameter 
+        add;             # incorrect, missing parameter
+          ";
+    }
+
+    #  
+    "semicolon","punctuation","all" {
+      swap; add "
+       semicolon:
+         All statements (commands) must end with a semi-colon 
+         except .reparse and .restart (even the last command in
+         the block)
+       eg:
+         clear; .reparse       # correct
+         clear add '.';        # incorrect, clear needs ; 
+         ";
+    }
+
+
+    # 'brackets' is topic, 'punctuation' is a category, 'all' is everthing 
+    "brackets","punctuation","all" {
+      swap; add "
+      brackets () 
+        are used for tests like (eof) (EOF) (==) 
+        currently (2025) brackets are not used for logical grouping in 
+        tests.
+      examples:
+         (==)                  # correct
+         (==,'abc' { nop; }    # incorrect: unbalanced ";
+    }
+
+    "negation","punctuation","all" {
+      swap; add "
+      negation operator ! 
+        is used for negating class and equals tests and with the 
+        B and E modifiers. It should precede the test and the 
+        B and E modifiers.
+
+      examples:
+         !(eof) { add '.'; }   # correct, not at end-of-file
+         ![:space:] { clear; } # correct 
+         'abc'! { clear; }     # incorrect: ! must precede test.
+         B!'abc' { clear; }    # incorrect: ! must precede 'B'  ";
+    }
+
+
+    # 
+    "modifiers","tests","all" {
+      swap; add "
+      begins-with 'B' and ends-with 'E' modifiers:
+        are used with quoted text tests and cannot be used with 
+        class tests.
+      eg: 
+        B'abc' { clear; }        # correct 
+        E\"abc\" { clear; }      # correct 
+        B[:alpha:] { clear; }  # incorrect  ";
+    }
+
+    # help for the help system 
+    "help","help","all" {
+      swap; add "
+        help system:
+          categories: tests, commands, punctuation etc
+          type '#:help <command>' in a [nom] script to get help
+          for a particular command or word or category
+        eg:
+          #:help add    # shows help for the add command
+          #:help tests  # shows help nom block tests.
+        ";
+    }
+
+    # This help system quits after showing the help message
+    # but you could keep parsing if there is any point. 
+    add "\n\n"; print; quit; 
+  }
+
+  "nom.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "! Nom syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; 
+    add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+    add " syntax checking. See www.nomlang.org/doc for complete-ish \n";
+    add " pep and nom documentation. \n";
+    print;
+    # provide help from the help* token if one was put on the stack. 
+    clear; pop; "nom.help*" { push; .reparse } 
+    quit;
+  }
+
+  # this error is when the error should have been trapped earlier
+  "nom.untrapped.error*" {
+    clear; 
+    add "! Nom untrapped error! :";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; 
+    add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+    add " syntax checking. \n";
+    print; quit;
+  }
+
+  #----------------
+  # 2 parse token errors
+
+  #*
+  possible tokens: 
+  literal* BE!<>{}(),.;
+  quoted* class* word* command* test*
+  ortest* andtest* statement* statementset* 
+  *#
+
+  # none of these literal tokens can start a sequence because
+  # they should have already reduced to a subpattern (token)
+  pop;
+
+  "B*class*","E*class*" {
+    clear; 
+
+    clear; add "modifiers"; put; 
+    clear; add "nom.help*"; push;
+    add "  B or E modifier before class test."; put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # general token sequence errors
+
+  # literal token error sequences.
+
+  B"}*",B";*",B">*",B")*" {
+    clear; add "* misplaced } or ; or > or ) character?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  B"B*",B"E*" {
+    E"!*" {
+      clear; add "negation"; put; 
+      clear; add "nom.help*"; push;
+      add "* The negation operator (!) must precede the  \n"; 
+      add "  begins-with (B) or ends-with (E) modifiers \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  B"B*".!"B*".!E"quoted*" {
+    clear; 
+    add "* misplaced begin-test modifier 'B' ?"; 
+    add "  eg: B'##' { d; add 'heading*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  B"E*".!"E*".!E"quoted*" {
+    clear; 
+    add "* misplaced end-test modifier 'E' ?"; 
+    add "  eg: E'.' { d; add 'phrase*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # empty quote after B or E
+  B"E*".E"quoted*" {
+    clear; ++; get; --;
+    '""' {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'E' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "E*quoted*"; 
+  }
+
+  B"B*".E"quoted*" {
+    clear; ++; get; --;
+    '""' {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'B' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "B*quoted*"; 
+  }
+  
+  B"!*".!"!*".!E"(*".!E"<*".!E"B*".!E"E*".!E"quoted*".!E"class*".!E"test*" {
+    clear; 
+    add "* misplaced negation operator (!) ?"; 
+    add "  e.g. \n";
+    add "   !B'$#@' { clear; }   # correct \n"; 
+    add '   !"xyz" { clear; }   # correct \n'; 
+    add '   "abc"! { clear; }   # incorrect \n'; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # comma sequence errors, 2 tokens
+  # error eg: ,,
+  B",*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*" {
+    clear; add "* misplaced comma ?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: . {
+  B".*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*".!E"word*" {
+    clear; add "* misplaced dot?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: {}
+  B"{*".E"}*" {
+    clear; add "* empty block {} "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+  
+  # error eg: { ,
+  B"{*".!"{*" {
+    E">*",E",*",E")*",E"{*",E"}*",E";*" {
+      clear; add "* misplaced character '"; ++; get; --; add "' ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+  
+  # try to diagnose missing close brace errors at end of script
+  # eg ortest*{*statement*
+  # we probably need a line/char number in the tape cell
+  (eof) {
+    "{*statement*","{*statementset*" {
+      clear; 
+      add "* missing close brace (}) ?\n"; 
+      add "  At "; get; add " there is an opening brace ({) which does \n"; 
+      add "  not seem to be matched with a closing brace ";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # missing dot
+  # error eg: clear; reparse 
+  !B".*".E"word*".!"word*" {
+    push; push; --; get; ++; 
+    "reparse","restart" {
+      clear; add "* missing dot before reparse/restart ? "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; pop; pop;
+  }
+
+  # error eg: ( add
+  # currently brackets are only used for tests
+  B"(*".!"(*".!E"word*" {
+    clear; add "* strange syntax after '(' "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "<*;*" {
+    clear; 
+    add "* '<' used to be an abbreviation for '--' \n"; 
+    add "* but no-longer (mar 2025) since it clashes with <eof> etc "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: < add
+  # currently angle brackets are only used for tests ( <eof> <==> ) 
+  B"<*".!"<*".!E"word*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  ">*;*" {
+    clear; 
+    add "* '>' used to be an abbreviation for '++' \n"; 
+    add "  but no-longer (mar 2025) since it clashes with <eof> etc \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: begin add
+  B"begin*".!"begin*".!E"{*" {
+    clear; 
+    add "* begin is always followed by a brace.\n"; 
+    add "   eg: begin { delim '/'; }\n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear; begin { clear; }
+  E"begin*".!"begin*".!B"comment*" {
+    clear; add "* only comments can precede a begin block."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*}*" {
+    clear; add "* missing semicolon? "; 
+    add "
+     In nom all commands except .reparse and .restart 
+     must be terminated with a semicolon, even the last 
+     command in a block {...} 
+
+     see www.nomlang.org/doc/syntax/ for details \n";
+    put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear {
+  B"command*".!"command*".!E";*".!E"quoted*".!E"class*" {
+    clear; add "* bad command syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # specific analysis of the token sequences permitted above
+  "command*class*" {
+    clear; get; 
+    !"while".!"whilenot" {
+      clear; 
+      add "* command '"; get; add "' does not take class argument.\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*class*";
+  }
+
+  "command*quoted*" {
+    clear; get; 
+    !"add".!"replace".!"mark".!"go".!"until".
+    !"delim".!"escape".!"unescape" {
+      clear; 
+      add "* command '"; get; add "' does not take quoted argument.\n\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html ";
+      add "  for details.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # check that not empty argument.
+    clear; ++; get; --;
+    '""' {
+      clear; 
+      add "* empty quoted text ('' or \"\") is an error here.\n\n"; 
+      add "  - The 2nd argument to 'replace' can be an empty quote\n";
+      add "    eg: replace 'abc' ''; # replace 'abc' with nothing \n";
+      add "  - Also, empty quotes can be used in tests \n";
+      add "    eg: '' { add 'xyz'; } !'' { clear; } \n";
+      put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*";
+  }
+
+  "command*;*" {
+    clear; get; 
+    "add","replace","while","whilenot","delim","escape","unescape" {
+      clear; 
+      add "* command '"; get; add "' requires argument."; 
+      add "- eg: add 'abc'; while [:alnum:]; escape ']'; "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  # end-of-script 2 token command errors.
+  (eof) {
+    E"command*" {
+      clear; 
+      add "* unterminated command '"; get; add "' at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    "command*quoted*","command*class*" {
+        clear; 
+        add "* unterminated command '"; get; add "' at end of script"; 
+        put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: "xx" }
+  B"quoted*".!"quoted*".!E"{*".!E"quoted*".!E";*".!E",*".!E".*" {
+    clear; 
+    add " dubious syntax (eg: missing semicolon ';') after quoted text."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: [:space:] }
+  B"class*".!"class*".!E"{*".!E";*".!E",*".!E".*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after class? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # A word is not a command. reparse and restart have already reduced.
+  # error eg: eof (
+  B"word*".!"word*".!E")*".!E">*" {
+    clear; add "* bad syntax after word."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: E"abc";
+  B"test*".!"test*".!E",*".!E".*".!E"{*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx","yy"."zz"
+  B"ortest*".!"ortest*".E".*" {
+    clear; add "* AND '.' operator in OR test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa" "abc";
+  "ortest*quoted*","ortest*test*" {
+    clear; add "* missing comma in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa",E"abc";
+  B"ortest*".!"ortest*".!E",*".!E"{*" {
+    clear; add "* bad OR test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx"."yy","zz"
+  B"andtest*".!"andtest*".E",*" {
+    clear; add "* OR ',' operator in AND test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  "andtest*quoted*","andtest*test*" {
+    clear; add "* missing dot in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  B"andtest*".!"andtest*".!E".*".!E"{*" {
+    clear; add "* bad AND test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # end-of-script 2 token test errors.
+  (eof) {
+    E"test*",B"test*",E"ortest*",B"ortest*",E"andtest*",B"andtest*" {
+      clear; 
+      add "* test with no block {} at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: add 'x'; { 
+  B"statement*".!"statement*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: clear;add 'x'; { 
+  B"statementset*".!"statementset*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # specific command errors
+
+  # until, mark, go etc have no-parameter versions
+  "command*;*" {
+    clear; get;
+    "add","replace","while","whilenot","delim","escape","unescape" {
+      clear; add "* command '"; get; add "' requires argument"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  #----------------
+  # 3 parse token errors, 
+  pop;
+
+  # missing semicolon errors?
+  # error eg: [:space:] { whilenot [:space:] }
+  B"command*class*".!"command*class*".!E";*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # missing semicolon errors
+  # error eg: [:space:] { until "</em>" }
+  B"command*quoted*".!"command*quoted*".!E";*".!E"quoted*" {
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "cd" "ef" {
+  B"quoted*quoted*".!E";*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: , "cd" "ef"
+  E"quoted*quoted*".!B"command*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*quoted*quoted*" {
+    clear; get; 
+    !"replace" {
+      clear; 
+      add "* command '"; get; add "' does not take 2 quoted arguments.\n"; 
+      add "- The only nom command with 2 quoted arguments is 'replace'."; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*";
+  }
+
+  # error eg: clear "x"; already checked above.
+  # "command*quoted*;*" {}
+
+  # error eg: add [:space:] already checked above in 2 tokens
+  # "command*class*;*" {}
+
+  #----------------
+  # 4 parse token errors
+  pop;
+  "command*quoted*quoted*;*" {
+    clear; get;
+    !"replace" {
+      clear; add "* command '"; get; add "' does not take 2 arguments."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    # check that not 1st argument is empty
+    clear; ++; get; --;
+    '""' {
+      clear; add "* empty quoted text '' is an error here."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*;*";
+  }
+
+  push;push;push;push;
+  # end of errors
+  # ----------------
+
+
+  # ----------------
+  # 2 grammar parse tokens 
+  pop;pop;
+  
+  # permit comments anywhere in script
+  #
+  B"comment*".!"comment*" {
+    # A translator would try to conserve the comment.
+    replace "comment*" ""; push; 
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  E"comment*".!"comment*" {
+    replace "comment*" ""; push; .reparse
+  }
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; add "continue script;"; put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    "reparse" {
+      clear; count; 
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      "0" { clear; add "break lex;"; }
+      "1" { clear; add "continue parse;"; }
+      put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    clear; add "* invalid statement ."; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  "word*>*" {
+    clear; get; 
+    "parse" { 
+      clear; count;
+      !"0" {
+        clear; 
+        add "script error:\n";
+        add "  extra parse> label at line "; lines; add ".\n";
+        print;
+        quit;
+      }
+      clear; add "// parse>"; put;
+      clear; add "parselabel*"; push;
+      # use accumulator to indicate after parse> label
+      a+; .reparse 
+    }
+    clear; add "word*>*";
+  }
+
+  #-----------------------------------------
+  # format: E"text" or E'text'
+  #  This format is used to indicate a "workspace-ends-with" text before
+  #  a brace block.
+  # eg: E"abc" { ... }
+  "E*quoted*" {
+    clear; add "this.work.characters.endsWith("; 
+    ++; get; --; add ".characters)"; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #   A 'B' preceding some quoted text is used to indicate a 
+  #   'workspace-begins-with' test, before a brace block.
+  "B*quoted*" {
+    clear; add "this.work.characters.startsWith("; 
+    ++; get; --; add ".characters)"; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the dart code
+  "comment*statement*","statement*comment*","statementset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  "!*test*" {
+    clear; add "!("; ++; get; 
+    --; add ")"; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # transform quotes and classses to tests, this greatly reduces the number
+  # of rules required for other reductions
+  ",*quoted*",".*quoted*","!*quoted*" { 
+    push; clear; add "this.work == "; get; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  # transform quotes to tests
+  "quoted*,*","quoted*.*","quoted*{*" { 
+    replace "quoted*" "test*"; push; push; 
+    --; --; add "this.work == "; get; put;
+    ++; ++; clear; .reparse
+  }
+
+  # transform classes to tests, all characters in the workspace need
+  # to match the (unicode) class, category or unicode script name for the 
+  # class test to return true. This is why I add r'^' and '+$' to the 
+  # regexp. Also, an empty workspace cannot match.
+  ",*class*",".*class*","!*class*" { 
+    push; clear; 
+    add "RegExp(r'^"; get; 
+    add "+$', unicode:true).hasMatch(this.work)";
+    put; clear; add "test*"; push; .reparse
+  }
+
+  # transform classes to tests
+  "class*,*","class*.*","class*{*" { 
+    replace "class*" "test*"; push; push; 
+    --; --; 
+    add "RegExp(r'^"; get; 
+    add "+$', unicode:true).hasMatch(this.work)";
+    put; 
+    ++; ++; clear; .reparse
+  }
+
+  #--------------------------------------------
+  # ebnf: command := command ';' ;
+  # formats: "pop; push; clear; print; " etc
+  "command*;*" {
+     clear; get;
+
+     # error trap here .
+     !"go".!"mark".!"until".!"clip".!"clop".!"clear".!"upper".!"lower".
+     !"cap".!"print".!"pop".!"push".!"unstack".!"stack".!"state".!"put".!"get".
+     !"swap".!"++".!"--".!"read".!"count".!"a+".!"a-".!"zero".!"chars".
+     !"lines".!"nochars".!"nolines".!"quit".!"write".!"nop" {
+       clear; add "  incorrect command syntax?"; put;
+       clear; add "nom.untrapped.error*"; push; .reparse
+     }
+
+     # go; not implemented in pars/compile.pss yet (feb 2025)
+     "go" { 
+       clear;
+       add "this.goToMark(this.tape[this.cell]);  /* go (tape) */";
+     }
+     "mark" { 
+       clear;
+       add "this.addMark(this.tape[this.cell]);  /* mark (tape) */";
+     }
+
+     # the new until; command with no argument
+     "until" { 
+       clear;
+       add "this.until(this.tape[this.cell]);  /* until (tape) */";
+     }
+
+     "clip" { 
+       clear; 
+       # are these length tests really necessary
+       #add "if (this.work.isNotEmpty) {  /* clip */\n";
+       add "this.work =";
+       add " this.work.characters.skipLast(1).toString();";
+       #add "\n}";
+     }
+     "clop" { 
+       clear; 
+       #add "if (this.work.isNotEmpty) {  /* clop */\n";
+       add "this.work =";
+       add " this.work.characters.skip(1).toString();";
+     }
+     "clear" { 
+       clear; add "this.work = '';  /* clear */"; 
+     }
+     "upper" { 
+       clear; 
+       add "/* upper */ \n"; 
+       add "this.work = ";
+       add "this.work.characters.toUpperCase().toString();";
+     }
+     "lower" { 
+       clear; 
+       add "/* lower */ \n"; 
+       add "this.work = ";
+       add "this.work.characters.toLowerCase().toString();";
+     }
+     "cap" { 
+       clear; 
+       # capitalize every word not just the first.
+       add "/* cap */ \n"; 
+       # ${this[0].toUpperCase()}${substring(1).toLowerCase()}
+       add "this.work = '${this.work[0].toUpperCase()}";
+       add "${this.work.substring(1).toLowerCase()}';";
+     }
+     "print" { 
+       clear; add "stdout.write(this.work); /* print */";
+     }
+     "pop" { clear; add "this.pop();"; }
+     "push" { clear; add "this.push();"; }
+     "unstack" { clear; add "while (this.pop());   /* unstack */"; }
+     "stack" { clear; add "while(this.push());   /* stack */"; }
+     "state" { clear; add "this.printState();    /* state */"; }
+     "put" { 
+       clear; add "this.tape[this.cell] = this.work; /* put */";
+     }
+     "get" { 
+       clear; 
+       add "this.work += this.tape[this.cell]; /* get */";
+     }
+     "swap" { clear; add "this.swap(); /* swap */"; }
+     "++" { clear; add "this.increment();   /* ++ */"; }
+     "--" { 
+       clear; 
+       add "if (this.cell > 0) this.cell--; /* -- */"; 
+     }
+     "read" { clear; add "this.read(); /* read */"; }
+     "count" { 
+       clear; 
+       add "this.work += this.accumulator.toString(); /* count */";
+     }
+     "a+" { clear; add "this.accumulator++; /* a+ */"; }
+     "a-" { clear; add "this.accumulator--; /* a- */"; }
+     "zero" { clear; add "this.accumulator = 0; /* zero */"; }
+     "chars" { 
+       clear; add "this.work += this.charsRead.toString(); /* chars */"; 
+     }
+     "lines" { 
+       clear; add "this.work += this.linesRead.toString(); /* lines */";
+     }
+     "nochars" { clear; add "this.charsRead = 0; /* nochars */"; }
+     "nolines" { clear; add "this.linesRead = 0; /* nolines */"; }
+     # use a labelled loop to quit script.
+     "quit" { clear; add "break script; /* quit */"; }
+     "write" { clear; add "this.writeToFile(); /* write */"; }
+     # just eliminate since it does nothing.
+     "nop" { clear; add "/* nop: does nothing */"; }
+
+     put; clear; add "statement*";
+     push; .reparse
+   }
+
+  "statementset*statement*","statement*statement*" {
+    clear; get; add "\n"; ++; get; --; put;
+    clear; add "statementset*"; push; .reparse
+  }
+
+  # ----------------
+  # 3 grammar parse tokens 
+  pop;
+  "(*word*)*","<*word*>*" {
+    clear; ++; get; --;
+
+    !"eof".!"==" {
+      clear; add "* invalid test <> or () ."; put;
+      clear; add "nom.untrapped.error*"; push; .reparse
+    }
+    "eof" { 
+      clear; add "this.eof";
+    }
+    "==" { 
+      clear; add "this.tape[this.cell] == this.work";
+    }
+    put; clear; add "test*"; push; .reparse 
+  }
+
+  #--------------------------------------------
+  # quoted text is already double quoted eg "abc" 
+  # eg: add "text";
+  "command*quoted*;*" {
+    clear; get;
+    # error trap here 
+    !"mark".!"go".!"delim".!"add".!"until".!"escape".!"unescape" {
+      clear; 
+      add "  superfluous argument or other error?\n"; 
+      add "  (error should have been trapped in error block: check)"; 
+      put; clear; add "nom.untrapped.error*"; push; .reparse
+    }
+
+    "mark" {
+      clear; add 'this.addMark('; ++; get; --; add '); /* mark */';
+    }
+
+    "go" {
+      clear; add 'this.goToMark('; ++; get; --; add '); /* go */';
+    }
+
+    "delim" {
+      # dart does not have a char type I believe. 
+      # only the first character of the delimiter argument should be used. 
+      clear; add "this.delimiter = "; ++; get; --; 
+      add '.characters.characterAt(0).toString(); /* delim */';
+    }
+
+    "add" {
+      # use dart raw string? no because I want \n to work in add
+      clear; add 'this.work += '; ++; get; --; 
+      # handle multiline text
+      replace "\n" '"; \nthis.work += "\\n';
+      add '; /* add */';
+    }
+   
+    # no while/whilenot "quoted"; syntax
+    "until" {
+       clear; add 'this.until('; ++; get; --; 
+       # handle multiline argument
+       replace "\n" "\\n"; add ');'; 
+     }
+
+    "escape","unescape" {
+       # only use the first char or grapheme cluster of escape argument
+       clear; add "this."; get; add "Char"; 
+       add "("; ++; get; --; 
+       add '.characters.characterAt(0).toString());'; 
+     }
+     put; clear; add "statement*"; push; .reparse
+   }
+
+  # eg: while [:alpha:]; or whilenot [a-z];
+  "command*class*;*" {
+    clear; get;
+
+    # convert to dart code. 
+    "while" {
+      clear;
+      add "/* while */\n";
+      # unicode syntax
+      add "while (RegExp(r'"; ++; get; --; 
+      add "', unicode:true).hasMatch(this.peep)) {\n";
+      add "  if (this.eof) { break; } this.read();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+
+    "whilenot" {
+      clear;
+      add "/* whilenot */ \n";
+      add "while (!RegExp(r'"; ++; get; --; 
+      add "', unicode:true).hasMatch(this.peep)) {\n";
+      add "  if (this.eof) { break; } this.read();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+    clear; add "*** unchecked error in rule: statement = command class ;"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # brackets around tests will be ignored.
+  "(*test*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # brackets will allow mixing AND and OR logic 
+  "(*ortest*)*","(*andtest*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # -------------
+  # parses and compiles concatenated tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+  "test*,*test*","ortest*,*test*" {
+    # OR logic concatenation 
+    # put brackets around tests even though operator 
+    # precedence should take care of it
+    "test*,*test*" {
+      clear; add "("; get; add ")";
+    }
+    "ortest*,*test*" { clear; get; } 
+    add " || ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "ortest*"; push; .reparse
+  }
+
+  # -------------
+  # AND logic 
+  # parses and compiles concatenated AND tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+  # negated tests can be chained with non negated tests.
+  # eg: B'http'.!E'.txt' { ... }
+  "test*.*test*","andtest*.*test*" {
+    # AND logic concatenation 
+    # add brackets 
+    "test*.*test*" {
+      clear; add "("; get; add ")";
+    }
+    "andtest*.*test*" { clear; get; } 
+    add " && ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "andtest*"; push; .reparse
+  }
+
+  # dont need to reparse 
+  "{*statement*}*" { replace "ment*" "mentset*"; }
+
+  # ----------------
+  # 4 grammar parse tokens 
+  pop;
+
+  # see below
+  # "command*quoted*quoted*;*" { clear; add "statement*"; push; .reparse }
+
+  # eg:  replace "and" "AND" ; 
+  "command*quoted*quoted*;*" {
+    clear; get;
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      # multiline replace? no.
+      clear;
+      add "/* replace */ \n";
+      add "if (this.work.isNotEmpty) { \n";
+      add '  this.work = this.work.characters.replaceAll(';
+      ++; get; add '.characters, '; ++; get; 
+      add '.characters).toString();\n}'; 
+      --; --; put;
+      clear; add "statement*"; push; .reparse
+    }
+
+    # error trap
+    clear; add "  incorrect command syntax?"; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  # reducing blocks
+  "test*{*statementset*}*", 
+  "ortest*{*statementset*}*",
+  "andtest*{*statementset*}*" {
+    clear; 
+    # indent the dart code for readability
+    ++; ++; add "\n"; get; replace "\n" "\n  "; put; --; --; 
+    clear; add "if ("; get; add ") {";
+    ++; ++; get; add "\n}"; --; --; put; 
+    clear; add "statement*"; push; .reparse
+  }
+
+  "begin*{*statementset*}*" {
+     clear; 
+     ++; ++; get; --; --; put; clear;
+     add "beginblock*"; push; .reparse
+  }
+
+
+  # end of input stream errors
+  (eof) {
+    "test*","ortest*","andtest*","begin*" {
+       clear; 
+       add "* Incomplete script."; put;
+       clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # cannot be reduced to one push;
+  push;push;push;push;
+
+  pop;pop;pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+    # dart has labelled loops
+    "statementset*parselabel*statementset*" {
+      clear; 
+      # indent both code blocks
+      add "    "; get; replace "\n" "\n    "; put; clear; ++; ++;
+      add "    "; get; replace "\n" "\n    "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      add "script:\n";
+      add "while (true) {\n";
+      add "  lex: { \n";
+      get; 
+      add "\n  } /* lex block */\n"; 
+      add "  parse: \n";
+      add "  while (true) { \n"; ++; ++; get; --; --;
+      add "\n    break parse;  /* run-once parse loop */";
+      add "\n  } /* parse block */"; 
+      add "\n} /* while true (nom script loop) */";
+      put; 
+      clear; add "script*"; push; .reparse
+    }
+  }
+  push;push;push;
+  # this cannot be reduced to 'push;'
+  pop;pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+
+    "statementset*parselabel*" {
+       clear; add "    "; get; replace "\n" "\n    "; put; clear; 
+       add "script:\n";
+       add "while (true) {\n";
+       add "  lex: { \n";
+       get; 
+       add "\n  } /* lex block */\n"; 
+       add "  parse:";
+       add "\n} /* while true (nom script loop) */";
+       put; 
+       clear; add "script*"; push; .reparse
+    }
+
+    "parselabel*statementset*" {
+       clear; add "    "; ++; get; --; replace "\n" "\n    "; put; clear; 
+       add "script:\n";
+       add "while (true) {\n";
+       add "  parse: \n";
+       add "  while (true) { \n"; get; 
+       add "\n    break parse;  /* run-once parse loop */";
+       add "\n  } /* parse block */"; 
+       add "\n} /* while true (nom script loop) */";
+       put; 
+       clear; add "script*"; push; .reparse
+    }
+
+    "beginblock*script*" {
+      clear; get; add "\n"; ++; get; --; put;
+      clear; add "script*"; push; .reparse
+    }
+  }
+  # cannot reduce to push
+  push;push;
+  pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+    "statementset*" {
+       clear; add "  "; get; replace "\n" "\n  "; put; clear; 
+       add "script:\n";
+       # but how will reparse work here? fix:
+       add "while (true) {\n"; get;
+       add "\n} /* while true (nom script loop) */"; put;
+       clear; add "script*"; push; .reparse 
+    }
+    "beginblock*","comment*","parselabel*" {
+       clear; add "script*"; push; .reparse 
+    }
+  }
+
+  push;push;push;push;
+
+  (eof) {
+    pop;pop;
+    "" {
+      add "// empty nom script\n"; 
+      print; quit;
+    }
+    !"script*" {
+      push;push;
+      unstack; put; clear; 
+      add "* script syntax problem: the error was not caught by the \n"; 
+      add "  syntax checker, and should have been.\n";
+      add "  The parse stack was: ";
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "/* good syntax. */\n"; print; clear;
+    # indent the compiled code
+    add "\n"; get; replace "\n" "\n      "; put; clear;
+    # create the virtual machine object code and save it
+    # on the tape.
+    add '
+
+ /* Dart code generated by "nom.todart.pss" */
+ import "dart:io";
+ import "dart:convert";
+ import "package:characters/characters.dart";
+
+ /* I am using Dart Strings not stringbuffers because the 
+    string class seems to give better unicode support through the 
+    characters api. And unicode is essential */
+
+ enum inputType { stdin, string, file }
+ enum outputType { stdout, string, file }
+
+ class Machine {
+   int accumulator = 0;         // counter for anything
+   String peep = "";            // next char in input stream
+   int charsRead = 0;           // No. of chars read so far
+   int linesRead = 1;           // No. of lines read so far
+   String work = "";            // text manipulation buffer 
+   // just treat this like a stack
+   var stack = <String>[];   // parse token stack
+   int tapeLength = 100;     // tape initial length. This may not be 
+                             // necessary in dart.
+   var tape = <String>[];    // array of token attributes 
+   var marks = <String>[];   // tape marks
+   int cell = 0;             // pointer to current cell
+   inputType sourceType = inputType.stdin;   // whether from string,stdin,file
+   outputType sinkType =  outputType.stdout; // whether to string,stdout,file
+   Stream<List<int>> inputSource = stdin;    // text input stream ie stdin or file
+   // Stream<List<int>> outputSource = stdout;  // text outputstream 
+                                             // ie stdout or file or string
+
+   // may have to load all the input lines from file or string here.
+   // use File.readAsLinesSync and LineSplitter for string input.
+   // LineSplitter ls = new LineSplitter();
+   // List<String> l = ls.convert(text);
+   List<String> inputLines = <String>[];
+   StringBuffer outputBuffer = StringBuffer("");
+   String lineBuffer = "";    // one line of text input as characters.
+   bool eof = false;     // end of stream reached?
+   String escape = "\\\\";   // char used to "escape" others "\\"
+   String delimiter = "*";   // push/pop delimiter (default is "*")
+   bool markFound = false;   // if the mark was found in tape
+   
+   /** make a new machine with a character stream reader */
+   Machine() {
+     // stdin is the default
+     this.sourceType = inputType.stdin;
+     this.sinkType = outputType.stdout;
+     for (int ii = 0; ii < this.tapeLength; ii++) {
+       this.tape.add(""); this.marks.add("");
+     }
+   }
+
+   /** read one character from the input stream and 
+       update the machine. This reads though a lineBuffer so as to
+       handle unicode grapheme clusters (which can be more than 
+       one "character"). This method refills the lineBuffer when empty
+       either from stdin or from the inputLines List cache. */
+   void read() {
+     int iChar;
+     String? s;
+     try {
+       if (this.eof) { exit(0); /* print("eof exit"); */ }
+       this.charsRead++;
+       // increment lines
+       if (this.peep == "\\n") { this.linesRead++; }
+       this.work += this.peep;
+
+       // refill the line buffer if empty
+       if (this.lineBuffer.isEmpty) { 
+         if (this.sourceType == inputType.stdin) {
+           // retaining newline is important. otherwise need some
+           // hack to reput them, and another hack to remove trailing
+           // newline at EOF
+           s = stdin.readLineSync(retainNewlines:true);
+
+           // try to make ms windows line ending \\r\\n or \\r into unix \\n
+           // untested on ms windows.
+           s = s?.replaceAll("\\r\\n","\\n"); 
+           // apparently, sometime ms endings can be just \\r
+           s = s?.replaceAll("\\r","\\n"); 
+
+         } else if ((this.sourceType == inputType.file) || 
+                   (this.sourceType == inputType.string)) {
+           if (this.inputLines.isEmpty) {
+             s = null;
+           } else {
+             s = this.inputLines.first;
+             /*
+              File.readAsLinesSync seems to remove line endings
+              as does the LineSplitter class for strings.
+              restore all and normalise to unix LF. The code below may add
+              and extra newline at the end of the input, but I think we can
+              live with that.
+             */ 
+             // if (this.inputLines.length > 1) { s = s + "\\n"; }
+             s = s + "\\n";
+             this.inputLines.removeAt(0);
+           } 
+           
+         } else {
+           print("Unsupported input type (not stdin/file/string)");
+           exit(1);
+         }
+
+         if (s != null) { 
+           this.lineBuffer = s; 
+         } else { 
+           this.eof = true;
+           this.peep = "";
+         }
+         //stdout.write("input:" + this.lineBuffer);
+       }
+
+       if (this.eof == false) {
+         // throws "bad state" StateError error if no characters.
+         this.peep = this.lineBuffer.characters.first; 
+         this.lineBuffer = 
+           this.lineBuffer.characters.skip(1).toString();
+       }
+     }
+     catch (e) {
+       this.printState();
+       print("nom.todart: Error in machine.read() method: " + e.toString());
+       exit(-1);
+     }
+   }
+
+   /* write to current machine destination (stdout/string/file) */
+   void write(String output) {
+     if (this.sinkType == outputType.stdout) {
+       stdout.write(output);
+     } else if (this.sinkType == outputType.file) {
+       // a string buffer 
+       this.outputBuffer.write(output);
+     } else if (this.sinkType == outputType.string) {
+       this.outputBuffer.write(output);
+     }
+   }
+   
+
+   /** increment tape pointer by one */
+   void increment() {
+     this.cell++;
+     if (this.cell >= this.tapeLength) {
+       this.tape.add("");
+       this.marks.add("");
+       this.tapeLength++;
+     }
+   }
+   
+   /** remove escape character  */
+   void unescapeChar(String c) {
+     // dont unescape chars that are not escaped!
+     int countEscapes = 0;
+     String s = ""; String nextChar = "";
+     if (this.work.isEmpty) { return; }
+     for (nextChar in this.work.characters) {
+       if ((nextChar == c ) && (countEscapes % 2 == 1)) { 
+         s = s.characters.skipLast(1).toString();
+       }
+       if (nextChar == this.escape) 
+         { countEscapes++; } else { countEscapes = 0; }
+       s += nextChar;
+     }
+     this.work = s;
+   }
+
+   /** add escape character  */
+   void escapeChar(String c) {
+     // dont escape chars that are already escaped!
+     int countEscapes = 0;
+     String s = ""; String nextChar = "";
+     if (this.work.isEmpty) { return; }
+     for (nextChar in this.work.characters) {
+       if ((nextChar == c ) && (countEscapes % 2 == 0)) { s += this.escape; }
+       if (nextChar == this.escape) 
+         { countEscapes++; } else { countEscapes = 0; }
+       s += nextChar;
+     }
+     this.work = s;
+   }
+
+   /* a helper to see how many trailing \\\\ escape chars. I need to 
+      do this because the suffix for until can be multiple chars. */
+   int countEscaped(String sSuffix) {
+     String s = "";
+     int count = 0;
+     int index = 0;
+     // remove suffix if it exists
+     if (this.work.endsWith(sSuffix)) {
+       s = this.work.substring(0, this.work.lastIndexOf(sSuffix));
+     } else { s = this.work; }
+     while (s.endsWith(this.escape)) {
+       count++;
+       s = s.substring(0, s.lastIndexOf(this.escape));
+     }
+     return count;
+   }
+
+   /** reads the input stream until the workspace ends with text */
+   // can test this with
+   void until(String suffix) {
+     // read at least one character
+     if (this.eof) return; 
+     this.read();
+     while (true) {
+       if (this.eof) return;
+       if (this.work.endsWith(suffix)) {
+         if (this.countEscaped(suffix) % 2 == 0) { return; }
+       }
+       this.read();
+     }
+   }
+
+   /** pop the first token from the stack into the workspace */
+   bool pop() {
+     if (this.stack.isEmpty) return false;
+     this.work = this.stack.last + this.work;
+     this.stack.removeLast();
+     if (this.cell > 0) this.cell--;
+     return true;
+   }
+
+   /** push the first token from the workspace to the stack */
+   bool push() {
+     // need to use characters api. not string methods.
+     
+     List<Characters> parts = [];   
+     // dont increment the tape pointer on an empty push
+     if (this.work.isEmpty) return false;
+
+     // the delimiter should be guaranteed to be one unicode char
+     //  this.delimiter.characters.first.toString())) {
+
+     if (!this.work.characters.contains(this.delimiter)) {
+       this.stack.add(this.work);
+       this.work = "";
+     } else {
+       parts = this.work.characters.split(
+         this.delimiter.characters, 2).toList();
+       this.stack.add(parts[0].toString() + this.delimiter.characters.first);
+       this.work = parts[1].toString();
+     }
+
+     this.increment(); 
+     return true;
+   }
+
+   /** swap current tape cell with the workspace */
+   void swap() {
+     String s = this.work;
+     this.work = this.tape[this.cell];
+     this.tape[this.cell] = s;
+   }
+
+   /** save the workspace to file "sav.pp" */
+   void writeToFile() {
+     try {
+       File file = new File("sav.pp");
+       file.writeAsStringSync(this.work);
+     } catch (e) {
+       stdout.write("could not write file: $e"); 
+     }
+   }
+
+   void goToMark(String mark) {
+     var ii = this.marks.indexOf(mark);
+     if (ii != -1) {
+       this.cell = ii;
+     } else {
+       stdout.write("badmark \'" + mark + "\'!"); 
+       exit(1);
+     }
+   }
+
+   /* remove existing marks with the same name and add new mark */
+   void addMark(String mark) {
+     var ii = this.marks.indexOf(mark);
+     while (ii != -1) {
+       this.marks[ii] = "";
+       ii = this.marks.indexOf(mark);
+     }
+     this.marks[this.cell] = mark; 
+   }
+
+   /** check if the workspace matches given class: not used */
+   bool matchClass(String charclass) {
+     // but regExp cant handle emojis?
+     var regExp = RegExp(r\'^\' + charclass + r\'+$\', unicode:true);
+     return regExp.hasMatch(this.work); 
+   }
+
+   /* print the internal state of the pep/nom parsing machine. This 
+      is handy for debugging, but for some reason I took this command
+      out of some translators ... */
+
+   void printState() {
+      var displayPeep = 
+        this.peep.characters.replaceAll("\\n".characters,"\\\\n".characters);
+      displayPeep = 
+        displayPeep.replaceAll("\\r".characters,"\\\\r".characters);
+      var displayBuffer = 
+        this.lineBuffer.characters.replaceAll(
+          "\\n".characters,"\\\\n".characters);
+      displayBuffer = 
+        displayBuffer.replaceAll( "\\r".characters,"\\\\r".characters);
+
+      print("\\n--------- Machine State ------------- ");
+      print("(line buffer:${displayBuffer})");
+      stdout.write("Stack${this.stack} ");
+      stdout.write("Work[${this.work}] ");
+      stdout.write("Peep[${displayPeep}]\\n");
+      stdout.write("Acc:${this.accumulator} ");
+      stdout.write("EOF:${this.eof} ");
+      stdout.write("Esc:${this.escape} ");
+      stdout.write("Delim:${this.delimiter} ");
+      stdout.write("Chars:${this.charsRead} ");
+      stdout.write("Lines:${this.linesRead}\\n");
+      print("-------------- Tape ----------------- ");
+      print("Tape Size: ${tapeLength}");
+      var start = this.cell - 3; 
+      var end = this.cell + 3; 
+      if (start < 0) { start = 0; }
+      for (var ii = start; ii <= end; ii++) {
+        stdout.write("   ${ii}");
+        if (ii == this.cell) { stdout.write("> ["); }
+        else { stdout.write("  ["); }
+        stdout.write("${this.tape[ii]}]\\n");
+      }
+   }
+
+   /* makes the machine read from a string */
+   void setStringInput(String input) {
+     this.sourceType = inputType.string;
+     LineSplitter ll = new LineSplitter();
+     this.inputLines = ll.convert(input); 
+   }
+
+   /* makes the machine write to a string */
+   void setStringOutput(String input) {
+     this.sinkType = outputType.string;
+     // todo
+   }
+
+   /** parse/translate from a string and return the translated
+       string */
+   String parseString(String input) {
+     this.setStringInput(input);
+     this.sinkType = outputType.string;
+     this.parse();
+     return this.outputBuffer.toString();
+   }
+
+   /* makes the machine read from a file stream, not from 
+      stdin */
+   void setFileInput(String fileName) {
+     File inputFile = File(fileName);
+     if (!inputFile.existsSync()) {
+       print("File Doesnt exist");
+       exit(1);
+     }
+     // I couldnt work out how to make streams work with dart and pep/nom
+     // so I am just reading the whole file into a cache.
+     this.sourceType = inputType.file;
+     this.inputLines = inputFile.readAsLinesSync(encoding:utf8);
+   }
+
+   /** parse from a file */
+   void parseFile(String fileName) {
+     this.setFileInput(fileName);
+     this.parse();
+   }
+
+   /* I dont know how to do this with dart and nom 
+   void parseStream(Stream<List<int>> input) {
+     this.inputSource = input;
+     this.parse();
+   }
+   */
+
+    /** parse with the machines input steam */
+    void parse() {
+      try { this.read(); this.charsRead = 0; } 
+      catch (e) { print("read error: " + e.toString()); exit(-1); }';
+
+      # get the compiled code from the tape
+      get;
+      # terminate the dart program.
+    add '
+    } /* parse method */
+  }
+  void main() { 
+    String temp = "";    
+    Machine mm = new Machine();
+    // testing parse a file not stdin
+    // mm.parseFile("../index.txt");
+    // testing parse a string not stdin
+    // mm.parseString(" ## heading line: \\n next line www.nomlang.org \\n end.");
+
+    // by default the machine reads from stdin and writes to stdout
+    mm.parse();
+  }  \n';
+    print; quit;
+  } # end of block

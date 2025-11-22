@@ -1,0 +1,173 @@
+#* 
+
+ABOUT 
+
+  A script to translate the "brainf**k" esoteric language into plain
+  c. This version of the script uses a one-to-one compilation 
+  of commands. 
+  
+  So ++++ will be translated into 4 "c" statements,
+  which is not efficient. This is, in theory a very simple task 
+  for [pep] and [nom] but there may be a few tricks and traps to 
+  deal with.
+
+  * Valid brainf**k commands
+  >> ">" p++ "<" p-- "+" *p++ - *p-- "[]" while *p > 0 . putchar , getchar
+
+TESTING
+  
+  * translate a Brainf**k program to c, compile and execute
+  ----
+    pep -f ../brainf.1to1.c.pss -i '.,,,' > test.c; 
+    gcc test.c -o test; ./test
+  ,,,,f
+
+NOTES
+
+  Other things to think about, include array bounds checking, and 
+  handling of EOF.
+
+  This script demonstrates pep/nom parsing and translating one of 
+  the simplest possible formal languages.
+
+  The script could be greatly reduced but some error messages are printed with
+  line and character number.
+
+  Hardly any parsing is required, just for "[" and "]" I put a line:char number
+  message into the attribute for each [ or ], and then use that message if the
+  brackets are unbalanced.  This technique could be useful for other languages.
+  This is because we dont need that tape-cell (token attribute) for anything
+  else.
+
+HISTORY
+
+  30 july 2022
+    Made the script generate compilable c code and tested 
+    with some simple scripts. 
+  14 july 2022
+    wrote this script.
+
+*#
+
+  read;
+  ">","<","+","-",",","." {
+    ">" { clear; add "p++;"; }
+    "<" { clear; add "p--;"; }
+    "+" { 
+      clear; 
+      # do bounds checking here
+      add "if ((p < data) || (p > (data+SIZE*sizeof(int)))) {\n";
+      add '  printf("data pointer out of bounds\\n"); \n';
+      add "  exit(1);\n";
+      add "}\n";
+      add "(*p)++;";
+    }
+    "-" { 
+      # also do bounds checking here
+      clear; add "(*p)--;";
+    }
+    "." { clear; add "putc(*p, stdout);"; }
+    "," { 
+      clear; 
+      # also check for getc == EOF
+      # which can also mean an error
+      add "if (feof(stdin)) { exit(0); } \n";
+      add "if (*p == EOF) { exit(1); } \n";
+      add "*p = getc(stdin);";
+    }
+    put; clear;
+    add "com*"; push; .reparse
+  }
+
+  "[","]" { 
+    put; add "*"; push; 
+    add "unbalanced bracket '"; --; get; add "' ";
+    add "near line:char "; lines; add ":"; chars; put; ++; clear; 
+    .reparse
+  }
+
+  # ignore any other character but parse as a dummy command
+  # so that the ignored char will end up in the output.
+  !"" {  
+    #*
+    replace "\n" "\\n"; replace "\t" "\\t";
+    replace "\f" "\\f"; replace "\r" "\\r";
+    put; clear; add "// ignored character '"; get; add "'";
+    put; clear; add "com*"; push;
+    *#
+    clear;
+  } 
+
+parse>
+
+  # for debugging, add a c-style comment 
+  add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  pop; pop;
+
+  # brackets with nothing in them is really an error because 
+  # can create an infinite loop and does nothing anyway.
+  "[*]*" {
+    clear;
+    add "Empty bracket '[]' ";
+    add "near line:char "; lines; add ":"; chars; add "\n";
+    print; quit;
+  }
+
+  "com*com*","comset*com*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comset*"; push; .reparse
+  }  
+
+  # 
+  pop;
+  "[*com*]*","[*comset*]*" {
+    # indent the braced code
+    clear; add "  "; ++; get; replace "\n" "\n  "; put;
+    clear; add "while (*p > 0) {\n";
+    get; --; add "\n}"; put;
+    clear; add "com*"; push; .reparse
+  }
+
+  (eof) {
+    "com*","comset*" {
+      clear; 
+      # indent the generated code
+      add "  "; get; replace "\n" "\n  "; put; clear;
+      add "/* Code translated from the 'Brainf***' esoteric language \n";
+      add "   by the pep/nom parser with the script: \n";
+      add "   bumble.sf.net/books/pars/eg/brainf.toclang.pss */\n\n";
+      add "#include <stdio.h>\n";
+      add "#include <stdlib.h>\n";
+      add "#define SIZE 65000 \n";
+      add "int main(int argc, char *argv[]) {\n";
+      add "  int data[SIZE];\n";
+      add "  int* p = data;\n";
+      get; 
+      add "\n}\n"; print; quit;
+    }
+    "[*comset*","[*com*",B"[*[*" {
+      # get the saved error message from the [ token cell
+      clear; get; add "\n"; print; quit;
+    }
+    "comset*]*","com*]*",E"]*]*" {
+      # get the saved error message from the ] token cell
+      clear; ++; get; add "\n"; print; quit;
+    }
+    put;
+    add "
+   The 'Brainf' code didnt parse well:
+   Legal Brainf commands are 
+     > increment pointer 
+     < decrement pointer
+     + increment value at pointer
+     - [ ] . , 
+     (optional command) '#' print state
+   Everything else is ignored. 
+   The input parsed as tokens:\n  "; print; clear;
+   get; add "\n"; 
+    print; quit;
+  }
+  push; push; push;
+

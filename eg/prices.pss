@@ -1,0 +1,151 @@
+
+#*
+
+  This script parses/recognises prices in a financial format
+  eg $1,234,678.22
+
+  This script implements the following regular expression 
+  >> [ ]*\$[ ]*[1-9][0-9]{0,2}(,[0-9]{3})*\.[0-9][0-9][ ]*
+
+NOTES 
+  
+  This script may seem terribly verbose and complicated when compared to a
+  regular expression, and I think that criticism is valid.  However in any
+  case it is an interesting exercise to construct a simple bnf grammar to
+  achieve this.
+  
+HISTORY
+
+  24 Feb 2020 
+
+    The script is working can be tested with
+    >> pp -f eg/prices.pss -i '$1,234,567,897.00'
+
+    script at working stage and translatable to java with
+    ----
+      pp -f compile.java.pss eg/prices.pss > object.java/Script.java
+      javac Script.java; 
+      # now test if it works
+      echo ' $12,345,678.00' | java Script
+    ,,,,
+
+*#
+
+# lexing phase
+
+  read;
+  [0-9] { put; clear; add "digit*"; push; }
+  # allow multiple spaces in some positions
+  [:space:] { while [:space:]; put; clear; add "space*"; push; }
+  # These literal tokens have their own name
+  ".",",","$" { add "*"; push; }
+  # show an error message if extraneous character in price
+  !"" {
+    add " << illegal character at char "; cc; add ".\n";
+    print; quit;
+  }
+
+# parsing phase
+parse> 
+
+  pop; 
+
+  # 2 tokens
+  pop; 
+
+  # allow some leading space around the $ sign
+  "space*$*","$*space*" {
+    clear; add "$*"; push; .reparse
+  }
+
+  # allow some trailing and leading space.
+  # this rule is not used because other rules are applied first
+  # eg price = number cents ;
+  "cents*space*" {
+    clear; add "cents*"; push; .reparse
+  }
+
+  # allow some trailing and leading space.
+  "price*space*" {
+    clear; add "price*"; push; .reparse
+  }
+
+  "number*thousands*" {
+    clear; get; ++; get; --; put;
+    B"0" {
+      clear; add "number beginning with zero ("; get;
+      add ") at line "; ll; add "\n"; print; quit;
+    }
+    clear; add "number*"; push; .reparse
+  }
+
+  "number*cents*" {
+    clear; get; ++; add "."; get; --; put;
+    clear; add "price*"; push; .reparse
+  }
+
+  pop;
+
+  "$*digit*thousands*" {
+    clear; ++; get; ++; get; --; --; put;
+    clear; add "number*"; push; .reparse
+  }
+
+  ".*digit*digit*" {
+    clear; ++; get; ++; get; --; --; put;
+    clear; add "cents*"; push; .reparse
+  }
+
+  "$*digit*cents*","$*number*cents*" {
+    clear; ++; get; ++; add "."; get; --; --; put;
+    clear; add "price*"; push; .reparse
+  }
+
+  pop;
+
+  "$*digit*digit*cents*" {
+    clear; ++; get; ++; get; ++; 
+    add "."; get; --; --; --; put;
+    clear; add "price*"; push; .reparse
+  }
+
+  "$*digit*digit*thousands*" {
+    clear; ++; get; ++; get; ++; get; --; --; --; put;
+    clear; add "number*"; push; .reparse
+  }
+
+  ",*digit*digit*digit*" {
+    clear; ++; get; ++; get; ++; get; --; --; --; put;
+    clear; add "thousands*"; push; .reparse
+  }
+
+  # 5 tokens
+  pop;
+  "$*digit*digit*digit*cents*" {
+    clear; ++; get; ++; get; ++; get; ++; 
+    add "."; get; --; --; --; --; put;
+    clear; add "price*"; push; .reparse
+  }
+
+  "$*digit*digit*digit*thousands*" {
+    clear; ++; get; ++; get; ++; get; ++; get; --; --; --; --; put;
+    clear; add "number*"; push; .reparse
+  }
+
+  push; push; push; push; push;
+
+  <EOF> {
+    pop;
+    !"price*" {
+      clear; 
+      add "No, not a price in the format $123,456.99 \n";
+      print; quit;
+    }
+    clear; 
+    add "Yes, its a price \n"; 
+    add "The price was: "; get; add "\n";
+    print; quit;
+  }
+  
+  
+

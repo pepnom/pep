@@ -1,0 +1,71 @@
+
+## The pep and nom "get" command 
+
+  *get* the value of the current tape cell and append it to the 
+  workspace buffer.
+
+  The *get* command obtains the value in the current pep://tape cell
+  and "adds" nom://add it (appends it) to the end of the pep://workspace buffer.
+
+  The "get" command only affects the *workspace* buffer of the virtual
+  machine (it doesnt change any other registers) . 
+
+  The nom://put and *get* commands are how data is transferred to and from the
+  [pep] virtual pep://machine tape data structure. (The tape is an array with a
+  pointer to the current tape cell). We can use the put, get, nom://add ,
+  nom://clear, and nom://replace commands to build the attribute values which
+  correspond to each grammar parse token.
+
+  The script below implements the grammar rule 
+  >> nounphrase := article adjective noun ;
+
+  As can be seen below we need 3 rule "blocks" nomsyn://block to 
+  implement the single [ebnf] rule above. This is because there is no
+  direct translation of the "Kleene Star" wp://kleene.star in the 
+  Nom language.
+
+  * if the workspace has a "nounphrase*" token, get its value and print it.
+  ----++
+     while [:space:]; clear; whilenot [:space:]; 
+     "a","the","one" { put; clear; add "article*"; push; .reparse }
+     "small","pink","furry" { put; clear; add "adjective*"; push; .reparse }
+     "platypus","wombat","quoll" { put; clear; add "noun*"; push; .reparse }
+     clear;
+     parse>
+     # for debugging the grammar reductions
+     # unstack; print; clear; add "\n"; print; stack;
+     pop;
+     "nounphrase*" { clip; add ": "; get; add "\n"; print; clear; }
+     pop; 
+     "adjective*adjective*" { 
+       clear; get; ++; add " "; get; --; put; 
+       clear; add "adjective*"; push; .reparse
+     } 
+     "article*noun*" { 
+       clear; get; ++; add " "; get; --; put; 
+       clear; add "nounphrase*"; push; .reparse
+     } 
+     pop;
+     "article*adjective*noun*" { 
+       clear; get; ++; add " "; get; ++; add " "; get; --; --; put; 
+       clear; add "nounphrase*"; push; .reparse
+     } 
+     push; push; push; (eof) { quit; }
+  ,,,
+
+  The script above recognises phrases like *the small pink quoll*
+
+  * use pep and nom to parse space and non-space, not related to get
+  ----++
+    while [:space:]; clear; whilenot [:space:]; 
+    "ant","wombat","quoll" { add ":"; print; clear; }
+    "a","the" { add ":"; print; clear; }
+    (eof) { quit; }
+  ,,,,
+
+  To "prepend" the contents of the current tape-cell to the work
+  space we can use nom://swap with *get*
+
+  * script fragment to add the tape cell to the beginning of the workspace
+  >> swap; get;
+

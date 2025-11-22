@@ -1,0 +1,856 @@
+
+ import java.io.BufferedReader
+ import java.io.BufferedWriter
+ import java.io.File
+ import java.io.InputStreamReader
+ import java.io.FileWriter
+
+ /*
+   AI generated code for the pep machine and kotlin translator.
+ */
+
+ enum class InputType {
+   Unset,     // no input type has been set
+   Stdin,     // read all of stdin at once into buffer
+   StdinStream,  // read stdin as a stream (line by line?)
+   File,        // read all of file at once into buffer
+   FileStream,    // read a file as a stream
+   String         // read from a string
+ }
+
+ enum class OutputType {
+   Unset,
+   Stdout,
+   File,
+   String
+ }
+
+ class Machine {
+   var accumulator: Int = 0    // counter for anything
+   var peep: String = ""       // next char in input stream. It is better to
+   // make this a String because a grapheme cluster will
+   // consist of multiple unicode char points.
+   var charsRead: UInt = 0U    // No. of chars read so far init:0
+   var linesRead: UInt = 1U    // No. of lines read so far init:1
+
+   /* a reversed array of strings where each string represents one
+    grapheme cluster or character in the input stream. By reversing
+    we can process this one char at a time with Vec.pop()
+    This is a better alternative to a simple inputBuffer string */
+   // inputBuffer: String,
+   var inputBuffer: MutableList<String> = mutableListOf() // the nom read command will read from this
+   // this also helps with grapheme clusters.
+   // this is reversed!!
+   var outputBuffer: String = ""    // where string output will go.
+   var sourceType: InputType = InputType.Unset  // enum: reading from stdin/string/file etc
+   var sinkType: OutputType = OutputType.Unset    // should be enum?
+   var work: String = ""            // text accumulator
+   var stack: MutableList<String> = mutableListOf()    // parse token stack
+   var tapeLength: Int = 100    // tape initial length
+   var tape: MutableList<String> = MutableList(100) { "" } // array of token attributes, growable
+   var marks: MutableList<String> = MutableList(100) { "" }    // tape marks
+   var cell: Int = 0            // pointer to current cell
+   var input: BufferedReader     // text input stream
+   var output: BufferedWriter    //
+   var eof: Boolean = false    // end of stream reached?
+   var escape: Char = '\\'   // char used to "escape" others: default "\\"
+   var delimiter: Char = '*'  // push/pop delimiter (default is "*"). This can only be
+   // 1 unicode code-point not a grapheme cluster because its
+   // not necessary.
+
+   /** make a new machine. I am creating
+   a temp file because I dont know how to just create a file object. */
+   init {
+     input = BufferedReader(File("temp.xyz.123.txt").reader())
+     output = BufferedWriter(FileWriter("temp.xyz.123.txt"))
+     tapeLength = 100
+     eof = false
+     charsRead = 0U
+     linesRead = 1U
+     // inputBuffer: String::new(),
+     inputBuffer = MutableList(1000) { "" }
+     inputBuffer.clear()
+     outputBuffer = ""
+     sourceType = InputType.Unset   // set this at parse() if unset
+     sinkType = OutputType.Stdout
+     escape = '\\'
+     delimiter = '*'
+     accumulator = 0
+     work = ""
+     stack = MutableList(100) { "" }
+     stack.clear()
+     cell = 0
+     tape = MutableList(100) { "" }
+     marks = MutableList(100) { "" }
+     peep = ""  // could be grapheme cluster
+   }
+
+   /* this is useful for creating the internal representation of
+     the input, which could be a char iterator, a vector, array
+     of chars or grapheme clusters (strings) or just a plain string.
+     At the moment the rust code uses a reversed string/vector.
+     See Machine.fillInputBuffer() for a method that fills a reversed
+     vector with strings (chars or grapheme clusters).
+   */
+   fun fillInputStringBuffer(text: String) {
+     // is a non-empty input buffer an error here?
+     val revtext: String = text.reversed()
+     // self.inputBuffer.push_str(&revtext);
+   }
+
+   fun fillInputBuffer(text: String) {
+     // change to text.graphemes().rev for grapheme clusters.
+     for (c in text.reversed()) {
+       inputBuffer.add(c.toString())
+     }
+   }
+
+   /* read one character from the input stream and
+     update the machine. This reads though an inputBuffer/inputChars
+     so as to handle unicode grapheme clusters (which can be more
+     than one "character").
+   */
+   fun read() {
+     /* this exit code should never be called in a translated script
+     because the Machine:parse() method will return just before
+     a read() on self.eof But I should keep this here in case
+     the machine methods are used outside of a parse() method? */
+     if (eof) {
+       // need to return from parse method (i.e break loop) when reading on eof.
+       kotlin.system.exitProcess(0) // print("eof exit")
+     }
+
+     var result = 0
+     var line = ""
+     charsRead += 1U
+     // increment lines
+     if (peep == "\n") {
+       linesRead += 1U
+     }
+     work += peep
+
+     // fix: it would be better not to have a switch match here.
+     /* stdin.all/string/file all read the whole input stream
+       at once into a buffer. */
+     when (sourceType) {
+       InputType.Stdin, InputType.String, InputType.File -> {
+         if (inputBuffer.isEmpty()) {
+           eof = true
+           peep = ""
+         } else {
+           peep = ""
+           // the inputBuffer is a reversed vector. removeAt(lastIndex) returns last element
+           peep += inputBuffer.removeAt(inputBuffer.lastIndex)
+         }
+         return
+       }
+       InputType.StdinStream -> {
+         // read from stdin one line at a time. But self.input is
+         // a BufReader<File> which is incompatible with BufReader<Stdin>
+       }
+       InputType.FileStream -> {
+         if (inputBuffer.isEmpty()) {
+           if (input.readLine()?.also { line = it } != null) {
+             fillInputBuffer(line)
+           } else {
+             eof = true
+             peep = ""
+           }
+         }
+         if (inputBuffer.isNotEmpty()) {
+           peep = ""
+           peep += inputBuffer.removeAt(inputBuffer.lastIndex)
+         }
+         return
+       }
+       else -> {
+         println(
+           "Machine.sourceType error ${sourceType} while trying to read input"
+         )
+         kotlin.system.exitProcess(1)
+       }
+     }
+   } // read
+
+   /*
+     write to current machine destination (stdout/string/file)
+     no filestream or filelines types for file output because not
+     required
+   */
+
+   // function Machine:write(output)
+   fun write() {
+     when (sinkType) {
+       OutputType.Stdout -> {
+         print(work)
+       }
+       OutputType.File -> {
+         output.write(work)
+       }
+       OutputType.String -> {
+         outputBuffer += work
+       }
+       else -> {
+         println("Machine.sinkType error for type $sinkType")
+       }
+     }
+   }
+
+   /** increment tape pointer by one */
+   fun increment() {
+     cell += 1
+     if (cell >= tapeLength) {
+       for (ii in 1..50) {
+         tape.add("")
+         marks.add("")
+       }
+       tapeLength += 50
+     }
+   }
+
+   // Machine.decrement() is usually compiled inline
+
+   /** remove escape char, the char should be a string because it could be
+   a unicode grapheme cluster (diacritics etc) */
+   fun unescapeChar(c: Char) {
+     // dont unescape chars that are not escaped!
+     var countEscapes = 0
+     var s = ""
+     // let nextChar = ;
+     if (work.isEmpty()) {
+       return
+     }
+
+     for (nextChar in work) {
+       if ((nextChar == c) && (countEscapes % 2 == 1)) {
+         // assuming that the escape char is only one char?
+         // remove last escape char
+         s = s.substring(0, s.length - 1)
+       }
+       if (nextChar == escape) {
+         countEscapes += 1
+       } else {
+         countEscapes = 0
+       }
+       s += nextChar
+     }
+     work = s
+   }
+
+   /* add escape character, dont escape chars that are already escaped!
+     modify this for grapheme clusters.
+   */
+   fun escapeChar(c: Char) {
+     var countEscapes = 0
+     var s = ""
+     if (work.isEmpty()) {
+       return
+     }
+     for (nextChar in work) {
+       if ((nextChar == c) && (countEscapes % 2 == 0)) {
+         s += escape
+       }
+       if (nextChar == escape) {
+         countEscapes += 1
+       } else {
+         countEscapes = 0
+       }
+       s += nextChar
+     }
+     work = s
+   }
+
+   /* a helper to see how many trailing escape chars */
+   fun countEscaped(suffix: String): Int {
+     var s = work
+     var count = 0
+     if (s.endsWith(suffix)) {
+       s = s.substring(0, s.length - suffix.length)
+     }
+     while (s.endsWith(escape)) {
+       count += 1
+       s = s.substring(0, s.length - 1)
+     }
+     return count
+   }
+
+   /** reads the input stream until the work end with text. It is
+   better to call this readUntil instead of until because some
+   languages dont like keywords as methods. Same for read()
+   should be readChar() */
+   fun readUntil(suffix: String) {
+     // read at least one character
+     if (eof) {
+       return
+     }
+     read()
+     while (true) {
+       if (eof) {
+         return
+       }
+       if (work.endsWith(suffix)) {
+         if (countEscaped(suffix) % 2 == 0) {
+           return
+         }
+       }
+       read()
+     }
+   }
+
+   /** pop the first token from the stack into the workspace */
+   fun pop(): Boolean {
+     if (stack.size == 0) {
+       return false
+     }
+     work = stack.removeAt(stack.lastIndex) + work
+     if (cell > 0) {
+       cell -= 1
+     }
+     return true
+   }
+
+   // push the first token from the workspace to the stack
+   fun push(): Boolean {
+     // dont increment the tape pointer on an empty push
+     if (work.isEmpty()) {
+       return false
+     }
+
+     // no iterate chars.
+     var token = ""
+     var remainder = ""
+     for ((ii, c) in work.withIndex()) {
+       token += c
+       if (c == delimiter) {
+         stack.add(token)
+         remainder = work.substring(ii + 1)
+         work = remainder
+         increment()
+         return true
+       }
+     }
+     // push the whole workspace if there is no token delimiter
+     stack.add(token)
+     work = ""
+     increment()
+     return true
+   }
+
+   /** swap current tape cell with the workspace */
+   // swap not required, use mem::swap ??
+
+
+   /* swap current tape cell with the workspace */
+   /*
+   fun swap() {
+     val s = work
+     work = tape[cell].clone()
+     tape[cell] = s
+   }
+   */
+
+   /* code to read a line from BufReader */
+   /*
+   while reader.read_line(&mut line)? > 0 {
+     if line.trim() == "STOP" {
+         break;
+     }
+     println!("Read line: {}", line.trim());
+     line.clear(); // Clear the buffer for the next read
+   }
+   */
+
+
+   // save the workspace to file "sav.pp"
+   // we can put this inline?
+   fun writeToFile() {
+     File("sav.pp").writeText(work)
+   }
+
+   fun goToMark(mark: String) {
+     for ((ii, thismark) in marks.withIndex()) {
+       if (thismark == mark) {
+         cell = ii
+         return
+       }
+     }
+     print("badmark '$mark'!")
+     kotlin.system.exitProcess(1)
+   }
+
+   /* remove existing marks with the same name and add new mark */
+   fun addMark(newMark: String) {
+     // remove existing marks with the same name.
+     for (i in marks.indices) {
+       if (marks[i] == newMark) {
+         marks[i] = ""
+       }
+     }
+     marks[cell] = ""
+     marks[cell] = newMark
+   }
+
+   /* check if the workspace matches given list class eg [hjk]
+   or a range class eg [a-p]. The class string will be "[a-p]" ie
+   with brackets [:alpha:] may have already been made into something else by the
+   compiler.
+   fix: for grapheme clusters and more complete classes
+   */
+
+   fun matchClass(text: String, `class`: String): Boolean {
+     // empty text should never match a class.
+     if (text.isEmpty()) {
+       return false
+     }
+
+     // a character type class like [:alpha:]
+     if (`class`.startsWith("[:") && `class`.endsWith(":]") &&
+       (`class` != "[:]") && (`class` != "[::]")
+     ) {
+       var charType: String = `class`.substring(2)
+       charType = charType.substring(0, charType.length - 2)
+       // '京'.is_alphabetic()
+
+       // these functions are unicode aware for code-points (not graphemes)
+       when (charType) {
+         "alnum" -> return text.all { it.isLetterOrDigit() }
+         "alpha" -> return text.all { it.isLetter() }
+         "ascii" -> return text.all { it.code <= 127 }
+         "word" -> return text.all { it.isLetterOrDigit() || it == '_' }
+         "blank" -> return text.all { it == ' ' || it == '\t' }
+         "control" -> return text.all { it.isISOControl() }
+         "cntrl" -> return text.all { it.isISOControl() }
+         "digit" -> return text.all { it.isDigit() }
+         "graph" -> return text.all { it.code in 33..126 } // ASCII graphic characters
+         "lower" -> return text.all { it.isLowerCase() }
+         "upper" -> return text.all { it.isUpperCase() }
+         "print" -> return text.all { !it.isISOControl() || it == ' ' }
+         "punct" -> return text.all { it.isLetterOrDigit().not() && it.isWhitespace().not() } // This is a rough equivalent for ASCII punctuation
+         "space" -> return text.all { it.isWhitespace() }
+         "xdigit" -> return text.all { it.isDigit(16) }
+         else -> {
+           println("unrecognised char class in translated nom script")
+           println(charType)
+           kotlin.system.exitProcess(1)
+         }
+       }
+       return false
+     }
+
+     // get a mutable list of chars except the first and last which are [ and ]
+     val charList: MutableList<Char> = `class`.substring(1, `class`.length - 1).toMutableList()
+     // is a range class like [a-z]
+     if ((charList.size == 3) && (charList[1] == '-')) {
+       for (char in text) {
+         if ((char < charList[0]) || (char > charList[2])) {
+           return false
+         }
+       }
+       return true
+     }
+
+     // list class like: [xyzabc]
+     // check if all characters in text are in the class list
+     if (text.all { charList.contains(it) }) {
+       return true
+     }
+     return false
+     // also must handle eg [:alpha:] This can be done with char methods
+   }
+
+   /* a plain text string replace function on the workspace */
+   fun replace(old: String, new: String) {
+     if (old.isEmpty()) {
+       return
+     }
+     if (old == new) {
+       return
+     }
+
+     var text = ""
+     for (cc in work) {
+       text += cc
+       if (text.endsWith(old)) {
+         text = text.substring(0, text.length - old.length)
+         text += new
+       }
+     }
+     work = text
+   }
+
+   /* make the workspace capital case */
+   fun capitalise() {
+     var result = ""
+     var capitalizeNext = true
+     for (c in work) {
+       if (c.isLetter()) {
+         if (capitalizeNext) {
+           result += c.uppercaseChar()
+           capitalizeNext = false
+         } else {
+           result += c.lowercaseChar()
+         }
+       } else {
+         result += c
+         if (c == '\n' || c == ' ' || c == '.' || c == '?' || c == '!') {
+           capitalizeNext = true
+         }
+       }
+     }
+     work = result
+   }
+
+   /* print the internal state of the pep/nom parsing machine. This
+     is handy for debugging */
+   fun printState() {
+     println("\n--------- Machine State ------------- ")
+     println("(input buffer:$inputBuffer)")
+     print("Stack[")
+     for (token in stack) {
+       print("{},", token)
+     }
+     print("] Work[$work] ")
+     print("Peep[${peep.replace("\\", "\\\\")}]\n") // Escaping backslashes for display
+     print("Acc:$accumulator ")
+     print("EOF:$eof ")
+     print("Esc:$escape ")
+     print("Delim:$delimiter ")
+     print("Chars:$charsRead ")
+     print("Lines:$linesRead\n")
+     println("-------------- Tape ----------------- ")
+     println("Tape Size: $tapeLength")
+     var start = 0
+     if (cell > 3) {
+       start = cell - 4
+     }
+     val end = cell + 4
+     for (ii in start until end) {
+       print("    $ii")
+       if (ii == cell) {
+         print("> [")
+       } else {
+         print("  [")
+       }
+       print("${tape.getOrNull(ii) ?: ""}]\n")
+     }
+   }
+
+   /* just sets the Machine.inputBuffer to the given text
+     but in this implementation, also reverses it.
+   */
+
+   /*
+   fun setInputBuffer(text: String) {
+     // fix: for grapheme clusters
+     inputBuffer = mutableListOf()
+     val revtext: String = text.reversed()
+     inputBuffer.add(revtext)
+   }
+   */
+
+   /* makes the machine read from a string also needs to prime
+     the "peep" value. */
+   fun setStringInput(text: String) {
+     sourceType = InputType.String
+     inputBuffer.clear()
+     fillInputBuffer(text)
+     // prime the "peep" with the 1st char
+     peep = ""
+     read()
+     charsRead = 0U
+   }
+
+   /* makes the machine write to a string */
+   fun setStringOutput() {
+     sinkType = OutputType.String
+   }
+
+   /* parse/translate from a string and return the translated
+     string */
+   fun parseString(input: String): String {
+     setStringInput(input)
+     sinkType = OutputType.String
+     parse()
+     return outputBuffer
+   }
+
+   /* makes the machine read from a file stream line by line,
+     not from stdin */
+   fun setFileStreamInput(filename: String) {
+     if (!checkTextFile(filename)) {
+       kotlin.system.exitProcess(1)
+     }
+     val file = File(filename)
+     input = BufferedReader(file.reader())
+     sourceType = InputType.FileStream
+     // prime the peep, the read() method should refill the
+     // inputChars or inputBuffer if it is empty.
+     peep = ""
+     read()
+     charsRead = 0U
+   }
+
+   /* makes the machine read from a file line buffer array
+     but this also needs to prime the "peep" value */
+   fun setFileInput(filename: String) {
+
+     val file = BufferedReader(File(filename).reader())
+     // reads a file all at once into the Machine.inputBuffer
+     var text = ""
+     file.useLines { lines ->
+       lines.forEach { text += it + "\n" }
+     }
+     // there is an extra newline being added, I dont know where.
+     if (text.endsWith("\n")) {
+       text = text.substring(0, text.length - 1)
+     }
+     sourceType = InputType.File
+     inputBuffer.clear()
+     fillInputBuffer(text)
+     // prime the "peep" with the 1st char
+     peep = ""
+     read()
+     charsRead = 0U
+   }
+
+   /* makes the machine write to a file not to stdout (the default) */
+   fun setFileOutput(filename: String) {
+     if (!checkTextFile(filename)) {
+       kotlin.system.exitProcess(1)
+     }
+     val file = File(filename)
+     output = BufferedWriter(FileWriter(file))
+     sinkType = OutputType.File
+   }
+
+   // parse from a file and put result in file
+   fun parseFile(inputFile: String, outputFile: String) {
+     setFileInput(inputFile)
+     setFileOutput(outputFile)
+     parse()
+   }
+
+   /* parse from any stream, fix handle */
+   /*
+   fun parseStream(reader: Read) {
+     // self.input = handle;
+     parse();
+   }
+   */
+
+   /* this is the default parsing mode. If no other is selected
+     it will be activated when parse() is first called. I activate it when
+     parse is 1st called because otherwise it will block if no stdin
+     is availabel. It also sets stdout as output */
+   fun setStandardInput() {
+     sourceType = InputType.Stdin
+     sinkType = OutputType.Stdout
+
+     // unused because all input read at oncej
+     // self.input = io.stdin
+     // self.output = io.stdout
+
+     // read the whole of stdin into the inputBuffer
+     inputBuffer.clear()
+     val reader = BufferedReader(InputStreamReader(System.`in`))
+     val buffer = StringBuilder()
+     try {
+       var line: String?
+       while (reader.readLine().also { line = it } != null) {
+         buffer.append(line)
+         buffer.append("\n") // Add newline back if processing line by line
+       }
+       fillInputBuffer(buffer.toString())
+     } catch (why: Exception) {
+       // panic!("couldnt read : {}", why),
+       return
+     }
+
+     // prime the "peep" with the 1st char, but this doesnt count as
+     // a character read.
+     peep = ""
+     read()
+     charsRead = 0U
+   }
+
+   /** parse and translate the input stdin/file/string */
+   fun parse() {
+     when (sourceType) {
+       InputType.Unset -> setStandardInput()
+       else -> {}
+     }
+     // -----------
+     // translated nom code goes here
+     // -----------
+     // close open files here? yes. use break, not return
+     when (sinkType) {
+       OutputType.File -> {
+         output.flush()
+         output.close()
+       }
+       OutputType.Stdout -> {
+       }
+       OutputType.String -> {
+       }
+       else -> {
+         println("unsupported output type: $sinkType")
+       }
+     }
+   } //
+ } // Machine impl
+
+ fun printHelp() {
+   println(
+     """
+     Nom script translated to rust by www.nomlang.org/tr/nom.torust.pss
+     usage:
+         echo "..sometext.." | ./script
+         cat somefile.txt | ./script
+         ./script -f <file>
+         ./script -i <text>
+     options:
+       --file -f <file>
+          run the script with <file> as input (not stdin)
+       --input -i <text>
+          run the script with <text> as input
+       --filetest -F <filename>
+          test the translated script with file input and output
+       --filestream -S <filename>
+          test the translated script with file-stream input
+       --inputtest -I <text>
+          test the translated script with string input and output
+       --help -h
+          show this help
+          """
+   )
+ }
+
+ /* display a message about a missing argument to the translated
+   script */
+ fun missingArgument() {
+   println("Missing argument.")
+   printHelp()
+   kotlin.system.exitProcess(1)
+ }
+
+ /* display a message if an command line option is repeated */
+ fun duplicateSwitch() {
+   println("Duplicate switch found.")
+   printHelp()
+   kotlin.system.exitProcess(1)
+ }
+
+ fun checkTextFile(filepath: String): Boolean {
+   val file = File(filepath)
+   if (!file.exists()) {
+     println("File [$filepath] not found.")
+     return false
+   }
+   if (!file.canRead()) {
+     println("Permission denied to read file [$filepath] ")
+     return false
+   }
+   return true
+ }
+
+ fun main(args: Array<String>) {
+
+   /* add switches for file to file and string to string parsing
+     the -F and -I switch are mainly to allow file/string input/output
+     to be easily tested by scripts */
+
+   val mm: Machine = Machine()
+   var input = ""
+   var filename = ""
+
+   val argsList: List<String> = args.toList()
+   for ((pos, e) in argsList.withIndex()) {
+     if ((e == "-f") || (e == "--file")) {
+       if (filename.isNotEmpty()) {
+         duplicateSwitch()
+       }
+       if (pos >= argsList.size - 1) {
+         missingArgument()
+       }
+       filename = argsList[pos + 1]
+       if (!checkTextFile(filename)) {
+         printHelp()
+         kotlin.system.exitProcess(1)
+       }
+       mm.setFileInput(filename)
+       // print output file here
+     }
+     if ((e == "-F") || (e == "--filetest")) {
+       if (pos >= argsList.size - 1) {
+         missingArgument()
+       }
+       if (filename.isNotEmpty()) {
+         duplicateSwitch()
+       }
+       filename = argsList[pos + 1]
+       if (!checkTextFile(filename)) {
+         printHelp()
+         kotlin.system.exitProcess(1)
+       }
+       mm.parseFile(filename, "out.txt")
+       val output = File("out.txt").readText()
+       print(output)
+       kotlin.system.exitProcess(0)
+     }
+     // test the filestream input type (reads line by line through
+     // with a BufReader
+     if ((e == "-S") || (e == "--filestream")) {
+       if (pos >= argsList.size - 1) {
+         missingArgument()
+       }
+       if (filename.isNotEmpty()) {
+         duplicateSwitch()
+       }
+       filename = argsList[pos + 1]
+       if (!checkTextFile(filename)) {
+         printHelp()
+         kotlin.system.exitProcess(1)
+       }
+       mm.setFileStreamInput(filename)
+     }
+     if ((e == "-i") || (e == "--input")) {
+       if (pos >= argsList.size - 1) {
+         missingArgument()
+       }
+       if (input.isNotEmpty()) {
+         duplicateSwitch()
+       }
+       input = argsList[pos + 1]
+       mm.setStringInput(input)
+     }
+     if ((e == "-I") || (e == "--inputtest")) {
+       if (pos >= argsList.size - 1) {
+         missingArgument()
+       }
+       if (input.isNotEmpty()) {
+         duplicateSwitch()
+       }
+       input = argsList[pos + 1]
+       val text = mm.parseString(input)
+       print(text)
+       kotlin.system.exitProcess(0)
+     }
+     if ((e == "-h") || (e == "--help")) {
+       printHelp()
+       kotlin.system.exitProcess(0)
+     }
+
+     if (input.isNotEmpty() && filename.isNotEmpty()) {
+       print(
+         """
+       Either use the --file/--filetest options or the --input/--inputtest
+       options, not both
+          """
+       )
+       printHelp()
+       kotlin.system.exitProcess(0)
+     }
+   }
+
+   mm.parse()
+ }

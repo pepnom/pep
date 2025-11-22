@@ -1,0 +1,37 @@
+
+### The Pep/Nom documents folder
+
+ This folder contains documentation about the *Nom* interpreted and compilable
+ language and the *Pep* Pattern Engine for parsing.
+
+ *Nom* is a language with a syntax similar to "sed"
+ https://www.gnu.org/software/sed/manual/sed.html but hopefully less cryptic
+ than *sed* . Whereas *sed* matches and replaces "regular expression"
+ wp://regular.expression patterns, *nom* recognises and transforms, translates
+ or compiles context-free patterns or languages.
+
+ The folder file:///doc/commands/ contains information about 
+ each command in the nom language such as the nom://add command, the 
+ nom://push command and so on. The "command index" 
+ file:///doc/commands/doc.dir.index.html contains a list of commands 
+ and links to their documentation
+
+ The folder file:///doc/syntax/ contains information about 
+ the syntax of the *nom* language, as it is defined in the nom 
+ compiler nomsf://compile.pss . The page file:///doc/syntax/doc.dir.index.html
+ has a list of files in the syntax documentation.
+
+ The folder file:///doc/machine/ contains documentation about 
+ the *pep* "virtual machine" pep://machine and each of its parts such as
+ the pep://stack , the pep://tape and the pep://workspace buffer among 
+ others
+
+ There is a booklet about the Pep&Nom system in plain text 
+ file://pepnom-book.txt and html nomsf://pars-book.html but the documents
+ here are more up-to-date.
+
+
+
+ 
+
+

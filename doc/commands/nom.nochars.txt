@@ -1,0 +1,64 @@
+
+
+## THE NOM "NOCHARS" COMMAND
+
+  Set the automatic character counter register to zero (i.e. to *nochars*)
+
+  Everytime that a character (Unicode we hope) is read from the input stream,
+  (by the *nom* commands nom://read or nom://while or nom://whilenot or
+  nom://until ) the character counter register in the pep virtual "machine"
+  pep://machine is incremented by one. 
+  
+  The "nochars" command sets the automatic character counter to zero.  This is
+  useful for making the character number relative to the line number. This is
+  often more helpful than having a character count that starts from the
+  beginning of the input stream.  For example at the beginning of a script, we
+  can put
+
+  * break lines that are longer than 40 characters
+  ------+
+    read; [\n] { nochars; } print; clear; 
+    chars; "60" { clear; add "\n"; print; }
+    clear;
+  ,,,,
+
+  * show the line and (line-relative) character number of 'z's in input
+  -----+
+    read; 
+    "\n" { nochars; }
+    "z" { 
+      add "\n[Found a 'z' at line: "; lines; add ", char: "; chars;
+      add "]\n";
+    }
+    print; clear;
+  ,,,,,
+
+### Notes
+
+  The pep machine also has a built-in automatic line counting register
+  called the pep://lines register. It is *automatic* because it is 
+  automatically incremented every time a newline character is encountered
+  in the input-stream. Like the pep://chars register it cannot be 
+  decremented but it can be set = 0 with the nom://nolines command.
+
+  The reason that these 2 registers exist (and are automatic) is that 
+  pretty much every language compiler or "syntax checker" or data-format
+  checker will try to provide a somewhat helpful error message when 
+  an error is encountered in the source. That means, as far as possible,
+  giving a line and (relative) character number as a pointer to where 
+  the error occured.
+
+  In recent nom scripts I have actually developed the technique of creating
+  and nom://push ing an *error* token on the stack, and that token
+  will print the message that is in the token "attribute" (stored in the
+  corresponding cell of the machine pep://tape ) This avoid duplicating
+  the line and character printing code in every error message.
+
+### See Also
+
+  - nom://lines access the line counter
+  - nom://nolines set the line counter to 0
+  - nom://chars access the character counter
+  - nom://zero set the accumulator = 0
+  - nom://a+ increment the accumulator
+  - nom://a- decrement the accumulator

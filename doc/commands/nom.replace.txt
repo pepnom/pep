@@ -1,0 +1,35 @@
+
+
+## THE NOM "REPLACE" COMMAND ....
+
+ This command replaces one string with another in the pep://workspace . The
+ *replace* command is useful for indenting blocks of text during formatting
+ operations, among other things. The replace command only replaces plain text
+ strings, *not* regular expression patterns.
+
+  * replace the letter 'a' with 'A' in the workspace buffer
+  >> replace "a" "A";
+
+  The replace command is often used for indenting generated code.
+
+  * indent a block of text
+  >> clear; get; replace "\n" "\n  "; put; clear;
+
+  Replace can also be used to test if the workspace contains a particular
+  character, in conjunction with the "(==)" tape test.
+
+  * check if the workspace contains an 'x' 
+  -----+
+    # fragment 
+    put; replace 'x' ''; 
+    (==) {
+      clear; add "no 'x'"; print; clear;
+    } 
+  ,,,,
+
+### SEE ALSO
+  
+  nom://add add text to the workspace >>
+  nom://lower make workspace text lower case >>
+  nom://upper make workspace text upper case >>
+  

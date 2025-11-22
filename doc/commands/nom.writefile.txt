@@ -1,0 +1,26 @@
+
+## THE NOM "WRITEFILE" COMMAND
+
+ writes the contents of the pep://workspace buffer to the given file. 
+
+ I hardly ever use this command because it seems to be outside of 
+ the scope of a parser parser or a compiler compiler. But it could 
+ be useful
+
+ * write the workspace contents to the file 'test.txt'
+ >> writefile "test.txt";
+
+ * write one line to "new.txt" 
+ ----+
+   clear; add "new.txt"; put; clear; until "\n"; writefile;
+ ,,,
+
+ I am not even sure if this syntax above exists, but it is very
+ easy to implement in the interpreter and in the translation 
+ scripts.
+
+ I had actually forgotten completely about this command but 
+ it is clearly useful. I presume this takes one parameter which is
+ the filename. But their maybe another form, in which the file 
+ name is taken from the current tape-cell.
+

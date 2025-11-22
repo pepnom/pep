@@ -1,0 +1,36 @@
+
+ ## IDEAS FOR THE PEP/NOM SYSTEM
+
+ A document of ideas of the pep/nom system that may never be implemented. Often
+ I find that new commands aren't necessary after all.
+
+ - add an 'eprint' command that prints the workspace to 
+   stderr not stdout. This can be used for warnings etc.
+ - substitute a [latex] ampersand for a normal one
+ - some randomisation for nom. 🙵  ampersand
+ - archaic words
+ - 'getx;' command that appends the pep://tapecell to the 
+   pep://workspace the number of times that is in the pep://accumulator.
+   This can be sort of emulated with eg:
+    * emulation of getx;
+    -----+
+     count; replace "2" "..";
+     replace "3" "...";
+     replace "4" "....";
+     replace "." "abc ";
+    ,,,,
+ - sublists starting with items --
+ - empty item
+
+### UNICODE AND READING 
+
+  Unicode doesn't actually define what is a 'character', instead it uses code
+  points and combining marks (diacritics, underlines, etc). So the question of
+  what the nom://read command should do is a bit tricky. Should it read a byte,
+  or a (utf8) code point or a grapheme cluster (the series of codepoints and
+  combining marks that makes up a single visible character) ? Usually the
+  answer is the last: A grapheme cluster, but not always.
+
+  So the nom://read command could have several modes, and it could 
+  even read the data as a byte and treat it as 'binary'. 
+  

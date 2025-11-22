@@ -1,0 +1,312 @@
+
+#*
+
+ABOUT 
+
+  A [nom] script that pretty prints a *nom* snippet (in a document) in 
+  html with colours.
+
+  This script is the same as /eg/nom.tohtml.pss but it only colourises
+  nom scripts or fragments that are between html code. This [html]
+  below is generated when you use the delimiters ---+ and ,,,
+  for a block of code (not --- which is the normal start delimiter).
+
+  * the html 
+  -----
+    <pre class='nom-code'><code class='language-nom'>
+      ... nom snippet
+    </code></pre>
+  ,,,,
+
+  This script is to be used as a "post-processor" after rendering 
+  a text document into [html]. So, 1st run the script 
+  /eg/text.tohtml.pss and then this one.
+
+  * pretty print nom code in a plain text document
+  ------
+    pep -f eg/text.tohtml.pss doc.txt > doc.html
+    pep -f eg/nom.snippet.pss doc.html > newdoc.html
+  ,,,,
+  
+  If you translate the scripts to some other language like go or ruby or 
+  python, then you can chain this together with pipes.
+
+  This uses <span> tags to colourise the different components 
+  of the script such as nomsyn://quotes and nomsyn://comments etc.
+  I used this technique because this seems to be what other 
+  [html] "pretty-printers" urbandict://pretty.print such as 
+  highlight.js do.
+
+  We can just 'lex' the script and colorise it/
+
+STATUS
+
+  19 mar 2025
+    just started. more or less works. 
+    
+TODO
+NOTES
+TOKENS 
+  There are no tokens used in this script.
+
+HISTORY
+
+  19 mar 2025
+    started based on nom.tohtml.pss
+
+CSS CODE TO DISPLAY THIS
+
+   These colours are roughly from wren.io highlighting.
+
+   /* start of pretty print css */
+
+     pre.nom-code { background-color: #f5f2f0; }
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     # red green blue colours
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; }
+     span.nom-word { color: #07A; }
+     span.nom-keyword { color: #07D; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #6B0; }
+     span.nom-punct { color: #999; }
+     span.nom-comment { color: gray; }
+
+     /* end of pretty print css */
+
+*#
+
+  # dont need this because the html doc already has it
+  #begin {
+  #  add "<pre class='nom-code'>\n";
+  #  add "<code class='language-nom'>\n";
+  #  print; clear;
+  #}
+
+  # close the <pre> and <code> tags.
+  #(eof) {
+  #add "\n</code></pre>\n";    
+  # print; quit;
+  #}
+
+  # use the counter as inside/outside state
+  count;
+  "0" {
+    # this line is inserted by eg/text.tohtml.pss if it changes,
+    # then change this too.
+    clear; until "<pre class='nom-code'><code class='language-nom'>";
+    print; clear; a+; (eof) { quit; } 
+  }
+  "1" {
+    clear; read;
+    # this is end of script indicator ie </code> a bit dodgy
+    # but may work. I dont think this can exist in a script.
+    "<" { print; clear; zero; .restart }
+
+    # line-relative character numbers 
+    [\n] { nochars; }
+    # just print space as-is 
+    [:space:] { 
+       while [:space:]; print; 
+       # no silent exit on EOF
+       clear; (eof) { .reparse } !(eof) { .restart } 
+    }
+
+    # literal tokens, for readability maybe 'dot*' and 'comma*'
+    [<{}(!BE,.;)>] { 
+      put; clear; add "<span class='nom-punct'>"; get; add "</span>"; 
+      print; clear; .restart 
+    }
+
+    # command names, need to do some tricks to parse ++ -- a+ etc
+    # here. This is because [:alpha:],[+-] etc is not a union set
+    # and while cannot do "while [:alpha:],[+-] etc
+
+    # subtle bug, [+-^0=] parses as a range!!! [a-z]
+    [:alpha:],[-+^0=] {
+
+      "0" { clear; add "zero"; }
+      "^" { clear; add "escape"; }
+      "+" { while [+]; }
+      "-" { while [-]; }
+      "=" { while [=]; }
+      while [:alpha:]; 
+
+      # parse a+ or a- for the accumulator
+      "a" { 
+        # while [+-] is bug because compile.pss thinks its a range class
+        # not a list class
+        while [-+]; 
+        "a+","a-" { put; }
+        "a" { clear; add "add"; }
+      }
+
+      # one letter command abbreviations
+
+      put; clear; add "#"; get; add "#";
+      replace "#k#" "#clip#"; replace "#K#" "#clop#";
+      replace "#D#" "#replace#"; replace "#d#" "#clear#"; 
+      replace "#t#" "#print#"; replace "#p#" "#pop#"; replace "#P#" "#push#"; 
+      replace "#u#" "#unstack#"; replace "#U#" "#stack#"; replace "#G#" "#put#"; 
+      replace "#g#" "#get#"; replace "#x#" "#swap#"; replace "#m#" "#mark#"; 
+      replace "#M#" "#go#"; replace "#r#" "#read#"; replace "#R#" "#until#"; 
+      replace "#w#" "#while#"; replace "#W#" "#whilenot#"; replace "#n#" "#count#"; 
+      replace "#c#" "#chars#"; replace "#C#" "#nochars#"; replace "#l#" "#lines#"; 
+      replace "#L#" "#nolines#"; replace "#v#" "#unescape#"; 
+      replace "#z#" "#delim#"; 
+      replace "#S#" "#state#"; replace "#q#" "#quit#"; replace "#s#" "#write#"; 
+      replace "#o#" "#nop#"; replace "#rs#" "#restart#"; replace "#rp#" "#reparse#"; 
+
+      # remove trailing and leading '#' char
+      clip; clop; put;
+
+      # writefile is also a command?
+
+      # commands parsed above
+      "a+","a-","zero","escape","++","--",
+      "add","clip","clop","replace","upper","lower","cap","clear",
+      "print","state","pop","push","unstack","stack","put","get","swap",
+      "mark","go","read","until","while","whilenot",
+      "count","zero","chars","lines","nochars","nolines",
+      "escape","unescape","delim","quit","write",
+      "reparse","restart","nop" {
+
+        clear; 
+        add "<span class='nom-command'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+
+      # words not commands
+      "parse","eof","EOF","==" {
+        clear; 
+        add "<span class='nom-word'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+
+      "begin" { 
+        clear; 
+        add "<span class='nom-keyword'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+
+      # lower case and check for command with error
+      lower; 
+      "add","clip","clop","replace","upper","lower","cap","clear",
+      "print","state","pop","push","unstack","stack","put","get","swap",
+      "mark","go","read","until","while","whilenot",
+      "count","zero","chars","lines","nochars","nolines",
+      "escape","unescape","delim","quit", "write",
+      "zero","++","--","a+","a-","nop",
+      "begin","parse","reparse","restart" {
+        clear; 
+        add "<span class='nom-unknown'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+
+      # mark up in red errors
+      clear; 
+      add "<span class='nom-unknown'>"; get; add "</span>"; 
+      print; clear; .restart
+    }
+
+    # single line comments
+    '#' {
+      (eof) { print; .restart }
+      read; 
+      [#\n] { print; .restart }
+      # multiline comments
+      "#*" {
+        until "*#"; put;
+        !E"*#" { 
+          clear; add "<span class='nom-error'>"; get; add "</span>"; 
+          print; clear; .restart
+        }
+        clear; add "<span class='nom-comment'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+      whilenot [\n]; put;
+      clear; add "<span class='nom-comment'>"; get; add "</span>"; 
+      print; clear; .restart
+    }
+
+    # double quoted text
+    '"' {
+      # no error checking. 
+      # see nom.syntax.reference.pss for error checking
+      until '"'; put; 
+      !E'"' { 
+        clear; add "<span class='nom-error'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+      clear; add "<span class='nom-string'>"; get; add "</span>"; 
+      print; clear; .restart
+    }
+
+    # single quotes
+    "'" {
+      until "'"; put; 
+
+      !E"'" { 
+        clear; add "<span class='nom-error'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+
+      clear; add "<span class='nom-string'>"; get; add "</span>"; 
+      print; clear; .restart
+    }
+
+    # classes like [:space:] or [abc] or [a-z] 
+    # these are used in tests and also in while/whilenot
+    # The *until* command will read past 'escaped' end characters eg \]
+    # 
+
+    "[" {
+      until "]"; put;
+      !E"]" { 
+        clear; add "<span class='nom-error'>"; get; add "</span>"; 
+        print; clear; .restart
+      }
+      
+      B"[:".E":]".!"[::]".!"[:]" { 
+        clip; clip; clop; clop; put;
+        # list of [:class:] classes here. The character classes also
+        # abbreviations in nom (which may be silly but anyway) 
+        "alnum","N","alpha","A","ascii","I","word","W","blank","B",
+        "cntrl","C","digit","D","graph","G","lower","L","print","P",
+        "punct","T","space","S","upper","U","xdigit","X" {
+          clear; 
+          add "<span class='nom-class'>[:"; get; add ":]</span>"; 
+          print; clear; .restart
+        }
+        clear; 
+        add "<span class='nom-unknown'>[:"; get; add ":]</span>"; 
+        print; clear; .restart
+      }
+      # now [a-z] classes. I will not permit [\n-\t] silly
+      # todo check this 
+      clear; add "<span class='nom-class'>"; get; add "</span>"; 
+      print; clear; .restart
+    }
+
+    !"" {
+      put; clear; 
+      add "<span class='nom-error'>"; get; add " ??</span>"; 
+      print; clear; .restart
+    }
+
+  }
+
+# not used, but pep complains if not here.
+parse>
+

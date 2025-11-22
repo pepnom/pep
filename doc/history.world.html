@@ -1,0 +1,157 @@
+
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Timeline with Definition List</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f4;
+              padding: 40px;
+              display: flex;
+              justify-content: center;
+          }
+  
+          .timeline-container {
+              width: 80%;
+              max-width: 600px;
+          }
+  
+          .timeline {
+              display: flex;
+              flex-direction: column;
+              padding: 0; margin: 0;
+              position: relative;
+          }
+  
+          .timeline::before {
+              content: "";
+              position: absolute;
+              top: 0; left: 20px; width: 2px;
+              height: 100%;
+              background-color: #ddd;
+          }
+  
+          .timeline dt {
+              position: relative;
+              margin: 0 0 10px 40px;
+              padding-left: 20px;
+              font-weight: bold;
+              font-size: 1.2em;
+              color: #333;
+          }
+  
+          .timeline dt::before {
+              content: "";
+              position: absolute;
+              left: -20px; top: 50%;
+              transform: translateY(-50%);
+              width: 14px; height: 14px;
+              background-color: #007bff;
+              border-radius: 50%; border: 2px solid #fff;
+              box-shadow: 0 0 0 2px #007bff; /* Added for a nice glow effect */
+          }
+  
+          .timeline dd {
+              margin: 0 0 30px 40px;
+              padding: 10px 15px;
+              border-left: 2px solid #007bff;
+              font-style: italic;
+              color: #666;
+              background-color: #fff;
+              border-radius: 0 5px 5px 0;
+          }
+      </style>
+  </head>
+  <body>
+  
+       <h3> Some historical events </h3> <dl class='timeline'>
+  <dt>5 October 2011</dt>
+  <dd>Steve Jobs died at age 56 in Palo Alto , California. quotes: "Stay hungry , stay foolish." "Your time is limited , so don't waste it living someone else's life." </dd><dt>9 jan 2007</dt>
+  <dd>The <em><strong>iphone</strong></em> was unveiled. </dd><dt>2000</dt>
+  <dd>Nokia 3310 (cabezon) button phone was introduced </dd><dt>1999</dt>
+  <dd>Google gets 1 <em><strong>million</strong></em> page views per day. </dd><dt>4 September 1998</dt>
+  <dd>google founded </dd><dt>9 November 1989</dt>
+  <dd>The fall of the Berlin Wall. </dd><dt>30 Oct 1974</dt>
+  <dd>The 'Rumble in the Jungle' [ boxing match ] between **Muhammad Ali** and George Foreman took place on October 30 , 1974. </dd><dt>1970</dt>
+  <dd>Forth programming language invented by Charles Moore at NRAO National Radio Astronomy Observatory. </dd><dt>1969</dt>
+  <dd>First unix operating system invented. </dd><dt>20 july 1969</dt>
+  <dd>First Human Moon Landing (Apollo 11 mission marks a pivotal moment in space exploration and technological achievement). </dd><dt>may 1968</dt>
+  <dd>Start of french protests. police were called to the Sorbonne University in Paris to clear out a student occupation , leading to the arrest of student leaders. This confrontation quickly escalated into street battles between students and riot police. </dd><dt>27 may 1967</dt>
+  <dd>The historic referendum in Australia that is often associated with Aboriginal voting rights was held on May 27 , 1967. </dd><dt>10 February 1964</dt>
+  <dd>Album "The Times They Are a -Changin'" released </dd><dt>1960</dt>
+  <dd>to 1967 Leonard Cohen on Hydra , Greece. song: "Oh so long , Marianne "It's time that we began "To laugh and cry and cry and laugh about it all again" </dd><dt>6 February 1952</dt>
+  <dd>Start of Elizabeth II of England's reign </dd><dt>30 Jan 1948</dt>
+  <dd>Mahatma Gandhi assassinated. One of Mahatma Gandhi's most famous and powerful phrases in Hindi is: phrase: "करो या मरो।" transcript: Karo ya Maro translation: do or die </dd><dt>15 August 1947</dt>
+  <dd>Independance of India. </dd><dt>17 july 1936</dt>
+  <dd>The Spanish Civil War began on July 17 , 1936. On that date , a group of conservative generals , led by figures such as Emilio Mola and Francisco Franco , launched a military uprising in Spanish Morocco and other parts of Spain. </dd><dt>march 1935</dt>
+  <dd>Durrells arrive on corfu. Κέρκυρα </dd><dt>29 October 1929</dt>
+  <dd>'Black Tuesday' The sell off of the usa stock -market. </dd><dt>16 nov 1920</dt>
+  <dd>Qantas was founded on November 16 , 1920 , in Winton , Queensland , Australia </dd><dt>aug 1910</dt>
+  <dd>Summer of 1910: Picasso spent a significant amount of time in Cadaqués with his partner , Fernande Olivier. During this visit , he was deeply immersed in his Cubist work , and the landscape of the area became a subject in his art </dd><dt>16 june 1903</dt>
+  <dd>The Ford Motor Company was founded by Henry Ford on June 16 , 1903 , in Detroit , Michigan </dd><dt>2 Nov 1899</dt>
+  <dd>(until 7 Sept 1901) The Boxer Rebellion in China started , Foreign legations beseiged in Beijing. </dd><dt>12 Nov 1894</dt>
+  <dd>Lawrence Hargrave made a box kite flight at Stanwell Park , Sydney </dd><dt>26 August 1883</dt>
+  <dd>Explosion of Krakatoa </dd><dt>11 November 1880</dt>
+  <dd>Ned Kelly hung at Old Melbourne Gaol at age of 25. </dd><dt>10 February 1879</dt>
+  <dd>Ned Kelly's Jerilderie letter was delivered (Jerilderie ,NSW) </dd><dt>7 September 1876</dt>
+  <dd>Attempted robbery of Northfield , Minnesota Bank by Jesse James gang. </dd><dt>14 april 1865</dt>
+  <dd>Abraham Lincoln was assassinated on the evening of April 14 , 1865 , while attending a play at Ford's Theatre in Washington , D.C. </dd><dt>12 April 1861</dt>
+  <dd>Start of American civil war. </dd><dt>27 aug 1859</dt>
+  <dd>The date of the first modern , commercial drilling for petroleum is August 27 , 1859. On that date , Edwin Drake successfully drilled an oil well in Titusville , Pennsylvania , at a depth of 69.5 feet (21.2 meters). This event is widely considered to be the birth of the modern petroleum industry , as it was the first time a well was specifically drilled to extract oil for commercial use. </dd><dt>10 May 1857</dt>
+  <dd>until 1858 Start of the Seepoy Mutiny in Meerut , India. Indian Soldiers of the British East India Company mutinied. </dd><dt>3 dec 1854</dt>
+  <dd>The Eureka Stockade took place in Ballarat , Victoria , Australia , on December 3 , 1854. It was a rebellion by gold miners , known as "diggers ," who were protesting against the colonial government's oppressive mining license fees and heavy -handed enforcement by the police. </dd><dt>1845</dt>
+  <dd>Start of the Irish famine (until 1852) </dd><dt>10 jun 1838</dt>
+  <dd>The Myall Creek massacre occurred on June 10 , 1838. On that day , a group of armed stockmen murdered at least 28 unarmed Aboriginal people , mostly women , children , and elderly men , on a station near Myall Creek in northern New South Wales , Australia </dd><dt>25 Feb 1836</dt>
+  <dd>Samuel Colt receives U.S patent for revolver design </dd><dt>1838</dt>
+  <dd>Chopin's 24 piano impromptus composed on the Island of Mallorca. </dd><dt>31 may 1832</dt>
+  <dd>Death of Évariste Galois in a duel , the night after writing a letter with the ideas of group theory. </dd><dt>1831</dt>
+  <dd>The Choctaw Nation forcibly removed , "the trail of tears" </dd><dt>4 June 1830</dt>
+  <dd>Antonio José de Sucre assassinated. He was ambushed and shot while traveling through a foggy forest in the Berruecos mountains of Gran Colombia (in what is now modern -day Colombia). </dd><dt>1827</dt>
+  <dd>Franz Schubert's eight piano impromptus composed. </dd><dt>7 aug 1819</dt>
+  <dd>Battle of Boyaca , Colombia with Simon Bolivar. </dd><dt>18 June 1815</dt>
+  <dd>The Battle of Waterloo </dd><dt>16 October 1793</dt>
+  <dd>Marie Antoinette was executed by guillotine "Qu'ils mangent de la brioche" (Jean -Jacques Rousseau) </dd><dt>21 January 1793</dt>
+  <dd>King Louis XVI of France was executed by guillotine. Publicly executed at the Place de la Révolution (now the Place de la Concorde) in Paris. </dd><dt>14 July 1789</dt>
+  <dd>Storming of the Bastille , start of the French Revolution. </dd><dt>2 july 1778</dt>
+  <dd>Death of Jean -Jacques Rousseau "L'homme est né libre , et partout il est dans les fers" </dd><dt>4 july 1776</dt>
+  <dd>Declaration of American Independance. </dd><dt>1712</dt>
+  <dd>The steam engine of Thomas Newcomen </dd><dt>1599</dt>
+  <dd>Approximate 1st performance of the play Hamlet </dd><dt>8 Aug 1588</dt>
+  <dd>Battle of Gravelines against the Spanish Armada. </dd><dt>1586</dt>
+  <dd>The British Isles: The potato was also introduced to the British Isles , with Sir Walter Raleigh credited with planting the crop in Ireland in 1586. </dd><dt>23 April 1564</dt>
+  <dd>Traditional birthdate of Shakespeare in Avon , England. </dd><dt>17 Nov 1558</dt>
+  <dd>Start of Queen Elizabeth I of England's reign </dd><dt>1535</dt>
+  <dd>Sir Thomas More was executed on July 6 , 1535. He was a prominent English lawyer , statesman , and philosopher who served as Lord High Chancellor of England under King Henry VIII. He was a devout Catholic and a man of great integrity , which ultimately led to his downfall. He was executed for refusing to take the Oath of Supremacy , which would have acknowledged King Henry VIII as the head of the Church of England , and for refusing to accept the king's annulment of his marriage to Catherine of Aragon. More's refusal was considered an act of treason , and he was beheaded on Tower Hill in London. He was later canonized as a saint by the Catholic Church. </dd><dt>13 aug 1521</dt>
+  <dd>The conquest of the Aztec Empire by Hernán Cortés culminated on August 13 , 1521 , with the fall of the Aztec capital , Tenochtitlan. </dd><dt>31 Oct 1517</dt>
+  <dd>Luther published his 95 Theses on the door of Castle Church , Wittenburg Germany. "Hier stehe ich , ich kann nicht anders" </dd><dt>3 aug 1492</dt>
+  <dd>start of 1st voyage of Christopher Colombus from Palos de la Frontera , Spain. </dd><dt>31 July 1492</dt>
+  <dd>Expulsion of the Jews from Spain. </dd><dt>2 Jan 1492</dt>
+  <dd>Fall of Granada , Spain. </dd><dt>22 August 1485</dt>
+  <dd>King Richard III died at the Battle of Bosworth Field. He was the last English monarch to die in battle. The battle was the culmination of the Wars of the Roses and pitted Richard's army against the forces of Henry Tudor , who would go on to become King Henry VII "A horse , a horse! My kingdom for a horse!" King Richard III , William Shakespeare's Act V , Scene 4. This line appears in Act V , Scene 4 , during the Battle of Bosworth Field. Richard has lost his horse and is fighting on foot , a disastrous situation for a medieval king in battle. </dd><dt>30 may 1431</dt>
+  <dd>Joan of Arc burnt at stake , at age of 19. phrase: "Je n'ai pas peur; je suis née pour faire ça." </dd><dt>8 may 1429</dt>
+  <dd>British abandon seige of Orleans , after defence by Joan of Arc. </dd><dt>25 october 1415</dt>
+  <dd>The Battle of Agincourt was fought on October 25 , 1415. This decisive English victory over a much larger French army took place in northern France and was a major battle of the Hundred Years' War. It is one of the most famous battles in English history , immortalized in William Shakespeare's play Henry V. </dd><dt>1347</dt>
+  <dd>Start of the Black Plague (bacterium Yersinia pestis) in Europe between 30% and 60% mortality in Europe. </dd><dt>1271</dt>
+  <dd>Start of Marco Polo's travels </dd><dt>1250</dt>
+  <dd>approx. maori arrive in the north island of new zealand </dd><dt>August 1227</dt>
+  <dd>Genghis Khan died in August 1227. </dd><dt>April 6 , 1199</dt>
+  <dd>Death of Richard the Lionheart , King of England , in Aquitaine France. </dd><dt>1096</dt>
+  <dd>Start of the First Crusade </dd><dt>28 sept 1066</dt>
+  <dd>William the Conqueror's invasion of England began on September 28 , 1066 , when his fleet landed unopposed at Pevensey on the south coast of England. The invasion culminated with the pivotal Battle of Hastings on October 14 , 1066 , where William's forces defeated the English army led by King Harold Godwinson , who was killed in the battle. </dd><dt>28 jan 814 CE</dt>
+  <dd>Charlemagne died on January 28 , 814 , at the age of 72. He passed away in Aachen , a city that served as a major center of his Frankish empire and is where he was buried. </dd><dt>711 CE</dt>
+  <dd>The Arabic conquest of Spain , more accurately referred to as the Umayyad conquest of Hispania , began in 711 CE. An army led by the Berber general Tariq ibn Ziyad crossed the Strait of Gibraltar from North Africa. They quickly defeated the Visigothic army under King Roderic at the Battle of Guadalete. </dd><dt>610 CE</dt>
+  <dd>The Founding of Islam by divine revelation </dd><dt>2 Sept 31 BC</dt>
+  <dd>Defeat of Mark Antony by Octavian/Augustus at the naval battle of Actium </dd><dt>15 Mar 44 BC</dt>
+  <dd>Assassination of Julius Caesar. </dd><dt>146 BCE</dt>
+  <dd>The city of Carthage was destroyed by the Romans in 146 BCE at the conclusion of the Third Punic War. </dd><dt>212 BCE</dt>
+  <dd>Archimedes , the Greek mathematician and inventor , was killed in 212 BCE during the Siege of Syracuse by a Roman soldier. "Eureka!" is εὕρηκα </dd><dt>10 june 323 BC</dt>
+  <dd>Death of Alexander the Great in Babylon at the age of 32. </dd><dt>399 BCE</dt>
+  <dd>Socrates died by drinking hemlock (conium maculatum). Greek: "ὁ δὲ ἀνεξέταστος βίος οὐ βιωτὸς ἀνθρώπῳ." "The unexamined life is not worth living." Greek: "ἓν μόνον ἀληθινὸν σοφόν ἐστιν , τὸ εἰδέναι ὅτι οὐδὲν οἶδας." "The only true wisdom is in knowing you know nothing." Greek: "ἓν μόνον ἀγαθόν , ἡ ἐπιστήμη , καὶ ἓν μόνον κακόν , ἡ ἄγνοια." "There is only one good , knowledge , and one evil , ignorance." </dd><dt>August 480 bc</dt>
+  <dd>Battle of Thermopylae , the 300 Spartan Warriors defend the pass (The arrows of the persians are so numerous they will blot out the sun) Modern Greek: "Τότε θα πολεμήσουμε στη σκιά." "Then we will fight in the shade" </dd><dt>480 BCE</dt>
+  <dd>Approximate birth of Buddha , Siddhartha Gautama. </dd><dt>1200 BCE approx.</dt>
+  <dd>greek siege of troy. achilles: Δεν υπάρχει πλούτος που να αξίζει τη ζωή μου!" "no wealth is worth my life" </dd><dt>approx 1975 BC</dt>
+  <dd>extinction of woolly mammoths on Wrangel Island. </dd><dt>2580 BCE</dt>
+  <dd>approx. The Great Pyramid of Khufu built (Giza) </dd></dl>
+</body></html>

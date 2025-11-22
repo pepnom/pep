@@ -1,0 +1,57 @@
+
+#*
+  This script shows parsing/recognising the context free language 
+  { a^n b^n : n>0 } with nom. Its pretty simple.
+
+NOTES
+
+  This doesn't use a normal shift-reduce technique such as 
+  T* := a*b* | a*T*b*
+
+  It uses a replace trick to see if the number of a's and b's are the same. But
+  the approach above also works. The current way of parsing/recognising will
+  also work with { a^n b^n c^n : n>0 } which apparently is not a context-free
+  language.
+
+  This script also accepts multiple strings separated by whitespace
+  >> eg: aabb ab aaabbb  aaaabbbb
+
+STATUS
+
+  working I believe
+*#
+
+ read; 
+ 'a' { 
+   while [a]; put; clear;
+   add "A*"; push; .reparse
+ }
+ 'b' { 
+   while [b]; put; clear;
+   add "B*"; push; .reparse
+ }
+
+ # ignore space between aabb strings.
+ [:space:] {
+   while [:space:]; clear;
+ }
+
+ !"" {
+   put; clear; add "What the ... is '"; get; add "'?\n"; 
+   print; quit;
+ }
+ parse>
+  pop;pop;
+  "A*B*" {
+    clear; get; replace "a" "."; ++;
+    swap; replace "b" "."; 
+    !(==) {
+      clear; add "Nope. not a^n b^n I'm afraid\n";
+      print; quit;
+    }
+    replace "." "b"; swap; replace "." "a"; 
+    get; add ":"; add "Yes a^n b^n \n"; print; clear;
+    --;
+  }
+  push;push;
+

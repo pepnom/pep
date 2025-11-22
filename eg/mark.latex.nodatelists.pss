@@ -1,0 +1,1324 @@
+#*
+
+  mark.latex.pss
+
+  This script attempts to parse a "markdown"-like syntax (this script header is
+  an example of the document format) and to transform it into LaTeX source
+  code. The script runs on on the "pep" parsing machine which is implemented at
+  http://bumble.sf.net/books/pars/ . 
+
+  There are other ways, which may seem better or more straight-forward of
+  achieving this. The ANTLR parsing system can be used to right grammars that
+  can parse markdown like structures, or just regular expressions can be used.
+  But this is a good exercise for the pep/nom machine, and more complex
+  structures can be recognised than with plain regular expressions.
+
+STATUS
+
+  Producing nice readable output with pdflatex. Includes most syntax
+  except faq's and datelist
+
+  Would like to include date lists with descriptions.
+  eg 
+  24 july 2022
+    did something
+  26 jul 2022
+    more stuff
+
+  The script is now generating compilable tex output with:
+  >> pep -f eg/mark.latex.pss pars-book.txt > test.tex
+  >> pdflatex test.tex; pdflatex test.tex
+ 
+  This produces a pdf file "test.pdf" and the formatting includes
+  lists.
+
+  A work in progress. The document parses as text, most structures are
+  recognised (not images). This file contains an interesting way of resolving
+  or removing parse tokens when they are no longer significant- it uses a
+  negative approach such as...
+
+  ----
+    # codeblocks with no caption (description) 
+    !"codeblock*".E"codeblock*".!B"emline*" {
+      clear; get; add " "; ++; get; --; put; clear;
+      add "text*"; push; .reparse
+    }
+  ,,,,
+
+TOKEN LIST
+
+  * tokens currently used by this script
+  >> --- >> 4dots codeblock codeline emline nl text uutext uuword word
+   bl, ulist, olist, dlist, dash, 
+  
+    [[* (for images) ??
+
+  We dont actually need heading* and subheading* tokens because they get
+  transpiled (into LaTeX) as soon as they are seen in the document.
+  Also, dont need link/file/quoted/star, although I could allow them
+  to exist for a brief moment.
+
+  For lists need: - dash, bl, list
+  eg:  o/- -> olist, 
+  olist, text, nl, dash -> list
+
+  star* has been eliminated by parsing immediately, and >> and ---
+  could also be eliminated. Probably need to add bl*=blankline
+  dash* and ulist/olist/dlist for unordered lists, ordered lists
+  and definition lists
+
+  Useful grammar analysis.
+
+  * get a unique list of tokens used during parsing
+  >> pep -f eg/mark.latex.simple.pss pars-book.txt | sed '/%% ---/q;' | sed 's/^[^:]*: *//;s/\* *$//' | tr '*' '\n' | sort | uniq
+
+TODO
+
+  make images work. make datelists work. 
+  adapt this script to translate to markdown. translate to 
+  nroff man format. translate to html.
+
+BUGS
+
+  Strange pep/nom segmentation fault with multiline comment.
+  Special chars like \n in a d/- definition list will halt pdflatex.
+  Need to escape them.
+
+NOTES
+
+ Using a technique to make image-related tokens and then make them
+ disappear by changing tokens to "word*"
+
+ Lists might have a title- caption.
+
+ Could use d/- for description lists where definition occurs on the 
+ same line, and D/- for lists where definition starts on next line.
+
+ Use pdfpages to create a bindable booklet on A4, without sticking pages
+ together; this works but the font is currently too small, and the margins too
+ big.
+
+ A signature is how many pages (not sheets) go into a "folio". Each folio
+ gets sown through its centre onto bookspine. Signatures must be *4.
+
+  see also psnup
+  >> www.ctan.org/pkg/pdfpages
+
+  * create a bindable landscape pdf with a4 paper using pdfpages
+  --------
+    %%Signatures with pdfpages
+    \documentclass[a4paper]{article}
+    \usepackage{pdfpages}
+    \begin{document}
+    \includepdf[pages=-,signature=8,landscape]{book.pdf}
+    \end{document}
+  ,,,,
+
+  0/- pages=- use all pages
+    - signature, number of logical pages per signature, divide by 4
+    - for physical A4 sheets. This seems to work well.
+
+  Need to escape | in code lines because it terminates the 
+  \verbatim environment.
+
+  This script is probably a great deal more complex than some 
+  equivalent regular expression type renderer (for a format such 
+  as markdown). And when it goes wrong, it has to be carefully
+  debugged, thinking about how the rules interact with each other.
+  Also, normally you have to watch the token stack as it reduces
+  in order to find out what is going wrong.
+
+  But apart from these problems it has great advantages: Once the 
+  grammar is robust and permissive, it can be easily modified to 
+  output different formats such as html or markdown.
+  Also, it can be translated into scripting and compilable languages
+  using the pep/nom scripts in the tr/ folder: languages such
+  as "go","java","c","ruby","python" and maybe "tcl".
+
+  Add images, datelists, inline code?
+  Convert this grammar to generate html/markdown etc
+
+  Need to tidy up description lists.
+
+  Nested lists may just work- out of the box! But a different
+  list terminator (not blankline) would be handy.
+
+  What about inline code?
+  This script needs to parse *any* text successfully! Even text
+  that is not in any particular format.
+
+  May need to add "quoted" to handle quoted text, but not really
+  necessary at the moment.
+  
+  Using o/- O/- u/- U/- d/- D/- to start ordered/unordered/description
+  lists!
+
+IMAGE FORMAT
+  
+  * examples of the image
+  ---
+    [[ f.png >> 80% "caption" ]]
+    [[ f.png >> 
+      80% 
+    ]]
+  ,,,
+
+DOCUMENT FORMAT
+  
+  This is a document format I have used in many code and 
+  booklet files. It is a kind of markdown, with even less markup than
+  markdown. It would be useful to try to transform it to markdown.
+  
+ * A Description of the format
+
+D/- UPPER CASE LINE
+      is formatted as a top level heading. It can include "quotes"
+      but no other characters apart from [A-Z]
+  - UPPER CASE LINE ....
+      is a subheading if it ends with 4 dots
+  - asterixes
+      before and after a word eg *this* emphasises the word.
+  - ">>" 
+      starting a line is a "code" line 
+  - --- and ,,,,
+      starting their lines and surrounding code, is a code block
+  - star
+      a line starting with a star "*"
+      describes the code line or block which follows
+  - urls and filenames should get a special format.
+
+  d/- d/- : makes a description list (which is good for a 
+      type of glossary 
+    - term : the description term can end with a colon ":"
+      or with a newline
+    - machine
+        or with a newline
+    - end the whole list with a blank line
+    - it may be possible to nest lists, I havent tried
+      but probably not, until I include a different terminating
+      token (not a blank line)
+    
+  o/- or O/- or 0/- makes an ordered list
+    - each item gets a number automatically. 
+    - This type of list also ends with a blank line
+    - *u/-* or *U/-* makes an unordered or "bullet" list
+    - empty dashes in the middle of the list may crash it
+      at the moment, who knows.
+
+
+  Key names are rendered as keys.
+  eg [return] is rendered as a keyname.
+  urls are turned into links. Filenames are made into fixed-pitch
+  font.
+
+LATEX 
+
+  Need to escape all these chars in latex
+  >> & % $ # _ { } ~ ^ \
+  The first 7 add a backslash eg \&
+  The last 3 do
+    \textasciitilde, \textasciicircum, and \textbackslash
+
+  \begin{verbatim}...\end{verbatim}
+
+  Look at books/format-book/booktocgi.sed for lots of latex tricks and tips
+
+HISTORY 
+
+   25 aug 2022
+     added images. added quotes, width and positioning. Parsing seems to
+     work well. Wrote mark.format.txt to document this format and 
+     test the "mark" scripts.
+
+   9 July 2022
+     ordered and unordered and description lists appear to work well.
+     Made emphasis lines (starting with star) appear on a line by 
+     themselves. This means they can be used for as a simple list.
+     Also, introduced a bl* blankline token which will be used with
+     lists (to terminate a list). Made the parser more permissive.
+   8 July 2022
+     Removed the star* token and parsed immediately in the word block.
+     But didnt remove >>* because nl* tokens cause problems.
+   7 july 2022
+     A lot of progress. Had the idea to use the accumulator to 
+     count words on a line and so be able to tell what is the 1st word.
+     This could allow to displense with a number of tokens, and simplify
+     the grammar.
+
+     Output now seems acceptable apart from lists not working.
+     Revisiting this to try to make a nice pep/nom book. Cant use 
+     a table in a figure environment. This version mark.latex.simple.pss
+     is actually better than mark.latex.pss
+
+   17 June 2021
+     Adding emphasis words such as *this* . Need to do lists with - * and
+     maybe dates, images with floating and resizing. Better code listings
+
+   14 June 2021
+     Looked at how to escape chars. Done. We also escape chars that 
+     are in star lines and maybe codelines, but the \verbatim and 
+     \lstlisting words seem to take care of special characters in
+     those blocks.
+
+    I should try
+      -----
+        ">>*star*" --> "starline*"
+        "starline*word*" --> "starline*"
+        "starline*uuword*" --> "starline*"
+      ,,,,
+
+    This is in contrast to the technique of immediately reading to the 
+    end of the line with "until" or "whilenot"
+
+   3 june
+    more work. proceeding well.
+
+   2 june 2021
+    Much progress, a basic latex doc has been formed. Now to refine
+    and introduce new tokens. Have done sections, subsections, and 
+    codeblocks. Found an elegant way to eliminate insignificant tokens
+    using a "negative" logic.
+
+    Continuing to write this. The unstack;print;stack trick is 
+    very useful. Parsing and printing text with just upper case headings.
+    This seems a promising incremental way to parse
+
+   1 June 2021
+    Try the unstack trick at the parse label to debug token
+    reductions. I fixed the "stack" command in object/machine.interp.c
+    so that it updates the tape pointer.
+
+  23 April 2021
+    Continuing to work on the script and look for ways to 
+    simply debug it. I have come to the idea that ".reparse"
+    should also print the stack if a particular switch is set.
+    This would allow the stack reductions to be easily followed.
+
+  21 April 2021
+    Script begun. This is a second attempt.
+
+vvvvvvv
+*#
+  
+  begin {
+    # create a dummy newline so that doc structures work even
+    # on the first line of the file/stream.
+    add "nl*"; push;
+  }
+
+  read;
+
+  ![:space:] {
+    # count words per line with the accumulator
+    a+;
+    whilenot [:space:]; put;
+    
+    # image structure delimiters
+    "[[","]]" { put; add "*"; push; .reparse }
+    # an image position indicators, default is centre?
+    ">>>","<<<","ccc" { put; clear; add "float*"; push; .reparse }
+    # quotes for image captions. I will use """ to delimit 
+    # image captions, but not multiline. Because a run-away multiline
+    # quote will eat up the whole document. Or use word parsing here
+
+    B'"""' { 
+      put; clop; clop; clop;
+      E'"""'.!'"""' { clear; add "quote*"; push; .reparse } 
+      clear; get;
+      whilenot ["\n]; 
+      !(eof) { read; } !(eof) { read; } !(eof) { read; }
+      !E'"""' { put; clear; add "word*"; push; .reparse } 
+      put; clear; add "quote*"; push; .reparse
+    }
+
+    # widths for images in format eg 20%
+    E"%".!"%".[0123456789%] {
+      put; clear; add "width*"; push; .reparse
+    }
+    # image width in point format
+    E"pt".!"pt".[0123456789pt] {
+      put; clear; add "width*"; push; .reparse
+    }
+    E"cm".!"cm".[0123456789cm] {
+      put; clear; add "width*"; push; .reparse
+    }
+    E"mm".!"mm".[0123456789mm] {
+      put; clear; add "width*"; push; .reparse
+    }
+    E"em".!"em".[0123456789em] {
+      put; clear; add "width*"; push; .reparse
+    }
+
+    # create an image file token for images. 
+    #E".png",E".jpg",E".jpeg",E".bmp",E".gif" {
+
+    # these are the formats that pdflatex can handle
+    E".png",E".jpg",E".jpeg",E".eps",E".pdf" {
+      clear; add "imfile*"; push; .reparse 
+    }
+
+    # date and datelist tokens
+    [0-9] {
+      put; clear; add "number*"; push; .reparse
+    }
+    # case insensitive month names
+    lower;
+    "jan","january","feb","febuary","mar","march" {
+      put; clear; add "month*"; push; .reparse
+    }
+    clear; add "word*"; push; .reparse 
+  }
+
+  # keep leading space in newline token?
+  [\n] { 
+    # set accumulator == 0 so that we can count words 
+    # per line (and know which is the first word)
+    zero; nochars;
+    while [ ]; put; clear; add "nl*"; 
+    push; .reparse
+  }
+  [\r\t ] { clear; !(eof){.restart} }
+
+parse>
+
+  # for debugging, add % as a latex comment.
+   add "%%> line "; lines; add " char "; chars; add ": "; print; clear; 
+   unstack; print; stack; add "\n"; print; clear;
+
+  # -------------
+  # 1 token
+  pop;
+
+  "nl*" { nop; }
+
+  # here we classify words into other tokens
+  # we can use accumulator with a+ a- to determine if current
+  # word is the first word of the line, or even count number of 
+  # words per line. This should simplify grammar items such as
+  # nl/---  and nl/star/ etc
+  # another advantage, is that we can dispense with tokens such as 
+  # ---, >> etc and not have to get rid of them later.
+  "word*" {
+    clear; get; 
+    # no numbers in headings!
+    [A-Z] { clear; add "uuword*"; push; .reparse }
+
+    # at least three --- on a newline marks a code block start
+    # use 'count;' here to simplify. The token --- probably doesnt
+    # need to exist.
+    B"---".[-] { clear; add "---*"; push; .reparse }
+
+    ">>" { add "*"; push; .reparse }
+    # >> is use for code lines and for image position indicators 
+    # only make a dash token if it is first word on the line
+    #*
+     no this wont work, it may result in an infinite loop
+     because ">>" := float  float := word  word := float
+    ">>" { 
+      put; clear; count;
+      # >> on a newline marks a code line start
+      "1" { clear; add ">>*"; push; .reparse }
+      # if not first word then is image position 
+      clear; add "float*"; push; .reparse
+      #clear; get;
+    }
+    *#
+
+    # subheading marker
+    B"....".[.] { clear; add "4dots*"; push; .reparse }
+
+    # dash is used for lists 
+    # only make a dash token if it is first word on the line
+    "-" { 
+      clear; count;
+      "1" { clear; add "dash*"; push; .reparse }
+      clear; get;
+    }
+
+    # ordered list start token 
+    # only make token if it is first word on the line
+    "o/-","O/-","0/-" { 
+      clear; count;
+      "1" { clear; put; add "olist*"; push; .reparse }
+      clear; get;
+    }
+
+    # unordered list start token 
+    "u/-","U/-" { 
+      clear; count;
+      "1" { clear; put; add "ulist*"; push; .reparse }
+      clear; get;
+    }
+
+    # definition/description list start token 
+    # need to parse a bit differently because of the desc
+    "d/-","D/-" { 
+      clear; count;
+      "1" { 
+        clear;
+        # read description here, but have to escape special
+        # verb cant go in here. Special chars will crash this. 
+        add "\n \\item["; whilenot [\n:]; add "]"; put;
+        clear; add "dlist*"; push; .reparse
+      }
+      clear; get;
+    }
+
+    # star on newline marks emphasis, list or code description 
+    # probably dont need star token.
+    "*" { 
+      # check that * is 1st 'word' on line using accumulator
+      clear; count; 
+      !"1" { clear; add "*"; }
+      "1" {
+        clear; while [ \t\f]; clear;
+        whilenot [\n]; cap; put; clear;
+        # this is a trick, because we want special LaTeX chars to
+        # be escaped. So, will add \\emph{} after next replace code. 
+        add "::EMPH::"; get; put;
+        #add "emline*"; push; .reparse
+      }
+    }
+
+    # need to escape % # } \ and others
+    # & % $ # _ { } ~ ^ \   
+    # \textasciitilde, \textasciicircum, and \textbackslash
+    replace '\\' "\\textbackslash ";
+    replace "&" "\\&";
+    replace "%" "\\%";
+    replace "$" "\\$";
+    replace "#" "\\#";
+    replace "_" "\\_";
+    replace "{" "\\{";
+    replace "}" "\\}";
+    replace "~" "\\textasciitilde";
+    replace "^" "\\textasciicircum";
+    replace ">" "\\textgreater ";
+    replace "<" "\\textless ";
+    replace "LaTeX" "\\LaTeX{}";
+
+    # now make the emphasis line token, after special chars have 
+    # been escaped.
+    B"::EMPH::" { 
+      replace "::EMPH::" " \\emph{"; add "}";
+      put; clear;
+      add "emline*"; push; .reparse
+    }
+
+    # If a previous test has matched, then the workspace should
+    # be clear, and so none of the following will match.
+
+    # graphical key representations
+    B"[".E"]" {
+      replace "[esc]" "\\Esc";
+      replace "[enter]" "\\Enter";
+      replace "[return]" "\\Enter";
+      replace "[insert]" "\\Ins";
+      replace "[shift]" "\\Shift";
+      replace "[delete]" "\\Del";
+      replace "[home]" "\\Home";
+      # keys defined by 'keystroke' package, can make new ones.
+      # \Enter \Del  \Ins    \Esc   \Shift  \Ctrl  \Home
+      # \End   \PgUp \PgDown \PrtSc \Scroll \Break
+    }
+
+    #replace '\\n' "\\textbackslash n";
+    #replace '\\f' "\\textbackslash f";
+    #replace '\\r' "\\textbackslash r";
+    #replace '\\t' "\\textbackslash t";
+
+    put;     
+    
+    # urls, not so important for LaTex (and pdf) output.
+    # Dont really need a token because we can render immediately
+    # Could maybe render them as footnotes
+    B"http://",B"https://",B"www.",B"ftp://",B"sftp://" { 
+      # clear; add "url*"; push; .reparse
+      # render as fixed pitch font
+      clear; add "\\url{"; get; add "}"; put; clear; 
+    }
+
+    # format acronyms as a small capital font, case insensitive
+    lower;
+    "antlr","pdf","json","ebnf","bnf","dns","html" {
+      clear; add "\\textsc{\\textbf{"; get; add "}}"; put; clear;
+    }
+    # restore the mixed-case version of the input word
+    !"" { clear; get; }
+
+    # filenames, could be elided with quoted filenames
+    "parse>","print","pop","push","get","put",".reparse",".restart", "add",
+    "sed","awk","grep","pep","nom","less","stdin","stdout","bash",
+    "lex","yacc","flex","bison","lalr","gnu",
+    E".h",E".c",E".a",E".txt",E".doc",E".py",E".rb",E".rs",E".java",E".class",
+    E".tcl",E".tk",E".sw",E".js",E".go",E".pp",E".pss",E".cpp",E".pl",
+    E".html",E".pdf",E".tex",E".sh",E".css",E".out",E".log",
+    E".png",E".jpg",E".jpeg",E".bmp",
+    E".mp3",E".wav",E"aux",
+    E".tar",E".gz",E"/" {
+      clear; add "\\texttt{"; get; add "}"; put; clear;
+    }
+
+    # mark up language names
+    "python","java","ruby","perl","tcl","rust","swift","markdown",
+    "c","c++" {
+      clear; add "\\textit{\\texttt{"; get; add "}}"; put; clear;
+    }
+
+    # paths and directories ? 
+    B"../".!"../" {
+      clear; add "\\texttt{"; get; add "}"; put; clear;
+    }
+
+    B'"'.E'"'.!'""'.!'"' {
+      # filenames in quotes
+      clip; clop; put;
+      # quoted uppercase words in headings
+      [A-Z] {
+        # add LaTeX curly quotes to the heading word
+        clear; add "``"; get; add "''"; put; clear;
+        add "uuword*"; push; .reparse 
+      }
+
+      # markup language names
+      "python","java","ruby","perl","tcl","rust","swift","markdown",
+      "c","c++","forth" {
+        clear; add "``\\textit{\\texttt{"; get; add "}}''"; put; clear;
+      }
+
+      # markup filenames and some unix and pep/nom names as fixed-pitch
+      # font. 
+      "pep",
+      "parse>","print","pop","push","get","put",".reparse",".restart", "add",
+      "sed","awk","grep","pep","nom","less","stdin","stdout","bash",
+      E".h",E".c",E".a",E".txt",E".doc",E".py",E".rb",E".rs",E".java",E".class",
+      E".tcl",E".tk",E".sw",E".js",E".go",E".pp",E".pss",E".cpp",E".pl",
+      E".html",E".pdf",E".tex",E".sh",E".css",E".out",E".log",
+      E".png",E".jpg",E".jpeg",E".bmp",
+      E".mp3",E".wav",E"aux",
+      E".tar",E".gz",E";"
+        { clear; add "``\\texttt{"; get; add "}''"; put; clear; }
+      # everything else in quotes (but only words without spaces!)
+      !"" { clear; add "``\\textit{"; get; add "}''"; put; clear; }
+    }
+
+    # filenames 
+    # crude pattern checking.
+    B"/".!"/" {
+      clip; E"." { clear; add "\\texttt{"; get; add "}"; put; clear; }
+      clip; E"." { clear; add "\\texttt{"; get; add "}"; put; clear; }
+      clip; E"." { clear; add "\\texttt{"; get; add "}"; put; clear; }
+    }
+
+    # emphasis is *likethis* (only words, not phrases) 
+    B"*".E"*".!"**" {
+      clip; clop; put; clear; 
+      add "\\textbf{\\emph{"; get; add "}}"; put; clear;
+    }
+
+    # && starting a line marks the document title 
+
+    # the document 'title' after && or first heading, & has already 
+    # been escaped
+    "\\&\\&" { 
+      clear; count; 
+      "1" {
+        clear; while [ \t\f]; clear;
+        whilenot [\n]; put; clear;
+        add "\\centerline{\\Large \\bf "; get;
+        add "} \\medskip \n"; put; clear;
+      }
+    }
+
+   # A quote, starting the line
+   "quote:" { 
+      clear; count; 
+      "1" {
+        # \begin{center}
+        #    {\huge \`\`}\textit{$quote}{\huge ''}
+        #    \textsc{$quoteauthor}
+        #  \end{center}
+        clear; while [ \t\f]; clear;
+        whilenot [\n]; put; clear;
+        add "\\begin{center}{\\huge ``}\\textit{"; get;
+        add "}{\\huge ''}\\end{center} \n"; put; clear;
+      }
+    }
+
+    clear; add "word*";
+  }
+
+  pop;
+  # -------------
+  # 2 tokens
+
+  #----------------
+  # dates for datelists
+  # dates begin on a newline and each date begins a list item.
+
+  # vanish numbers if not first on line or preceded by month*
+  E"number*".!"number*".!B"nl*".!B"bl*".!B"month*" {
+    replace "number*" "word*"; push; push; .reparse
+  }
+  B"number*".!"number*".!E"nl*".!E"bl*".!E"month*" {
+    replace "number*" "word*"; push; push; .reparse
+  }
+
+  # vanish months if not between day/year or first on line
+  # this should allow eg "aug 2022" and "30 aug 2022"
+  E"month*".!"month*".!B"nl*".!B"bl*".!B"number*" {
+    replace "month*" "word*"; push; push; .reparse
+  }
+  B"month*".!"month*".!E"number*" {
+    replace "month*" "word*"; push; push; .reparse
+  }
+
+  #--------------------
+  # images 
+  # standard format is [[*imfile*quote*width*float*]]*
+  # A width is "50%" or "200pt"; float is left/right/center 
+  # imfile is a image file name. quote/width/float are optional
+  # tokens. The order of tokens is mandatory
+
+  # remove newline and blank line tokens when parsing
+  # images. But this is tricky, because we want to preserve
+  # them otherwise.
+
+  # remove nl/bl tokens in image formats  
+  "[[*nl*","[[*bl*","imfile*nl*","imfile*bl*",
+  "quote*nl*","quote*bl*","width*nl*","width*bl*",
+  "float*nl*","float*bl*" { 
+    push; clear; .reparse
+  }
+  
+  # vanish [[ if not followed by imfile
+  B"[[*".!"[[*".!E"imfile*" {
+    replace "[[*" "word*"; push; push; .reparse
+  }
+
+  # vanish ]] 
+  E"]]*".!"]]*".
+  !B"imfile*".!B"float*".!B"quote*".!B"width*" {
+    replace "]]*" "word*"; push; push; .reparse
+  }
+
+  # vanish imfiles 
+  B"imfile*".!"imfile*".!E"float*".!E"quote*".!E"width*".!E"]]*" {
+    replace "imfile*" "word*"; push; push; .reparse
+  }
+  E"imfile*".!B"[[*" {
+    replace "imfile*" "word*"; push; push; .reparse
+  }
+
+  # vanish quotes
+  B"quote*".!"quote*".!E"float*".!E"width*".!E"]]*" {
+    replace "quote*" "word*"; push; push; .reparse
+  }
+  E"quote*".!"quote*".!B"imfile*" {
+    replace "quote*" "word*"; push; push; .reparse
+  }
+
+  # vanish widths
+  B"width*".!"width*".!E"float*".!E"]]*" {
+    replace "width*" "word*"; push; push; .reparse
+  }
+  E"width*".!"width*".!B"quote*".!B"imfile*" {
+    replace "width*" "word*"; push; push; .reparse
+  }
+
+  # vanish floats
+  B"float*".!"float*".!E"]]*" {
+    replace "float*" "word*"; push; push; .reparse
+  }
+  E"float*".!"float*".!B"width*".!B"quote*".!B"imfile*" {
+    replace "float*" "word*"; push; push; .reparse
+  }
+
+  # Add missing attributes here. This is a technique for 
+  # providing "optionality" in pep/nom scripts
+  "width*]]*" {
+    clear; add "width*float*]]*"; 
+    push; push; push; 
+    # also add an appropriate attribute for a center float
+    --; --; get; ++; put; 
+    clear; --; put; ++; ++;
+    .reparse
+  }
+  "quote*]]*","quote*float*" {
+    replace "quote*" "quote*width*"; push; push; push;
+    # now transfer the attributes and add null quote
+    --; --; get; ++; put; 
+    # or add an appropriate width
+    clear; --; put; ++; ++;
+    .reparse
+  }
+  "imfile*]]*","imfile*width*","imfile*float*" {
+    replace "imfile*" "imfile*quote*";
+    push; push; push; # ws should be clear
+    # now transfer the attributes and add null quote
+    --; --; get; ++; put; 
+    # or put a null quote here.
+    clear; --; put; ++; ++;
+    .reparse
+  }
+
+  # End image token manipulation
+
+  # ellide text
+  "text*text*","word*text*",
+  "word*word*","text*word*",
+  "word*uuword*","text*uuword*","uutext*word*","uuword*word*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # tokenlist:
+  # --- >> 4dots codeblock codeline emline nl text uutext uuword word
+  # codeblock,
+  # remove pesky newline tokens, 4dots handled elsewhere
+  # not really working
+  #*
+  "nl*text*","nl*word*","nl*emline*","nl*codeline*",
+  "nl*codeblock*" {
+    # delete nl token
+    clop; clop; clop; push; clear;
+    # ignore newline
+    get; --; put; clear;
+    .reparse
+  }
+  *#
+
+  "nl*text*","nl*word*", "bl*text*","bl*word*" {
+    clear; get; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  "nl*dash*" {
+    clear; get; ++; get; --; put; clear;
+    add "dash*"; push; .reparse
+  }
+
+  "nl*emline*","bl*emline*" {
+    clear; ++; get; --; put; clear;
+    add "emline*"; push; .reparse
+  }
+
+  # We are using a dummy nl* token at the start of the doc, so the 
+  # codeblock* codeline* etc tokens are not able to be the first token
+  # of the document. So we can remove the !"codeblock*". clause.
+
+  # multiline codeblocks with no caption 
+  E"codeblock*".!B"emline*" {
+    clear; get; 
+    add "\n\n \\begin{tabular}{l}\n  ";
+    ++; get; --; 
+    add " \\end{tabular} \n";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # single line code with no caption 
+  E"codeline*".!B"emline*" {
+    clear; get; 
+    add "\n\n \\begin{tabular}{l}\n  ";
+    ++; get; --; 
+    add " \\end{tabular} \n";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # eliminate emline* tokens (not followed by codeblock/line)
+  # the logic is slightly different because emline* is significant before
+  # other tokens, not after.
+  # also, consider emline*text*nl*
+  B"emline*".!E"nl*".!E"codeline*".!E"codeblock*" {
+    replace "emline*" "text*"; push; push; 
+    # make emline display on its own line, even when not
+    # followed by codeline/codeblock. LaTeX will treat a blank line 
+    # as a paragraph break, but \newline or \\ could be used.
+    --; --; add "\n\n"; get; add "\n\n"; put; clear;
+    .reparse
+  }
+
+  # remove insignificant 4dots* tokens, 
+  # 4 dots (....) marks a subheading and always comes at the end of 
+  # all capitals line. Just replacing the 4dots token with a text
+  # token is safer and more logical.
+  E"4dots*".!B"uutext*".!B"uuword*" {
+    replace "4dots*" "text*"; push; push; .reparse
+  }
+
+  # remove insignificant ---* tokens
+  E"---*".!B"nl*".!B"bl*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # remove insignificant >>* tokens
+  # lets assume that codelines cant start a document? Or lets
+  # generate a dummy nl* token at the start of the document to 
+  # make parsing easier.
+  # !">>*".E">>*".!B"nl*" {
+  E">>*".!B"nl*".!B"bl*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # ellide upper case text 
+  "uuword*uuword*","uutext*uuword*" {
+    clear; get; add " "; ++; get; --; put; 
+    clear; add "uutext*"; push; .reparse
+  }
+
+  # a blank line token for terminating lists etc 
+  # bl/bl should not happen really
+  "nl*nl*","bl*nl*","bl*bl*" {
+    clear; get; ++; get; --; put; clear;
+    add "bl*"; push; .reparse
+  }
+
+  # code line (starts with >>) 
+  "bl*>>*","nl*>>*" { 
+    # ignore leading space.
+    clear; while [ \t\f]; clear;
+    # escape | so it doesnt terminate the verb environment.
+    # but how to do it? or use lstlisting
+    whilenot [\n]; put; clear;
+    add " \\verb| "; get;
+    add " |\n"; put; clear;
+    add "codeline*"; push; .reparse
+  }
+
+  # code block marker 
+  "bl*---*","nl*---*" { 
+    clear; until ",,,"; clip; clip; clip;
+    # remove excessive indentation.
+    replace "\n   " "\n";
+    put; while [,]; clear;
+    add "\n \\begin{lstlisting}[breaklines]"; get;
+    add "\n \\end{lstlisting} \n"; put; clear;
+    add "codeblock*"; push; .reparse
+  }
+
+  # a code block with its preceding description
+  "emline*codeblock*" {
+    clear; 
+    add "\n\n \\begin{tabular}{l}\n  ";
+    get; add " \\\\ "; ++; get; --; 
+    add " \\end{tabular} \n";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # a code line with its preceding description
+  # add some tabular LaTeX markup here.
+  "emline*codeline*" {
+    clear; 
+    add "\n\n \\begin{tabular}{l}\n  ";
+    get; add " \\\\ \n";
+    ++; get; --; 
+    add " \\end{tabular} \n";
+    #add " \\end{figure}";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+
+  # probably indicates an empty - at the end of a list
+  # add a dummy text token
+  "olist*bl*","ulist*bl*","dlist*bl*" {
+    push; clear; add "empty"; put; 
+    clear; add "\n\n"; ++; put; --;
+    clear; add "text*bl*"; push; push; .reparse
+  }
+
+  # or use this to terminate the list, and so allow nested lists
+  "olist*dash*","ulist*dash*","dlist*dash*" {
+    push; clear; add "empty"; put; 
+    clear; add "text*dash*"; push; push; .reparse
+  }
+
+  pop;
+  # -------------
+  # 3 tokens
+  "olist*word*dash*","ulist*word*dash*","dlist*word*dash*",
+  "olist*word*bl*","ulist*word*bl*","dlist*word*bl*" {
+    replace "word*" "text*"; 
+    # or dont reparse
+    # push; push; push; .reparse
+  }
+
+  # eliminate dashes that are not part of a list
+  # eg: ulist*dash* olist*text*dash* dlist*word*dash*
+  # the logic is tricky, how do we know there are really 3 tokens 
+  # here, and not 2. This is the problem with negative tests.
+  # doesnt matter because not altering attributes here.
+  E"dash*" {
+    !B"ulist*text*".!B"olist*text*".!B"dlist*text*" {
+      replace "dash*" "text*"; push; push; push; .reparse
+    }
+  }
+
+  "olist*text*dash*" {
+    clear;
+    get; add "\n \\item "; ++; get; --; put; clear;
+    add "olist*"; push; .reparse
+  }
+
+  # could be ellided, but for readability, no
+  "ulist*text*dash*" {
+    clear;
+    get; add "\n \\item "; ++; get; --; put; clear;
+    add "ulist*"; push; .reparse
+  }
+
+  # 
+  "dlist*text*dash*" {
+    clear;
+    # already have \item start
+    get; add " "; ++; get; --; 
+    # also, put a \verbatim in [] because text is not escaped??
+    add "\n \\item["; whilenot [\n:]; add "] ";
+    put; clear;
+    add "dlist*"; push; .reparse
+  }
+
+  # finish off the ordered list, also could finish it off with 
+  # ulist*dash* ??
+  "olist*text*bl*" {
+    clear; 
+    add "\n \\begin{enumerate}\n"; get;
+    add "\n \\item "; ++; get; --; 
+    add "\n \\end{enumerate}\n\n"; 
+    put; clear;
+    # insert the blankline attribute
+    add "\n\n"; ++; put; --; clear;
+    add "text*bl*"; push; push; .reparse
+  }
+
+  # finish off the unordered list
+  "ulist*text*bl*" {
+    clear; 
+    add "\n \\begin{itemize}\n"; get;
+    add "\n \\item "; ++; get; --; 
+    add "\n \\end{itemize}\n\n"; 
+    put; clear; 
+    # insert the blankline attribute
+    add "\n\n"; ++; put; --; clear;
+    add "text*bl*"; push; push; .reparse
+  }
+
+  # finish off the description list
+  "dlist*text*bl*" {
+    # or check here if it is D/- or d/- for nextline style
+    # or use \hfill \\ on each item which also works
+    clear; 
+    add "\n \\begin{description}[style=nextline]\n"; get;
+    add "\n "; ++; get; --; 
+    add "\n \\end{description}\n\n"; 
+    put; clear; 
+    # insert the blankline attribute
+    add "\n\n"; ++; put; --; clear;
+    add "text*bl*"; push; push; .reparse
+  }
+
+  # top level headings, all upper case on the line in the source document.
+  # dont need a "heading" token because we dont parse the document as a 
+  # heirarchy, we just render things as we find them in the stream.
+  "nl*uutext*nl*","nl*uuword*nl*",
+  "bl*uutext*nl*","bl*uuword*nl*" {
+    clear; 
+    # Check that heading is at least 4 chars
+    ++; get; --; clip; clip; clip; 
+    "" { 
+      add "nl*text*nl*"; push; push; push; .reparse
+    }
+    clear;
+    # make headings capital case
+    ++; get; 
+    # capitalise even 1st word in latex curly quotes
+    # add "<<heading\n"; print; replace "<<heading\n" "";
+    B"``" { clop; clop; }
+    cap; put; replace "''" "";
+    # add open curly quotes if there before.
+    !(==) {
+      clear; add "``"; get;
+    }
+    put; --; clear; 
+    get; # newline
+    add '\\section{'; ++; get; --; add "}"; put; 
+    clear;
+    # transfer nl value
+    ++; ++; get; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+  # simple reductions 
+  "nl*text*nl*","nl*word*nl*", "bl*text*nl*","bl*word*nl*",
+  "text*text*nl*","emline*text*nl*" {
+    clear; get; ++; get; --; put; clear;
+    ++; ++; get; --; put; --; clear; # transfer newline value
+    add "text*nl*"; push; push; .reparse
+  }
+
+  pop;
+  # -------------
+  # 4 tokens
+
+  # sub headings, 
+  "nl*uutext*4dots*nl*","nl*uuword*4dots*nl*",
+  "bl*uutext*4dots*nl*","bl*uuword*4dots*nl*" {
+    clear; 
+
+    # Check that sub heading text is at least 4 chars ?
+    # yes but need to transfer 4dots and nl
+    # ++; get; --; clip; clip; clip; 
+    # "" { add "nl*text*nl*"; push; push; push; .reparse }
+
+    clear;
+    # make subheadings capital case
+    ++; get; 
+    # capitalise even 1st word in latex curly quotes
+    B"``" { clop; clop; }
+    cap; put; replace "''" "";
+    # add open curly quotes if there before.
+    !(==) {
+      clear; add "``"; get;
+    }
+    put; --; clear; 
+    get; # newline
+    add '\\subsection{'; ++; get; --; add "}"; put; clear;
+    # transfer nl value, really? just add "\\n" no? 
+    ++; ++; ++; get; --; --; put; clear; --;
+    add "text*nl*"; push; push; .reparse
+  }
+
+  pop;
+
+  #------------------
+  # 5 tokens
+
+  # resolve dates
+  "bl*number*month*number*nl*", 
+  "nl*number*month*number*nl*" {
+    clear; ++; get;
+    # make sure 1st number is a valid day number
+    "0","00","000","0000" { 
+      clear; add "word*word*word*"; 
+      push; push; push; .reparse
+    }
+    clip; clip;
+    # >2 digits, not day number
+    !"" {
+      clear; add "word*word*word*"; 
+      push; push; push; .reparse
+    }
+    clear; get;
+    !B"0".!B"1".!B"2".!"30".!"31" {
+      clear; add "word*word*word*"; 
+      push; push; push; .reparse
+    }
+    # is valid day number (01-31 or 1-31)
+    clear; 
+    # now check the year number
+    ++; ++; get; --; --; 
+    clip; clip; 
+    # less than 3 digits not allowed for year
+    B"0","" {
+      clear; add "word*word*word*"; 
+      push; push; push; .reparse
+    }
+    clip; clip;
+    # >4 digits, not a year
+    !"" {
+      clear; add "word*word*word*"; 
+      push; push; push; .reparse
+    }
+    # now assemble date value
+    get; ++; get; ++; get; --; --; --; put;
+    clear; add "date*"; push; .reparse
+  }
+
+  pop;
+  # -------------
+  # 6 tokens
+
+  # all images have been standardised to this format (all 
+  # optional tokens have been added but may be empty).
+  # for latex, image formats are jpeg,png,or pdf. Others need
+  # to be converted. Image names cant have dots in them???
+  "[[*imfile*quote*width*float*]]*" {
+    # need to translate widths floats etc to latex here because
+    # they may revert to word* if out of context.
+    clear; 
+    # latex can't handle dots in file names so need 
+    # to put braces around the name part eg: {name.is}.png
+    # this is a hack. Or try the grffile package
+    add "{"; ++; get;
+    replace ".png" "}.png"; 
+    replace ".jpg" "}.jpg"; 
+    replace ".jpeg" "}.jpeg"; 
+    replace ".pdf" "}.pdf"; 
+    replace ".eps" "}.eps"; 
+    put; clear;
+
+    # get quote, if any, and remove """
+    ++; get; clip; clip; clip; clop; clop; clop; 
+    put; clear;
+    # get width attribute
+    ++; get; 
+    # turn percentage into decimal
+    E"%","" { 
+      clip;  
+      !"".!"100" { put; clear; add "0."; get; }
+      "" { add "0.60"; } # default width 60%
+      "100" { clear; add "1.00"; }
+      add "\\textwidth";
+    }
+    put; clear; 
+    # translate floats into LaTeX, default is centre
+    ++; get; "" { add "c"; }
+    # unknown positioning spec
+    !"ccc".!"<<<".!">>>" { clear; add "c"; }
+    "ccc" { clear; add "c"; } # centre
+    "<<<" { clear; add "l"; } # left
+    ">>>" { clear; add "r"; } # right
+    put; clear;
+    add "\n\\begin{wrapfigure}{"; 
+    # position attribute
+    get; add "}{"; 
+    # width attribute
+    --; get; add "}\n";
+    add "\\includegraphics[width="; 
+    # width attribute again
+    get;
+    --; --; add "]{"; 
+    # image file name
+    get; --; add "}"; 
+    add "\n\\centering\n";
+    # the * removes the "figure" prefix
+    add "\\caption*{";
+    # get the quote attribute
+    ++; ++; get; --; --; add "}\n\\end{wrapfigure}";
+    put; clear;
+    add "text*"; push; .reparse
+  }
+ 
+  # example: 75% page width
+  #  \includegraphics[width=0.75\textwidth]{image/test.jpg}
+
+  push; push; push; push; push; push;
+
+  (eof) {
+    # or use 'unstack' but does it adjust the tape pointer?
+    pop; pop; pop; pop; pop; pop;
+
+    # "nl*word*","nl*text*" have already been dealt with.
+
+    # we would like "permissive" parsing, because this is just
+    # a document format, not code, so will just check for starting
+    # text token
+    #"text*nl*","text*bl","text*" {
+
+    B"text*",B"word*" {
+      # show the token parse stack at the top of the document
+      ++; put; clear; 
+      add "%% Document parse-stack is: "; get; add "\n"; --;
+      clear; 
+      # make a valid LaTeX document
+      add "
+  %% <start-document>
+  %% -------------------------------------------
+  %%  latex generated by: mark.latex.pss 
+  %%   from source file : 
+  %%                  on: 
+  %% -------------------------------------------
+
+  \\documentclass[a4paper,12pt]{article}
+  \\usepackage[margin=4pt,noheadfoot]{geometry}
+  \\usepackage{color}                   %% to use colours, use 'xcolor' for more
+  \\usepackage{multicol}                %% for multiple columns
+  \\usepackage{keystroke}               %% for keyboard key images
+  \\usepackage[toc]{multitoc}           %% for multi column table of contents
+  \\usepackage{tocloft}                 %% to customize the table of contents
+  \\setcounter{tocdepth}{2}             %% only display 2 levels in the contents
+  \\setlength{\\cftbeforesecskip}{0cm}   %% make the toc more compact
+  \\usepackage{listings}                %% for nice code listings
+  \\usepackage{caption}                 %% 
+  \\lstset{
+    captionpos=t,
+    language=bash,
+    basicstyle=\\ttfamily,           %% fixed pitch font
+    xleftmargin=0pt,                %% margin on the left outside the frames
+    framexleftmargin=0pt,
+    framexrightmargin=0pt,
+    framexbottommargin=5pt,
+    framextopmargin=5pt,
+    breaklines=true,                %% break long code lines
+    breakatwhitespace=false,        %% break long code lines anywhere
+    breakindent=10pt,               %% reduce the indent from 20pt to 10
+    postbreak=\\mbox{{\\color{blue}\\small$\\Rightarrow$\\space}},  %% mark with arrow
+    showstringspaces=false,            %% dont show spaces within strings
+    framerule=2pt,                     %% thickness of the frames
+    frame=top,frame=bottom,
+    rulecolor=\\color{lightgrey}, 
+    % frame=l
+    % define special comment delimiters '##(' and ')'
+    % moredelim=[s][\\color{grey}\\itshape\\footnotesize\\ttfamily]{~(}{)},
+  }   %% source code settings
+  \\usepackage{graphicx}                %% to include images
+  \\usepackage{fancybox}                %% boxes with rounded corners
+  \\usepackage{wrapfig}                 %% flow text around tables, images
+  \\usepackage{tabularx}                %% change width of tables
+  \\usepackage[table]{xcolor}           %% alternate row colour tables
+  \\usepackage{booktabs}                %% for heavier rules in tables
+  \\usepackage[small,compact]{titlesec} %% sections more compact, less space
+  \\usepackage{enumitem}                %% more compact and better lists
+  \\setlist{noitemsep}                  %% reduce list item spacing
+  \\usepackage{hyperref}     %% make urls into hyperlinks
+  \\hypersetup{              %% add pdftex if only pdf output is required
+     colorlinks=false,       %% set up the colours for the hyperlinks
+     linkcolor=black,        %% internal document links black
+     urlcolor=black,        %% url links black
+     frenchlinks=true,
+     bookmarks=true, pdfpagemode=UseOutlines}
+
+  \\geometry{ left=1.0in,right=1.0in,top=1.0in,bottom=1.0in }
+  %% define some colours to use
+  \\definecolor{lightgrey}{gray}{0.70}
+  \\definecolor{grey}{gray}{0.30}
+
+  %% titlesec: create framed section headings
+  %% \\titleformat{\\section}[frame]{\\normalfont}
+  %%   {\\filleft \\footnotesize \\enspace Section \\thesection\\enspace\\enspace}
+  %%   {3pt} {\\bfseries\\itshape\\filright}
+
+  \\title{The Pep/nom parsing language and machine}
+  \\author{m.j.bishop}
+  \\date{\\today}
+  \\setlength{\\parindent}{0pt}
+  %% \\setlength{\\parskip}{1ex}
+
+  %% label lists with stars
+  \\renewcommand{\\labelitemi}{$\\star$}
+
+  \\parindent=0pt
+  \\parskip=6pt
+  \\begin{document}
+
+  ";
+
+      get; 
+      add "\n\\end{document} \n";
+      add "\n\n %% Document parsed as text*!\n"; 
+      # show parse-stack at end of doc as well
+      ++; add " %% Document parse-stack is: "; get; add "\n"; --;
+      print; quit;
+    }
+
+    stack; 
+    add "Document parsed unusually!\n";
+    add "Stack at line "; lines; add " char "; chars; add ": "; print; clear; 
+    unstack; print; stack; add "\n"; print; clear;
+    quit;
+
+  }

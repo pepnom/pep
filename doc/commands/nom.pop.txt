@@ -1,0 +1,53 @@
+
+
+## THE NOM "POP" COMMAND
+
+  *pop* a parse token off the stack into the front of the workspace buffer
+
+  The "pop" command pops the last item from the pep virtual pep://machine stack
+  and places its contents, without modification, at the *beginning* of the
+  pep://workspace buffer, and at the same time decrements the pep://tape
+  pointer. If the pep://stack is empty, then the *pop* command does nothing
+  (and the tape pointer is unchanged).
+  
+  *pop* is typically used before a "grammar rule" block to see if 
+  a certain parse-token sequence is on the stack
+
+  Below is [nom] script-fragment to recognise a [lisp] -like language
+
+  * typical use of pop and push to check grammar rule reductions
+  ------+
+    pop;pop;pop;pop;pop;
+    # grammar rule:
+    #   expression := '(' operator expression expression ')' ;
+    "(*operator*expression*expression*)*" {
+      clear; add "expression*"; push; .reparse
+    }
+    push;push;push;push;push;
+  ,,,,
+
+  * pop the stack onto the beginning of the workspace.
+  >> pop;
+
+  * apply a 2 token grammar rule (a shift-reduction).
+  >> pop;pop; "word*colon*" { clear; add 'command*'; push; }
+
+  The pop command is usually employed in the parsing phase of the script (not
+  the "lexing" phase); that is, after the nomsyn://parse> label. The *pop*
+  command is the converse machine operation of the nom://push command, but
+  it is important to realise that a command sequence of *pop;push;* is not
+  equivalent to the nom://nop (no-operation) command.
+   
+  If the pep/nom parser language is being used to parse and translate a
+  language then the script writer needs to ensure that each token ends with a
+  delimiter character (by default "*") in order for the push and pop commands
+  to work correctly.
+
+  The pop command also affects the pep://tape of the [pep] virtual machine in
+  that the tape-pointer is automatically decremented by one once for each pop
+  command.  This is convenient because it means that the tape pointer will be
+  pointing to the corresponding element for the token. In other words in the
+  context of parsing and compiling a "formal language" the tape will be
+  pointing to the "value" or "attribute" for the token which is currently in
+  the workspace.
+

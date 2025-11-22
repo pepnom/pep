@@ -1,0 +1,84 @@
+
+## THE PEP VIRTUAL MACHINE ELEMENTS (REGISTERS ETC)
+
+  An overview of the elements of the [pep] virtual machine
+
+  The file file:///doc/machine/doc.dir.index.html contains a list 
+  of pages in this folder of the documentation for pep/nom.
+  It contains a documentation page for each element of the pep
+  virtual pep://machine
+
+### WORKSPACE BUFFER
+
+  The pep://workspace is possibly the most important register in the [pep]
+  virtual machine because almost all commands and operations manipulate it.
+
+  This is where all "text change" operations within the machine are carried
+  out. It is similar in concept to a register within a "cpu" or to the [sed]
+  stream editor pattern space.  The workspace is affected by (almost?) all
+  commands, for example the command nom://add appends the given text to
+  the *workspace*. The buffer is called this because the same terminology
+  is used for the [sed] stream editor (and its function is similar).
+
+   
+### THE STACK OR PARSE STACK
+
+   The pep://stack can contain grammar parse-tokens or anything else
+   the you want to put into it. You can put parse-tokens into the 
+   [pep] *stack* with the nom://push command and get them out with 
+   the nom://pop command. The stack is designed to be automatically
+   synchronised with the pep://tape array.
+
+### THE TAPE 
+
+    The pep://tape is an array of text data which is synchronized with the
+    machine stack using a tape pointer and the nom://pop and nom://push
+    commands which "decrement" nom://-- and "increment" nom://++ the tape
+    pointer respectively. The tape is manipulated with the 
+    nom://get , nom://put and nom://swap commands.
+
+### TAPE-POINTER OR THE CURRENT TAPE CELL:
+
+   The pep://tape pointer determines the current tape element (or "cell") which
+   will be used by "get;" and "put;" commands. The tape pointer is incremented
+   with the nom://++ command and decremented with the nom://-- command.  This
+   pointer register will also be incremented or decremented on a successful
+   nom://push or nom://pop command. To be more explicit, if the 
+   pep://workspace buffer is not empty then a *push* command will 
+   increment the tape-pointer and if the *stack* is not empty then a 
+   nom://pop command will *decrement* the tape-pointer. This behaviour
+   of *push* and *pop* is very important for maintained the 
+   *tape* and *stack* in a synchronized state and for making parsing and 
+   compiling (more or less) simple. 
+   
+### PEEP CHARACTER REGISTER
+
+   This machine register is not directly manipulable. It contains
+   the next character in the input stream (or <null> or <eof> if 
+   the end-of-input has been reached). This register is used by the 
+   nom://while and nom://whilenot commands, which read the input stream while
+   the pep://peep register satisfies a given condition.
+
+### THE ACCUMULATOR OR COUNTER 
+
+  The counter or "accumulator" is an integer variable which can
+  be incremented with the command nom://a+ , decremented with the 
+  command nom://a- , and set to zero with the command nom://zero .
+
+### LINE COUNTER REGISTER
+
+  This register contains a count of the number of lines encountered
+  so far in the input stream. It is automatically incremented when
+  a newline *\n* character is encountered (but not a "\r" character). It
+  can be set to zero with the nom://nolines command. Its value can
+  be appended to the pep://workspace buffer with the nom://lines command
+
+### CHARACTER COUNTER
+
+  This register contains a count of the number of (hopefully Unicode)
+  characters encountered so far in the input stream. It is automatically
+  incremented when with each character character. It can be set to zero
+  with the nom://nochars command. Its value is appended (as text) to 
+  the *workspace* buffer with the nom://chars command.
+
+

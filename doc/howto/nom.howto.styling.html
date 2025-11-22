@@ -1,0 +1,434 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/fig.deniliquin.jpg'/>
+
+<p>
+
+
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/howto/nom.howto.styling.txt -->
+<p>
+ <!-- ------------------------------- -->
+<h2> adding styles to text with nom</h2>
+
+<p>
+ How to add styles to text with a <em>nom</em> parsing technique
+<p>
+ <em>Nom</em> is really designed to recognise, parse, error-check, compile, transpile,
+ translate or transform text patterns and languages. But the same techniques
+ that are used when shift-reducing parse tokens can be used to apply 'styles'
+ (formatting) to text. A good example of this is in the script
+ <a href='/eg/nom.tolatex.pss'>/eg/nom.tolatex.pss</a> which formats a <em>nom</em> script as printable latex (which can
+ be converted to pdf with xelatex) This is a technique that I discovered while
+ writing that script and will document it better here.
+<p>
+ 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> contains some tricky special characters that need to be 
+ 'escaped' in different ways. Some are escaped with the standard backslash
+ character. In the script <a href='/eg/nom.tolatex.pss'>/eg/nom.tolatex.pss</a> I use a special token 
+ called <em><code>replace*</code></em> to do this escaping. Then this token looks <em>behind</em> it 
+ for other styling tokens such as <em><code>comment*</code></em> <em><code>string*</code></em> etc.
+<p>
+ This technique works but is not logical. It is better to use standard
+ token reduction techniques to apply the styles as follows. The script
+ below is simplified for clarity. It only tokenises comments starting
+ with # and 'classes' between [ and ]. 
+ the attributes for the parse tokens <em><code>replace*</code></em> <em><code>italic*</code></em> and <em><code>bold*</code></em> are 
+ empty when we <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.push.html'>push</a></code> them on the <a href='http://nomlang.org/doc/machine/pep.stack.html'>stack</a> but they indicate
+ operation to carry out on the text that is in the <em><code>text*</code></em> parse token.
+ <p>
+ The pattern below is useful because I can apply any style (in any order)
+ to the given text, just by pushing the corresponding parse token on 
+ the stack. However, because the syntax of 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> the <em><code>replace*</code></em> token
+ should always be immediately before the <em><code>text*</code></em> parse token.
+<p>
+ In the code below, the tokens need to be placed in the reverse order
+ to how they will be applied to the text.
+<p>
+<!-- ------------------------------- -->
+<h3> an example script</h3>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ escaping special chars and applying styles with shift-reduction
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span>
+
+    <span class='nom-comment'># alphabetic words</span>
+    <span class='nom-class'>[:alpha:]</span> <span class='nom-punct'>{</span>
+
+      <span class='nom-comment'># the text needs to be placed in the text* token attribute</span>
+      <span class='nom-comment'># hence the ++;--; command soup.</span>
+      
+      <span class='nom-command'>while</span> <span class='nom-class'>[:alpha:]</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"italic*bold*replace*text*"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># single line comments</span>
+    <span class='nom-string'>'#'</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>whilenot</span> <span class='nom-class'>[\n]</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"italic*replace*text*"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># 'classes' between [ and ] </span>
+    <span class='nom-string'>'['</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>until</span> <span class='nom-string'>']'</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"bold*replace*text*"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    
+    <span class='nom-comment'># ignore everything else</span>
+    <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"text*text*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" "</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"text*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-string'>"replace*text*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"\\"</span> <span class='nom-string'>"\\textbackslash{}"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"{"</span> <span class='nom-string'>"\\{"</span><span class='nom-punct'>;</span> <span class='nom-command'>replace</span> <span class='nom-string'>"}"</span> <span class='nom-string'>"\\}"</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'># undo the circular escape</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"textbackslash\\"</span> <span class='nom-string'>"textbackslash"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"textbackslash{\\"</span> <span class='nom-string'>"textbackslash{"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"#"</span> <span class='nom-string'>"\\#"</span><span class='nom-punct'>;</span> <span class='nom-command'>replace</span> <span class='nom-string'>"$"</span> <span class='nom-string'>"\\$"</span><span class='nom-punct'>;</span> <span class='nom-command'>replace</span> <span class='nom-string'>"%"</span> <span class='nom-string'>"\\%"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"&"</span> <span class='nom-string'>"\\&"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"_"</span> <span class='nom-string'>"\\_"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"^"</span> <span class='nom-string'>"\\textasciicircum{}"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"~"</span> <span class='nom-string'>"\\textasciitilde{}"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"text*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-string'>"italic*text*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\\textit{"</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"}"</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"text*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-string'>"bold*text*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\\textbf{"</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"}"</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"text*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-comment'># ... more styles here.</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+
+    <span class='nom-comment'># print the styled text at the end-of-file</span>
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-string'>"text*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+    <span class='nom-punct'>}</span>
+ </code></pre>
+</figure>
+ <p>
+<!-- ------------------------------- -->
+<h3> notes</h3>
+
+<p>
+ This same technique could be applied to the <em><code>error*</code></em> and <em><code>help*</code></em> token
+ system that is used in several recent <em>nom</em> scripts, and which should 
+ be part of any non-trivial <em>nom</em> language compiler.
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb &lt;at&gt; nomlang.org</em> 
+<p>
+  </em></small></div></body></html>

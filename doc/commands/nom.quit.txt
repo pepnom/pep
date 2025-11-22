@@ -1,0 +1,82 @@
+
+## THE NOM "QUIT" COMMAND
+
+  This command immediately exits out of the nom script without
+  processing any more script commands or input stream characters.
+  The command takes no parameters. The current value of the 
+  pep://accumulator register is returned as an exit code for the script.
+  So, to follow, normal conventions, the accumulator should be set to 
+  nom://zero (if it was altered) before executing *quit* .
+
+  * a successful script exit
+  >> clear; add "all good!"; print; zero; quit;
+  
+  * exit with some error condition 2 
+  >> clear; add "not good!"; print; zero; a+; a+; quit;
+  
+  This command is often used when some kind of format or syntax error is
+  detected in the input or it is used at the end of the input-stream.
+
+  * exit the script if a 'bad' character is found
+  -----++
+    read; 
+    [:alnum:],[:space:] { print; clear; }
+    !"" {
+      put; clear;
+      add "! strange character found '"; get; add "'\n";
+      add "  sampai jumpa lagi...\n"; print;
+      # exit with exit code 1.
+      zero; a+; quit;
+    }
+  ,,,,
+
+  The idiom above of handling different character nomsyn://classes 
+  and then "clearing" nom://clear the pep://workspace buffer. Then we 
+  can use the *workspace not empty" text ( *!""* ) to check for 
+  characters that should not be in the input-stream for whatever 
+  format that [nom] is parsing or transforming.
+
+  * using quit when a syntax error is encountered 
+  -----++
+    # script snippet ...
+    "parameter*parameter*" {
+      clear; 
+      add "! Error in input at line "; lines; add " \n";
+      add "! character "; chars; add "\n";
+      add " (Multiple parameters are not allowed in 'Gurgle')";
+      print; 
+      zero; a+; quit;
+    }
+  ,,,,
+  
+### NOTES
+
+  The nom commands nom://while , nom://whilenot and nom://until 
+  do *not* automatically exit when the [eof] marker is encountered in the
+  input-stream. So, in this case an explicit *quit* command must be used,
+  if desired.
+
+  * a required quit at end-of-file or stream
+  -------+
+    while [:space:]; clear;
+    whilenot [:space:]; add "\n"; print; clear; 
+    # without this quit the script will never exit.
+    (eof} { quit; }
+  ,,,,,
+
+  The nom://read command will automatically (and 'silently') exit the 
+  script when the end-of-stream is encountered. This is what it is 
+  supposed to do, but sometimes it is surprising and mysterious.
+
+  Some compilers or interpreters (such as gcc or perl or rust) will produce a
+  vast number of errors if you make one teensy little error in the program or
+  script. For example in perl, if you forget a semi colon as the end of a
+  statement, you get an incredible litany of rubbish error messages, non of
+  which mention the actual problem. I think this is silly and that compilers
+  should really on display the first encountered error, because all the others
+  may be spurious. So, in my nom scripts I just print a hopefully helpful error
+  message (often using an error* parse token) and then quit the script with an
+  appropriate error code in the pep://accumulator.
+
+  This command is similar to the [sed] command 'q'
+

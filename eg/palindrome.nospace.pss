@@ -1,0 +1,196 @@
+
+#*
+ 
+
+ABOUT 
+
+ parse and recognise palindromes while ignoring space and punctuation.
+
+ Palindromes may be one of the simplest context-free languages which are not
+ regular. In this script a series of letters (such as "aa",
+ "aaa", "bb", "bbbb" etc) is considered a trivial palindrome and will not be
+ reported. This version ignores whitespace characters such as \n \t \r \f and
+ ' '. So if the input is 'do geese see god' that input will be recognised
+ as a palindrome. 
+
+SEE ALSO
+  
+  http://bumble.sf.net/books/pars/eg/palindrome.pss
+    The same as the current script but does not ignore whitespace.
+  http://bumble.sf.net/books/pars/eg/pal.words.pss 
+    prints all words in the input stream which are palindromes.
+    It uses a simpler technique, but doesnt demonstrate actual parsing.
+
+TESTING
+
+  You can use the helper scripts in peprc to translate this script into
+  go/java/ruby/python and run with input, for example
+
+  * translate this script to a go executable and run with file input
+  >> pep.goff eg/palindrome.nospace.pss input.txt
+
+  * translate script into a java class file and run with test input
+  >> pep.jaf eg/palindrome.nospace.pss input.txt
+
+  Look at the peprc file functions for how to translate scripts 
+  manually.
+  The go code currently (june 2022) has a 30000 stack/tape limit, but
+  that can be changed by altering 'size' in tr/translate.go.pss
+
+BUGS
+
+  It may not be possible to have long input using the pep interpreter, because
+  some implementations may use a fixed tape size. This can be avoided by first
+  translating the script into another language and then running.
+
+  The c translation code tr/translate.c.pss creates a fixed tape array size,
+  which is silly.
+
+NOTES
+
+  Large amounts of memory will be used by pep and the translations
+  when the input is long. This is because the stack and tape
+  must remember all input in case a palidrome is later encountered.
+
+  There is only one line of difference here compared with 
+  eg/palindrome.pss, after the initial 'read' command.
+   >> [\n\r\t\f ] { clear; (eof) { .reparse } .restart }
+  Actually this script will ignore any character that is not 
+  [:alpha:] in order to find more palindromes.
+
+  We only restart (jump back to the first command - normally 'read') if
+  the end of stream has not been reached. This is because attempting to
+  'read' at the end of the stream automatically exits the script without
+  printing the final messages.
+
+  This script as well as eg/palindrome.pss will actually miss some 
+  sub-palindromes. Consider the following string
+    "ababcbaba"
+  The script will find "aba", "bcb", "aba" and "ababcbaba" as 
+  palindromes but will miss the sub-palindrome "bab". This is 
+  because the machine cannot do backtracking (pushing read characters
+  back onto the input stream).
+
+  Instead of doing push;push; at each rule we could just do
+  stack; at the parse> label
+
+HISTORY
+ 
+  23 july 2022
+    Modifying to ignore any non-letter character.
+  17 june 2022
+    Adapting this script from eg/palindrome.pss
+    The script is working apart from the problems with the fixed 
+    array sizes mentioned above and long input.
+
+*#
+
+  # ignore leading whitespace
+  begin { 
+    while [:space:]; clear;
+    add "> Searching for palindromes and sub-palindromes \n";
+    add "> in the input. Strings of the same character are not \n";
+    add "> considered as palindromes (eg: xxxx or yyy). \n";
+    add "> Whitespace and non-letters are ignored!.\n";
+    add " Palidrome: text that is the same backwards.  \n";
+    add "  παλίν (palin) = back \n";
+    add "  δρομος (dromos) = running \n";
+    print; clear;
+  }
+
+  read; 
+  #[\n\r\t\f ] { clear; (eof) { .reparse } .restart }
+  [\n] { nochars; }
+  ![:alpha:] { clear; (eof) { .reparse } .restart }
+  put; clear; add "char*"; push;
+    
+#-----------
+# here lexing ends and parsing begins
+parse>
+
+ # To view parse-stack token reduction uncomment the lines below
+ # lines; add ":"; chars; add " "; print; clear; 
+ # unstack; add "\n"; print; clip; stack; 
+
+#------------
+# 2 tokens
+
+  pop; pop;
+  "pal*pal*" {
+    clear; get; ++;  
+    (==) { 
+      get; --; put; clear;
+      add "[palindrome found!] ending at line "; lines; 
+      add ", char "; chars; add ": "; get; add "\n"; print; clear;
+      add "pal*"; push; .reparse
+    }
+    clear; --;
+    add "pal*pal*"; 
+  }
+  
+  "char*char*" {
+    # create the list* token
+    clear; get; ++;
+    (==) {
+      # save a copy of the single char on the tape
+      # where it wont get overwritten
+      ++; put; --;
+      get; --; put; clear;
+      add "list*"; push; .reparse
+    }
+    clear; --; add "char*char*";
+  }
+
+  "list*char*" {
+    # the next tape cell has a copy of the single char
+    # of the list
+    clear; ++; get; ++;
+    (==) { 
+      --; --; get; put; clear;
+      add "list*"; push; .reparse
+    }
+    --; --; clear; add "list*char*";
+  }
+#------------
+# 3 tokens
+
+  pop;
+  "list*list*list*",
+  "char*list*char*","list*char*list*","list*pal*list*","pal*list*pal*",
+  "char*char*char*","char*pal*char*","pal*pal*pal*","pal*char*pal*" {
+    push; push; push; --; get; --; --; 
+    (==) { 
+      clear; get; ++; get; ++; get; --; --; put; clear;
+      add "[palindrome found!] ending at line "; lines; 
+      add ", char "; chars; add ": "; get; add "\n"; print; clear;
+      ++; ++; ++;
+      pop; pop; pop; clear; 
+      add "pal*"; push; .reparse
+    }
+    clear; ++; ++; ++; 
+    pop; pop; pop;
+  }
+
+
+  push; push; push;
+
+  (eof) {
+    pop; pop;
+    "pal*" {
+      clear;
+      add "[whole string is a complete palindrome!]\n"; print; quit;
+    }
+    "list*" {
+      clear;
+      add "[a list]\n"; print; quit;
+    }
+    push; push;
+    add "[Whole string isn't a palindrome]\n"; 
+    # Printing the parse stack is too verbose when the input is long.
+    # and not a palindrome.
+    # add "The parse-stack tokens are:\n  "; print; clear;
+    # unstack; 
+    # replace "pal*" "palindrome|";
+    # replace "*" "|"; clip; add "\n"; 
+    print; clear;
+  }

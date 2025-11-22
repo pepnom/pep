@@ -1,0 +1,218 @@
+#*
+
+ABOUT 
+ 
+  remove trivial commands from the output of a bash history file.
+  The original file is not changed.
+
+  The purpose of this script is to remove commands like 'ls' or 'cd'
+  and many others from a bash history file. The script looks for 
+  comments (beginning with # ) that are above the command and does 
+  *not* remove the command if it has a comment associated with it.
+  It also looks for the timestamp.
+
+  This is an example of a simple text file filter script that is 
+  tricky or impossible to do in sed the stream editor, because it
+  involves multiline recognition and the amalgamation of multiple
+  comment lines into one comment.
+
+TESTING
+
+  use the helper functions in helpers.pars.sh to translate to other 
+  languages and run.
+
+  * run with the pep/nom interpreter
+  >> pep -f eg/bash.hist.trivial.pss ~/.bash_history
+
+  * translate to dart and run
+  -----
+    pep -f tr/nom.todart.pss eg/bash.hist.trivial.pss > bash.hist.trivial.dart
+    dart compile exe bash.hist.trivial.dart
+    cat ~/.bash_history | ./bash.hist.trivial.exe
+  ,,,,
+  
+  Actually the dart translator requires the 'characters' package in order
+  to handle unicode grapheme clusters properly, so you need to install
+  that package with 'dart pub get' etc for this to run.
+
+  There are many other nom translators which dont have any dependencies.
+
+NOTES
+
+  Sudden thought: there is really no reason to parse all the "records" before 
+  printing them. For the sake of speed and memory use, we can just print
+  records as we find them. Yes this would be better.
+  
+HISTORY
+
+  9 april 2025
+    Adapting this from bash.history.pss just to remove trivial commands.   
+  29 june 2022
+    Tested with different translators: java, go, python, ruby, c
+    tcl. All seem to work, but with a small variation on the number
+    of commands eliminated (about +/- 10)
+  18 june 2021
+    Re-examining this to make more useful. Marking trivial commands and 
+    only removing them if they have no attached comment. Also outputting in
+    standardized order: comment/timestamp/command. removing all commands
+    of 4 letters or less. Working on this makes me want to have a 
+    shell command syntax: eg shell; which will execute the workspace as 
+    a shell command!! why not? It would make nom a more generally useful
+    scripting tool. The workspace would be replaced with the output of the 
+    command.
+
+*#
+  begin { 
+    # the empty recordset trick to simplify the grammar rules
+    add "recordset*"; push; 
+  }
+  read; 
+  [\n] { 
+    # just to debug
+    # lines; print;
+    clear; 
+  }
+  whilenot [\n]; 
+  # ignore blank lines
+  "",[:space:] { clear; .reparse }
+  put;
+  B"#".!"#" { 
+    [#0123456789] {
+      clear; add "timestamp*"; push; .reparse
+    }
+    clear; add "comment*"; push; .reparse
+  }
+
+  # tag the command as trivial if it is 
+  # for later removal. If there is a comment above it we may keep it anyway
+  
+   
+  # tag as trivial all commands less than 5 characters
+  clip; clip; clip; clip;
+  "" { clear; add "trivial*"; push; .reparse }
+
+  clear; get;
+  B"df ","df",B"du ",B"mv ",B"cp ",B"less ",B"vim ",B"rm ",B"mkdir ",
+  B"find ",B"locate ",B"cd ","cd",B"ls ",B"open ",B"man ",
+  B"blog.",B"evince",B"stuff",B"play ",B"chmod ",B"aircrack",
+  B"mutt",
+  "ls","pwd","hist","books","bk","ho","hist",
+  "updatedb","bashrc","vimrc","os","cos","ccos","make" { 
+    clear; add "trivial*"; push; .reparse
+  }
+
+  clear; add "command*"; push;
+
+parse>
+  # for debugging to watch the parse stack reductions as they happen
+  # add "line "; lines; add " char "; chars; add ": "; print; clear; 
+  #add "line "; lines; add ": "; print; clear; 
+  #unstack; print; stack; add "\n"; print; clear;
+
+  # ----------------
+  # 2 tokens
+  pop; pop; 
+
+  # ignore duplicated timestamps. 
+  "timestamp*timestamp*" {
+    clear; ++; get; --; put; clear;
+    add "timestamp*"; push; .reparse
+  }
+
+  # handle multiline comments
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # dont need because an initial recordset always exists
+  # actually can just print and delete.
+  "recordset*record*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    # debug code
+    # a+; count; add " record!\n"; print; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  # this will be compiled differently from r*r*
+  "recordset*command*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  "recordset*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  (eof) {
+    # clean up trailing comments etc
+    "recordset*timestamp*","recordset*comment*" {
+      clear; add "recordset*record*"; push; push; .reparse 
+    }
+  }
+  # 3 tokens
+  pop;
+
+  # remove trivial commands without comments
+  "recordset*timestamp*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  # ignore duplicated timestamps. 
+  "timestamp*comment*timestamp*" {
+    clear; ++; get; --; put; clear; ++; ++; get; --; put; --; clear;
+    add "comment*timestamp*"; push; push;  .reparse
+  }
+
+  # amalgamate comments before and after the timestamp
+  "comment*timestamp*comment*" {
+    clear; 
+    get; ++; ++; add "\n"; get; --; --; put; clear;
+    add "comment*timestamp*"; push; push; .reparse
+  }
+
+  "comment*timestamp*command*","comment*timestamp*trivial*" {
+    clear; get; add "\n"; ++; get; add "\n"; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  # dont remove trivial commands with comments
+  "timestamp*comment*command*","timestamp*comment*trivial*" {
+    clear; 
+    # switch the order to make comment precede timestamp
+    ++; get; add "\n"; --; get; add "\n"; 
+    ++; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  "recordset*timestamp*command*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  # resolve commands and trivial command with comments
+  "recordset*comment*command*","recordset*comment*trivial*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  push; push; push;
+
+  (eof) {
+     pop; pop;
+     !"recordset*" {
+       push; push; add "# History file did not parse well!\n"; print; clear;
+       add "# Parse stack was: "; print; clear; unstack; add "\n"; print;
+       quit;
+     }
+     "recordset*" { 
+       clear; get; 
+       add "\n# History file parsed and filtered by ";
+       add "  pars/eg/bash.hist.trivial.pss \n"; 
+       add "# "; count; 
+       add " trivial commands (without preceding comments) were removed.\n"; 
+       print;
+     }
+  }

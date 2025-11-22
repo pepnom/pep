@@ -1,0 +1,635 @@
+#*
+
+  Parse a bash history file which has some explanatory 
+  comments above or below the timestamp for commands. This is a format 
+  that I use in my bash history file to remind me of something that I did
+  a while ago, and also to make it easier to search for the command.
+  
+  This script may transform the history file into a perl/python/ruby array in
+  order to eliminate duplicate and simple commands, while conserving comments
+  and timestamps. I find comments above commands in the history file very
+  useful for remembering how I did something a long time ago.
+
+  eg in ruby to remove duplicate objects
+  >> users = User.find(user_list.map(&:user_id).uniq)
+   or just users.uniq
+
+   create a ruby array with
+   -----
+   class Record
+    def initialize(comment, time, command)
+     @comment = comment 
+     @timestamp = time
+     @command = command
+    end
+
+    // define equality (for uniq to use)
+    def ==(other)
+      self.command == other.command && self.comment == other.comment
+    end
+    def display
+      # print out in bash history format
+    end
+   end
+
+   aa = [
+     Record.new("comment", timestamp, command)
+     Record.new("comment", timestamp, command)
+     Record.new("comment", timestamp, command)
+     ...
+   ]
+   aa.uniq
+   ,,,
+
+  Appears to be more or less working, and only takes about 1 second for a 35000
+  line history file eg:
+  >> pep -f pars/eg/history.pss ~/.bash_history
+
+TESTING
+
+  use the helper functions in helpers.pars.sh to translate to other 
+  languages and run.
+
+  * translate to python and run
+  ---
+    pep -f tr/translate.py.pss eg/bash.history.pss > eg/py/bash.history.pss
+    chmod a+x eg/py/bash.history.pss
+    cat ~/.bash_history | eg/py/bash.history.pss > test1.txt
+    # now compare with the output from the interpreted script
+    pep -f eg/bash.history.pss ~/.bash_history > test2.txt
+    vimdiff test1.text test2.txt
+  ,,,
+
+NOTES
+
+  Sudden thought: there is really no reason to parse all the "records" before 
+  printing them. For the sake of speed and memory use, we can just print
+  records as we find them.
+  
+  We can use the "empty startset" technique here, because
+  a recordset is just a set of records. The next step is to fork this 
+  script to create a ruby array and make the array unique where the 
+  comment and command are the same (but not the timestamp). See the 
+  skeleton code below. This should keep my .bash_history file quite 
+  lean and clean and useful for reference purposes.
+
+BUGS
+
+ The help system is not working after translating to go/java etc.
+ These are older style scripts.  
+
+ After translating to perl and trying to activate the help system
+ there is an error thrown which seems to have to do with the scope of 
+ labels. I may not have fixed the .reparse in begin bug for perl???
+
+ * error
+ ----
+  echo '/help' | ./bashhistory.pl 
+   Exiting subroutine via last at ./bashhistory.pl line 758, <STDIN> line 1.
+   Label not found for "last LEX" at ./bashhistory.pl line 758, <STDIN> line 1.
+ ,,,
+
+HISTORY
+
+  11 aug 2025
+    Adding a help system with self-translation, self-testing and 
+    self-help. This means that I can now translate this script into
+    all available languages with 
+    >> pep -f bash.history.pss -i /toall 
+    Or translate into only one language with
+    >> pep -f bash.history.pss -i /torust
+    This relies on /eg/nom.to.pss and the translation scripts in 
+    the /tr/ folder and obviously needs the relative compilers to be 
+    installed (eg javac, rustc, go)
+  29 june 2022
+    Tested with different translators: java, go, python, ruby, c
+    tcl. All seem to work, but with a small variation on the number
+    of commands eliminated (about +/- 10)
+  18 june 2021
+    Re-examining this to make more useful. Marking trivial commands and 
+    only removing them if they have no attached comment. Also outputting in
+    standardized order: comment/timestamp/command. removing all commands
+    of 4 letters or less. Working on this makes me want to have a 
+    shell command syntax: eg shell; which will execute the workspace as 
+    a shell command!! why not? It would make nom a more generally useful
+    scripting tool. The workspace would be replaced with the output of the 
+    command.
+  27 july 2020
+    testing with pars/tr/translate.java.pss seems to be working
+  26 march 2020
+    Revising the script. Found a bug for duplicated timestamps, and
+    timestamp*comment*timestamp* sequence. Also, ignore trivial commands 
+  15 March 2020
+    Began this script.
+
+*#
+
+  begin {
+    # the empty recordset trick to simplify the grammar rules
+    add "recordset*"; push; 
+
+    # check for an empty doc or help-word and trigger help if so
+    while [:space:]; clear;
+    (eof) {
+      # the category is help and the token too.
+      add "usage"; put; clear; 
+      add "help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a bash history file shouldnt start with a / ? 
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; whilenot [:space:];
+      swap; get; put; clear;
+      add "help*"; push; .reparse
+    }
+  } # end of beginblock
+
+  # The script lexing phase
+
+  read; 
+  [\n] { 
+    # just to debug
+    # lines; print;
+    clear; 
+  }
+  whilenot [\n]; 
+  # ignore blank lines
+  "",[:space:] { clear; .reparse }
+  put;
+  B"#".!"#" { 
+    [#0123456789] {
+      clear; add "timestamp*"; push; .reparse
+    }
+    clear; add "comment*"; push; .reparse
+  }
+
+  # tag the command as trivial if it is 
+  # for later removal. If there is a comment above it we may keep it anyway
+  
+   
+  # tag as trivial all commands less than 5 characters
+  clip; clip; clip; clip;
+  "" { clear; add "trivial*"; push; .reparse }
+
+  clear; get;
+  B"df ","df",B"du ",B"mv ",B"cp ",B"less ",B"vim ",B"rm ",B"mkdir ",
+  B"find ",B"locate ",B"cd ","cd",B"ls ","ls","pwd","hist","books","bk","ho",
+  "updatedb","bashrc","vimrc","os","cos","ccos","make" { 
+    clear; add "trivial*"; push; .reparse
+  }
+
+  clear; add "command*"; push;
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.
+  # add "# line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+
+  # ----------------
+  # the error and help system
+
+  # we can group all error analysis here to make the script more 
+  # organised. This section helps to provide good error messages to
+  # the user.
+
+  pop;
+
+  
+  # there shouldn't really be 'errors' in the bash history file
+  # but I will keep the error token anyway.
+  "error*" {
+    clear; 
+    add "--bash.history.pss-- (clean the bash_history file)\n";
+    add "near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; 
+    # indent the error message 
+    replace "\n" "\n  "; add "\n"; print;
+    print;
+    # provide help from the help* token if one was 
+    # put on the stack. 
+    clear; pop; "help*" { push; .reparse } 
+    quit;
+  }
+
+  #*
+   Using a help* token to allow the script to document itself.
+   The swap commands below are used to save the help text in the tape
+   cell so that several or all help topics can be printed at once.
+
+  *#
+
+  "help*" {
+    clear; swap; 
+    
+    # how to use this script
+    "usage","help","format","help" {
+      swap; add "
+    USAGE
+      pep -f bash.history.pss ~/.bash_history 
+
+      A nom script to parse and clean the history file of trivial
+      commands.
+      ";
+      swap;
+    }
+
+    # help about the help-system
+    "words","usage","help" {
+      swap; add "
+    HELP KEYWORDS
+
+      All documents/input which begin with '/' are considered to be help 
+      requests. See below for the list of valid help keywords.
+
+      pep -f bash.history.pss -i /<helpword> 
+        see some help for that topic or category
+
+      pep -f bash.history.pss -i /words
+        see what help topics and categories are available for this script.
+
+      pep -f bash.history.pss -i /help
+        see all the help.
+
+      pep -f bash.history.pss -i /toperl | bash
+        translate this script to perl 
+        
+    ### General Help 
+      - /usage: show a usage message for this script 
+      - /words: show what help commands are available
+      - /faq: show an FAQ about this script.
+      - /nom: show information about the nom script language
+      - /flaws: known limitations with this script 
+      - /format: show information about the bash history format
+    ### About testing this script
+      - /test: test the script with the ~/.bash_history file
+      - /eg.lines: prints a set of one line examples
+      - /eg.bad.lines: a set of one-liners that should be rejected (n/a?)
+      - /test.line: tests one random one-line 
+      - /test.line.pdf: make and open a pdf ???
+      - /test.bad.line: tests one random one-line 
+
+      The 'test' and 'to' words need to be piped to bash to actually 
+      execute.
+
+    ### About translating this script
+
+      - /translate: show how to translate this script to another language
+      - /to<lang>: translate this script to some other language
+          using the nom translation scripts at www.nomlang.org/tr/ 
+           ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+           (eg: /toperl /tolua etc). Or latex/pdf/html 
+
+      There are also help 'categories' which display several help
+      topics at once such as:
+
+      - /usage: script usage and helpwords
+      - /format: all information about the bash format 
+      - /help: show all available help topics.
+
+      ";
+      swap;
+    }
+
+    # the faq 
+    "FAQ","faq","help" {
+      swap; add "
+    FAQ
+      (not) frequently asked questions about /eg/bash.history.pss
+
+      Q: What does this script do?
+      A: It parses a .bash_history file with comments and timestamps
+         and tries to remove trivial commands.
+
+      Q: But a bash_history file is just a set of timestamps and 
+         commands. How can you 'parse' that?
+      A: Well, it still has a structure, or a *grammar* if you like and 
+         I also like to write comments above particular commands that 
+         do something useful so that I will be able to find them again.
+         So each command had 3 elements: The comment, the timestamp and 
+         the command.
+
+      Q: But do you need a whole script just to do this?
+      A: Its an interesting exercise in line-by-line parsing with nom,
+         and I would like to have a way to keep my bash_history 'clean'
+
+
+      ";
+      swap;
+    }
+       
+    # more information about the nom language 
+    "nom","about","help" {
+      swap; add "
+        This script is written in the 'nom' language which is a 
+        manifestation of the pep:nom parsing system.
+
+        Nom is a scripting language for parsing/translating context-free and 
+        (some) context-sensitive patterns. Please see www.nomlang.org for
+        (much) more information.
+      ";
+      swap;
+    }
+
+    # standard help word. produce a bash history style document 
+    # can be used to test the script with /test
+    "eg" {
+      swap; add '
+      # here a small example document with timestamps etc.
+      #1754276914
+      ls -thor 
+      '; 
+      replace "\n  " "\n";
+      swap;
+    }
+
+    # This help word should be standard so that a script like 
+    # /eg/nom.to.pss can call it and test any script
+    "eg.lines" {
+      swap; add '
+        # An example comment 
+        #1754278950
+        convert a.jpg a.png
+        #1754278951
+      '; 
+      replace "\n       " "\n";
+      swap;
+    }
+
+    # I dont think a bash history file can have an 'error' 
+    # so this may not be useful.
+    "eg.bad.lines" {
+      swap; add "
+      ";
+      swap;
+    }
+
+    # tests one line with this script. This will just make a 
+    # timestamp or command etc.
+    "test.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) 
+        doc=$(pep -f bash.history.pss -i /eg.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"% test-line: $doc\"
+        pep -f bash.history.pss -i \"$doc\" 
+        echo \"% test-line: $doc\"
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f bash.history.pss -i /test.line | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # make and open the pdf 
+    "test.line.pdf" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+        pep -f bash.history.pss -i /test.line | sed '/^ *%/d' | bash > test.tex
+        pdflatex test.tex
+        qpdfview test.pdf
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f bash.history.pss -i /test.line.pdf | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # tests one one-line invalid text, but maybe not useful here 
+    "test.bad.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) BAD EXPRESSION
+        doc=$(pep -f bash.history.pss -i /eg.bad.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"test-line: $doc\"
+        pep -f bash.history.pss -i \"$doc\" 
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f bash.history.pss -i /test.line | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # tests the script with the bash_history file 
+    "test" {
+      swap; add "
+        # TESTING INPUT from ~/.bash_history
+        pep -f bash.history.pss $HOME/.bash_history 
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f bash.history.pss -i /test | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # just call the /eg/nom.to.pss script which does translation from
+    # a simple command like 'translate script.pss to ruby'
+    # >> pep -f bash.history.pss -i /to<lang> | bash
+    B"to" {
+      clop; clop; put; clear;
+      add '
+       translator=${PEPNOM}/eg/nom.to.pss
+       if [ -f $translator ]; then
+         echo -e "[ok] Found translator script: $translator"
+       else
+         echo -e "
+          [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+          (maybe) set the $PEPNOM environment var
+          (or)    download the translator from www.nomlang.org/eg/ 
+          ";
+         exit 1;
+       fi
+       pep -f $translator -i "translate bash.history.pss to '; get; add '" | bash
+       # RUN THIS WITH:  
+       #   pep -f bash.history.pss -i /to'; get; add ' | bash
+       ';
+       replace "\n    " "\n";
+       print;
+       quit;
+    }
+
+    # how to translate this script to another language, 
+    "translate","tr","about","help" {
+      swap; add "
+
+     HOW TO TRANSLATE THIS SCRIPT
+
+       This script can be translated to other languages using nom 
+       translation scripts which are available at www.nomlang.org/tr/
+
+       current (aug 2025) translation languages:
+         all languages: all
+         code languages: 
+           rust|dart|perl|lua|go|java|javascript|ruby|
+           python|tcl|c
+         formats: html|pdf|latex
+
+       * translate to ruby with /eg/nom.to.pss
+       >> pep -f /eg/nom.to.pss -i 'translate bash.history.pss to ruby' | bash
+
+       * translate itself to java with the help word '/to' (needs /eg/nom.to.pss)
+       >> pep -f bash.history.pss -i /tojava | bash
+
+       * format the script as colourised pdf (needs xelatex) 
+       >> pep -f bash.history.pss -i /topdf | bash
+
+       * translate 'by-hand' to rust, compile and run (needs 'rustc')
+       ---
+         pep -f tr/nom.torust.pss bash.history.pss > bash.history.rs
+         rustc -o texttohtml.exe texttohtml.rs
+         echo ' some *strong* text ' | ./texttohtml.exe 
+       ,,,
+
+       * translate a script to perl, and run with 'doc.txt' as input
+       ---
+         pep -f nom.toperl.pss bash.history.pss > test.pl 
+         chmod +x test.pl
+         cat doc.txt | ./test.pl
+       ,,,
+
+      ";
+      swap;
+    }
+
+    B"flaw",B"fault",B"format","help" {
+      swap; add "
+     KNOWN BASH HISTORY SCRIPT FLAWS (aug 2025): 
+
+      - if you don't reduce the stack properly with this script grammar
+        then the stack will become enormous and the plain-c pep interpreter
+        will throw an un-ceremonious segmentation fault. But the grammar 
+        is ok at the moment.
+      - The script removes some 'trivial' commands but not duplicate
+        commands. I think the script /eg/bash.history.comments.pss only
+        retains commands with a comment above them which may be more 
+        useful.
+      ";
+      swap;
+    }
+
+    swap;
+    "" {
+      add "Help topic '/"; get; add "' not known\n";  
+      add "Type: pep -f bash.history.pss -i /words \n";
+      add "  to see valid help keywords";
+    }
+
+    add "\n\n"; print; quit; 
+  }
+
+  # end of the help and error system.
+
+  # ----------------
+  # 2 tokens
+  pop; 
+
+  # ignore duplicated timestamps. 
+  "timestamp*timestamp*" {
+    clear; ++; get; --; put; clear;
+    add "timestamp*"; push; .reparse
+  }
+
+  # handle multiline comments
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # dont need because an initial recordset always exists
+  #"record*record*","recordset*record*" {
+  "recordset*record*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    # debug code
+    # a+; count; add " record!\n"; print; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  # this will be compiled differently from r*r*
+  "recordset*command*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  "recordset*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  (eof) {
+    # clean up trailing comments etc
+    "recordset*timestamp*","recordset*comment*" {
+      clear; add "recordset*record*"; push; push; .reparse 
+    }
+  }
+  # 3 tokens
+  pop;
+
+  # remove trivial commands without comments
+  "recordset*timestamp*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  # ignore duplicated timestamps. 
+  "timestamp*comment*timestamp*" {
+    clear; ++; get; --; put; clear; ++; ++; get; --; put; --; clear;
+    add "comment*timestamp*"; push; push;  .reparse
+  }
+
+  # amalgamate comments before and after the timestamp
+  "comment*timestamp*comment*" {
+    clear; 
+    get; ++; ++; add "\n"; get; --; --; put; clear;
+    add "comment*timestamp*"; push; push; .reparse
+  }
+
+  "comment*timestamp*command*","comment*timestamp*trivial*" {
+    clear; get; add "\n"; ++; get; add "\n"; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  # dont remove trivial commands with comments
+  "timestamp*comment*command*","timestamp*comment*trivial*" {
+    clear; 
+    # switch the order to make comment precede timestamp
+    ++; get; add "\n"; --; get; add "\n"; 
+    ++; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  "recordset*timestamp*command*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  # resolve commands and trivial command with comments
+  "recordset*comment*command*","recordset*comment*trivial*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  push; push; push;
+
+  (eof) {
+     pop; pop;
+     !"recordset*" {
+       push; push; add "# History file did not parse well!\n"; print; clear;
+       add "# Parse stack was: "; print; clear; unstack; add "\n"; print;
+       quit;
+     }
+     "recordset*" { 
+       clear; get; 
+       add "\n# History file parsed and filtered by pars/eg/bash.history.pss \n"; 
+       add "# "; count; add " trivial commands (without preceding comments) were removed.\n"; 
+       print;
+     }
+  }

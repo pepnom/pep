@@ -1,0 +1,48 @@
+
+#*
+
+ABOUT 
+  
+  parse nested c-style multiline comments
+
+  This script just shows one way to parse nested comments such as
+  /* text /* text*/*/ It is not very enlightening about parsing techniques.
+
+HISTORY 
+
+  23 april 2025
+    wrote this. appears to work
+
+*#
+
+  read; 
+  "/" { 
+    !(eof) { read; }
+    "/*" { put; clear; add "start*"; push; .reparse }
+  }
+  "*" { 
+    !(eof) { read; }
+    "*/" { put; clear; add "end*"; push; .reparse }
+  }
+  put; clear; add "text*"; push; 
+
+ parse>
+
+  add "// line "; lines; add " char "; chars; add ": "; print; clear;
+  unstack; print; stack; add "\n"; print; clear;
+
+
+  pop; pop;
+  "text*text*","start*end*","text*comment*","comment*text*",
+  "comment*comment*" { 
+    clear; get; ++; get; --; put;  
+    clear; add "text*"; push; .reparse
+  }
+  pop;
+  "start*text*end*","start*comment*end*" {
+    clear; get; ++; get; ++; get; --; --; put;  
+    clear; add "comment*"; push; .reparse
+  }
+  push; push; push;
+
+

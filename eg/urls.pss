@@ -1,0 +1,6 @@
+# Only print (some) urls in the input stream
+read;
+B"http://",B"https://",B"www.",B"ftp://" {
+  E" ",E"\n",(eof) { add "\n"; print; clear; }
+}
+E" ",E"\n",(eof) { clear; }

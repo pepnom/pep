@@ -1,0 +1,39 @@
+
+## REGULAR EXPRESSIONS IN THE NOM LANGUAGE 
+
+ About regular expressions in the nom language (there aren't any).
+
+ This could be the shortest document here: There are 
+ **no** "regular expressions" wp://regular.expression in the *nom* language
+ and the *pep* virtual "machine" pep://machine . This may seem a 
+ strange and self-defeating design decision, but actually I believe that 
+ it is a stroke of genius.
+
+ Regular expressions can be slow and they are also quite bulky to implement.
+ I believe approximately 4000 lines of c code is required to implement
+ a regex engine. I note with interest that the inventor of Lua also 
+ decided not to implement a full regular expression engine in that language.
+
+ But there are other reasons, not to include regexes in the nom language 
+ and some of them are psychological. It seems to be a great temptation 
+ for programmers to try to make context-free patterns with regular 
+ expression patterns, even when they know, or have been told that it is 
+ not possible.
+
+ Most parser generators (such as "ANTLR" www.antlr.org ) include support 
+ for regular expressions during the "lexical analysis" wp://lexical.analysis
+ phase of the parsing and compiling process. Surprisingly regular expressions
+ do not seem necessary for most parsing applications, although sometimes
+ their absence makes the grammar more complex.
+
+ For example, the nom script /eg/text.tohtml.pss does (in my opinion)
+ a quite reasonable job of turning plain text patterns into html without
+ the use of regular expressions (this script is the engine that renders
+ the website www.nomlang.org where this documentation is located).
+
+ The lack of regular expression support in the "lexing" phase of the *nom*
+ script means that the implementation of pep and nom is considerably simpler
+ than other tools and this is one of the primary aims of the pep/nom
+ system: simplicity.
+
+ 

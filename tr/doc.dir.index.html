@@ -1,0 +1,305 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='http://bumble.sourceforge.net/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; color:blue;
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='../../../doc'>documentation </a> |
+<a href='../../../eg'>examples </a> |
+<a href='../../../tr/index.html'>translators </a> |
+<a href='../../../download/index.html'>download </a> |
+<a href='http://bumble.sourceforge.net/post/index.html'>blog </a> |
+<a href='http://bumble.sourceforge.net/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='http://bumble.sourceforge.net/image/doodle.horse.duck.swirl.300.square.jpg'/>
+
+<p>
+<p>
+<!-- ------ start [doc.list] ---- -->
+<!-- generated by blog.sh -->
+<!-- function: blog.make.doc.list -->
+<dl class='blog-index'>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//dev.translate.cpp.pss'>
+    dev.translate.cpp.pss</a></dt>
+  <dd style='margin-left:1em'> 
+(in dev, not working) A parse-script which translates parse-scripts into c++
+code.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//dev.translate.kotlin.pss'>
+    dev.translate.kotlin.pss</a></dt>
+  <dd style='margin-left:1em'> 
+(incomplete, not working) a 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>NOM</abbr> script to translate <em>nom</em> scripts
+in the &ldquo;kotlin&rdquo; language, which is a computer language based on 
+
+<abbr class='tek-acronym' 
+      title='Java Programming Language'>JAVA</abbr> but hopefully slightly less annoying.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//dev.translate.rust.pss'>
+    dev.translate.rust.pss</a></dt>
+  <dd style='margin-left:1em'> 
+(in development, not working) translate a 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>NOM</abbr> script into
+the rust language.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//dev.translate.swift.pss'>
+    dev.translate.swift.pss</a></dt>
+  <dd style='margin-left:1em'> 
+(in dev, not working). translate nom scripts in the swift language
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.c.pss'>
+    translate.c.pss</a></dt>
+  <dd style='margin-left:1em'> 
+translate a 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>NOM</abbr> script into compilable 'c' code (which only
+uses byte characters)
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.go.pss'>
+    translate.go.pss</a></dt>
+  <dd style='margin-left:1em'> 
+This is a parse-script which translates parse-scripts into &ldquo;go&rdquo; (golang)
+code, using the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>PEP</abbr> interpreter and the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>NOM</abbr> script language. The script
+creates a standalone compilable <em>go</em> program.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.java.pss'>
+    translate.java.pss</a></dt>
+  <dd style='margin-left:1em'> 
+translate <em>nom</em> scripts into standalone compilable java code.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.js.pss'>
+    translate.js.pss</a></dt>
+  <dd style='margin-left:1em'> 
+A nom script which translates nom scripts into a standalone javascript
+program.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.perl.orig.pss'>
+    translate.perl.orig.pss</a></dt>
+  <dd style='margin-left:1em'> 
+<code>translate.perl.pss</code> 
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.perl.pss'>
+    translate.perl.pss</a></dt>
+  <dd style='margin-left:1em'> 
+A nom script which translates nom scripts into a standalone perl
+program.
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.py.pss'>
+    translate.py.pss</a></dt>
+  <dd style='margin-left:1em'> 
+a <em>nom</em> script which translates nom scripts into python code, using the
+
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>PEP</abbr> virtual <a href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a> . The script creates a standalone python program
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.ruby.pss'>
+    translate.ruby.pss</a></dt>
+  <dd style='margin-left:1em'> 
+A nom script which translates nom scripts into ruby
+code. The script creates a standalone ruby program
+  </dd>
+  <dt style='color:gray'><a href='http://bumble.sourceforge.net/tr//translate.tcl.pss'>
+    translate.tcl.pss</a></dt>
+  <dd style='margin-left:1em'> 
+A nom script which translates nom scripts into tcl code. The script creates
+a standalone tcl program
+  </dd>
+</dl>
+<!-- ------- end [doc.list] ---- -->
+<!-- ------- dir: tr/      ---- -->
+<div class='footer'><small><em>
+<p>
+retro html <a href='https://bumble.sf.net/books/pars/eg/text.tohtml.pss'>formatted </a> by <a href='http://nomlang.org'>nom </a> <br/>
+
+comments/suggestions to: mjb &lt;at&gt; nomlang.org
+<p>
+  </em></small></div></body></html>

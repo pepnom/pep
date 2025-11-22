@@ -1,0 +1,4721 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; 
+       margin-right:5%; 
+       padding:0;
+     }
+     p { 
+       margin-left:2em; 
+       margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     h2 { color: lightslategray; }
+     h3 { color: lightslategray; }
+     /* darkkhaki khaki */
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+      /* border-bottom: 1px dotted #000; */ 
+       border-bottom: 1px dashed #000;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/doodle.horse.duck.swirl.300.square.jpg'/>
+
+<p>
+<p>
+<p>
+<p>
+ <!-- ------------ page title -------------------- -->
+<h1 class='page-title'> The Pep/Nom Parser and Script Language </h1>
+
+<p>
+AN OVERVIEW 
+<p>
+<p>
+ This booklet is about the pattern-parsing virtual machine and script
+ language &ldquo;pep". The executable file is /books/pars/pep and is compiled&rdquo; from the c source code <a href='/books/pars/object/pep.c'>pep.c </a>
+ <p>
+ The virtual machine and language allows simple &ldquo;LR&rdquo; bottom-up shift
+ reduce parsers to be implemented in a limited script language with
+ a syntax which is very similar to the &ldquo;sed&rdquo; unix stream editor.
+<p>
+ As far as I am aware, this is a new approach to parsing context-free
+ languages and according to the scripts and tests so far written has 
+ great potential. The script language is deliberately limited in 
+ a number of ways (it does not have regular expressions, for example), but
+ it seems to be an interesting tool for learning about compiler techniques.
+<p>
+DOCUMENTATION
+<p>
+ This file &ldquo;pars-book.txt&rdquo; is the principle documention about the
+ pep/nom pattern-parser machine and language. This should also be available 
+ as html at <a href='http://bumble.sf.net/books/pars/pars-book.html'>bumble.sf.net/books/pars/pars-book.html</a>
+<p>
+ There is also a lot of documentation in the &ldquo;pep.c&rdquo; file (which implements
+ the virtual machine) as well as in the &ldquo;compile.pss&rdquo; file, which converts
+ scripts into machine assembler programs which can then be loaded by the
+ pep tool. 
+ <p>
+ Also, most example scripts in the <code>/books/pars/eg/</code> folder also have
+ notes at the beginning of the script.
+<p>
+ [[ <code>img/parsetree.png</code> &ldquo;""A parse tree&rdquo; "" &gt;&gt;&gt; ]] 
+<p>
+DOWNLOAD
+<p>
+ A &ldquo;.tar.gz&rdquo; archive file of the c source code can be downloaded from 
+ the <a href='https://sourceforge.net/projects/bumble/'>sourceforge.net/projects/bumble/</a> folder.
+<p>
+ONE LINE EXAMPLES
+<p>
+ The pep tool may have useful applications in unix &ldquo;one-liners&rdquo; but
+ its main power is in the implementation of simple context free 
+ languages and compilers.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ remove multiple consecutive instances of any character
+ </figcaption>
+<pre class='codeline'>
+ read; !(==) { put; print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ double space a text file
+ </figcaption>
+<pre class='codeline'>
+ pep -e "r;'\n'{a'\n';}t;d;" /usr/share/dict/words 
+</pre>
+</figure>
+ <pre class='codeline'>
+ pep -e "r;'\n'{t;}t;d;" /usr/share/dict/words # better
+</pre>
+
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the same as above with long command names. 
+ </figcaption>
+<pre class='codeline'>
+ pep -e "read; '\n' { add '\n'; } print; clear;" someFile
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print a string in reverse order
+ </figcaption>
+<pre class='codeline'>
+ read; get; put; clear; &lt;eof&gt; { get; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert tabs to 2 spaces 
+ </figcaption>
+<pre class='codeline'>
+ read; [\t]{d;a '  ';} t;d;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print all words which end with "ess".
+ </figcaption>
+<pre class='codeline'>
+ pep -e 'r; ![:space:] { whilenot [:space:]; [a-z].E"ess"{add "\n";t; }} d;' /usr/share/dict/words 
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert all whitespace (eg [ \r\n\t\f]) to dots
+ </figcaption>
+<pre class='codeline'>
+ read; [:space:] {d;a'.';} t;d;
+</pre>
+</figure>
+ <pre class='codeline'>
+ read; [:space:] {clear; add '.';} print; clear; 
+</pre>
+
+ <pre class='codeline'>
+ read; [ \r\b\t\f] {clear; add '.';} print; clear; 
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ double every instance of vowels   
+ </figcaption>
+<pre class='codeline'>
+ pep -e "read; [aeiou] { put; get; } print;clear;" -i "a tree"
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Only print text within single quotes:
+ </figcaption>
+<pre class='codeline'>
+ read; "'" { until "'"; print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ remove multiple consecutive instances of the character "a":
+ </figcaption>
+<pre class='codeline'>
+ read; print; "a" { while [a]; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Number each line of the input:
+ </figcaption>
+<pre class='codeline'>
+ read; "\n" { lines; add " "; } print; clear;
+</pre>
+</figure>
+ <pre class='codeline'>
+ read; "\n" { lines; a " "; } t; d;  # the same, with short commands
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Print the number of lines in the input stream
+ </figcaption>
+<pre class='codeline'>
+ read; (eof) { add "lines="; lines; add "\n"; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the same using the accumulator
+ </figcaption>
+<pre class='codeline'>
+ read; "\n" { a+; } clear; (eof) { add "lines: "; count; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Delete leading whitespace (spaces, tabs) from the start of each line: 
+ </figcaption>
+<pre class='codeline'>
+ read; print; "\n" { while [:space:]; } clear; 
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only lines containing "fox"
+ </figcaption>
+<pre class='codeline'>
+ r; E'\n',(eof) {put; replace "fox" ""; !(==) { swap; print; } clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only lines in input containing "fox" OR "dog"
+ </figcaption>
+<pre class='codeblock'>
+
+  r; E'\n',(eof) {
+    put; replace "dog" ""; replace "fox" ""; 
+    !(==) { swap; print; } clear; 
+  }
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Delete whitespace from the input stream
+ </figcaption>
+<pre class='codeline'>
+ r; ![:space:] {print;} d;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ insert 5 blank spaces at beginning of each line (make page offset):
+ </figcaption>
+<pre class='codeline'>
+ r; "\n" { add '     '; } print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only the first ten lines of the input stream
+ </figcaption>
+<pre class='codeline'>
+ read; print; clear; lines; "10" {quit;} clear; 
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Delete trailing whitespace (spaces, tabs) from end of each line: 
+ </figcaption>
+<pre class='codeblock'>
+
+   read;
+   [ \t] { while [ \t\r]; read; E"\n" { clear; add "\n"; } }
+   print; clear;
+ </pre>
+</figure>
+<p>
+COMMAND LINE USAGE
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ specify script and input on the command line 
+ </figcaption>
+<pre class='codeblock'>
+
+   pep -e "read; print; print; clear;" -i "abcXYZ"  
+   # prints "aabbccXXYYZZ"
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ load a script from file and start an interactive session to view/debug 
+ </figcaption>
+<pre class='codeline'>
+ pep -If scriptfile somefile.txt
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ load an "assembly" file into the machines program and view/debug. 
+ </figcaption>
+<pre class='codeline'>
+ pep -Ia asmfile somefile.pss
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert a script to compilable java code
+ </figcaption>
+<pre class='codeline'>
+ pep -f translate.java.pss script 
+</pre>
+</figure>
+<p>
+&ldquo;TRANSFORMATIONS&rdquo; AND COMPILATIONS
+<p>
+ The &ldquo;pep&rdquo; virtual machine and language is designed to either check the syntax
+ of input or else transform one textual (data) format into another, or
+ compile/transpile one context-free language into another. 
+<p>
+ Examples might be: 
+<p>
+ u/- transform a csv (comma-separated-values) file into a 
+ json data format.
+ - check if a string is a palindrome, or contains palindromes.
+ - check the syntax of a DNS domain file.
+ - Check if brackets and braces are &ldquo;balanced".&rdquo; - check the syntax of a JSON text data file or convert to another format.
+ - convert &ldquo;markdown&rdquo; text (or another plain-text format) into html or LaTeX
+ See the script <code>eg/mark.latex.pss</code> for an example (that is the script
+ that has generated the current document, with the help of 
+ &ldquo;pdflatex".&rdquo; - convert from &ldquo;infix&rdquo; arithmetic notation to &ldquo;postfix&rdquo; notation.
+ - compile a (simple?) computer language into an assembly language.
+ - properly indent a computer language source code file.
+ - Analyse genetic sequences (possibly).
+<p>
+DEBUGGING
+<p>
+ The pep/nom virtual-machine is more complicated than the &ldquo;sed&rdquo; (the unix stream
+ editor) virtual machine (sed only has 2 string registers, the
+ &ldquo;work-space&rdquo; and the &ldquo;hold-space"). So you may find yourself needing to&rdquo; debug a script. There are a number of ways to do this.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ see how a particular script is compiled to "assembler" format
+ </figcaption>
+<pre class='codeline'>
+ pep -f compile.pss script
+</pre>
+</figure>
+<p>
+ The compiled script will be printed to stdout and saved in <code>sav.pp</code>
+ or an error message will be displayed if the script has a syntax
+ error.
+<p>
+ Sometimes the line above is useful for finding errors in a script
+ which are not caught during the script loading process.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ load a script and view/execute/step through it interactively 
+ </figcaption>
+<pre class='codeline'>
+ pep -If someScript input.txt
+</pre>
+</figure>
+<p>
+ If the script did not compile properly there will only be 1 
+ instruction (quit).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ interactively view how some script is being compiled by "asm.pp" 
+ </figcaption>
+<pre class='codeline'>
+ pep -Ia asm.pp someScript 
+</pre>
+</figure>
+ <pre class='codeline'>
+ pep -a asm.pp someScript 
+</pre>
+
+<p>
+ (Now you can step through the compiled program &ldquo;asm.pp&rdquo; and watch as 
+ it parses and compiles &ldquo;someScript". Generally, use&rdquo; rr" to run the
+ whole script, and &ldquo;rrw text&rdquo; to run the script until the workspace
+ is some particular text. This helps to narrow down where the <code>asm.pp</code>
+ compiler is not parsing the input script correctly.
+<p>
+ Once in an interactive &ldquo;pep&rdquo; session, there are many commands to 
+ run and debug a script. For example:
+<p>
+ u/-
+ - n - execute the next instruction in the program
+ - m - view the state of the machine (stack/workspace/registers/tape/program)
+ - rrw &lt;text&gt; - run the script until the workspace is exactly some text.
+ - rre &lt;text&gt; - run script until the workspace ends with something
+ - rrc &lt;num&gt; - run script with &lt;num&gt; characters of input.
+ - rr - run the whole script from the current instruction
+ - M.r - reset the virtual machine and input stream 
+ (but not the compiled program)
+<p>
+GRAMMAR AND SCRIPT DEBUGGING ....
+<p>
+ Because pep/nom is a &ldquo;filter&rdquo; style system (which writes output to
+ &ldquo;stdout&rdquo; ), we can print the stack and line/character number after
+ each reduction and watch the grammar in action. This is a <em>very</em> useful
+ technique for debugging grammars and scripts.
+<p>
+ The &ldquo;print&rdquo; statements are placed just after the &ldquo;parse&gt;&rdquo; label.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ visualise the stack token reductions with line/character numbers 
+ </figcaption>
+<pre class='codeblock'>
+
+  parse&gt;
+    add "# "; lines; add ":"; chars; add " "; print; clear; 
+    add "\n"; unstack; print; clip; stack; 
+  </pre>
+</figure>
+<p>
+ The &ldquo;less&rdquo; program makes it possible to search for any particular token by
+ name, to watch it being reduced. We can also seach by input line number.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ watch token reduction and search for reductions 
+ </figcaption>
+<pre class='codeline'>
+ pep -f eg/script.pss file.txt | less
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ get a unique list of tokens used during parsing
+ </figcaption>
+<pre class='codeline'>
+ pep -f eg/mark.latex.simple.pss pars-book.txt | sed '/%% ---/q;' | sed 's/^[^:]*: *//;s/\* *$//' | tr '*' '\n' | sort | uniq
+</pre>
+</figure>
+<p>
+<p>
+COMMON SCRIPT BUGS AND ERRORS....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make sure that you are pushing as many times as there are tokens.
+ </figcaption>
+<pre class='codeline'>
+ add "noun*verb*noun*"; push; push; # &lt;&lt; error, 3 tokens, 2 pushes
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ in a block, if you "push" the tokens back, you need to .reparse
+ </figcaption>
+<pre class='codeblock'>
+
+    "article*noun*" {
+      clear; add "nounphrase*"; push; 
+      # error! no '.reparse' command
+    }
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make sure there is at least one read command in the script 
+ </figcaption>
+<pre class='codeline'>
+ "."{ clear; } print; clear; # &lt;&lt; error: no read in script
+</pre>
+</figure>
+<p>
+ Two &ldquo;pop&rdquo; commands does not guarantee that there are 2 tokens 
+ in the workspace. The stack may be empty, or may contain only 
+ 1 token.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check that the workspace has 2 tokens, and last is not a verb 
+ </figcaption>
+<pre class='codeblock'>
+
+    pop; pop;
+    B"noun*".!"noun*".!E"verb*" {
+       # process tokens here.
+    }
+  </pre>
+</figure>
+<p>
+ Often we expect a certain order of tokens, without realising that 
+ an extra token has already been parsed and pushed onto the stack.
+<p>
+MORE SCRIPT EXAMPLES 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ remove whitespace only at the beginning of the input stream
+ </figcaption>
+<pre class='codeline'>
+ begin { while [:space:]; clear; } read; print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print alphanumeric words in input stream one per line
+ </figcaption>
+<pre class='codeblock'>
+
+   read; [:alpha:] { while [:alpha:]; add "\n"; print; clear; }
+   clear;
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print assignments in the form abc:333 or val = 66
+ </figcaption>
+<pre class='codeblock'>
+
+   r; 
+   ":","=" { add "*"; push; }
+   [:alpha:] { 
+     while [:alpha:]; put; clear; add "id*"; push; .reparse 
+   }
+   [0-9] {
+     while [0-9]; put; clear; add "num*"; push; .reparse
+   }
+   !"" {d;}
+ parse&gt;
+   pop; pop; pop;
+   "id*:*num*", "id*=*num*" {
+     clear;
+     ++; ++; get; add " assigned to '"; --; --; get;
+     add "'\n"; print; clear;
+   }
+   push; push; push;
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print the number of alphabetical words in the input stream
+ </figcaption>
+<pre class='codeblock'>
+
+   read; [:alpha:] { while [:alpha:]; a+; } clear;
+   (eof) { add "Words in file: "; count; add "\n"; print; clear; }
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the classic fizzbuzz program 
+ </figcaption>
+<pre class='codeblock'>
+
+   # untested
+   lines;
+   E"5",E"0" { clear; add "fizz"; print; }
+   clear; count; 
+   "3" { clear; add "buzz "; print; zero; }
+   clear; until "\n"; print;
+   a+
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print words beginning with "www." as html links 
+ </figcaption>
+<pre class='codeblock'>
+
+   read; 
+   ![:space:] { 
+     whilenot [:space:]; 
+     B"www." { 
+       put; clear; add "&lt;a href='"; get; add "'&gt;"; get; add "&lt;/a&gt;";
+       add "\n"; print; a+; 
+     }
+   } clear;
+   (eof) { add "Http urls in file: "; count; add "\n"; print; clear; }
+ </pre>
+</figure>
+<p>
+PEP VIRTUAL MACHINE DESCRIPTION
+<p>
+ The pep/nom parsing virtual-machine consists of a number of parts or registers
+ which I will describe in the following subsections.
+<p>
+MACHINE ELEMENTS
+<p>
+ D/- stack:
+ which can contain &ldquo;parse tokens&rdquo; if the language
+ is used for parsing or any other text data.
+ - workspace buffer:
+ This is where all &ldquo;text change&rdquo; operations within the machine are 
+ carried out. It is similar in concept to a register within
+ a &ldquo;cpu&rdquo; or to the &ldquo;sed&rdquo; stream editor pattern space. 
+ The workspace is affected by (almost?) all commands.
+ - tape:
+ Which is an array of text data which is synchronized with the 
+ machine stack using a tape pointer. The tape is manipulated 
+ with the &ldquo;get",&rdquo; put", and &ldquo;swap&rdquo; commands
+ - tape-pointer or the current tape cell:
+ This variable determines the current tape element (or &ldquo;cell") which will&rdquo; be used by &ldquo;get;&rdquo; and &ldquo;put;&rdquo; commands. The tape pointer is incremented
+ with the &ldquo;++&rdquo; command and decremented with the &ldquo;--&rdquo; command.
+ This pointer register will also be incremented or decremented on a 
+ successful &ldquo;push&rdquo; or &ldquo;pop&rdquo; command.
+ - peep character register:
+ This machine register is not directly manipulable. It contains
+ the next character in the input stream (or &ldquo;null&rdquo; or &ldquo;eof&rdquo; if 
+ the end-of-input has been reached). This register is used by the 
+ &ldquo;while&rdquo; and &ldquo;whilenot&rdquo; commands, which read the input stream while
+ the peep register satisfies a given condition.
+ - counter:
+ The counter or &ldquo;accumulator&rdquo; is an integer variable which can
+ be incremented with the command &ldquo;a+&rdquo; , decremented with the 
+ command &ldquo;a-&rdquo; , and set to zero with the command &ldquo;zero&rdquo; .
+ - line counter:
+ This register contains a count of the number of lines encountered
+ so far in the input stream. It is automatically incremented when
+ a &ldquo;\n&rdquo; character is encountered (but not a &ldquo;\r&rdquo; character). It
+ can be set to zero with the &ldquo;nolines&rdquo; command.
+ - character counter:
+ This register contains a count of the number of (hopefully Unicode)
+ characters encountered so far in the input stream. It is automatically
+ incremented when with each character character. It can be set to zero
+ with the &ldquo;nochars&rdquo; command.
+<p>
+WORKSPACE BUFFER ....
+<p>
+ The workspace buffer is the centre of the pep/nom virtual-machine and is 
+ analogous to an &ldquo;accumulator&rdquo; register in a cpu chip. All incoming
+ and outgoing text data is processed through the workspace. All machine
+ instructions either affect or are affected by the state of the 
+ workspace.
+<p>
+ The workspace buffer is a buffer within the virtual machine of 
+ the stream parsing language. In this buffer all of the text
+ transformation processed take place. For example, the commands
+ clear, add, indent, newline all affect the text in the 
+ workspace buffer.
+<p>
+ The workspace buffer is analogous to a processor register 
+ in a non-virtual cpu. In order to manipulate a value, it is
+ generally necessary to first load that value into a 
+ cpu register. In the same way, in order to manipulate some 
+ text in the pep machine, it is necessary to first
+ load that text into the workspace buffer. This can be 
+ achieve with the @get, @pop, @read commands.
+<p>
+STACK ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ machine instructions relating to the stack
+ </figcaption>
+<pre class='codeline'>
+ push, pop, stack, unstack
+</pre>
+</figure>
+<p>
+ The stack is used to store and access the parse tokens that are constructed
+ by the virtual machine while parsing input.
+<p>
+<strong><em> parse tokens</em></strong>
+
+<p>
+ Within the virtual machine of the pep/nom language the &ldquo;stack
+&rdquo; structure is designed to hold and contain the &ldquo;parse tokens 
+ <p>
+&rdquo;  Parse tokens can be any string ended by the delimiter eg:
+ <pre class='codeline'>
+ add "set*";
+</pre>
+
+<p>
+DELIMITER REGISTER ....
+<p>
+ The delimiter register determines what character will be used for 
+ delimiting parse tokens on the stack when using the &ldquo;push&rdquo; and &ldquo;pop
+&rdquo; commands. This can be set with the &ldquo;delim&rdquo; command. The default
+ parse-token delimiter is the '*' asterisk character.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ set the parse token delimiter to '/'
+ </figcaption>
+<pre class='codeblock'>
+
+    begin { delim '/'; }
+    read; "(",")" { put; d; add "bracket/"; push; }  
+  </pre>
+</figure>
+<p>
+ The delimiter character will often set in a 'begin' block. I normally use
+ the &ldquo;*&rdquo; character, but &ldquo;/&rdquo; or &ldquo;;&rdquo; might be good options. Apart from the
+ parse-token delimiter character, any character (including spaces) may be used
+ in parse tokens.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ parse tokens with spaces 
+ </figcaption>
+<pre class='codeline'>
+ r; [A-Z] { while [A-Z]; put; add "\n"; print; d; add "cap word*"; push; }
+</pre>
+</figure>
+<p>
+FLAG REGISTER ....
+<p>
+ The flag register affects the operation of the conditional jump instructions
+ &ldquo;jumpfalse&rdquo; and &ldquo;jumptrue&rdquo; and it is affected by the test instructions such
+ as &ldquo;testis",&rdquo; testtape", &ldquo;testeof&rdquo; etc. It is analogous to a &ldquo;flags
+&rdquo; register in a cpu, but (currently) it only contains one boolean (true/false)
+ value.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ machine assembler instructions relating to the flag register
+ </figcaption>
+<pre class='codeline'>
+ testis, testbegins, testends, testtape, testeof 
+</pre>
+</figure>
+ <pre class='codeline'>
+ jumptrue, jumpfalse
+</pre>
+
+<p>
+ The script writer does not read or write the machine flag register
+ directly. It is set automatically by the testing instructions
+<p>
+ACCUMULATOR REGISTER ....
+<p>
+ The machine contains 1 integer accumulator register that can
+ be incremented (with &ldquo;a+"), decremented (with&rdquo; a-") and set to
+ zero (with &ldquo;zero"). This register is useful for counting occurrences&rdquo; of miscellaneous elements that occur during parsing and translating.
+<p>
+ An example of the use of the accumulator register is given during the
+ parsing of &ldquo;quotesets&rdquo; in old versions of the &ldquo;compile.pss&rdquo; script. The
+ accumulator in this case, keeps track of the target for true-jumps.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ count how many "x" characters occur in the input stream
+ </figcaption>
+<pre class='codeline'>
+ r; 'x' {a+;} d; &lt;eof&gt; { add ' # of Xs == '; count; print; }
+</pre>
+</figure>
+ <p>
+PEEP REGISTER ....
+<p>
+ The peep buffer is a single character buffer which stores
+ the next character in the input stream. When a 'read' command
+ is performed the current value of the peep buffer is appended to
+ the 'workspace' buffer and the next character from the input
+ stream is placed into the peep buffer.
+<p>
+ The &ldquo;end-of-stream&rdquo; tests &lt;eof&gt; &lt;EOF&gt; (eof) (EOF) check to see if the peep
+ buffer contains the end of input stream marker. 
+<p>
+ The 'while' command reads from the input stream while the 
+ peep buffer is, or is not, some set of characters
+ For example
+ <pre class='codeline'>
+ while [abc];
+</pre>
+
+ reads the input stream while the peep buffer is any one of the 
+ characters 'abc'. 
+<p>
+TAPE ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ machine instructions with an effect on the tape
+ </figcaption>
+<pre class='codeline'>
+ get, put, ++, --, pop, push, mark, go
+</pre>
+</figure>
+<p>
+ The tape is an array of string cells (with memory allocated dynamically),
+ each of which can be read or written, using the workspace buffer.
+ The tape cell array also includes a tape cell pointer, which is usually
+ called the &ldquo;current cell&rdquo; . 
+<p>
+CURRENT CELL OF TAPE ARRAY ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ instructions affecting the current cell of the tape
+ </figcaption>
+<pre class='codeline'>
+ ++, --, push, pop, mark, go
+</pre>
+</figure>
+<p>
+ The current cell of the tape is a very important mechanism for storing
+ attributes of parse tokens, and then manipulating those attributes. The
+ pep virtual machine has the ability to &ldquo;compile&rdquo; or translate one text
+ format into another. (I call this compilation because because the target
+ text format may be an assembly language - for either a real or virtual
+ machine)
+<p>
+ In the parsing phase of a script, the attributes of different parse tokens
+ are accessed from the tape and combined and manipulated in the workspace
+ buffer, and then stored again in the current cell of the tape. This means
+ that a script which is transforming some input stream may finish with the
+ entire transformed input in the 1<sup>st</sup> cell of the tape structure. The script
+ can then print out the cell to &lt;stdout&gt; (with &ldquo;get; print;&rdquo; , which allows
+ further processing by other tools in the pipe chain) or else write the
+ contents of the cell to the file 'sav.pp' (with &ldquo;get; write;&rdquo; ).
+<p>
+ The current cell is also affected by the stack machine commands 
+ &ldquo;pop&rdquo; and &ldquo;push". The push command increments the tape pointer &rdquo; (current cell) by 1 and the pop command decrements the tape pointer 
+ by one. 
+<p>
+ This is a simple but powerful mechanism that allows the tape pointer
+ to stay in sync with the stack. After a &ldquo;push&rdquo; or &ldquo;pop&rdquo; command
+ the tape pointer will be pointing at the correct tape cell for 
+ that item on the stack. In some cases, it may be easiest to see how
+ these mechanisms work by running the machine engine in interactive mode
+ (pep -If script input) and stepping through a script or executing
+ commands at the prompt.
+<p>
+ The tape pointer is also incremented and decremented by the 
+ ++ and -- commands, and these commands are mainly used during the
+ compilation phase to access and combine attributes to transform
+ the input into the desired output.
+<p>
+SYNTAX OF THE PEP OR NOM SCRIPT LANGUAGE
+<p>
+ The script language, which is implemented in the file <code>/pars/compile.pss</code>
+ has a syntax very similar to the &ldquo;sed&rdquo; stream editor. Unlike sed, it also
+ allows long names for commands (eg &ldquo;clear&rdquo; instead of &ldquo;d",&rdquo; add" instead of
+ &ldquo;a"). Each command has a long and a short form.<p>
+&rdquo; All commands must be terminated with a semicolon except for the following:
+ <pre class='codeline'>
+ .reparse .restart parse&gt;
+</pre>
+
+<p>
+ White-space is not significant in the syntax of the parse-script 
+ language, except within ' and " quote characters and square brackets []
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ random white-space
+ </figcaption>
+<pre class='codeblock'>
+
+    read; !
+    [a-e]{t;}
+
+    d;
+  </pre>
+</figure>
+<p>
+ Braces &ldquo;{&rdquo; and &ldquo;}&rdquo; are used to define blocks of commands (as in
+ sed, awk and c).
+<p>
+LANGUAGE FEATURES ....
+<p>
+ The script language (and its syntax) is implemented in the file
+ <code>compile.pss</code> . Some commands, such as &ldquo;.reparse&rdquo; and &ldquo;.restart 
+&rdquo; affect the flow of the program, but not the virtual machine. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ tests on the workspace buffer, followed by a block of commands
+ </figcaption>
+<pre class='codeline'>
+ [a-z] { print; clear; }
+</pre>
+</figure>
+ <p>
+ Most scripts start with &ldquo;read;&rdquo; or &ldquo;r;&rdquo; (which is the abbreviated
+ equivalent). This reads one character from the input stream. Whereas sed
+ and awk are line oriented (they process the input stream one line at a
+ time), pep is character orientated (the input stream is processed one
+ character at a time).
+<p>
+ As with sed and awk, pep scripts have an implicit loop. When the interpreter
+ reaches the end of the script, it jumps back to the first command (usually
+ &ldquo;read") and continues looping until the input stream is finished. <p>
+&rdquo; CHARACTER CLASSES ....
+<p>
+ Character classes are written [:space:] [:alnum:] etc. Currently (July
+ 2022), the c language implementation of the parse machine and language uses
+ plain <code>ctype.h</code> character classes as a way of grouping characters.
+<p>
+ These classes are important in a Unicode setting because they allow
+ specifying types of characters in a locale-neutral way. The &ldquo;while&rdquo; and
+ &ldquo;whilenot&rdquo; commands can use character classes as their argument.
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if the workspace is only alphanumeric characters 
+ </figcaption>
+<pre class='codeline'>
+ r; ![:alnum:] { add " not alpha-numeric! \n"; print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ read the input stream while the peep register is whitespace
+ </figcaption>
+<pre class='codeline'>
+ while [:space:];
+</pre>
+</figure>
+<p>
+QUOTES ....
+<p>
+ Both single and double quotes may be used in scripts and they
+ have exactly the same role in the syntax of the pep/nom languages.
+ But quoted text which starts with a double quote (") must end
+ with a double quote, and the same rules applies to single quotes.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ use single or double quotes in pep/nom scripts
+ </figcaption>
+<pre class='codeline'>
+ r; '"' { add "&lt;&lt; single quote!\n"; print; } d;
+</pre>
+</figure>
+<p>
+ If using the negation operator &ldquo;!&rdquo; in an &ldquo;in-line&rdquo; script, then
+ enclose the whole thing in single quotes, so that the shell does
+ not substitute the &ldquo;!&rdquo; character (or other special characters).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ use single quotes in one-line pep scripts to avoid bash substitution 
+ </figcaption>
+<pre class='codeline'>
+ pep -e '![u-z],"/",";"{print;} clear;' -i "axbycz/;"
+</pre>
+</figure>
+<p>
+ Prints: abc/;
+<p>
+ The pep/nom language syntax allows quoted text to span more than one
+ line. No special syntax is required and all special characters have the
+ same meaning. This is mainly only useful as the argument to the 
+ &ldquo;add&rdquo; command, in order to improve the readability of scrips
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ A multi-line quoted text example 
+ </figcaption>
+<pre class='codeblock'>
+
+  begin { add '
+    A multi-line 
+    argument for "add".
+    '; 
+  } print; clear; quit;
+  </pre>
+</figure>
+ <p>
+ It is not necessary to have any space between a command and any
+ quoted argument. This is because the pep/nom language knows how to 
+ parse itself (see <code>compile.pss</code> for the gory details). In fact,
+ &ldquo;white-space&rdquo; (\n\t\s\r\f) is not really significant anywhere in
+ a pep/nom script - except within quotes.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ no space is required before quotes
+ </figcaption>
+<pre class='codeblock'>
+
+    read; add"."; # this is ok!
+    replace"."".."; # this is be ok too.
+    print;clear;
+    # if the input is 'abc' this should print 'a..b..c..'
+  </pre>
+</figure>
+<p>
+&ldquo;ESCAPING&rdquo; WITHIN QUOTES
+<p>
+ The until command automatically recognises &ldquo;escaped&rdquo; quote characters, so it
+ will not stop reading the input stream when it encounters \\" or \\'
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using single quotes, and some abbreviated commands
+ </figcaption>
+<pre class='codeline'>
+ r; 'a' { add 'A'; print; } d;
+</pre>
+</figure>
+<p>
+ Within quoted text, certain &ldquo;escaped&rdquo; characters have a special meaning.
+ These characters have the same meaning in double and single quotes. 
+<p>
+ d/- \\n - represents a 'newline' character
+ - \\r - a return character
+ - \\f - a form feed (rarely used).
+ - \\t - a tab
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert all tabs to 2 spaces in the input stream
+ </figcaption>
+<pre class='codeline'>
+ read; "\t" { clear; add "  "; } print; clear;
+</pre>
+</figure>
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ An abbreviated version of the above in-line pep/nom script
+ </figcaption>
+<pre class='codeline'>
+ r; "\t" { d; a "  "; } t;d;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a "go" program, equivalent of the above script, compile and run
+ </figcaption>
+<pre class='codeblock'>
+
+    pep -f tr/translate.go.pss -i 'r;"\t"{d;a"  ";}t;d;' &gt; notabs.go
+    go build -o notabs notabs.go
+    echo -e "no\ttabs\tplease!" | notabs
+    # should print 'no  tabs  please!'
+  </pre>
+</figure>
+<p>
+COMMENTS ....
+ <p>
+ Both single line comments (line starting with &ldquo;#"), or multiline&rdquo; comments (hash+asterix .... asterix+hash) are available. 
+<p>
+ Multiline comments are useful for disabling blocks of code
+ during script development, as well as for long comments at the 
+ beginning of a script.
+<p>
+BEGIN BLOCKS ....
+<p>
+ Like <em>awk*, the pep/nom language allows 'begin' blocks. These </em> blocks are only executed once, whereas the rest of the script
+ is executed in a loop for every character in the input stream.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ an example begin block and script
+ </figcaption>
+<pre class='codeblock'>
+
+    begin {
+      add "Starting script ...\n"; print; clear;
+      # set the token delimiter to / 
+      delim "/";  
+    }
+    read; print; clear;
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a basic html document 
+ </figcaption>
+<pre class='codeblock'>
+
+    begin { add "&lt;html&gt;&lt;body&gt;&lt;pre&gt;\n"; print; clear; } 
+    read; replace "&gt;" "&gt;"; replace "&lt;" "&lt;"; 
+    print; clear;
+    (eof) { add "\n&lt;/pre&gt;&lt;/body&gt;&lt;/pre&gt;\n"; print; clear;}
+  </pre>
+</figure>
+<p>
+<p>
+CONDITIONS AND TESTS .... 
+<p>
+CLASS TESTS ....
+<p>
+ The class test checks whether the workspace buffer matches any one of the
+ characters or character classes listing between the square braces. A class
+ test is written.
+<p>
+ <pre class='codeline'>
+ [character-class] { &lt;commands&gt;  }
+</pre>
+
+<p>
+ There are 3 forms of the character class test:
+ o/- a list of characters eg: [abcxyz.,;]
+ - a range of characters eg: [A-M]
+ - a named character class eg: [:space:]
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ delete all vowels from the input stream using a list class test
+ </figcaption>
+<pre class='codeline'>
+ read; ![aeiou] { print; } clear;
+</pre>
+</figure>
+<p>
+ All characters in the workspace must match given class, so 
+ that a class test is equivalent to the regular expression &ldquo;^[abcd]+$
+<p>
+&rdquo; As in the previous example, class tests, like all other type of tests, can
+ be negated with a prefixed &ldquo;!&rdquo; character. Double and multiple negation,
+ such as &ldquo;!!&rdquo; or &ldquo;!!!&rdquo; is a syntax error (since it doesn&rsquo;t have 
+ any purpose).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print certain sequences 
+ </figcaption>
+<pre class='codeline'>
+ r; [abc-,] { while [abc-,]; print; } clear;
+</pre>
+</figure>
+<p>
+EOF END OF STREAM TEST ....
+ <p>
+ This test returns true if the 'peep' look-ahead register currently contains
+ the &lt;EOF&gt; end of stream marker for the input stream. This test is equivalent
+ to the &ldquo;END { ... }&rdquo; block syntax in the AWK script language. The eof test is
+ written as follows
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ possible formats for the "end-of-stream" test
+ </figcaption>
+<pre class='codeline'>
+ &lt;eof&gt; &lt;EOF&gt; (eof) (EOF)
+</pre>
+</figure>
+<p>
+ <pre class='codeline'>
+ r; print; (eof) { add " &lt;&lt; end of stream!"; } clear;
+</pre>
+
+<p>
+ This test can be combined with other tests either with AND
+ logic or with OR logic
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if the input ends with "horse" when the end-of-stream is reached
+ </figcaption>
+<pre class='codeline'>
+ r; (eof).E"horse" { add ' and cart'; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if workspace ends with "horse" OR end-of-file has been reached 
+ </figcaption>
+<pre class='codeline'>
+ r; (eof),E"horse" { add " &lt;horse OR end-of-file&gt; "; print; } 
+</pre>
+</figure>
+ <p>
+ The &lt;eof&gt; test is important for checking if the script has
+ successfully parsed the input stream when the end of stream is
+ reached. Usually this means checking for the &ldquo;start token&rdquo; or tokens of the 
+ given grammar. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check for a start token
+ </figcaption>
+<pre class='codeblock'>
+
+    read;
+    # ... more code
+    (eof) {
+      pop; 
+      "statement*" {
+         # successful parse
+         quit;
+      }
+      # unsuccessful pase
+    }
+  </pre>
+</figure>
+<p>
+TAPE TEST ....
+<p>
+ <pre class='codeline'>
+ (==) { ...}
+</pre>
+
+<p>
+ This test determines if the current tape cell is equal to the 
+ contents of the workspace buffer.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if previous char the same as current
+ </figcaption>
+<pre class='codeblock'>
+
+    read;  
+    (==) {
+      put; add ".same."; 
+    }
+    print; clear;
+  </pre>
+</figure>
+<p>
+BEGINS WITH TEST ....
+<p>
+ Determines if the workspace buffer begins with the given 
+ text.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print words beginning with "wh"
+ </figcaption>
+<pre class='codeline'>
+ read; E" ",E"\n",(eof) { B"wh" { print; } clear; } 
+</pre>
+</figure>
+<p>
+ENDS WITH TEST
+<p>
+ Tests if the workspace ends with the given text. The 'E'
+ (ends-with modifier) can only be used with quoted text but
+ not with class tests
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a syntax error, using E with a class
+ </figcaption>
+<pre class='codeline'>
+ r; E[abcd] { print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ correct using the E modifier with quoted text
+ </figcaption>
+<pre class='codeline'>
+ r; E"less" { print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print words ending with "ess"
+ </figcaption>
+<pre class='codeline'>
+ read; E" ",E"\n" { clip; E"ess" { add " "; print; } clear; } 
+</pre>
+</figure>
+<p>
+CONCATENATING TESTS
+<p>
+ Conditional tests can be chained together with OR (,) or AND (.)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if workspace starts with "http:" OR "ftp:"
+ </figcaption>
+<pre class='codeline'>
+ B"http:",B"ftp:" { print; }
+</pre>
+</figure>
+<p>
+ &ldquo;AND&rdquo; and &ldquo;OR&rdquo; test cannot be combined simply, but a similar thing
+ can be achieved by nesting tests in braces. It may be useful to 
+ add logic grouping for tests, eg: (B"a",B"b").E"z" { ... } however
+ this is not currently supported.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ an incorrect test
+ </figcaption>
+<pre class='codeline'>
+ B"a".E"z",E"x" { print; }   # wrong!
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using nesting to combine "AND" and "OR" tests
+ </figcaption>
+<pre class='codeline'>
+ B"a",B"b" { E"z" { ... }}
+</pre>
+</figure>
+<p>
+ This line above is equivalent to the logic: 
+ <pre class='codeline'>
+ ((workspace BEGINS WITH "a") OR (workspace BEGINS WITH "b"))
+</pre>
+
+ <pre class='codeline'>
+ AND (workspace ENDS WITH "z")
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only urls 
+ </figcaption>
+<pre class='codeblock'>
+
+   r; B"http://",B"https://",B"www.",B"ftp:" { 
+     E" ",E"\n",(eof) { add "\n"; print; clear; }
+   }
+   E" ",E"\n",(eof) { clear; }
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only names of animals using OR logic concatenation
+ </figcaption>
+<pre class='codeblock'>
+
+   read; [:space:] {d;} whilenot [:space:];
+   "dog","cat","lion","puma","bear","emu" { add "\n"; print; }
+   clear;
+  </pre>
+</figure>
+<p>
+AND LOGIC CONCATENATION ....
+<p>
+ It is also possible to do AND logic concatenation with the &ldquo;.&rdquo; operator
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if the workspace starts with 'a' AND ends with 'z'
+ </figcaption>
+<pre class='codeline'>
+ r; B"a".E"z" { print; clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if workspace is a url but not a ".txt" text file 
+ </figcaption>
+<pre class='codeline'>
+ B"http://".!E".txt" { add "&lt;&lt; non-text url"; print; clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ workspace begins with # and only contains digits and # 
+ </figcaption>
+<pre class='codeline'>
+ B"#".[#0123456789] { add " (timestamp?)\n"; print; }
+</pre>
+</figure>
+<p>
+ &ldquo;AND&rdquo; logic can also be achieved by nesting brace blocks. In some
+ circumstances this may may have advantages.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ and logic with nested braces
+ </figcaption>
+<pre class='codeblock'>
+
+    B"/" { E".txt" { ... } }
+  </pre>
+</figure>
+<p>
+NEGATED TESTS ....
+<p>
+ The &ldquo;!&rdquo; not operator is used for negating tests.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ examples of negated tests
+ </figcaption>
+<pre class='codeline'>
+ !B"abc", !E"xyz", ![a-z], !"abc" ...
+</pre>
+</figure>
+<p>
+STRUCTURE OF A SCRIPT
+<p>
+LEXICAL PHASE ....
+<p>
+ Like most systems which are designed to parse and compile context-free
+ languages, parse scripts normally have 2 distinct phases: A &ldquo;lexing&rdquo; phase
+ and a parse/compile/translate phase. This is shown by the separation of the
+ Unix tools &ldquo;lex&rdquo; and &ldquo;yacc&rdquo; where lex performs the lexical analysis (which
+ consists of the recognition and creation of lexical tokens), and yacc
+ performs parsing and compilation of tokens.
+ <p>
+ In the <code>compile.pss</code> program, as with many scripts that can be written
+ in the parse language, the lexical and compilation phases are 
+ combined into the same script. 
+<p>
+ In the first phase, the program performs lexical analysis of the input
+ (which is an uncompiled script in the pep/nom language), and converts
+ certain patterns into &ldquo;tokens".  In this system, a&rdquo; token" is just a string
+ (text) terminated in an asterix (*) character. <code>Asm.pp</code> constructs these
+ tokens by using the &ldquo;add&rdquo; machine instruction, which appends text to the
+ workspace buffer.
+<p>
+ Next the parse token is &ldquo;pushed&rdquo; onto the &ldquo;stack". I have quoted these&rdquo; words because the stack buffer is implemented as a string (char <em>) </em> buffer and &ldquo;pushing&rdquo; and &ldquo;popping&rdquo; the stack really just involves
+ moving the workspace pointer back and forth between asterisk characters.
+<p>
+ I used this implementation because I thought that it would be fast and simple
+ to implement in the &ldquo;c&rdquo; language. It also means that we don't have to worry
+ about how much memory is allocated for the stack buffer or each of its items.
+ As long as there is enough memory allocated for the workspace buffer (which
+ is actually just the end of the stack buffer) there will be enough room for
+ the stack.
+<p>
+ The lexical phase of &ldquo;asm.pp&rdquo; also involves preserving the &ldquo;attribute
+&rdquo; of the parse token. For example if we have some text such as
+ &ldquo;hannah&rdquo; then our parse token may be &ldquo;quoted.text*
+&rdquo; and the attribute is the actual text between the quotes 'hannah'.
+ The attribute is preserved on the machine tape data structure, which 
+ is array of string cells (with no fixed size), in which data can
+ be inserted at any point by using the tape pointer.
+<p>
+PARSING PHASE ....
+ <p>
+ The parsing phase of the <code>asm.pp</code> compiler involves recognising and
+ shift-reducing the token sequences that are on the machine &ldquo;stack".&rdquo; These tokens are just strings post-delimited with the '*' character.
+ Because the tokens are text, they popped onto the workspace buffer
+ and then manipulated using the workspace text commands.
+ <p>
+COMMANDS
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ view all commands supported by the pep/nom interpreter
+ </figcaption>
+<pre class='codeline'>
+ pep -C 
+</pre>
+</figure>
+<p>
+COMMAND SUMMARY ....
+ <p>
+ All pep/nom commands have an abbreviated (one letter) form as well.
+ <pre class='codeline'>
+ eg: p=pop, P=push, g=get, G=put;
+</pre>
+
+<p>
+ D/- ++ 
+ increments the tape pointer by one (see 'increment' )
+ - --
+ decrements the tape pointer by one. (see &ldquo;decrement;")&rdquo; - mark &ldquo;text
+&rdquo; adds a marker to the current tape cell (used with 'go')
+ - go &ldquo;text
+&rdquo; sets the current tape cell to the marked cell 
+ - add &ldquo;text&rdquo; (or add 'text') 
+ adds text to the end of the workspace 
+ - .reparse 
+ jumps back or forward to the parse&gt; label. This is used to ensure that
+ all shift reductions take place.
+ - .restart 
+ jumps back to the first instruction in the script (after the 
+ &ldquo;begin&rdquo; block).
+ - clip 
+ removes the last character from the workspace
+ - clop
+ removes the first character from the workspace
+ - quit 
+ exits the script without reading anything more from
+ standard input. (like the sed command 'q')
+ - clear
+ sets the workspace to a zero length string. Equivalent
+ to the sed command 
+ <pre class='codeline'>
+ s/^.*$//;
+</pre>
+
+ - put
+ puts the contents of the workspace into the current
+ item of the tape (as indicated by the tape-pointer )
+ - get
+ gets the current item of the tape and adds it to
+ the <em>end</em> of the workspace with <em>no</em> separator character
+ - swap
+ swaps the contents of the current tape cell and the 
+ workspace buffer.
+ - count 
+ appends the integer counter to the <em>end</em> of the workspace
+ - a+ 
+ increments the accumulator variable/register in the virtual 
+ machine by 1.
+ - a- 
+ this command decrements a counter variable by one
+ - zero
+ sets the counter to zero 
+ - lines (or 'll')
+ appends the line number register to the workspace buffer.
+ - nolines 
+ sets the automatic line counter to zero.
+ - chars (or 'cc')
+ appends the character number register to the workspace buffer
+ - nochars
+ sets the automatic character counter to zero.
+ - print
+ prints the contents of the workspace buffer to the standard 
+ output stream (stdout). Equivalent to the sed command 'p'
+ - pop
+ pops one token from the stack and adds it to the 
+ -beginning- of the stack
+ - push 
+ pushes one token from the workspace onto the stack, or
+ reads upto the first star &ldquo;*&rdquo; character in the @workspace buffer
+ and pushes that section of the buffer onto the stack.
+ - unstack
+ pops the entire stack as a prefix onto the workspace buffer
+ - stack
+ pushes the entire workspace (regardless of any token delimiters
+ - in the workspace) onto the stack.
+ - replace
+ replaces a string in the workspace with another string. 
+ - read
+ reads one more character from the &lt;stdin&gt;.
+ - state
+ prints the current state of the virtual machine
+ to the standard output stream. This maybe useful for debugging
+ I may remove this command.
+ - until 'text'
+ reads characters from the input stream until the &ldquo;workspace
+&rdquo; ends in the given text. This can be used for &ldquo;lexing
+&rdquo; quoted strings etc. 
+ - until; 
+ reads characters from the input-stream until the &ldquo;workspace
+&rdquo; ends with the text contained in the current tape-cell.
+ (this version of the until command is still being implemented)
+ - cap
+ converts the workspace to 'capital case' (first upper, then all lower)
+ - lower
+ converts all characters in the workspace to lowercase
+ - upper
+ converts all characters in the workspace to upper case.
+ - while class/text;
+ reads characters from the input stream while the 
+ peep character is the given class 
+ - whilenot class/text;
+ reads characters from the input stream while the 
+ peep register is <em>not</em> the given character or class
+ - write
+ saves the current contents of the workspace in the file
+ &ldquo;sav.pp
+&rdquo; - write &lt;filename&gt;
+ (over) writes the current contents of the workspace to the 
+ file &ldquo;filename".&rdquo; - append &lt;filename&gt;
+ appends the contents of the workspace to the 
+ file &ldquo;filename".<p>
+&rdquo; ADD COMMAND ....
+ <p>
+ The &ldquo;add&rdquo; command appends some text to the end of the 'workspace'
+ buffer. No other register or buffer within the virtual machine is
+ affected. The command is written:
+ <pre class='codeline'>
+ add 'text'; #* or *#
+</pre>
+
+ <pre class='codeline'>
+ add "text";
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ add a quote after the ':' character
+ </figcaption>
+<pre class='codeline'>
+ r; [\:] { add "\""; } print; clear;  # non java fix!!
+</pre>
+</figure>
+ <pre class='codeline'>
+ r; [:] { add "\""; } print; clear; # java version
+</pre>
+
+<p>
+ But it shouldn&rsquo;t be necessary to escape ':'
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ The quoted argument may span more than one line. For example:
+ </figcaption>
+<pre class='codeblock'>
+
+  begin { add '
+      A multi-line 
+      argument for "add".
+    '; } read; print; clear;
+  </pre>
+</figure>
+ <p>
+ It is possible to use escaped characters such as \n \r \t \f or \" in 
+ the quoted argument.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ add a newline to the workspace after a full stop
+ </figcaption>
+<pre class='codeline'>
+ r; E"." { add "\n"; } print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Add a space after every character of the input 
+ </figcaption>
+<pre class='codeblock'>
+
+    read; add ' '; print; clear;
+    # or the same using abbreviated commands
+    # r; a ' ';p;d;  
+  </pre>
+</figure>
+ <p>
+ &ldquo;Add&rdquo; is used to create new tokens and to modify the token attributes.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create and push (shift) a token using the "add" command
+ </figcaption>
+<pre class='codeblock'>
+
+   "style*type*" {
+     clear;
+     add "command*";
+     push;
+   }
+  </pre>
+</figure>
+<p>
+ The script above does a shift-reduce operation while parsing some
+ hypothetical language. The &ldquo;add&rdquo; command is used to add a new token name to
+ the 'workspace' buffer which is then pushed onto the stack (using the 'push'
+ operation, naturally). In the above script the text added can be seen to be
+ a token name (as opposed to some other arbitrary piece of text) because it
+ ends in the &ldquo;*&rdquo; character. Actually any character could be used to delimit
+ the token names, put &ldquo;*&rdquo; is the default implementation. 
+<p>
+ The add command takes -one- and only one parameter, or argument.
+ <p>
+&ldquo;REPARSE&rdquo; COMMAND ....
+<p>
+ The &ldquo;.reparse&rdquo; command makes the interpreter jump to the &ldquo;parse&gt;&rdquo; label. The
+ .reparse command takes no arguments, and is <em>not</em> terminated with a
+ semi-colon. The .reparse command is important for ensuring that all
+ shift-reductions occur at a particular phase of a script.
+ <p>
+ If there is no 'parse&gt;' label in the script, then it is a (compile-time)
+ error to use the &ldquo;.reparse&rdquo; command.
+<p>
+&ldquo;CLIP&rdquo; COMMAND ....
+ <p>
+ The clip command removes one character from the end of the 'workspace' buffer
+ and sends it into the void. It deletes it. The character is removed from the
+ <em>end</em> of the workspace, and so, it represents the last character which would
+ have been added to the workspace from a previous 'read' operation.
+<p>
+ The command is useful, for example, when parsing quoted text, used in
+ conjunction with the 'until' command. The following script only prints
+ text which is contained within double quote characters, from the input.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ parse and print quoted text
+ </figcaption>
+<pre class='codeblock'>
+
+  read; '"' { clear; until '"'; clip; print; }
+  "\"" { clear; until "\""; clip; print; }
+ </pre>
+</figure>
+<p>
+ If the above script receives the text 'this &ldquo;big&rdquo; and &ldquo;small&rdquo; things'
+ as its input, then the output will be 'big small' .That is, only
+ that which is within double quotes will be printed.
+<p>
+The script above can be translated into plain English as follows
+<p>
+ a- If the workspace is a " character then
+ - clear the workspace
+ - read the input stream until the workspace -ends- in "
+ - remove the last character from the workspace (the &ldquo;)&rdquo; - print the workspace to the console
+ - end if
+ -
+<p>
+ The script should print the contents of the quoted text
+ without the quote characters because the 'clear' and
+ the clip commands got rid of them. 
+<p>
+&ldquo;CLOP&rdquo; COMMAND ....
+<p>
+ The &ldquo;clop&rdquo; command removes one character from the front
+ of the workspace buffer. The clop command is the counterpart of 
+ the 'clip' command.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only quoted words without the quotes
+ </figcaption>
+<pre class='codeline'>
+ r; '"' { until '"'; clip; clop; print; } clear;
+</pre>
+</figure>
+<p>
+&ldquo;COUNT&rdquo; COMMAND ....
+<p>
+ The count command adds the value of the counter variable
+ to the end of the workspace buffer . For example, if the counter variable
+ is 12 and the workspace contains the text 'line:', then after the 
+ count command the workspace will contain the text
+ <pre class='codeline'>
+ line:12
+</pre>
+
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ count the number of dots in the input 
+ </figcaption>
+<pre class='codeline'>
+ read; "." { a+; } clear; &lt;eof&gt; { count; print; }
+</pre>
+</figure>
+ <p>
+ The count command only affects the 'workspace' buffer in the virtual
+ machine. For counting lines and characters in the input-stream,
+ the commands &ldquo;lines",&rdquo; chars", &ldquo;nolines&rdquo; and &ldquo;nochars&rdquo; exist.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ count blank lines in input
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    "\n" { 
+      while [ \t\r]; clear; 
+      !(eof) { read; "\n" { a+; }}
+    }
+    clear;
+    (eof) {
+      add "Blank lines: "; count; add "\n";
+      print; quit;
+    }
+  </pre>
+</figure>
+<p>
+&ldquo;QUIT&rdquo; COMMAND ....
+<p>
+ This command immediately exits out of the script without
+ processing any more script commands or input stream characters.
+ <p>
+ This command is similar to the &ldquo;sed&rdquo; command 'q'
+ It would be useful for this command to provide an exit (or error)
+ code. eg &ldquo;quit 1;
+<p>
+&rdquo; DECREMENT COMMAND ....
+<p>
+ The decrement command reduces the tape pointer by one and thereby moves the
+ current 'tape' element one to the 'left' 
+ <p>
+ The decrement command is written &ldquo;--&rdquo; or &ldquo;&lt;
+<p>
+&rdquo; If the current tape element is the first element of the tape then the tape
+ pointer is not changed and the command has no effect. The tape pointer
+ is also decremented by the &ldquo;pop&rdquo; command (if it is greater than zero).
+<p>
+&ldquo;INCREMENT&rdquo; COMMAND ....
+<p>
+ The command adds <em>one</em> to the &ldquo;tape&rdquo; pointer. The command is written
+ <pre class='codeline'>
+ ++ or &gt;
+</pre>
+
+<p>
+ Notice that the only part of the machine state which has
+ changed is that the 'tape-pointer' (the arrow in the 'tape' 
+ structure) has been incremented by one cell.
+ <p>
+ This command allows the tape to be accessed as a 'tape' . This is
+ tautological but true. Being able to increment and 'decrement' the tape
+ pointer allows the script writer and the virtual machine to access any value
+ on the tape using the 'get' and 'put' commands.
+ <p>
+ It should be remembered that the 'push' command also automatically
+ increments the tape pointer, in order to keep the tape pointer
+ and the stack in synchronization.
+<p>
+ Since the &ldquo;get&rdquo; command is the only way to retrieve values from
+ the tape the &ldquo;++;&rdquo; and &ldquo;--;&rdquo; commands are necessary. The tape
+ cannot be accessed using some kind of array index because
+ the get and 'put' commands to not have any arguments.
+<p>
+ An example, the following script will print the string associated
+ with the &ldquo;value&rdquo; token.
+<p>
+ <pre class='codeline'>
+ pop;pop; "field*value*" { ++; get; --; print; }
+</pre>
+
+<p>
+&ldquo;MARK&rdquo; COMMAND ....
+ <p>
+ The mark command adds a text &ldquo;tag&rdquo; to the current tape-cell.
+ This allows the tape-cell to be accessed later in the script with
+ the &ldquo;go&rdquo; command. The mark and go commands should allow &ldquo;offside
+&rdquo; or indent parsing (such as for the python language)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ use mark and go to use the 1st tape cell as a buffer.
+ </figcaption>
+<pre class='codeblock'>
+
+   begin { mark "topcell"; ++; }
+   read; [:space:] { d; }
+   whilenot [:space:]; put; 
+   # create a list of urls in the 1st tapecell
+   B"http:" {
+     mark "here"; go "topcell"; add " "; get; put; go "here";
+   }
+   clear; add "word*"; push; 
+   &lt;eof&gt; { go "topcell"; get; print; quit; }
+ </pre>
+</figure>
+<p>
+ See the script <code>pars/eg/markdown.toc.pss</code> for an example of using
+ the &ldquo;mark&rdquo; and &ldquo;go&rdquo; commands to create a table of contents for 
+ a document from markdown-style underline headings.
+<p>
+&ldquo;GO&rdquo; COMMAND ....
+<p>
+ The &ldquo;go&rdquo; command set the current tape cell pointer to a cell
+ which has previously been marked with a &ldquo;mark&rdquo; command (using
+ a text tag. The go/mark commands may be useful for offside
+ parsing as well as for assembling, for example, a table of contents
+ for a document, while parsing the document structure.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ basic usage
+ </figcaption>
+<pre class='codeline'>
+  read; mark "a"; ++; go "a"; put; clear;
+</pre>
+</figure>
+<p>
+&ldquo;MINUS&rdquo; COUNTER COMMAND ....
+ <p>
+ The minus command decreases the counter variable by one.
+ This command takes no arguments and is written
+ <pre class='codeline'>
+ a-;
+</pre>
+
+<p>
+ The 'testeof' (eof) checks to see if the peep buffer contains the 
+ end of input stream marker. 
+<p>
+ The 'while' command reads from the input stream while the 
+ peep buffer is or is not some set of characters
+ For example
+ <pre class='codeline'>
+ while 'abc';
+</pre>
+
+ reads the input stream while the peep buffer is any one of the 
+ characters 'abc'. 
+<p>
+&ldquo;PLUS&rdquo; COUNTER COMMAND ....
+<p>
+ This command increments the machine counter variable by
+ one. It is written
+ <pre class='codeline'>
+ a+ 
+</pre>
+
+<p>
+ The plus command takes no arguments. Its counter part is the
+ 'minus' command.
+<p>
+&ldquo;ZERO&rdquo; COMMAND ....
+ <p>
+ The &ldquo;zero&rdquo; command sets the internal counter to zero. This counter may be
+ used to keep track of nesting during parsing processes, or used by other
+ mundane purposes such as numbering lines or instances of a particular string
+ or pattern.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ 
+ </figcaption>
+<pre class='codeline'>
+ read; "x" { zero; } 
+</pre>
+</figure>
+<p>
+&ldquo;CHARS&rdquo; COMMAND ....
+<p>
+ The &ldquo;chars&rdquo; (or &ldquo;cc") command appends the value of the current &rdquo; character counter to the workspace register.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ show an error message with a character number
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    [@#$%^&] {
+      put; clear; 
+      add "illegal character ("; get; ") ";
+      add "at character number "; chars; add ".\n";
+      print; clear;
+    }
+  </pre>
+</figure>
+<p>
+ I originally named this command &ldquo;cc&rdquo; but prefer the longer 
+ form &ldquo;chars". <p>
+&rdquo; NOCHARS COMMAND ....
+<p>
+ The &ldquo;nochars&rdquo; command sets the automatic character counter to zero.
+ This is useful for making the character number relative to the line
+ number. For example at the beginning of a script, we can put
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ show the line and character number of 'z's in input
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    "\n" { nochars; }
+    "z" { 
+      add "\n[Found a 'z' at line: "; lines; add ", char: "; chars;
+      add "]\n";
+    }
+    print; clear;
+  </pre>
+</figure>
+<p>
+<p>
+&ldquo;LINES&rdquo; COMMAND ....
+<p>
+ The &ldquo;lines&rdquo; (or &ldquo;ll", it's original, cryptic name) command appends to the&rdquo; workspace the current value of the line counter register. This is very useful
+ when writing compilers in order to produce an error message with a line
+ number when there is a syntax error in the input stream.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using "lines" in error messages
+ </figcaption>
+<pre class='codeblock'>
+
+    (eof) {
+      clear; 
+      add "Unexpected end-of-file at line: "; lines;
+      add " of input.";
+      print; quit;
+    }
+  </pre>
+</figure>
+<p>
+&ldquo;NOLINES&rdquo; COMMAND ....
+<p>
+ Sets the line number character counter to zero.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make line numbers relative to current paragraph
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    # find empty lines
+    "\n" { while [ \t\n]; E"\n".!"\n" { nolines; } }
+  </pre>
+</figure>
+<p>
+&ldquo;UNSTACK&rdquo; COMMAND ....
+<p>
+ Pop the entire stack as a prefix onto the workspace. This may be 
+ useful for displaying the state of the stack at the end of 
+ parsing or when an error has occurred. Currently (Aug 2019) the 
+ tape pointer is not affected by this command.
+<p>
+&ldquo;STACK&rdquo; COMMAND ....
+<p>
+ Push the entire workspace onto the stack regardless of token
+ delimiters.
+<p>
+&ldquo;PUSH&rdquo; COMMAND ....
+<p>
+ The &ldquo;push&rdquo; command pushes one token from (the beginning of) the 
+ workspace onto the stack.
+<p>
+&ldquo;POP&rdquo; COMMAND ....
+<p>
+ The &ldquo;pop&rdquo; command pops the last item from the virtual-machine stack
+ and places its contents, without modification, at the <em>beginning</em>
+ of the workspace buffer, and decrements the tape pointer. If the 
+ stack is empty, then the &ldquo;pop&rdquo; command does nothing (and the tape
+ pointer is unchanged).
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ pop the stack onto the beginning of the workspace.
+ </figcaption>
+<pre class='codeline'>
+ pop;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ apply a 2 token grammar rule (a shift-reduction).
+ </figcaption>
+<pre class='codeline'>
+ pop;pop; "word*colon*" { clear; add 'command*'; push; }
+</pre>
+</figure>
+<p>
+ The pop command is usually employed in the parsing phase 
+ of the script (not the &ldquo;lexing&rdquo; phase); that is, after the &ldquo;parse&gt;
+&rdquo; label. The &ldquo;pop;&rdquo; command is almost the inverse machine operation
+ of the &ldquo;push;&rdquo; command, but it is important to realise that 
+ a command sequence of &ldquo;pop;push;&rdquo; is not equivalent to
+ &ldquo;nop;&rdquo; (no-operation).
+ <p>
+ If the pep/nom parser language is being used to parse and translate a
+ language then the script writer needs to ensure that each token ends with a
+ delimiter character (by default &ldquo;*") in order for the push and pop commands&rdquo; to work correctly.
+<p>
+ The pop command also affects the &ldquo;tape&rdquo; of the virtual machine in that the
+ tape-pointer is automatically decremented by one once for each pop command.
+ This is convenient because it means that the tape pointer will be pointing to
+ the corresponding element for the token. In other words in the context of
+ parsing and compiling a &ldquo;formal language&rdquo; the tape will be pointing to the
+ &ldquo;value&rdquo; or &ldquo;attribute&rdquo; for the token which is currently in the workspace.
+<p>
+&ldquo;PRINT&rdquo; COMMAND ....
+<p>
+ The print command prints the contents of the workspace to
+ the standard output stream (the console, normally). This is
+ analogous to the sed 'p' command (but its abbreviated form
+ is 't' not 'p' because 'p' means &ldquo;pop".<p>
+&rdquo; <strong><em> Examples</em></strong>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Print each character in the input stream twice:
+ </figcaption>
+<pre class='codeline'>
+ read; print; print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Replace all 'a' chars with 'A's;
+ </figcaption>
+<pre class='codeline'>
+ read; "a" { clear; add "A"; } print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Only print text within double quotes:
+ </figcaption>
+<pre class='codeline'>
+ read; '"' { until '"'; print; } clear;
+</pre>
+</figure>
+ <p>
+<strong><em> Details  </em></strong>
+
+ <p>
+ The print command does not take any arguments or parameters.
+ The print command is basically the way in which the parse-language
+ communicates with the outside world and the way in which it
+ generates an output stream. The print command does not change
+ the state of the pep virtual machine in any way.
+<p>
+ Unlike sed, the parse-language does not do any &ldquo;default&rdquo; printing.
+ That is, if the print command is not explicitly specified the 
+ script will not print anything and will silently exit as if it
+ had no purpose. This should be compared with the default 
+ behavior of sed which will print each line of the input stream if 
+ the script writer does not specify otherwise (using the -n switch).
+<p>
+ Actually the print command is not to be so extensively used as 
+ in sed. This is because if an input stream is successfully parsed
+ by a given script then only -one- print statement will be necessary,
+ at the end of the input stream. However the print command could be
+ used to output progress or error messages or other things. 
+ <p>
+<p>
+&ldquo;GET&rdquo; COMMAND ....
+<p>
+ This command obtains the value in the current 'tape' cell
+ and adds it (appends it) to the end of the 'workspace' buffer.
+ The &ldquo;get&rdquo; command only affects the 'workspace' buffer of the virtual
+ machine. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ if the workspace has the "noun" token, get its value and print it.
+ </figcaption>
+<pre class='codeline'>
+ "noun*" { clear; get; print; clear; }
+</pre>
+</figure>
+<p>
+&ldquo;PUT&rdquo; COMMAND ....
+<p>
+ The put command places the entire contents of the workspace
+ into the current tape cell, overwriting any previous value
+ which that cell might have had. The command is written
+ <pre class='codeline'>
+ put;
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ put the text "one" into the current tape cell and the next one.
+ </figcaption>
+<pre class='codeline'>
+  clear; add "one"; put; ++; put;
+</pre>
+</figure>
+ <p>
+ The put command only affects the current tape cell of the virtual
+ machine. 
+<p>
+ After a put command the workspace buffer is -unchanged- . This contrasts
+ with the machine stack 'push' command which pushes a certain amount of text
+ (one token) from the workspace onto the stack and deletes the same amount of
+ text from the workspace buffer.
+<p>
+ The put command is the counterpart of the 'get' command which retrieves or
+ gets the contents of the current item of the tape data structure. Since the
+ tape is generally designed for storing the values or the attributes of parse
+ tokens, the put command is essentially designed to store values of
+ attributes. However, the put command overwrites the contents of the 
+ current tape cell, whereas the &ldquo;get&rdquo; command appends the contents of 
+ the current tape cell to the work space.
+<p>
+ The put command can be used in conjunction with the 'increment' ++ and
+ 'decrement' -- commands to store values in the tape which are not the current
+ tape item. 
+<p>
+&ldquo;SWAP&rdquo; COMMAND ....
+ <p>
+ Syntax: swap;
+ Abbreviation: 'x' 
+<p>
+ Swaps the contents of the current tape-cell with the &ldquo;workspace&rdquo; buffer.
+ The swap command allows the tape-cell to be added to the beginning of 
+ the workspace, not the end.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ prepend the current tape cell to the workspace buffer
+ </figcaption>
+<pre class='codeline'>
+ swap; get;
+</pre>
+</figure>
+<p>
+&ldquo;READ&rdquo; COMMAND ....
+ <p>
+ The read command reads one character from the input stream and places that
+ character in the 'peep' buffer. The character which was in the peep
+ buffer is added to the end of the 'workspace' buffer. 
+<p>
+ The read command is the fundamental mechanism by which the input stream is
+ &ldquo;tokenized", which is also known as&rdquo; lexical analysis". The commands which
+ also perform tokenisation are &ldquo;until",&rdquo; while" and &ldquo;whilenot".  These&rdquo; commands perform implicit &ldquo;read&rdquo; operations.
+<p>
+ There is no implicit read command at the beginning of a script (unlike
+ &ldquo;sed&rdquo; ), so all scripts will probably need at least one read command.
+<p>
+&ldquo;REPLACE&rdquo; COMMAND ....
+<p>
+ This command replaces one piece of text with another in the workspace. The
+ &ldquo;replace&rdquo; command is useful for indenting blocks of text during formatting
+ operations, among other things. The replace command only replaces plain text,
+ not regular expression patterns.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ replace the letter 'a' with 'A' in the workspace buffer
+ </figcaption>
+<pre class='codeline'>
+ replace "a" "A";
+</pre>
+</figure>
+<p>
+ The replace command is often used for indenting generated code.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ indent a block of text
+ </figcaption>
+<pre class='codeline'>
+ clear; get; replace "\n" "\n  "; put; clear;
+</pre>
+</figure>
+<p>
+ Replace can also be used to test if the workspace contains a particular
+ character, in conjunction with the &ldquo;(==)&rdquo; tape test.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if the workspace contains an 'x' 
+ </figcaption>
+<pre class='codeblock'>
+
+    # fragment 
+    put; replace 'x' ''; 
+    (==) {
+      clear; add "no 'x'"; print; clear;
+    } 
+  </pre>
+</figure>
+<p>
+UNTIL COMMAND ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ example
+ </figcaption>
+<pre class='codeline'>
+ until 'text';
+</pre>
+</figure>
+<p>
+ Reads the input stream until the workspace ends with the given
+ text.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print any text that occurs between '&lt;' and '&gt;' characters
+ </figcaption>
+<pre class='codeline'>
+ /&lt;/ { until "&gt;"; print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only text between quote characters (excluding the quotes)
+ </figcaption>
+<pre class='codeline'>
+ r; '"' { until '"'; clip; clop; print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a parse token 'quoted' from quoted text
+ </figcaption>
+<pre class='codeline'>
+ r; '/' { until '"'; clip; clop; put; add 'quoted*'; push; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print quoted text, reading past escaped quotes (\")
+ </figcaption>
+<pre class='codeline'>
+ /"/ { until '"'; print; } clear;
+</pre>
+</figure>
+<p>
+ The 'while' and 'whilenot' commands are similar to the until
+ command but they depend on the value of the 'peep' virtual
+ machine buffer (which is a single-character buffer) rather than
+ on the contents of the 'workspace' buffer like the until command.
+<p>
+<strong><em> notes</em></strong>
+
+<p>
+ The 'until' command usually will form part of the 'lexing' phase
+ of a script. That is, the until command permits the script to 
+ turn text patterns into 'tokens'. While in traditional parsing tools
+ (such as Lex and Yacc) the lexing and parsing phases are carried out
+ by separate tools, with the 'pep' tool the two functions are combined.
+ <p>
+ The until command essentially performs
+ multiple read operations or commands and after each read checks to see
+ whether the workspace meets the criteria specified in the argument.
+<p>
+WHILENOT COMMAND ....
+ <p>
+ It reads into the workspace characters from the input stream -while- the
+ 'peep' buffer is -not- a certain character. This is a &ldquo;tokenizing&rdquo; command
+ and allows the input stream to be parsed up to a certain character without
+ reading that character.
+<p>
+ The whilenot command does not exit if it reaches the end of the
+ input-stream (unlike 'read').
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print one word per line
+ </figcaption>
+<pre class='codeline'>
+ r; [:space:] { d; } whilenot [:space:]; add "\n"; print; clear;
+</pre>
+</figure>
+<p>
+ (there seems to be a bug in pep with whilenot &ldquo;x&rdquo; syntax)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ whilenot can also take a single character quote argument
+ </figcaption>
+<pre class='codeline'>
+ r; whilenot [z]; add "\n"; print; clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ another way to print one word per line
+ </figcaption>
+<pre class='codeline'>
+ r; [ ] { while [ ]; clear; add "\n"; } print; clear;
+</pre>
+</figure>
+<p>
+ The advantage of the first example is that it allows the 
+ script to tokenise the input stream into words
+<p>
+WHILE COMMAND ....
+<p>
+ The 'while' command in the pattern-parse language reads the 
+ input stream while the 'peep' buffer is any one of the 
+ characters or character sets mentioned in the argument.
+ The command is written
+<p>
+ <pre class='codeline'>
+ while [cdef];
+</pre>
+
+<p>
+ The command takes one argument. This argument may also
+ include character classes as well as literal characters.
+ From example,
+<p>
+ <pre class='codeline'>
+ while [:space:];
+</pre>
+
+<p>
+ reads the input stream while the peep buffer is a digit.
+ The read characters are appended to the 'workspace' buffer.
+ The while command cannot take a quoted argument ("xxx").
+<p>
+ Negation for the while command is currently supported 
+ using the &ldquo;whilenot&rdquo; command.
+<p>
+ENDSWITH TEST .... 
+<p>
+ The 'ends with' test checks whether the workspace ends
+ with a given string. This test is written
+ <p>
+ <pre class='codeline'>
+ E"xyz" { ... }
+</pre>
+
+<p>
+ The script language contains a structure to perform a 
+ test based on the content of the workspace and to
+ execute commands depending on the result of that test.
+ An example of the syntax is
+<p>
+ <pre class='codeline'>
+ "ocean" { add " blue"; print; }
+</pre>
+
+<p>
+ In the script above, if the workspace buffer is the text &ldquo;ocean&rdquo; then the
+ commands within the braces are executed and if not, then not. The test
+ structure is a simple string equivalence test, there are -no- regular
+ expressions and the workspace buffer must be -exactly- the text which is
+ written between the <code>//</code> characters or else the test will fail, or return
+ false, and the commands within the braces will not be executed.
+<p>
+ This command is clearly influenced by the <a href='http://sed.sf.net'>sed </a>
+ stream editor command which has a virtually identical syntax
+ except for some key elements. In sed regular expressions are 
+ supported and in sed the first opening brace must be on the 
+ same line as the test structure.
+<p>
+ There is also another test structure in the script language 
+ which checks to see if the workspace buffer -begins- with the 
+ given text and the syntax looks like this
+ <pre class='codeline'>
+ B"ocean" { add ' blue'; print; }
+</pre>
+
+<p>
+USING TESTS IN THE PEP TOOL
+ <p>
+TEST EXAMPLES ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ if the workspace is not empty, add a dot to the end of the workspace
+ </figcaption>
+<pre class='codeline'>
+ !"" { add '.'; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ if the end of the input stream is reached print the message "end of file"
+ </figcaption>
+<pre class='codeline'>
+ &lt;eof&gt; { add "end of file"; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ if the workspace begins with 't' trim a character from the end
+ </figcaption>
+<pre class='codeline'>
+ B"t" { clip; }
+</pre>
+</figure>
+<p>
+TAPE TEST ....
+<p>
+ The tape test determines if the current element of the tape structure is the
+ same as the workspace buffer.
+<p>
+ The tape test is written
+ <pre class='codeline'>
+ &lt;==&gt;
+</pre>
+
+<p>
+ This test was included originally in order to parse the sed structure
+ <pre class='codeline'>
+ s@old@new@g  or s/old/new/g or s%old%new%g
+</pre>
+
+ In other words, in sed, any character can be used to delimit the 
+ text in a substitute command.
+<p>
+ACCUMULATOR 
+<p>
+STACK STRUCTURE IN THE VIRTUAL MACHINE 
+<p>
+ The 'virtual'-machine of the pep language contains
+ a stack structure which is primarily intended to hold
+ the parse tokens during the parsing and transformation
+ of a text pattern or language. However, the stack 
+ could hold any other string data. Each element of the
+ stack structure is a string buffer of unlimited size. 
+<p>
+ The stack is manipulated using the pop and push commands.
+ When a value is popped off the stack, that value is appended
+ to the -front- of the workspace buffer. If the stack is 
+ empty, then the pop command has no effect.
+<p>
+TAPE IN THE PEP MACHINE 
+<p>
+ The tape structure in the virtual machine is an infinite
+ array of elements. Each of these elements is a string buffer
+ of infinite size. The elements of the tape structure may be 
+ accessed using the @increment , @decrement , @get and @put
+ commands. 
+<p>
+TAPE AND THE STACK ....
+<p>
+ The tape structure in the virtual machine and the @stack
+ structure and designed to be used in tandem, and several
+ mechanisms have been provided to enable this. For example,
+ when a &ldquo;pop&rdquo; operation is performed, the @tape-pointer is
+ automatically decremented, and when a @push operation is
+ performed then the tape pointer is automatically incremented.
+<p>
+ Since the parsing language and machine have been designed
+ to carry out parsing and transformation operations on
+ text streams, the tape and stack are intended to hold
+ the values and tokens of the parsing process.
+ <p>
+BACKUSNAUR FORM AND THE PATTERN PARSER
+<p>
+ Backus-naur form is a way of expressing grammar rules for formal languages.
+ A variation of BNF is &ldquo;EBNF&rdquo; which modifies slightly the syntax of bnf.
+ Sometimes on this site I use (yet another) syntax for bnf or ebnf rules but
+ the idea is the same. 
+<p>
+ There is close relationship between the syntax of the 'pep' language
+ and a BNF grammar. For example
+<p>
+ <pre class='codeline'>
+  "word*colon*" { clear; add 'command*'; push }
+</pre>
+
+<p>
+ corresponds to the grammar rule
+<p>
+ <pre class='codeline'>
+ command := word colon
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ bnf rule written in pep/nom
+ </figcaption>
+<pre class='codeblock'>
+
+   # lines: lines line 
+   #        | line
+   #        ;
+   # or in "ebnf" format
+   # lines: line+ ;
+   until "\n"; put; clear; add "line*"; push;
+   parse&gt;
+   pop; pop;
+   "line*line*","lines*line*" 
+     { clear; add "lines*"; push; .reparse }
+  </pre>
+</figure>
+<p>
+SIMPLE LANGUAGES 
+<p>
+ eg brainf***
+<p>
+SELF REFERENTIALITY
+<p>
+ The pep/nom language is a language which is designed to 
+ parse/compile/translate languages. This means that it can 
+ recognise/parse/compile, and translate itself. The script 
+ <code>books/pars/translate.c.pss</code> is an example of this.
+<p>
+ Another interesting application of this self-referentiality
+ is creating a new compiling system in a different target language.
+ <p>
+REFLECTION SELF HOSTING AND SELF PARSING
+<p>
+ The script &ldquo;compile.pss&rdquo; is a parse-script which implements the 
+ parse-script language. This was achieved by first writing a hand-coded
+ &ldquo;assembler&rdquo; program for the machine (contained in the file &ldquo;asm.pp").&rdquo; Once a working <code>asm.pp</code> program implemented a basic syntax for the language,
+ the <code>compile.pss</code> script was written. This makes it possible to maintain and
+ add new syntax to the language using the language itself.
+<p>
+ A new &ldquo;asm.pp&rdquo; file is generated by running 
+ <pre class='codeline'>
+ pep -f compile.pss compile.pss &gt;&gt; asm.new.pp; cp asm.new.pp asm.pp
+</pre>
+
+<p>
+ Finally it is necessary to comment out the 2 &ldquo;print&rdquo; commands near 
+ the end of the &ldquo;asm.pp&rdquo; file which are labelled &ldquo;:remove:
+<p>
+&rdquo; The command above runs the script <code>compile.pss</code> and also uses <code>compile.pss</code> as
+ its text input stream. In this sense the system is &ldquo;self-hosting&rdquo; and
+ &ldquo;self-parsing".  It is also a good idea to preserve the old copy of asm.pp&rdquo; in case there are errors in the new compiler. 
+<p>
+SED THE STREAM EDITOR 
+<p>
+ The concept of &ldquo;cycles&rdquo; is drawn directly from the sed
+ language or tool (sed is a Unix utility). In the sed language
+ each statement in a sed script is executed once for each -line-
+ in a given input stream. In other words there is a kind of
+ implicit &ldquo;loop&rdquo; which goes around the sed script. This loop in some
+ fictional programming language might look like:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ pseudo
+ </figcaption>
+<pre class='codeblock'>
+
+  while more input lines
+  do
+    sed script
+  loop
+ </pre>
+</figure>
+<p>
+ In the current parse-language the cycles are executed for each 
+ -character- in the input stream (as opposed to line).
+ <p>
+SHIFTING AND REDUCING
+<p>
+ There is one complicating factor which is the concept of multiple
+ shift-reduces during the &ldquo;shift-reduce parsing  one cycle or the&rdquo; interpreter. This concept has already been treated within the @flag command
+ documentation. Another tricky concept is grammar rule precedence, in other
+ words, which grammar rule shift-reduction should be applied first or with
+ greater precedence. In terms of any concrete application the order of the
+ script statements determines precedence.
+ <p>
+SHIFT REDUCTIONS ON THE STACK ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ see the following script fragment 
+ </figcaption>
+<pre class='codeblock'>
+
+    pop;pop;
+    "command*command*",
+    "commandset*command*" { 
+      clear; add 'commandset*'; push;
+    }
+    "word*colon*" {
+      clear; add 'command*'; push; 
+    }      
+    push; push;
+  </pre>
+</figure>
+<p>
+ This script corresponds directly to the (e)bnf grammar rules
+<p>
+ <pre class='codeblock'>
+
+    commandset := command , command;
+    commandset := commandset , command;
+    command := word , colon;
+  </pre>
+
+<p>
+ But in the script above there is a problem; that the first rule
+ needs to be applied after the second rule.
+<p>
+ But it seems now that another reduction should occur namely
+ <pre class='codeline'>
+ if-block --&gt; if-statement block
+</pre>
+
+ <p>
+ which can be simply implemented in the language using the 
+ statements:
+<p>
+ <pre class='codeblock'>
+
+    pop; pop;
+    "if-statements*block*" { clear; add "if-block*"; push; }
+  </pre>
+
+<p>
+ But the crucial question is, what happens if the statements just written
+ come before the statements which were presented earlier on? The problem is
+ that the second reduction will not occur because the script has already
+ passed the relevant statements. This problem is solved by the 
+ .reparse command and the parse&gt; label
+<p>
+PARSE TOKENS 
+<p>
+LITERAL TOKENS ....
+<p>
+ One trick in the pep/nom language is to use a &ldquo;terminal
+&rdquo; character as its own parse-token. This simplifies the lexing phase
+ of the script. The procedure is just to read the terminal symbol
+ (one or more characters) and then add the token delimiter character
+ on the end.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using literal tokens with the default token delimiter '*'
+ </figcaption>
+<pre class='codeblock'>
+
+     read; 
+     "{","}","(",")","=" {
+       put; add "*"; push; .reparse
+     }
+   </pre>
+</figure>
+<p>
+PURPOSE OF THE LANGUAGE AND VIRTUAL MACHINE
+<p>
+ The language is designed to allow the simple creation of parsers and
+ translators, without the necessity to become involved in the complexities of
+ something like Lex or Yacc. Since the interpreter for the language is based
+ on a virtual machine, the language is platform independent and has a level
+ of abstraction.
+<p>
+ The language combines the features of a tokenizer and parser and
+ translator.
+<p>
+AVAILABLE IMPLEMENTATIONS 
+<p>
+ <a href='http://bumble.sourceforge.net/books/pars/object/'>bumble.sourceforge.net/books/pars/object/</a>
+ This folder contains a working implementation in the c language.
+ The code can be compiled with the bash functions in the file 
+ &ldquo;helpers.pars.sh
+ <p>
+&rdquo; COMPARISON BETWEEN PEP AND SED 
+<p>
+ The pep tool was largely inspired by the &ldquo;sed&rdquo; stream editor, both its
+ capabilities and limitations. Sed is a program designed to find and replace
+ patterns in text files. The patterns which Sed replaces are &ldquo;regular&rdquo; expressions". Pep has many similarities with sed, both in the syntax of
+ its scripts and also the underlying concepts. To better understand pep, 
+ it may be useful to analyse these similarities and differences.
+<p>
+SIMILARITIES ....
+<p>
+  sed and the pep machine have a 'workspace' buffer (which in sed is 
+ called the &ldquo;pattern space&rdquo; ). This workspace is the area where
+ manipulations of the text input stream are carried out.
+<p>
+  languages are based on an implicit cycle. That is to say
+ that each command in a sed or a pep script is executed once
+ for each line (sed) or once for each character (pep/nom)
+<p>
+  syntax of sed and pep are similar. Statement blocks are
+ surrounded by curly braces {} and statements are terminated with
+ a semi-colon ; .Also the sed idea of &ldquo;tests&rdquo; based on the contents
+ of the &ldquo;pattern space&rdquo; (or @workspace ) is used in the pep
+ language. 
+<p>
+  sed and pep are text stream based utilities, like many 
+ other unix tools. This means that both sed and pep consume an
+ input text stream and produce as output an output text stream.
+ These streams are directed to the programs using &ldquo;pipes&rdquo; | in a 
+ console window on both unix and windows systems. For example, for
+ sed we could write in a console window
+ <pre class='codeline'>
+ echo abcabcabc | sed "s/b/B/g"
+</pre>
+
+ and the output would be
+ <pre class='codeline'>
+ aBcaBcaBc
+</pre>
+
+<p>
+ However the pep implementation in c cannot receive input from stdin. This
+ is because <em>stdin</em> is used for receiving interactive commands in debug mode.
+ Nevertheless, once a script has been translated to another language (eg:
+ python, ruby, java, go, tcl) using the translation scripts in the <code>tr/</code>
+ folder, then the translated script can be used in a pipe.
+ <p>
+ For example, we can translate a simple script into ruby and then
+ run it as a &ldquo;filter&rdquo; program in a pipe
+ <pre class='codeblock'>
+
+      pep -f tr/translate.ruby.pss -i "r;t;t;d;" &gt; test.rb
+      chmod o+x test.rb; echo "abcd" | ./test.rb
+    </pre>
+
+<p>
+ In the case of &ldquo;pep", the command line could be written&rdquo; <pre class='codeline'>
+ pep -e "r;'b'{d;add'B'} print;d;" -i "abcabcabc"
+</pre>
+
+<p>
+ and the output, once again will be
+ <pre class='codeline'>
+ aBcaBcaBc
+</pre>
+
+<p>
+DIFFERENCES ....
+<p>
+  (like AWK) is a &ldquo;line&rdquo; based text manipulation tool (text is processed
+ one line at a time), whereas pep is character based (text is normally
+ processed one character at a time). This means that all the instructions
+ in a sed script are executed once for each line of the input text stream,
+ but in the case of pep, the instructions are executed once for each
+ character of the input text stream.
+<p>
+  syntax of the pep language is stricter than that of sed. For example,
+ in a pep script all commands must end with a semi-colon (except .reparse,
+ parse&gt; and .restart - which affect program flow) and all statements after
+ a test must be enclosed in curly braces. In many versions of sed, it is
+ not always necessary to terminate commands with a semi-colon. For example,
+ both of the following are valid sed statements.
+ <pre class='codeline'>
+ s/b/B/g s/b/B/g;
+</pre>
+
+<p>
+  is more flexible with the placement of white-space in 
+ scripts. For example, in pep one can write
+ <pre class='codeblock'>
+
+        "text" 
+        { 
+          print; }
+      </pre>
+
+<p>
+ That is, the opening brace is on a different line to the 
+ test. This would not be a legal syntax in most versions of sed.
+ <p>
+  uses single character &ldquo;mnemonics&rdquo; for its commands. For example, &ldquo;p
+&rdquo; is print, &ldquo;s&rdquo; is substitute, &ldquo;d&rdquo; is delete. In the pep language, in
+ contrast, commands also have a long name, such as &ldquo;print&rdquo; (which prints
+ the workspace), &ldquo;clear&rdquo; (to clear or delete the workspace), or &ldquo;pop&rdquo; (to
+ pop the last element off the stack onto the beginning of the workspace).
+ While the sed approach is useful for writing very short, terse scripts,
+ the readability of the scripts is not good. Pep allows for improved
+ readability, as well as terseness if required. 
+ <p>
+  both sed and pep are based on simple &ldquo;virtual machines&rdquo; (which
+ consist of string registers and commands to manipulate those registers),
+ the pep machine is more extensive. The sed machine essentially has 2
+ buffers, the &ldquo;pattern space&rdquo; , and the &ldquo;hold space&rdquo; . The pep virtual
+ machine however, has a workspace buffer, a stack, a tape array, several
+ counting registers and others.
+ <p>
+  tests or &ldquo;ranges&rdquo; in sed, as well as the substitutions are based
+ on regular expressions. In pep, however, no regular expressions are
+ used. The reason for this difference is that pep is designed to
+ parse and transform a different set of patterns than sed. The patterns
+ that pep is designed to deal with are referred to formally as
+ &ldquo;context free languages 
+ <p>
+&rdquo;  Negation of tests:
+ The negation operator ! in the &ldquo;pep&rdquo; language is placed
+ before the test to which is applies, where as in sed the 
+ negation operator comes after the test or range. So, 
+ in pep it is correct to write
+ <pre class='codeline'>
+ !"tree" { ... }
+</pre>
+
+ But in sed the correct syntax is
+ <pre class='codeline'>
+ /tree/! { ... }
+</pre>
+
+ <p>
+  implicitly reads one line of the input stream for each cycle of the
+ script. Pep does not do this, so most scripts need an explicit &ldquo;read
+&rdquo; command at the beginning of the script. For example
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a sed script with an implicit line read
+ </figcaption>
+<pre class='codeline'>
+ s/a/A/g;
+</pre>
+</figure>
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ pep has no implicit character read or print
+ </figcaption>
+<pre class='codeline'>
+ r; replace "a" "A"; print; clear;
+</pre>
+</figure>
+<p>
+BACKUS-NAUR FORM AND THE PATTERN PARSER
+<p>
+ Backus-naur form is a way of expressing grammar rules for formal languages.
+ A variation of BNF is &ldquo;EBNF&rdquo; which modifies slightly the syntax of bnf.
+ There are many versions of bnf and ebnf
+<p>
+ There is close relationship between the syntax of the 'pep' language
+ and a bnf grammar. For example:
+<p>
+ <pre class='codeline'>
+  "word*colon*" { clear; add "command*"; push }
+</pre>
+
+<p>
+ corresponds to the backus-naur form grammar rule
+<p>
+ <pre class='codeline'>
+ command := word colon
+</pre>
+
+<p>
+PEP LANGUAGE PARSING ITSELF
+<p>
+ One interesting challenge for the pep language is to &ldquo;generate itself
+&rdquo; from a set of bnf rules. In other words given rules such as
+ <pre class='codeblock'>
+
+    command := word semicolon;
+    command := word quotedtext semicolon;
+  </pre>
+
+<p>
+ Then it should be possible to write a script in the language 
+ which generates the output as follows
+<p>
+ <pre class='codeblock'>
+
+   pop;pop;
+   "word*semicolon*" {
+     clear; add "command*"; push; .reparse
+   }
+   pop;
+   "word*quotedtext*semicolon*" {
+     clear;  add "command*"; push; .reparse
+   }
+   push;push;push;
+  </pre>
+
+<p>
+ When I first thought of a virtual machine for parsing languages,
+ I thought that it would be interesting and important to build 
+ a more expressive language &ldquo;on-top-of&rdquo; the pep commands. However,
+ that now seems less important.
+<p>
+TOKEN ATTRIBUTE TRANSFORMATIONS
+<p>
+ We can write complete translators/compilers with the script language.
+ However it may be nice to have a more expressive format like the one shown
+ below.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a more expressive compiling language built on top of the parse language
+ </figcaption>
+<pre class='codeblock'>
+
+   command := word semicolon {
+     $0 = "&lt;em&gt;" $1 "&lt;/em"&gt; $2;
+   };
+ ...
+   
+ The $n structure will fetch the tape-cell for the corresponding 
+ identifier in the bnf rule at the start of the brace block.
+ This would be "compiled" to pep syntax as 
+
+  ----
+   pop;pop;
+   "word*semicolon*" {
+     clear; 
+     # assembling: $0 = "&lt;em&gt;" $1 "&lt;/em"&gt; $2;
+     add "&lt;em&gt;"; get; add "&lt;/em&gt;"; ++; get; --; put; clear;
+     # resolve new token 
+     add "command*"; push; .reparse
+   }
+
+   push;push;
+  </pre>
+</figure>
+<p>
+<p>
+SHIFT REDUCTIONS ON THE STACK 
+<p>
+ Imagine we have a &ldquo;recogniser&rdquo; pep script as follows:
+ <pre class='codeblock'>
+
+    read; 
+    '"' { until '"'; clear; add "quote*"; push; }
+    ";" { clear; add "semicolon*"; push; }
+    [a-z] { 
+      while [a-z]; clear; add "word*"; push; 
+    } 
+    [:space:] { clear; }
+  parse&gt;
+    unstack; add "\n"; print; clip; stack; 
+    pop;pop;
+    "command*command*","commandset*command*"
+      { clear; add 'commandset*'; push; .reparse }
+    "word*semicolon*" 
+      { clear; add 'command*'; push; .reparse }      
+    pop;
+    "word*quote*semicolon*" 
+      { clear; add 'command*'; push; .reparse }      
+    push; push; push;
+    (eof) { 
+       pop; pop;
+       "command*", "commandset*" {
+         clear; add "Correct syntax! \n"; print; quit;
+       }
+       clear; add "incorrect syntax! \n"; print; quit;
+    }
+  </pre>
+
+ <p>
+ This script recognises a simple language which consists of a series of
+ &ldquo;commands&rdquo; (which are lower case words) terminated in semicolons. The
+ commands can have an optional quoted argument. At the end of the script,
+ there should only be one token on the stack (either command* or commandset*). 
+<p>
+ This script corresponds reasonable directly to the ebnf rules
+ <pre class='codeblock'>
+
+    word := [a-z]+;
+    semicolon := ';';
+    commandset := command command;
+    command := word semicolon;
+  </pre>
+
+<p>
+ But in the script above there is a problem; that the first rule
+ needs to be applied after the second rule.
+<p>
+ The above statements in the pep language execute a reduction according to
+ the grammar rule written above. Examining the state of the machine
+ before and after the script statements above ....
+ <p>
+ ==:: virtual machine
+ .. stack, if-statement, open-brace*, statements*, close-brace*
+ .. tape, if(a==b), {, a=1; b=2*a; ..., }
+ .. workspace,
+ ..,
+<p>
+NEGATION OF TESTS 
+<p>
+ A test such as 
+ <pre class='codeline'>
+ "some-text" { #* commands *# }
+</pre>
+
+<p>
+ can be modified with the logic operator &ldquo;!&rdquo; (not) as in
+ <pre class='codeline'>
+ !"some-text" { #* commands *# }
+</pre>
+
+<p>
+ Note that the negation operator '!' must come before the test which it
+ modifies, instead of afterwards as in &ldquo;sed&rdquo; .
+<p>
+ Multiple negations are not allowed, because any even number of negations
+ is equivalent to the positive test.
+ <pre class='codeline'>
+ !!"a" {...} # incorrect
+</pre>
+
+ <p>
+NEGATION EXAMPLES ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only numbers in the input 
+ </figcaption>
+<pre class='codeline'>
+ r; ![0-9] { clip; add " "; print; clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only words not beginning with 'a'
+ </figcaption>
+<pre class='codeline'>
+ r; [ \n] { d; } !B"a".!"" { E" ",E"\n",(eof) { print; d; }}
+</pre>
+</figure>
+<p>
+ If the end of the input stream has not been reached
+ then push the contents of the workspace onto the stack
+ <pre class='codeline'>
+ !(eof) { push; } 
+</pre>
+
+ <p>
+ If the value of the workspace is exactly equal to the 
+ value of the current element of the tape, then exit
+ the script immediately
+<p>
+ <pre class='codeline'>
+ !(==) { quit; } 
+</pre>
+
+<p>
+COMMENTS IN THE PEP NOM LANGUAGE 
+<p>
+ Both single line, and multi-line comments are available in the
+ parser script language as implemented in <code>books/pars/asm.pp</code> and 
+ <code>compile.pss</code>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ single and multi-line examples
+ </figcaption>
+<pre class='codeblock'>
+ 
+  #* check if the workspace 
+    is the text "drib" *#
+  "drib" {
+    clear; # clear the workspace buffer 
+  }
+ </pre>
+</figure>
+<p>
+The script &ldquo;compile.pss&rdquo; attempts to preserve comments 
+in the output &ldquo;assembler&rdquo; code to make that code more readable.
+<p>
+GRAMMAR AND SCRIPT CONSTRUCTION
+<p>
+ My knowledge of formal language grammar theory is quite limited. I am more 
+ interested in practical techniques. But there is a reasonably close
+ correlation between bnf-type grammar rules and pep/nom script construction.
+ <p>
+ The right-hand-side of a (E)BNF grammar rule is represented by the 
+ quoted text before a brace block, and the left-hand-side 
+ correlates to the new token pushed onto the stack.
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the rule "&lt;nounphrase&gt; ::= &lt;article&gt; &lt;noun&gt; ;" in a parse script
+ </figcaption>
+<pre class='codeline'>
+ "article*noun*" { clear; add "nounphrase*"; push; }
+</pre>
+</figure>
+<p>
+TRICKS 
+<p>
+ This section contains tips about how to perform specific tasks
+ within the limitations of the parse machine (which does not have 
+ regular expressions, nor any kind of arithmetic).
+<p>
+ See the example <code>eg/plzero.pss</code> for an example of reducing high
+ token rules before low token rules, in order to resolve 
+ precedence issues. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if accumulator is equal to 4
+ </figcaption>
+<pre class='codeblock'>
+
+    read; a+; put; clear; count; 
+    "4" {  clear; add "4th char is '"; get; "'\n"; print; clear; }
+    
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only if number 3 digits or greater
+ </figcaption>
+<pre class='codeblock'>
+
+    # check if the input matches the regex /[0-9]{3,}/
+    r;
+    (eof) {
+      [0-9] { put; clip; clip; clip; !"" { clear; get; print; } }
+    }
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print the length of each word in input 
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    ![:space:] { 
+      nochars; whilenot [:space:]; 
+      add " ("; chars; add ") "; print; clear; 
+    }
+    # ignore whitespace
+    !"" { clear; }
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ another way to print the length of each word in input 
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    E" ",E"\n",(eof) { 
+      add "("; chars; add ") "; print; clear; nochars;
+    }
+  </pre>
+</figure>
+<p>
+ The script below uses a trick of using the replace command
+ with the &ldquo;tape equals workspace&rdquo; test (==) to check if the 
+ workspace contains a particular string.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only lines that contain the text 'puma' 
+ </figcaption>
+<pre class='codeblock'>
+
+    whilenot [\n]; 
+    put; replace "puma" ""; !(==) { clear; get; print; } 
+    (eof) { quit; } 
+  </pre>
+</figure>
+<p>
+MULTIPLEXING TOKEN SEQUENCES ....
+<p>
+ Sometimes it is useful to have a long list of token sequences
+ before a brace block. One way to reduce this list is as follows
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using nested tests to reduce token sequence lists
+ </figcaption>
+<pre class='codeblock'>
+
+     pop; pop;
+     B"aa*","bb*","cc*" {
+       E"xx*","yy*","zz*" {
+         # process tokens here.
+         nop;
+       }
+     }
+     # equivalent long token sequence list
+     "aa*xx*","aa*yy*","aa*zz*","bb*xx*","bb*yy*","bb*zz*"
+     "cc*xx*","cc*yy*","cc*zz*" {
+       nop;
+     }
+   </pre>
+</figure>
+<p>
+NOTES FOR A REGEX PARSER ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ parse a regex between / and / 
+ </figcaption>
+<pre class='codeblock'>
+
+    #*
+    tokens for the regex parser
+      class: [^-a\][bc1-5+*()]
+      spec: the list and ranges in [] classes
+      char: one character 
+    *#
+
+    begin { while [:space:]; clear; }
+    read;
+    !"/" { 
+      clear; add "error"; print; quit;
+    }
+    # special characters for regex can be literal tokens
+    [-/\]()+*$^.?] {
+      "*" { put; clear; add "star*"; push; .reparse }
+      add '*'; push; .reparse
+    }
+
+    # the start of class tests [^ ... ]
+    "[" {
+      read; 
+      # empty class [] is an error
+      "]" { 
+        clear; add "Empty class test [] at char "; chars;
+        print; quit;
+      }
+      # negated class test
+      "^" { clear; add "[neg*"; push; .reparse }
+      # not negated
+      clear; add "[*char*"; push; push; .reparse
+    }
+
+    # just get the next char after the escape char 
+    "\\ " { 
+      (eof) { clear; add "error!"; print; quit; } 
+      clear; read; 
+      [ntfr] { 
+        "n" { clear; add "\n"; }
+        "t" { clear; add "\t"; }
+        "f" { clear; add "\f"; }
+        "r" { clear; add "\r"; }
+        put; clear; add "char*"; push; 
+      }
+    }
+    !"" { put; add "char*"; push; .reparse }
+   parse&gt;
+    pop; pop;
+    "char*star*" { clear; add "pattern*"; .reparse }
+    "char*char*" { clear; add "pattern*char*"; push; push; .reparse }
+    "[*]*" { clear; add "error!"; print; quit; } 
+
+    # 3 tokens
+    pop;
+    
+    # parsing class tests eg: [ab0-9A-C^&*] or [^-abc]
+    # so the only special characters in classes are []^(negation)
+    # - indicates a range, except when it is the 1st char in the brackets
+    #
+    # sequences like: [*char*char* [*-*char*
+
+    B"[*",B"[neg*" {
+      # in brackets, a-b is a range
+      !E"]*".!E"-*" {
+        # manip attributes
+        clear; add "[*spec*char*"; push; push; push; .reparse
+      }
+    }
+    
+    # token sequences, eg: spec/char/? spec/+/+ spec/./char
+    B"spec*" {
+      !E"]*".!E"-*" {
+        # manip attributes
+        get; ++; get; --; put;
+        clear; add "spec*char*"; push; push; .reparse
+      }
+    }
+    
+    "[*spec*]*","[*char*]*" {
+      ++; get; --; put;
+      clear; add "class*"; push; .reparse
+    }
+
+    "[neg*spec*]*","[neg*char*]*" {
+      ++; get; --; put;
+      clear; add "negclass*"; push; .reparse
+    }
+    # end of class parsing
+
+    # a pattern can be simple, like 'a*' or complex like 
+    #  '[1-9abc\n]+' also a pattern can be a sequence of 
+    # patterns
+    "pattern*pattern*" {
+      # this is a recogniser or checker. so just copy the patterns
+      # across.
+      get; ++; get; --; put;
+      clear; add "pattern*"; push; .reparse
+    }
+    
+    push; push;
+    (eof) {
+      add "Parse stack is: "; print; clear; unstack; print; quit;
+    }
+  </pre>
+</figure>
+<p>
+COMPILATION TECHNIQUES
+<p>
+ One of the enjoyable aspects of this parsing/compiling machine is discovering
+ interesting practical &ldquo;heuristic&rdquo; techniques for compiling syntactical
+ structures, within the limitations of the machine capabilities.
+<p>
+ This section details some of these techniques as I discover them.
+<p>
+LOOKAHEAD ....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a technique for lookahead parsing (json)
+ </figcaption>
+<pre class='codeblock'>
+
+    pop; pop; pop; pop;
+    # the test below ensures that there are 4 tokens in the workspace
+    # the final token will normally be ]* or ,* (this is a json array)
+    # but we dont have to worry about it
+    B"items*,item*.!"items*item*" {
+      replace "items*,item*" "items*";
+      push; push; .reparse
+    }
+  </pre>
+</figure>
+ <p>
+RULE ORDER ....
+<p>
+ In a script, after the parse&gt; label we can parse rules in the
+ order of the number of tokens. Or we can group the rules by
+ token. There are some traps, for example: &ldquo;pop; pop;&rdquo; doesn&rsquo;t
+ guarantee that there are 2 tokens in the workspace.
+<p>
+RECOGNISERS AND CHECKERS ....
+<p>
+ A recogniser is a parser that only determines if a given string is a valid
+ &ldquo;word&rdquo; in the given language. We can extend a recogniser to be an error
+ checker for a given string, so that it determines at what point (character
+ or line number) in the string, the error occurs. The error-checker can also
+ give a probably reason for the error (such as the missing or excessive
+ syntactic element) This is much more practically useful than a recogniser
+<p>
+EMPTY START TOKEN ....
+<p>
+ When the start symbol is an array of another token, it may often
+ simplify parsing to create an empty start token in a &ldquo;begin&rdquo; block
+ EBNF equivalent: text = word*
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using an empty start token
+ </figcaption>
+<pre class='codeblock'>
+
+    begin { add "text*"; push; }
+    read;
+    # ignore white-space
+    [:space:] { while [:space:]; clear; }
+    !"" { whilenot [:space:]; put; clear; add "word*"; push; }
+  parse&gt;
+    pop; pop;
+    "text*word*" { clear; add "text*"; push; .reparse }  
+    (eof) { 
+      # check for start symbol 'text* here
+    }
+    push; push; 
+  </pre>
+</figure>
+<p>
+ Without the empty &ldquo;text*&rdquo; token we would have to write
+ <pre class='codeline'>
+ "text*word*","word*word*" { &lt;commands&gt; }
+</pre>
+
+<p>
+ This is not such a great disadvantage, but it does lead to 
+ inefficient compiled code, because the &ldquo;word*word*&rdquo; token 
+ sequence only occurs once when running the script (at the 
+ beginning of the input stream)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ compiled code for "text*word*","word*word*" { ... }
+ </figcaption>
+<pre class='codeblock'>
+
+  </pre>
+</figure>
+<p>
+ Secondly, in other circumstances, there are other advantages
+ of the empty start symbol. See the <code>pars/eg/history.pss</code> script 
+ for an example.
+<p>
+END OF STREAM TOKEN ....
+ <p>
+ This is an analogous technique to the &ldquo;empty start symbol&rdquo; . In
+ many cases it may simplify parsing to create a &ldquo;dummy&rdquo; end token
+ when the end-of-stream is reached. This token should be created
+ immediately after the parse&gt; label
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ example of use of "end" token to parse dates in text
+ </figcaption>
+<pre class='codeblock'>
+
+    # tokens: day month year word
+    # rules: 
+    #    date = day month year
+    #    date = day month word 
+    #    date = day month end
+    read;
+    ![:space:] { 
+      whilenot [:space:]; put; clear; 
+      [0-9] {
+        # matches regex: /[0-9][0-9]*/
+        clip; clip; !"" {
+        }
+      add "word*"; push;
+    }
+   parse&gt;
+    (eof) {
+    }
+  </pre>
+</figure>
+<p>
+PALINDROMES ....
+<p>
+ See <code>eg/palindrome.pss</code> for a complete pep/nom palindrome example
+ that uses token-stack reductions to recognise palindromes.
+<p>
+ Palindromes are an interesting exercise for the machine because
+ they may be the simplest &ldquo;context-free&rdquo; language.
+<p>
+ The script below is working but also prints single letters
+ as palindromes. See the note below for a solution.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only words that are palindromes
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    # the code in this block builds 2 buffers. One with 
+    # the original word, and the other with the word in reverse
+    # Later, the code checks whether the 2 buffers contain the 
+    # same text (a palindrome).
+    ![:space:] {
+      # save the current character
+      ++; ++; put; --; --;
+      get; put; clear;
+      # restore the current character
+      ++; ++; get; --; --;
+      ++; swap; get; put; clear; --;
+    } 
+
+    # check for palindromes when a space or eof found
+    [:space:],&lt;eof&gt; { 
+      # clear white space
+      [:space:] { while [:space:]; clear; }
+      # check if the previous word was a palindrome
+      get; ++; 
+      # if the word is the same as its reverse and not empty
+      # then its a palindrome. 
+      (==) { 
+        # make sure that palindrome has &gt; 2 characters
+        clip; clip; 
+        !"" { clear; get; add "\n"; print; }
+      } 
+      # clear the workspace and 1st two cells
+      clear; put; --; put;
+    }
+
+  </pre>
+</figure>
+<p>
+<p>
+LINE BY LINE TOKENISATION ....
+<p>
+ See the example below and adapt
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a simple line tokenisation example
+ </figcaption>
+<pre class='codeblock'>
+
+    read; 
+    [\n] { clear; }
+    whilenot [\n]; put; clear;
+    add "line*"; push;
+  parse&gt;
+    pop; pop; 
+    "line*line*", "lines*line*" {
+      clear; get; add "\n"; ++; get; --; put; clear;
+      add "words*"; push; .reparse
+    }
+    push; push;
+    (eof) {
+       pop; "lines*" { clear; get; print; }
+    }
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ remove all lines that contain in a particular text 
+ </figcaption>
+<pre class='codeblock'>
+
+    until "
+
+  </pre>
+</figure>
+<p>
+WORD BY WORD TOKENISATION ....
+<p>
+ A common task is to treat the input stream as a series of space
+ delimited words. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a simple word tokenisation example, print one word per line
+ </figcaption>
+<pre class='codeblock'>
+
+    read; [:space:] { clear; }
+    whilenot [:space:]; put; clear;
+    add "word*"; push;
+  parse&gt;
+    pop; pop; 
+    "word*word*", "words*word*" {
+      clear; get; add "\n"; ++; get; --; put; clear;
+      add "words*"; push; .reparse
+    }
+    push; push;
+    (eof) {
+       pop; "words*" { clear; get; print; }
+    }
+  </pre>
+</figure>
+<p>
+REPETITIONS ....
+ <p>
+ The parse machine cannot directly encode rules which contain the ebnf
+ repetition construct {}. The trick below only creates a new list token if
+ the preceding token is not a list of the same type.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a technique for building a list token from repeated items 
+ </figcaption>
+<pre class='codeblock'>
+
+     # ebnf rules:
+     #   alist := a {a}
+     #   blist := b {b}
+
+     read;
+     # terminal symbols
+     "a","b" { add "*"; push; }
+     !"" { 
+       put; clear; 
+       add "incorrect character '"; get; add "'";
+       add " at position "; chars; add "\n"; 
+       add " only a's and b's allowed. \n"; print; quit;
+     }
+   parse&gt;
+     # 1 token (with extra token)
+     pop;
+     "a*" { 
+       pop; !"a*".!"alist*a*" { push; } 
+       clear; add "alist*"; push; .reparse
+     }
+     "b*" { 
+       pop; !"b*".!"blist*b*" { push; } 
+       clear; add "blist*"; push; .reparse
+     }
+     push;
+     &lt;eof&gt; {
+       unstack; put; clear; add "parse stack is: "; get;
+       print; quit; 
+     }
+
+  </pre>
+</figure>
+<p>
+OFFSIDE OR INDENT PARSING ....
+<p>
+ Some languages use indentation to indicate blocks of code, or 
+ compound statements. Python is an important example. These languages
+ are parsed using &ldquo;indent&rdquo; and &ldquo;outdent&rdquo; or &ldquo;dedent&rdquo; tokens.
+ <p>
+ The mark/go commands should allow parsing of indented languages.
+<p>
+ Untested and incomplete...
+ the idea is to issue &ldquo;outdent&rdquo; or &ldquo;indent&rdquo; tokens by
+ comparing the current leading space to a previous 
+ space token. But the code below is a mess.
+ The tricky thing is that we can have multiple &ldquo;outdent*
+&rdquo; tokens from one space* token eg
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a simple python-esque source code example
+ </figcaption>
+<pre class='codeblock'>
+
+     if g==x:
+       while g&lt;100:
+         g++
+     g:=0;
+   </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a basic indent parsing procedure
+ </figcaption>
+<pre class='codeblock'>
+
+    # incomplete!!
+    read;
+    begin { mark "b"; add ""; ++; }
+    [\n] { 
+      clear; while [ ]; put; mark "here"; go "b";
+      # indentation is equal so, do nothing
+      (==) { clear; go "here"; .reparse }
+      add "  ";
+      (==) { clear; add "indent*"; push; go "here"; .reparse }
+      clip; clip;  
+      clip; clip;  
+      (==) { clear; add "outdent*"; push; go "here"; .reparse }
+      put; clear; add "lspace*"; push;
+      mark "b";
+    }   
+   parse&gt;
+  </pre>
+</figure>
+<p>
+OPTIONALITY ....
+<p>
+ The parse machine cannot directly encode the idea of an
+ optional &ldquo;[...]&rdquo; element in a BNF grammar, nor a &ldquo;Kleene star
+&rdquo; element, such as (x)*. But other techniques can be used to 
+ recognise and parse these structures.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a BNF rule with an optional element
+ </figcaption>
+<pre class='codeline'>
+ r := 'a' ['b'] .
+</pre>
+</figure>
+<p>
+ In some cases we can just factor out the optional into alternation &ldquo;|
+&rdquo; <pre class='codeline'>
+ r := 'a' | 'a' 'b' .
+</pre>
+
+<p>
+ However once we have more than 2 or 3 optional elements in a rule, this
+ becomes impractical, for example
+ <pre class='codeline'>
+ r := ['a'] ['b'] ['c'] ['d'] .
+</pre>
+
+ <p>
+ In order to factor out the optionality above we would end up with
+ a large number of rules which would make the parse script very verbose.
+ Another approach is to encode some state into a parse token.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a strategy for parsing rules containing optional elements
+ </figcaption>
+<pre class='codeblock'>
+
+     # parse the ebnf rule
+     # rule := ['a'] ['b'] ['c'] ['d'] ';' .
+     begin { add "0.rule*"; push; }
+     read;
+     [:space:] { clear; }
+     "a","b","c","d",";" { add "*"; push; .reparse  }
+     !"" { add " unrecognised character."; print; quit; }
+   parse&gt;
+     pop; pop;
+     E"rule*a*" { 
+       B"0" { clear; add "1.rule*"; push; .reparse }
+       clear; add "misplaced 'a' \n"; print; quit; 
+     } 
+     E"rule*b*" { 
+       B"0",B"1" { clear; add "2.rule*"; push; .reparse }
+       clear; add "misplaced 'b' \n"; print; quit; 
+     } 
+     E"rule*c*" { 
+       B"0",B"1",B"2" { clear; add "3.rule*"; push; .reparse }
+       clear; add "misplaced 'c' \n"; print; quit; 
+     }
+     E"rule*d*" { 
+       B"0",B"1",B"2",B"3" { clear; add "4.rule*"; push; .reparse }
+       clear; add "misplaced 'd' \n"; print; quit; 
+     }
+
+     E"rule*;*" { clear; add "rule*"; push; }
+
+    push; push;
+    (eof) {
+      pop; 
+      "rule*" { add " its a rule!"; print; quit; }
+    } 
+   </pre>
+</figure>
+<p>
+REPETITION PARSING ....
+<p>
+ Similar to the notes above about parsing grammar rules containing
+ optional elements, we have a difficulty when parsing elements or 
+ tokens which are enclosed in a &ldquo;repetition&rdquo; structure. In ebnf 
+ syntax this is usually represented with either braces &ldquo;{...}&rdquo; or 
+ with a kleene star &ldquo;*". <p>
+&rdquo; We can use a similar technique to the one above to parse repeated
+ elements within a rule.
+<p>
+ The rule parsed below is equivalent to the regular expression
+ <pre class='codeline'>
+ /a?b*c*d?;/
+</pre>
+
+ So the script below acts as a recogniser for the above regular
+ expression. (I wonder if it would be possible to write a script
+ that turns simple regular expressions into pep scripts?)
+<p>
+ In the code below we don't have any separate &ldquo;blist&rdquo; or &ldquo;clist&rdquo; tokens.
+ The code below appears very verbose for a simple task.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ parsing repetitions within a grammar rule
+ </figcaption>
+<pre class='codeblock'>
+
+     # parse the EBNF rule
+     # rule := ['a'] {'b'} {'c'} ['d'] ';' .
+     # equivalent regular expression: /a?b*c*d?;/
+
+     begin { add "0/rule*"; push; }
+     read;
+     [:space:] { clear; }
+     "a","b","c","d",";" { add "*"; push; .reparse  }
+     !"" { add " unrecognised character."; print; quit; }
+   parse&gt;
+   # ------------
+   # 2 tokens 
+     pop; pop; 
+
+     E"rule*a*" { 
+       B"0" { clear; add "a/rule*"; push; .reparse }
+       clear; add "misplaced 'a' \n"; print; quit; 
+     } 
+     E"rule*b*" { 
+       B"0",B"a",B"b" { clear; add "b/rule*"; push; .reparse }
+       unstack; add " &lt;&lt; parse stack.\n"; 
+       add "misplaced 'b' \n"; print; quit;
+     } 
+     E"rule*c*" { 
+       B"0",B"a",B"b",B"c" { clear; add "c/rule*"; push; .reparse }
+       clear; add "misplaced 'c' \n"; 
+       unstack; add " &lt;&lt; parse stack.\n"; print; quit;
+     }
+     E"rule*d*" { 
+       B"0",B"a",B"b",B"c" { clear; add "d/rule*"; push; .reparse }
+       clear; add "misplaced 'd' \n"; print; quit; 
+     }
+
+     E"rule*;*" { clear; add "rule*"; push; }
+
+    push; push;
+    (eof) {
+      pop; 
+      "rule*" { 
+        clear; add "text is in regular language /a?b*c*d?;/ \n"; print; quit; 
+      }
+      push; 
+      add "text is not in regular language /a?b*c*d?;/ \n"; 
+      add "parse stack was:"; print; clear; 
+      unstack; print; quit;
+    } 
+   </pre>
+</figure>
+<p>
+PL ZERO ....
+<p>
+ Pl/0 is a minimalistic language created by Niklaus Wirth, for 
+ teaching compiler construction.
+<p>
+LOOKAHEAD AND REVERSE REDUCTIONS ....
+<p>
+ The so called &ldquo;quotesets&rdquo; have been replaced in the current (aug 2019)
+ implementation of <code>compile.pss</code> with 'ortestset' and 'andtestset'. But the
+ compilation techniques are similar to those shown below.
+<p>
+ The old implementation of the &ldquo;quotesets&rdquo; token in old versions of
+ <code>compile.pss</code> seems quite interesting. It waits until the stack contains a
+ brace token &ldquo;{*&rdquo; until it starts reducing the quoteset list.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a "quoteset", or a set of tests with OR logic
+ </figcaption>
+<pre class='codeline'>
+ 'a','b','c','d' { nop; }
+</pre>
+</figure>
+<p>
+ So the <code>compile.pss</code> script actually parses &ldquo;'c','d' { &rdquo; first, and
+ then resolves the other quotes ('a','b'). This is good because 
+ the script can work out the jump-target for the forward true jump.
+ (the accumulator is used to keep track of the forward true jump).
+<p>
+ It also uses the brace as a lookahead, and then just pushes it
+ back on the stack, to be used later when parsing the whole brace block.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ BNF rules for parsing quotesets
+ </figcaption>
+<pre class='codeline'>
+ quoteset '{' := quote ',' quote '{' ;
+</pre>
+</figure>
+ <pre class='codeline'>
+ quoteset '{' := quote ',' quoteset '{' ;
+</pre>
+
+<p>
+ But this has 2 elements on the left-hand side. This works but is 
+ not considered good grammar (?)
+<p>
+ Multiple &ldquo;testset&rdquo; sequences may be used as a poor-persons
+ regular expression pattern matcher.
+<p>
+ 
+ <pre class='codeblock'>
+
+    r;
+    E" ",E"\n",(eof) {
+      !(eof) { clip; } 
+      B"z".E".txt".![o] { add " (yes!) \n"; print; }
+      clear;
+    }
+  </pre>
+
+<p>
+ It doesn&rsquo;t really make sense to combine a text-equals test with
+ any other test, but the other combinations are useful.
+<p>
+ The &ldquo;set&rdquo; token syntax parses a string such as 
+ <pre class='codeline'>
+ 'a','b','c','d' { nop; }
+</pre>
+
+<p>
+ The comma is the equivalent of the alternation operator (|) in
+ BNF syntax.
+<p>
+ASSEMBLY FORMAT AND FILES
+<p>
+ The implementation of the pep script language uses an intermediary &ldquo;assembly
+&rdquo; phase when loading scripts. <code>asm.pp</code> is responsible for converting 
+ the script into an assembly (text) format. &ldquo;asm.pp&rdquo; is itself an
+ &ldquo;assembly-format&rdquo; file. I refer to this format as &ldquo;assembly&rdquo; or &ldquo;assembler
+&rdquo; because it is similar to other assembly languages: It has one instruction
+ per line. These files consist of &ldquo;instructions&rdquo; on the virtual
+ machine, along with &ldquo;parameters", jumps, tests and jump labels, (which make&rdquo; writing assembly files much easier since line numbers do not have 
+ to be used). So the <code>asm.pp</code> file actually implements the pep script language.
+<p>
+ It is not necessary for the pep/nom script writer to know anything about
+ the assembly format or process. However, for scripts which contain
+ hard-to-find bugs it is useful to load a script into the pep interpreter
+ in &ldquo;interactive&rdquo; mode and step through the script. This interactive mode
+ displays the compiled script in assembly format.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ load the script 'eg/palindromes.pss' in interactive mode
+ </figcaption>
+<pre class='codeline'>
+ pep -If eg/palindrome.pss -i 'hannah'
+</pre>
+</figure>
+<p>
+ &ldquo;The proof is in the pudding&rdquo; : The implementation of the pep script language
+ shows that the pep system (and the pep virtual-machine) is capable of
+ implementing code languages and data languages (or at least simple ones).
+<p>
+ The assembler file syntax is similar to other machine assemblers:
+ 1 command per line, leading space is insignificant. Labels are 
+ permitted and end in a &ldquo;:&rdquo; character. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert the script 'brackets.pss' to its compiled form
+ </figcaption>
+<pre class='codeline'>
+ pep -f compile.pss brackets.pss
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ an example compilation of a simple script 
+ </figcaption>
+<pre class='codeblock'>
+ 
+  # pep script source
+  # read; "abc" { nop; }
+  # pep/nom 'assembly' equivalent of the above script 
+    start:
+    read
+    testis "abc"
+    jumpfalse block.end.21
+      nop
+    block.end.21:
+    jump start 
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ another example showing begin-block compilation 
+ </figcaption>
+<pre class='codeblock'>
+
+  # pep script source
+  # begin { whilenot [:space:]; clear; } read; [:space:] { d; }
+  # compilation:
+
+    whilenot [:space:]
+    clear
+    start:
+    read
+    testclass [:space:]
+    jumpfalse block.end.60
+      clear
+    block.end.60:
+    jump start 
+  </pre>
+</figure>
+<p>
+COMPARISON WITH OTHER COMPILER COMPILERS
+<p>
+ As far as I am aware, all other compiler compiler systems take 
+ some kind of a grammar as input, and produce source code as 
+ output. The produced source code acts as a &ldquo;recogniser&rdquo; for 
+ strings which conform to the given grammar.
+<p>
+YACC AND LEX COMPARISON ....
+<p>
+ The tools &ldquo;yacc&rdquo; and &ldquo;lex&rdquo; and the very numerous clones, rewrites
+ and implementations of those tools are very popular in the implementation
+ of parsers and compilers. This section discusses some of the 
+ important differences between the pep machine and language and 
+ those tools.
+<p>
+ The pep language and machine is (deliberately) a much more limited system
+ than a &ldquo;lex/yacc&rdquo; style combination. A lex/yacc-type system often produces &ldquo;c
+&rdquo; language code or some other language code which is then compiled and run to
+ implement the parser/compiler. 
+<p>
+ The pep system, on the other hand, is a &ldquo;text stream filter&rdquo; ; it simply 
+ transforms one text format into another. For this reason, it cannot
+ perform the complex programmatic &ldquo;actions&rdquo; that tools such as lex/yacc
+ bison or ANTLR can achieve.
+<p>
+ While clearly more limited than a lex-yacc style system, in my opinion
+ the current machine has some advantages:
+<p>
+ u/- It may be simpler and therefore should be easier to understand
+ - It does not make use of shift-reduce tables.
+ - It should be possible to implement it on computer environments with
+ modest resources (data/code memory).
+ - Because it is a text-filter, it should be more accessible for &ldquo;playing&rdquo; around" or experimentation. Perhaps it lacks the psychological barrier
+ that a lex-yacc system has for a non-specialist programmer.
+ - Using translation &ldquo;pep&rdquo; scripts (in the <code>tr/</code> folder), we can translate any
+ pep/nom script into a number of other languages, such as python, ruby,
+ java, go and plain c. These translation scripts (eg
+ tr/translate.python.pss) can also translate themselves, thus creating a
+ complete stand-alone pep system in the target language.
+ - It is relatively easy to create a pep translation script for a new
+ language: a class/object/data-structure is created representing the pep
+ virtual machine, and then an existing translation script is adapted for
+ the new language.
+<p>
+STATUS 
+<p>
+ As of June 2022, the interpreter and debugger written in c (i.e
+ <code>/books/pars/object/pep.c</code> ) works well. This implementation is 
+ not Unicode-aware and has a &ldquo;tape&rdquo; array of fixed size, but these 
+ problems are somewhat obviated by the existence of the translation
+ scripts in the <code>tr/</code> folder.
+<p>
+ A number of interesting and/or useful examples have been written using the
+ &ldquo;pep&rdquo; script language and are in the &ldquo;eg/&rdquo; folder 
+<p>
+ Several translation scripts have been written and are largely bug-free
+ such as for the languages java, go, ruby, python, tcl, and c. These 
+ scripts can be tested with the &ldquo;pep.tt&rdquo; helper function in the
+ <code>helpers.pars.sh</code> bash script. I would like to finish the translation
+ scripts for swift, c++, javascript and rust.
+<p>
+NAMING OF THE &ldquo;PEP NOM&rdquo; SYSTEM
+<p>
+ The system has 2 names &ldquo;pep&rdquo; and &ldquo;nom&rdquo; or &ldquo;pep/nom".&rdquo; The executable is called 'pep' standing for &ldquo;Parse Engine for Patterns
+&rdquo; The source code and examples and translation scripts are contained in
+ a folder called <code>pars/</code>
+<p>
+ The main c source file for the interpreter is called <code>object/pep.c</code> and uses
+ structures and code in the same &ldquo;object&rdquo; directory. Pep scripts are given a
+ &ldquo;.pss&rdquo; file extension, and files in the &ldquo;assembler format have a&rdquo; .pp" file
+ extension.
+<p>
+ The source files are split into <code>.c</code> files where each one corresponds to a
+ particular &ldquo;object&rdquo; (data structure) within the machine (e.g. tape-cell, tape,
+ buffer with stack and workspace). 
+<p>
+ 'pep' is is not an &ldquo;evocative&rdquo; name (unlike, for example, &ldquo;lisp"),&rdquo; but it fits with standard short Unix tool naming.
+<p>
+ Another name for the system is be &ldquo;nom&rdquo; which is a slight reference to &ldquo;noam
+&rdquo; (as in Chomsky) and also an Indo-European (?) root for &ldquo;name
+<p>
+&rdquo; LIMITATIONS AND BUGS
+<p>
+ <p>
+ u/- The main interpreter 'pep' (source /books/pars/object/pep.c) is 
+ written using plain c byte characters. This seemed a big limitation, but
+ the scripts <code>translate.xxx.pss</code> are a simple way to accommodate Unicode
+ characters without rewriting the code in <code>pep.c</code>
+ - The tape structure in the c interpreter is of a fixed size (instead
+ of being dynamically allocated) and so the interpreter will crash
+ if a very large number of tokens are on the stack. 
+ - the pep/nom tool cannot receive the input-stream from STDIN. This is 
+ very &ldquo;un-Unix-like&rdquo; but is unavoidable because the &ldquo;pep&rdquo; executable
+ allows interactive debugging. However, once a script is translated 
+ into another language (such as python/ruby/c/go/java/javascript)
+ it can function as a normal unix &ldquo;filter&rdquo; program.
+ - some segmentation faults may remain in <code>pep.c</code> 
+<p>
+IDEAS
+<p>
+<p>
+ u/- 
+ a simple language which can generate xcode-compatible swift and 
+ android java for writing apps. A json-like layout language to 
+ replace android xml layouts.
+ - parsing regular expressions shouldn&rsquo;t be that difficult:
+ <pre class='codeline'>
+ [0-9abcd]n*a+
+</pre>
+
+ - A vim command to compile and run a fragment with <code>translate.java.pss</code>
+ - A script to turn a Bash shell history file with comments into a python or perl
+ array of objects (so that we can easily eliminate duplicated commands). And
+ eliminate simple commands immediately with pep. (Partly done in the 
+ script <code>eg/bash.history.pss</code>
+ - An indent parser with tokens: space newline word words leading.space =
+ nl space ....
+<p>
+<p>
+FUTURE CHANGES TO THE &ldquo;PEPNOM&rdquo; LANGUAGE AND MACHINE
+<p>
+ In the future, scripts may be able to define new character classes
+ in the following way.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ define new named character classes
+ </figcaption>
+<pre class='codeblock'>
+
+    begin { 
+      class "brackets" [{}()]; 
+      class "idchar" [a-z],[.$]; 
+    } 
+    # now use the new character class
+    [:brackets:] {
+      while [:brackets:]; clear;
+    } print;
+  </pre>
+</figure>
+<p>
+ The commands and new syntax below have not been implemented
+ but might solve a range of problems.
+<p>
+ Here are some possible future changes to the machine.
+<p>
+ o/- abbreviations for character classes eg [:S:] for [:space:]
+ (already in <code>translate.java.pss</code> and some other &ldquo;transpilers
+&rdquo; but not &ldquo;pep.c&rdquo; )
+ - a &ldquo;length&rdquo; command that sets the accumulator to the length
+ of the current workspace?? 
+ - some accumulator based tests might be good. eg:
+ :: &gt;n { &lt;commands&gt; } # check if accumulator greater than n
+ :: &lt;n { &lt;commands&gt; } # check if accumulator less than n
+ :: setchars # set accumulator = character counter
+ :: setlines # set accumulator = line counter
+ - create a &ldquo;forth"/c++ language version of the machine&rdquo; - I may separate the error checking code which is currently
+ in <code>compile.pss</code> into a separate script <code>error.pss</code> . This will 
+ allow the same code to be used in other scripts such as
+ <code>translate.java.pss</code>
+ - add a new command &ldquo;untiltape&rdquo; or just &ldquo;until&rdquo; which has no arguments,
+ which reads the input stream until the workspace ends with
+ the text contained in the current cell of the tape.
+ One application of this command would be parsing gnu sed
+ syntax, where the pattern delimiter is what ever character 
+ follows the &ldquo;s&rdquo; for example:
+ <pre class='codeline'>
+ s/a*b/c/
+</pre>
+
+ <pre class='codeline'>
+ s@a*b@c@
+</pre>
+
+ <pre class='codeline'>
+ s#a*b#c#
+</pre>
+
+ - a new command &ldquo;replacetape&rdquo; which replaces text in the workspace
+ with the contents of the current tape cell. eg:
+ replace all newlines in the workspace with current cell contents
+ <pre class='codeline'>
+ replacetape "\n"; 
+</pre>
+
+ - remove &ldquo;bail&rdquo; the command. Instead allow the &ldquo;quit&rdquo; command to 
+ return an exit code.
+<p>
+HISTORY OF IDEA
+<p>
+ The file <code>object/pep.c</code> contains detailed information about the 
+ development of this idea. The file <code>pars/index.txt</code> contains a history
+ of recent work carried out on the system. Each script file (including
+ translation scripts and examples) contains a history of work on that 
+ particular script.
+<p>
+DESIGN PHILOSOPHY FOR THE MACHINE
+<p>
+ When designing the pep/nom virtual-machine, I wanted to make its capabilities
+ as limited as possible, while still being able to properly parse and
+ translate &ldquo;most&rdquo; context-free languages and some context-sensitive languages.
+ Related to this idea, was the aim to make the virtual-machine implementable
+ in the smallest possible way.
+<p>
+ Also, I deliberately excluded the use of regular expressions, so
+ that the script writer would not be tempted to try to &ldquo;parse 
+&rdquo; context-free patterns with them.
+<p>
+ The general design of the syntax and command-line usage is inspired
+ by some old Unix tools, such as sed, grep and awk
+<p>
+REGULAR EXPRESSIONS OR LACK THEREOF ....
+<p>
+ As oft-repeated in this document, the &ldquo;pep/nom&rdquo; virtual-machine for parsing
+ and the pep/nom language does not support regular expressions. This may seem
+ a strange decision, considering that all existing &ldquo;lexers&rdquo; (tools that
+ perform the &ldquo;lexing&rdquo; phase of compilation) support regular expressions 
+ (as far as I know). 
+<p>
+ I omitted regular expressions from the virtual machine so that the machine
+ could be implemented in a minimal size and also, so that it
+ would run quickly. I am still hopeful that it is possible to 
+ implement the machine on embedded architectures (eg the Atmega328), which
+ have very limited resources. 
+ <p>
+ An interesting example is as follows: A pep script is used to create a
+ compiler for a simple language for embedded systems. A translator script
+ is then used to translate this compiler into embedded c and compiled.
+ The user of the embedded system can then enter commands in the language
+ which are immediately compiled and run on the embedded system.
+ This would create a system similar to micro-python or forth with more 
+ flexibility.
+ <p>
+EVOLUTION OF THE VIRTUAL MACHINE AND LANGUAGE
+<p>
+ 
+ and commands are important additions, because they
+ allow script error messages to pinpoint the line and character number 
+ of the error (which is a service that almost all compilers and interpreters
+ provide). 
+  added to try to allow &ldquo;indent&rdquo; parsing, (also called &ldquo;offside
+&rdquo; parsing, such as is used in the Python language)
+<p>
+IMPORTANT FILES AND FOLDERS
+<p>
+ This section describes some of the key files and folders within
+ the parse-machine implementation at 
+ <a href='http://bumble.sourceforge.net/books/pars/'>bumble.sourceforge.net/books/pars/</a>
+<p>
+EXAMPLE SCRIPTS ....
+<p>
+ The folder <code>eg/</code> contains a set of scripts to demonstrate
+ the utility of the pep/nom language and machine. Here is a 
+ description of some of these scripts.
+<p>
+ u/- <code>sed.tojava.pss</code>
+ converts a gnu &ldquo;sed&rdquo; script into java. All syntax is supported except
+ branching and alternative substitution delimiters (eg &ldquo;s#a#A#g")&rdquo; - <code>mark.latex.pss</code>
+ Converts a plain text format into LaTeX (and hence pdf via pdflatex).
+ - <code>palindrome.pss</code>
+ Finds almost all palindromes (and sub-palindromes) in the 
+ input.
+ - <code>exp.tolisp.pss</code>
+ formats simple arithmetic expressions, of the form 
+ &ldquo;a+b*c+(d/e)&rdquo; into a lisp-style syntax.
+ - <code>brainf.toclang.pss</code>
+ compiles the simple brainf*** language to plain c.
+ - <code>bash.history.pss</code>
+ parses a bash history file which may contain comments for 
+ a particular command as well as the time-stamp and removes
+ trivial commands.
+ - <code>json.check.pss</code>
+ parses and checks text data in the JSON format .
+ - <code>plzero.parse.pss</code>
+ parses and checks N. Wirth's PL/0 teaching language
+ - <code>ro.xxx.pss</code>
+ various scripts which solve problems proposed on the 
+ rosettacode.org site.
+<p>
+COMPILE DOT PSS ....
+<p>
+ This is the script compiler and also the compiler compiler. It has replaced
+ the handcoded <code>/books/pars/asm.pp</code> file because it is easier to write and
+ maintain.
+<p>
+ASM DOT PP ....
+<p>
+ This file implements the &ldquo;pep&rdquo; scripting language. It is a text file which
+ consists of a series of &ldquo;instructions&rdquo; or commands for the pep virtual
+ machine. These instructions include instructions which alter the registers of
+ the virtual machine; tests, which set the flag register of the machine to
+ true if the test returns true, or else false; and conditional and
+ unconditional jumps which change the instruction pointer for the machine if
+ the flag register is true.
+ <p>
+ 'Asm.pp' also contains labels (lines ending in &ldquo;:"). These labels make&rdquo; it much easier to write code containing jumps (a label can be used 
+ instead of an instruction number. 
+<p>
+ Because of the similarity of this format to many &ldquo;assembly&rdquo; languages
+ I refer to this as assembly language for the pep virtual machine.
+<p>
+ &ldquo;asm.pp&rdquo; is generated from <code>pars/compile.pss</code> with
+ <pre class='codeline'>
+ pep -f compile.pss compile.pss &gt; asm.new.pp; cp asm.new.pp asm.pp;
+</pre>
+
+ (and then delete the final print statement at the end of asm.pp)
+<p>
+ This is a good example of the utility of scripts being run on themselves.
+ In fact, all the &ldquo;translate.xxx.pss&rdquo; scripts can be (and are) used in this way.
+ For example:
+ <pre class='codeline'>
+ pep -f translate.java.pss translate.java.pss &gt; Machine.java
+</pre>
+
+<p>
+ This creates a java source file which, when compiled with &ldquo;javac 
+&rdquo; is able to compile scripts into java.
+<p>
+VIM AND PEP
+<p>
+ I usually edit with the (annoying but excellent) &ldquo;vim&rdquo; text editor. Here are
+ some techniques for using Vim with the pep/nom tool. The vim mappings and
+ commands below are useful for checking that pep &ldquo;one-liners&rdquo; and pep scripts
+ or script fragments contained within a text document, actually compile and
+ run. This may be a way of approximating Knuth's &ldquo;literate programming&rdquo; idea.
+<p>
+ The multi-line snippets are contained in a plain text document within &ldquo;---
+&rdquo; and &ldquo;,,,&rdquo; tags, which are both on an otherwise empty line.
+<p>
+ 
+ <pre class='codeline'>
+ com! -nargs=1 Ppm ?^ *---?+1,/^ *,,,/-1w !sed 's/^//' &gt; test.pss; /Users/baobab/sf/htdocs/books/pars/pep -f test.pss -i "&lt;args&gt;"
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a vim command to compile to "assembly" format, an embedded script 
+ </figcaption>
+<pre class='codeline'>
+ com! Ppcc ?^ *---?+1,/^ *,,,/-1w !sed 's/^//' &gt; test.pss; /Users/baobab/sf/htdocs/books/pars/pep -f compile.pss test.pss 
+</pre>
+</figure>
+<p>
+ (The assembly compilation will be printed to STDOUT )
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ compile a one line script to assembly format and save as test.asm 
+ </figcaption>
+<pre class='codeline'>
+ com! -nargs=1 Pplcc .w !sed 's/^ *&gt;&gt;//' &gt; test.pss; /Users/baobab/sf/htdocs/books/pars/pep -f compile.pss test.pss &gt; test.asm
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ run a one line script embedded in a text document, input stream as arg
+ </figcaption>
+<pre class='codeline'>
+ com! -nargs=1 Ppl .w !sed 's/^ *&gt;&gt;//' &gt; test.pss; ./pep -f test.pss -i "&lt;args&gt;"
+</pre>
+</figure>
+<p>
+ Given a one line script such as the following
+ <pre class='codeline'>
+ read; "'" { until "'"; print; } clear;
+</pre>
+
+<p>
+ Typing &ldquo;:Ppl one'two'three&rdquo; within the &ldquo;Vim&rdquo; text editor, with the cursor
+ positioned on the same line (the line beginning with &ldquo;&gt;&gt;"), will execute the&rdquo; script with the text as input.
+<p>
+ There will be quoting problems if the input contains " characters.
+<p>
+ 
+ <pre class='codeline'>
+ com! -nargs=1 Ppm ?^ *---?+1,/^ *,,,/-1w !sed 's/^//' &gt; test.pss; ~/sf/htdocs/books/pars/pep -f test.pss -i "&lt;args&gt;" 
+</pre>
+
+<p>
+ 
+ <pre class='codeline'>
+ com! Ppf ?^ *---?+1,/^ *,,,/-1w !sed 's/^//' &gt; test.pss; ~/sf/htdocs/books/pars/pep -f test.pss pars-book.txt
+</pre>
+
+<p>
+ 
+ <pre class='codeline'>
+ com! Ppll .w !sed 's/^ *&gt;&gt;//' &gt; test.pss; ~/sf/htdocs/books/pars/pep -f test.pss pars-book.txt 
+</pre>
+
+<p>
+ The mapping below can only run the script with a static input &ldquo;abc
+&rdquo; which is not very useful, but at least it tests if the script compiles
+ properly. The compiled script will be saved in &ldquo;sav.pp
+<p>
+&rdquo;  create a vim mapping to run a script embedded in a text document
+ <pre class='codeline'>
+ map ,pp :?^ *---?+1,/^ *,,,/-1w! test.pss \| !pp -f test.pss -i "abc"&lt;cr&gt;
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a vim mapping to execute the current line as a bash "one-liner"
+ </figcaption>
+<pre class='codeline'>
+ map ,pl :.w !sed 's/^ *&gt;&gt;//' \| bash
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a vim command to execute the current line as a pep "one-liner"
+ </figcaption>
+<pre class='codeline'>
+ command! Ppl .w !sed 's/^ *&gt;&gt;//' | bash
+</pre>
+</figure>
+<p>
+ The mappings and commands are for putting in the .vimrc file. To 
+ create them within the editor prepend a &ldquo;:&rdquo; to each mapping etc.
+ <pre class='codeline'>
+ :command! Ppl .w !sed 's/^ *&gt;&gt;//' | bash
+</pre>
+
+<p>
+CONVERT AND RUN WITH JAVA ....
+<p>
+ The vim commands below work because 'translate.java.pss' and 'pep' and 
+ <code>pars-book.txt</code> (this document) are all in the same folder. The paths
+ below would have to be ajusted if that were not the case.
+<p>
+ The commands below are very useful for testing the soundness of the 
+ 'translate.java.pss' script.
+<p>
+ 
+ <pre class='codeline'>
+ com! -nargs=1 Ppmj ?^ *---?+1,/^ *,,,/-1w !sed 's/^//' &gt; test.pss; echo "[translating to java and compiling]"; ./pep -f translate.java.pss test.pss &gt; Machine.java; javac Machine.java; echo "[running code]"; echo "&lt;args&gt;" | java Machine
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ convert to java a script embedded in a text document, input stream as arg
+ </figcaption>
+<pre class='codeline'>
+ com! -nargs=1 Pplj .w !sed 's/^ *&gt;&gt;//' &gt; test.pss; echo "[translating to java and compiling]"; ./pep -f translate.java.pss test.pss &gt; Machine.java; javac Machine.java; echo "[running code]"; echo "&lt;args&gt;" | java Machine
+</pre>
+</figure>
+<p>
+<p>
+HISTORY
+<p>
+ See <code>/books/pars/object/pep.c</code> for detailed development history of the 
+ script interpreter (written in c).
+<p>
+ 22 june 2022
+ Continued work on translator scripts (perl, js) and on examples
+ 13 march 2020
+ made &ldquo;chars&rdquo; and &ldquo;lines&rdquo; aliases for cc and ll in <code>compile.pss</code>
+ 2 November 2019
+ Need to write <code>tr/translate.c.pss</code> to create executable code. This 
+ is based on <code>translate.java.pss</code> . Also would like to write 
+ <code>translate.php.pss</code> so that scripts can easily be run on a web-server.
+ Also, <code>translate.python.pss</code> since python is an important modern
+ language (done). <code>translate.swift.pss</code> <code>translate.ruby.pss</code> (done)
+ <code>translate.forth.pss</code> 
+<p>
+ Need to fix <code>mark.html.pss</code> to produce acceptable html output from
+ this booklet file. Also need to write <code>mark.latex.pss</code> , based 
+ on <code>mark.html.pss</code> so that I can create a decent pdf booklet. Then
+ need to print the booklet with some images and send to people
+ who may be interested in this.
+<p>
+ 27 sept 2019
+ <code>translate.js.pss</code> is nearing completion... seems to be able
+ to compile many scripts to javascript.
+<p>
+ 25 august 2019
+ Great progress has been made. <code>compile.pss</code> has all sorts of 
+ nice new syntax like negated text= tests !"abc"{ ... }
+ Almost all tests can now be negated. There is now an &ldquo;AND&rdquo; concatenation
+ operator (.).
+<p>
+ begin blocks, begintests in ortestsets. <code>compile.pss</code>
+ has replaced <code>asm.handcode.pp</code> for compiling scripts.
+<p>
+ [/dates]
+<p>
+2019
+<p>
+ For a number of years I have been working on a project to write a virtual
+ machine for pattern parsing. The code is located at
+ <a href='https://bumble.sf.net/books/pars/'>bumble.sf.net/books/pars/</a> is) used to implement a script language for
+ parsing and compiling some context-free languages. (The implementation is in
+ 'asm.pp')
+<p>
+ The project is now at a stage where useful scripts can be written in
+ the parse-script language.
+<p>
+ The purpose of the virtual machine is to be able to parse and transform
+ patterns which cannot normally be dealt with through &ldquo;regular expressions&rdquo; .
+ I.e patterns which are not &ldquo;regular languages&rdquo; . Possibly the simplest
+ example of one of these would be palindromes (eg: &ldquo;aba",&rdquo; hannah", &ldquo;anna").&rdquo; The machine also allows a script language to describe patterns and
+ transformations, and this language has similarities to sed and to awk. 
+<p>
+ In fact the whole idea was inspired by sed and its limitations for 
+ context free languages.
+<p>
+ Palindromes are interesting because they can be parsed with the 
+ simplest possible recursive-descent parser. 
+ <p>
+ The &ldquo;pep&rdquo; machine does not use recursive-descent parsing. In fact,
+ the pep machine was written to avoid recursive-descent parsing. 
+<p>
+DOCUMENT HISTORY
+<p>
+<p>
+ 10 july 2022
+ Editing to reduce unnecessary material, which has been left in
+ the file pars-notes.txt. The &ldquo;eg/mark.latex.pss&rdquo; is now in a good
+ enough state to produce an acceptable pdf file. The 3 list types 
+ are now supported. I will work to produce a printed version of 
+ this booklet, with <code>mark.latex.pss</code> and &ldquo;pdflatex&rdquo; and use 
+ pdfpages latex module to produce signatures and folios for binding.
+ <p>
+ 13 march 2020
+ revisiting <code>eg/mark.html.pss</code> in order to format this booklet
+ into html, LaTeX and pdf for printing. Also, some revisions of 
+ the booklet.
+<p>
+ 1 novembre 2019
+ Revising this book file and attempting to make the examples
+ work and more useful.
+<p>
+ 13 sept 2019
+ some editing.
+<p>
+ 4 September 2019
+ Adding some ideas about parsing optional elements.
+<p>
+ 23 August 2019
+ trying to organise this document.
+<p>
+ [/dates]
+<p>
+ 131517 
+ a
+<p>
+<div class='footer'><small><em>
+<p>
+retro html <a href='https://bumble.sf.net/books/pars/eg/text.tohtml.pss'>formatted </a> by <a href='http://nomlang.org'>nom </a> <br/>
+
+comments/suggestions to: mjb &lt;at&gt; nomlang.org
+<p>
+  </em></small></div></body></html>

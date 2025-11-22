@@ -1,0 +1,37 @@
+
+
+## NOM BEGIN BLOCKS 
+
+  The *begin* block: nom code that is executed once at the beginning
+  of the script.
+
+  Like *awk*, the pep/nom language allows 'begin' blocks. These 
+  blocks are only executed once, whereas the rest of the script
+  is executed in a loop for every character in the input stream.
+
+  The *(eof)* end-of-file or end-of-inputstream is in a sense the 
+  converse of the *begin* block because it allows you to do 
+  something at the *end* of the script.
+
+  * an example begin block and 'do almost nothing' script
+  -----+
+    begin {
+      add "Starting script ...\n"; print; clear;
+      # set the token delimiter to / 
+      delim "/";  
+    }
+    read; print; clear;
+  ,,,
+
+  * convert text to a basic html document using begin and (eof)
+  --------+
+    begin { add "<html><body><pre>\n"; print; clear; } 
+    read; 
+    replace "&" "&amp;"; 
+    replace ">" "&gt;"; 
+    replace "<" "&lt;"; 
+    print; clear;
+    (eof) { add "\n</pre></body></pre>\n"; print; clear;}
+  ,,,,
+
+

@@ -1,0 +1,80 @@
+
+ ## The pep&nom assembly language
+
+ About the assembly language used by the pep/nom system to compile
+ and run scripts in the *pep* interpreter.
+
+ The nom system is a "self-hosting compiling" system but not just 
+ in the usual way that compilers can be self-hosting (that is: that 
+ the compiler for a language like java, go, dart, wren, lisp, forth 
+ can compile itself - once a urbandict://bootstrap compiler has been
+ created ), but it is self hosting on multiple levels.
+
+ That is a grandiose statement, and here is the explanation: The *nom*
+ language (which runs on top of the pep pep://machine ) is self-hosting
+ because the *nom* "compiler" nomsf://compile.pss  is written in nom. 
+ To update the compiler, we can modify *compile.pss* and then use it 
+ to compile itself as follows:
+
+   * compile the nom compiler
+   >> pep -f compile.pss compile.pss > asm.test.pp
+
+ Apart from being a neat trick it also makes maintaining the compiler 
+ simpler. But what is this *asm.test.pp* ? It is a "pep assembly" file
+ and you can have a look at the gory details in the current assembler 
+ nomsf://asm.pp Its probably a lot easier to understand than most assembly
+ languages because the instruction names are a bit longer and it is also
+ space indented to show conditional jumps. (the *nom* compiler does the indenting)
+ 
+ The file nomsf://asm.pp is the *real* compiler and if you delete it 
+ the *pep* interpreter will suddenly and unceremoniously stop working. 
+ This is because the *asm.pp* compiler is also *self-hosting* which 
+ means that when you type 
+  
+   * run a nom script
+   >> pep -f gargle.compiler.pss -i "/*test gargle comment*/ "
+
+ The pep interpreter opens 'gargle.compiler.pss' (which would be a compiler for
+ the amazing *gargle* language) and which is a *nom* script and then it uses
+ *asm.pp* to compile this nom script into a ... pep assembly file. So now the
+ *pep* interpreter has an assembly file called something like "script.pp" or
+ probably "sav.pp" which it can load directly (into a Program object, which is
+ just a series of Instruction objects).  Once it has loaded the assembly file
+ it runs the script using the input given to the *-i* switch.
+
+ So that is another level on which pep/nom is a self-hosting compiling 
+ system. But there is another:
+
+   * use a translation script to translate a translator
+   >> pep -f tr/translate.go.pss tr/translate.go.pss > nom.to.golang.go
+
+ (this could be run from the *pepnom* base folder of the 
+ "downloaded" /download/download.pepnom.tar.gz and unpacked pep/nom
+ system)
+
+ The incantation above takes the nom script which translates nom scripts 
+ into the *go* language (googles sort-of successor to c/c++ ) and uses it
+ to translate itself into "go" . All this can become a bit strange to 
+ think about. But it has a practical purpose: after compiling the 
+ go source code in "nom.to.golang.go" with something like 
+ 
+   * compile go source code
+   >> go build nom.to.golang.go
+
+ we have an executable go program which will translate nom scripts into
+ go source code. This means that we can completely dispense with the 
+ *pep* interpreter, which may be a good thing since it is written in 
+ plain c with *byte char* characters and who knows what memory leaks 
+ and weird undiscoverable c-bugs it may have hidden under the proverbial 
+ bonnet.
+
+ So this somewhat oed://onanistic translation of nom translation scripts 
+ is another level at which the pep/nom system is a self-hosting compiling
+ system. 
+ 
+ As far as I know, there is no other language system which can do all this, and
+ especially not for a domain-specific language as simple and as (more or less)
+ readable as *nom* .    
+
+  
+

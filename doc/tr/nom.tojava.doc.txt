@@ -1,0 +1,28 @@
+
+## THE NOM TO JAVA TRANSLATOR
+
+  The nom -> java translator is called /tr/translate.java.pss
+  As is indicated by its name it is an older translation script and 
+  needs to be ported to the new code pattern. However it works 
+  well according to my (somewhat limited) testing and also appears 
+  to work with 2nd generation tests.
+
+  The bash function below which is in nomsf://helpers.pars.sh tests 
+  the java translator with a set of one line scripts which are in
+  /tr/translate.test.txt Every command in the nom language is tested.
+  But multiline scripts and unicode mulibyte characters and grapheme
+  clusters are not tested.
+
+  * test the nom to java translator with a set of one-line scripts
+  >>  pep.tt java 
+
+### BUGS AND ISSUES
+
+  - The translator uses the old grammar which is not great
+  - I don't think a parse> label can go at the start or end 
+    of a script
+  - This uses a java 'int' to hold unicode code points which hopefully
+    works ok (I think that better that using a Character) but it 
+    doesn't handly unicode grapheme clusters (combining marks, underlines
+    diacritics and so forth) which is usually what you would want.
+  

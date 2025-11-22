@@ -1,0 +1,414 @@
+
+
+ # /doc/history.world.txt 
+ # a universal timeline. 
+
+ # sayings
+ # "Si vis pacem, para bellum"
+ # Wer Friede will muss mit sein Feind sprechen"
+ # Jeder Topf findet seinen Deckel."
+
+ ** Some historical events 
+
+ [5 October 2011]
+   Steve Jobs died at age 56 in Palo Alto, California.
+   quotes:
+   "Stay hungry, stay foolish." 
+   "Your time is limited, so don't waste it living someone else's life."
+
+ [9 jan 2007]
+   The *iphone* was unveiled.
+
+ [2000] 
+   Nokia 3310 (cabezon) button phone was introduced
+
+ [1999]
+   Google gets 1 *million* page views per day.
+
+ [4 September 1998]
+   google founded
+
+ [9 November 1989]
+   The fall of the Berlin Wall.
+
+ [1983] 
+   Bjorn Borg retires from tennis at the age of 26
+
+ [30 Oct 1974]
+
+   The 'Rumble in the Jungle' [boxing match] between **Muhammad Ali** 
+   and George Foreman took place on October 30, 1974.   
+
+ [6 Oct 1973] until 25 Oct 1973
+   Yom Kippur war. Egypt and Syria attack Israel. Golda Meir (nee Mabovitch)
+   president.
+
+ [1970] 
+   Forth programming language invented by Charles Moore at NRAO
+   National Radio Astronomy Observatory.
+
+ [1969]
+   First unix operating system invented.
+
+ [20 july 1969]
+   First Human Moon Landing (Apollo 11 mission marks a pivotal moment in space
+   exploration and technological achievement).  
+
+ [may 1968]
+
+   Start of french protests. police were called to the Sorbonne
+   University in Paris to clear out a student occupation, leading to the arrest
+   of student leaders. This confrontation quickly escalated into street battles
+   between students and riot police.
+
+ [27 may 1967]
+   The historic referendum in Australia that is often associated with
+   Aboriginal voting rights was held on May 27, 1967.
+
+ [10 February 1964]
+   Album "The Times They Are a-Changin'" released
+
+ [1960] to 1967
+   Leonard Cohen on Hydra, Greece.
+   song:
+   "Oh so long, Marianne
+   "It's time that we began
+   "To laugh and cry and cry and laugh about it all again"
+
+ [July 26, 1956] 
+   Egyptian President Gamal Abdel Nasser nationalized the Suez Canal
+   Israel, Britain and France then invaded Egypt.
+
+ [6 February 1952]
+   Start of Elizabeth II of England's reign
+
+ [30 Jan 1948]
+   Mahatma Gandhi assassinated.
+   One of Mahatma Gandhi's most famous and powerful phrases in Hindi is:
+
+   phrase: "करो या मरो।"
+   transcript: Karo ya Maro
+   translation: do or die
+
+ [15 August 1947]
+   Independance of India.
+
+ [Oct 21, 1940]
+   Ernest Hemingway's novel For Whom the Bell Tolls was published 
+
+ [17 july 1936]
+   The Spanish Civil War began on July 17, 1936.  On that date, a group of
+   conservative generals, led by figures such as Emilio Mola and Francisco
+   Franco, launched a military uprising in Spanish Morocco and other parts of
+   Spain. 
+
+ [march 1935]
+   Durrells arrive on corfu. Κέρκυρα
+
+ [29 October 1929]
+   'Black Tuesday' The sell off of the usa stock-market.  
+
+ [16 nov 1920]
+   Qantas was founded on November 16, 1920, in Winton, Queensland, Australia
+
+ [nov 20, 1910]
+   Leo Tolstoy died at Astapovo of pneumonia.
+
+ [aug 1910] 
+   Summer of 1910: Picasso spent a significant amount of time in Cadaqués with
+   his partner, Fernande Olivier. During this visit, he was deeply immersed in
+   his Cubist work, and the landscape of the area became a subject in his art
+
+ [16 june 1903]
+   The Ford Motor Company was founded by Henry Ford on June 16, 1903, in
+   Detroit, Michigan
+
+ [2 Nov 1899]
+   (until 7 Sept 1901) The Boxer Rebellion in China started, Foreign
+   legations beseiged in Beijing.
+    
+ [12 Nov 1894]
+   Lawrence Hargrave made a box kite flight at Stanwell Park, Sydney
+
+ [26 August 1883]
+   Explosion of Krakatoa
+   
+ [11 November 1880]
+   Ned Kelly hung at Old Melbourne Gaol at age of 25.
+
+ [10 February 1879]
+   Ned Kelly's Jerilderie letter was delivered (Jerilderie,NSW)
+
+ [7 September 1876]
+   Attempted robbery of Northfield, Minnesota Bank by Jesse James
+   gang.
+
+ [14 april 1865]
+   Abraham Lincoln was assassinated on the evening of April 14, 1865, while
+   attending a play at Ford's Theatre in Washington, D.C.
+
+ [12 April 1861]
+   Start of American civil war.
+
+ [27 aug 1859]
+   The date of the first modern, commercial drilling for petroleum is August 27,
+   1859.  On that date, Edwin Drake successfully drilled an oil well in
+   Titusville, Pennsylvania, at a depth of 69.5 feet (21.2 meters). This event is
+   widely considered to be the birth of the modern petroleum industry, as it was
+   the first time a well was specifically drilled to extract oil for commercial
+   use.
+
+ [10 May 1857] until 1858
+   Start of the Seepoy Mutiny in Meerut, India. Indian Soldiers of the British
+   East India Company mutinied.
+
+ [3 dec 1854]
+   The Eureka Stockade took place in Ballarat, Victoria, Australia, on December
+   3, 1854.  It was a rebellion by gold miners, known as "diggers," who were
+   protesting against the colonial government's oppressive mining license fees
+   and heavy-handed enforcement by the police.
+
+ [1845]
+   Start of the Irish famine (until 1852)
+
+ [10 jun 1838]
+   The Myall Creek massacre occurred on June 10, 1838.  On that day, a group of
+   armed stockmen murdered at least 28 unarmed Aboriginal people, mostly women,
+   children, and elderly men, on a station near Myall Creek in northern New South
+   Wales, Australia
+
+ [25 Feb 1836] 
+   Samuel Colt receives U.S patent for revolver design
+
+ [1838] 
+   Chopin's  24 piano impromptus composed on the Island of Mallorca.
+
+ [31 may 1832]
+   Death of Évariste Galois in a duel, the night after writing a letter 
+   with the ideas of group theory.
+
+ [1831] 
+   The Choctaw Nation forcibly removed, "the trail of tears"
+
+ [4 June 1830]
+   Antonio José de Sucre assassinated. He was ambushed and shot while
+   traveling through a foggy forest in the Berruecos mountains of Gran Colombia
+   (in what is now modern-day Colombia).
+
+ [1827]
+   Franz Schubert's eight piano impromptus composed.
+
+ [7 aug 1819]
+   Battle of Boyaca, Colombia with Simon Bolivar.
+
+ [18 June 1815]
+   The Battle of Waterloo
+
+ [16 October 1793]
+   Marie Antoinette was executed by guillotine
+   "Qu'ils mangent de la brioche" (Jean-Jacques Rousseau)
+
+ [21 January 1793]
+
+   King Louis XVI of France was executed by guillotine.
+   Publicly executed at the Place de la Révolution (now the Place de la
+   Concorde) in Paris. 
+
+ [14 July 1789]
+   Storming of the Bastille, start of the French Revolution.
+
+ [2 july 1778]
+   Death of Jean-Jacques Rousseau
+   "L'homme est né libre, et partout il est dans les fers"
+
+ [4 july 1776]
+   Declaration of American Independance.
+
+ [1712]
+   The steam engine of Thomas Newcomen
+
+ [1599]
+   Approximate 1st performance of the play Hamlet
+
+ [28 Jan 1596]
+   Sir Francis Drake dies of dysentery off the coast of Portobelo, Panama
+
+ [8 Aug 1588]
+   Battle of Gravelines against the Spanish Armada.
+
+ [1586]
+   The British Isles: The potato was also introduced to the British Isles, with
+   Sir Walter Raleigh credited with planting the crop in Ireland in 1586.
+
+ [5 June 1579]
+   Drake makes landfall near Coos Bay, Oregon
+
+ [1577 - 1580]
+   Francis Drake circumnavigates the globe in The Golden Hind
+
+ [23 April 1564]
+   Traditional birthdate of Shakespeare in Avon, England.
+
+ [17 Nov 1558]
+   Start of Queen Elizabeth I of England's reign
+
+ [1535]
+   Sir Thomas More was executed on July 6, 1535.
+
+   He was a prominent English lawyer, statesman, and philosopher who served as
+   Lord High Chancellor of England under King Henry VIII. He was a devout Catholic
+   and a man of great integrity, which ultimately led to his downfall.
+
+   He was executed for refusing to take the Oath of Supremacy, which would have
+   acknowledged King Henry VIII as the head of the Church of England, and for
+   refusing to accept the king's annulment of his marriage to Catherine of Aragon.
+   More's refusal was considered an act of treason, and he was beheaded on Tower
+   Hill in London. He was later canonized as a saint by the Catholic Church.
+
+ [13 aug 1521]
+   The conquest of the Aztec Empire by Hernán Cortés culminated on August 13,
+   1521, with the fall of the Aztec capital, Tenochtitlan.
+
+ [31 Oct 1517]
+   Luther published his 95 Theses on the door of Castle Church, Wittenburg
+   Germany.
+   "Hier stehe ich, ich kann nicht anders"
+
+ [3 aug 1492]
+   start of 1st voyage of Christopher Colombus from Palos de la Frontera, 
+   Spain.
+
+ [12 Oct 1492]
+   Colombus arrives at Dominica.
+
+ [31 July 1492]
+   Expulsion of the Jews from Spain.
+
+ [2 Jan 1492]
+  Fall of Granada, Spain.
+
+ [22 August 1485]
+  King Richard III died at the Battle of Bosworth Field.
+
+  He was the last English monarch to die in battle. The battle was the
+  culmination of the Wars of the Roses and pitted Richard's army against the
+  forces of Henry Tudor, who would go on to become King Henry VII
+
+   "A horse, a horse! My kingdom for a horse!" 
+   King Richard III, William Shakespeare's Act V, Scene 4.
+
+  This line appears in Act V, Scene 4, during the Battle of Bosworth Field.
+  Richard has lost his horse and is fighting on foot, a disastrous situation for
+  a medieval king in battle. 
+
+ [30 may 1431]
+   Joan of Arc burnt at stake, at age of 19.
+   phrase: "Je n'ai pas peur; je suis née pour faire ça."
+
+ 
+ [8 may 1429]
+   British abandon seige of Orleans, after defence by Joan of Arc.
+
+ [25 october 1415]
+   The Battle of Agincourt was fought on October 25, 1415.  This decisive English
+   victory over a much larger French army took place in northern France and was a
+   major battle of the Hundred Years' War. It is one of the most famous battles
+   in English history, immortalized in William Shakespeare's play Henry V.
+
+ [1347] 
+   Start of the Black Plague (bacterium Yersinia pestis) in Europe
+   between 30% and 60% mortality in Europe.
+
+ [1271]
+   Start of Marco Polo's travels
+
+ [1250] approx. 
+   maori arrive in the north island of new zealand
+
+ [August 1227]
+   Genghis Khan died in August 1227.
+
+ [April 6, 1199]
+   Death of Richard the Lionheart, King of England, in Aquitaine France.
+
+ [1096]
+   Start of the First Crusade
+
+ [28 sept 1066]
+    William the Conqueror's invasion of England began on September 28, 1066, when
+    his fleet landed unopposed at Pevensey on the south coast of England.  The
+    invasion culminated with the pivotal Battle of Hastings on October 14, 1066,
+    where William's forces defeated the English army led by King Harold Godwinson,
+    who was killed in the battle.
+
+ [859 AD]
+   Viking leader Rurik becomes ruler of Novgorod on the Volkhov river.
+
+ [28 jan 814 CE]
+   Charlemagne died on January 28, 814, at the age of 72.  He passed away in
+   Aachen, a city that served as a major center of his Frankish empire and is
+   where he was buried.
+
+ [8 June 793 AD]
+   Viking raid on Lindisfarne Priory Britain.
+
+ [711 CE]
+   The Arabic conquest of Spain, more accurately referred to as the Umayyad
+   conquest of Hispania, began in 711 CE.  An army led by the Berber general
+   Tariq ibn Ziyad crossed the Strait of Gibraltar from North Africa. They
+   quickly defeated the Visigothic army under King Roderic at the Battle of
+   Guadalete.
+
+ [610 CE]
+   The Founding of Islam by divine revelation
+
+ [2 Sept 31 BC]
+   Defeat of Mark Antony by Octavian/Augustus at the naval battle
+   of Actium
+
+ [15 Mar 44 BC]
+   Assassination of Julius Caesar.
+
+ [146 BCE]
+   The city of Carthage was destroyed by the Romans in 146 BCE at the
+   conclusion of the Third Punic War.
+
+ [212 BCE]
+   Archimedes, the Greek mathematician and inventor, was killed in 212 BCE during
+   the Siege of Syracuse by a Roman soldier. "Eureka!" is εὕρηκα
+
+ [10 june 323 BC]
+   Death of Alexander the Great in Babylon at the age of 32.
+
+ [399 BCE]
+   Socrates died by drinking hemlock (conium maculatum).
+
+    Greek: "ὁ δὲ ἀνεξέταστος βίος οὐ βιωτὸς ἀνθρώπῳ."
+      "The unexamined life is not worth living."
+
+    Greek: "ἓν μόνον ἀληθινὸν σοφόν ἐστιν, τὸ εἰδέναι ὅτι οὐδὲν οἶδας."
+    "The only true wisdom is in knowing you know nothing."
+
+    Greek: "ἓν μόνον ἀγαθόν, ἡ ἐπιστήμη, καὶ ἓν μόνον κακόν, ἡ ἄγνοια."
+    "There is only one good, knowledge, and one evil, ignorance."
+
+ [August 480 bc]
+   Battle of Thermopylae, the 300 Spartan Warriors defend the pass
+   (The arrows of the persians are so numerous they will blot out the sun)
+   Modern Greek: "Τότε θα πολεμήσουμε στη σκιά."  
+   "Then we will fight in the shade"
+
+ [480 BCE] 
+   Approximate birth of Buddha, Siddhartha Gautama.
+
+ [1200 BCE approx.] 
+   greek siege of troy.
+   achilles: Δεν υπάρχει πλούτος που να αξίζει τη ζωή μου!"
+   "no wealth is worth my life"
+
+ [approx 1975 BC] extinction of woolly mammoths on Wrangel Island.
+
+ [2580 BCE] approx.
+   The Great Pyramid of Khufu built (Giza)
+     
+

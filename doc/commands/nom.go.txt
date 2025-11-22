@@ -1,0 +1,69 @@
+
+## THE NOM "GO" COMMAND 
+ 
+ *go* to the tape cell marked with the given name.
+
+ The *go* command jumps to the pep://tape cell which has been 
+ "marked" nom://mark with the give name. The *go* command has 
+ 2 forms: 
+
+ * go to the tape-cell marked with the name "top" 
+ >> go "top"; 
+
+ * go to the tape-cell marked with the text in the current tape cell 
+ >> go;
+
+ * use mark and go to use the 1st tape cell as a buffer.
+ ------+
+   begin { mark "topcell"; ++; }
+   while [:space:]; clear;
+   whilenot [:space:]; put; 
+   # create a list of urls in the 1st tapecell
+   B"http:",B"https:",B"www." {
+     add " "; print; 
+     mark "here"; go "topcell"; get; put; 
+     go "here"; clear;
+   }
+   !B"http".!B"www.".!"" { add " "; print; clear; }
+   (eof) { go "topcell"; add "\n[url-list]:\n"; get; print; quit; }
+ ,,,,
+
+ See the script pars/eg/markdown.toc.pss for an example of using
+ the "mark" and "go" commands to create a table of contents for 
+ a document from markdown-style underline headings.
+
+### Notes
+
+ When using nom://mark and *go* to allocate a particular tape-cell 
+ as a "buffer" (variable) to store a value, there may be issues when
+ using the "++" nom://plusplus and the "--" nom://minusminus commands.
+ It may be necessary to realign the current tape-cell with *go 'top';* 
+ after a *--* command. On the other hand, there should be no issue when
+ using the nom://pop and nom://push commands, because when the 
+ pep://workspace buffer is empty, then the *push* command should do 
+ nothing (that is: the tape pointer is not incremented) and the same 
+ should be true of the *pop* command when the pep://stack is empty
+ (the tape pointer should not be decremented)
+
+ I have not done much language parsing/compiling with *mark* and *go*
+ so this topic requires further experimentation.
+
+ The non-parameter version of *go* (that is, "go;") has been implemented in
+ the *pep* interpreter but has not been tested or used much. It has been
+ implemented in some of the "translation" nomsf://tr scripts. The
+ non-parameter version is important because it converts the pep://tape into a
+ kind of "associative array" wp://associative_array . I believe this is
+ important in using nom for "type checking" https://wiki.c2.com/?TypeChecking
+ .  Type checking is not strictly pertinent to context-free languages because
+ it involves *remembering* the type a variable. But with the addition of an
+ associative array to the Pep machine, type-checking becomes possible.
+
+ Never-the-less, when nom is performing a type-checking task, it will not 
+ be possible for it to also compile or translate the source code or 
+ language. This means that a compiling system with nom would have to 
+ use 2 "passes" wp://multi-pass_compiler .
+
+ I have not yet (april 2025) written a type-checking script in the "Nom"
+ language.
+
+ 

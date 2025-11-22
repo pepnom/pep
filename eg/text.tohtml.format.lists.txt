@@ -1,0 +1,25 @@
+#: This document is just to check list parsing
+
+  - just checking lists here.
+    An *item* can extend over multiple nom://lines and
+    can contain images like this <:r:/image/test.jpg>
+  - "nom" www.nomlang.org with quotes
+  - terminated with a blank line
+
+
+  - list item with "nom" www.nomlang.org
+  - images can go in a list no? empty element below.
+  -  
+
+  - <image.jpg> 
+  * the caption for something
+  - another *list* item 
+    with <image.jpg> and "quote" and 
+    """ block """ and 
+    * starline here
+  - no nested lists sorry
+  - the last item. List terminated by blankline
+
+  Some text
+  - a list at the end
+  - of the doc. No list headings so far. 

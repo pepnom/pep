@@ -1,0 +1,86 @@
+
+#*
+
+ABOUT 
+  
+  Turn a list of quotes into a lua table structure and and format in html.
+  include some code to randomly select a quote or quotes from the table.
+
+USAGE 
+
+  * how to use this script
+  ----
+    pep -f eg/quotes.tolua.pss doc/misc.somequotes.txt > random.quote.lua
+    lua random.quote.lua
+    # prints a random quote in html blockquote tags. 
+  ,,,,
+
+  
+NOTES
+
+  The quotes are in the format
+  -----
+   * author name
+   """ 
+     some multiline or single line quote
+   """
+  ,,,
+
+  I am not actually parsing at the moment, just printing
+
+HISTORY
+
+  16 april 2025
+    started
+*#
+
+
+ begin {
+   add "local quotetable = {\n"; print; clear;
+ }
+
+ read;
+ [:space:] { clear; }
+ # the author
+ "*" {
+   while [ \t]; clear; until "\n"; clip; 
+   escape '"'; put; 
+   clear; add '["'; get; add '"] = ';
+   print;
+ }
+
+ # the quote between """ and """
+ '"' {
+   while ["]; while [ \t]; clear; until '"""'; clip; clip; clip; 
+   escape '"'; put; 
+   clear; add '[['; get; add ']],\n';
+   print; 
+ }
+
+ # ignore all other structures
+ !"" {
+   clear;
+ }
+
+parse>
+
+ (eof) {
+   add "}\n"; print; clear;
+   add "
+
+    -- iterate over whole table to get all keys
+    local keyset = {}
+    for k in pairs(quotetable) do
+        table.insert(keyset, k)
+    end
+    -- get a random key and value
+    author = keyset[math.random(#keyset)]
+    quote = quotetable[author]
+
+    print ('* '..author)
+    print ('\"\"\"')
+    print (quote) 
+    print ('\"\"\"')
+   ";
+   print;
+ }

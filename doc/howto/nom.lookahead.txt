@@ -1,0 +1,128 @@
+
+ ## Token Lookahead with Nom
+
+ About looking ahead in the parse token stream with [nom]
+
+ Pep and nom read the input stream one character at a time.
+ But it is still possible to approximate *lookahead* with the 
+ [nom] script language and the [pep] virtual machine. 
+ We do this with the *begins-with* (B) and the *ends-with* (E)
+ modifiers for nom "tests" /doc/syntax/nom.syntax.tests.html
+
+ The idea of "peeking" ahead to see what parse-token is coming 
+ next is important for example when implementing operator 
+ precedence in arithmetic expressions.
+
+ Here is a simplified arithmetic example. The script below 
+ parses arithmetic expressions of the form '(1+2)+3*4+5/6'
+ And places brackets around each sub-expression to show the 
+ order of parsing. There is no error checking. See 
+ file:///eg/exp.tolisp.pss for a more complete example with 
+ +/- decimal numbers and powers.
+
+ * operator precedence with look-ahead 
+ -------+
+   read; put; 
+   [0-9] { 
+     while [0-9]; put; 
+     clear; add "expr*"; push; .reparse
+   }
+   [-+] { clear; add "opadd*"; push; .reparse }
+   [*/] { clear; add "opmul*"; push; .reparse }
+   [()] { add "*"; push; .reparse }
+   # ignore everything else.
+   !"" { clear; }
+
+  parse>
+    # watch the parse stack.
+    add "lines:"; lines; add " char "; chars; add ": "; print; clear; 
+    unstack; print; stack; add "\n"; print; clear;
+
+   # implementing lookahead
+   pop;
+   pop;
+   pop;
+
+   "(*expr*)*" {
+     clear; get; ++; get; ++; get; --; --; put;
+     clear; add "expr*"; push; .reparse
+   }
+   # at <eof> no lookahead is required.
+   (eof) {
+     "expr*opadd*expr*","expr*opmul*expr*" {
+       # add brackets to show order of parsing.
+       clear; add "("; get; ++; get; ++; get; add ")"; --; --; put;
+       clear; add "expr*"; push; .reparse
+     }
+   }
+   pop;
+   B"expr*opadd*expr*".!"expr*opadd*expr*" {
+     # times and divide have higher precedence, so don't reduce
+     # x+y if it is followed by * or / eg: x+y/3
+     !E"opmul*" {
+       # have to use replace because we need to conserve the 
+       # lookahead token.
+       replace "expr*opadd*expr*" "expr*";
+       push;push;
+       # now transfer the attributes in the tape. 
+       # the workspace should be empty
+       --; --;
+       # assembling the attribute for the new exp* token
+       # add brackets to show order of parsing.
+       add "("; get; ++; get; ++; get; add ")"; --; --; put; 
+       # transfer the attribute for unknown lookahead token 
+       clear; ++; ++; ++; get; --; --; put; clear;
+       # realign the tape pointer (important!)
+       ++; 
+       .reparse
+     }
+   }
+   push;push;push;push;
+   (eof) {
+     pop; clear; get; print; quit;
+   }
+ ,,,,
+
+
+### LOOKBEHIND
+
+  As well as *lookahead* [nom] can also do *lookbehind* which is 
+  an important parsing technique for only reducing certain token
+  sequences when the tokens 'behind' the current tokens match
+  certain patterns. 
+
+  The example below is from eg/maths.tolatex.pss and only reduces
+  mathematical expressions to 'equations' if they are preceded by
+  nothing or by another equation or a list of equations.
+
+  This also shows the importance of popping 3 tokens but only
+  matching 2 tokens. This is because pop;pop;pop; does not guarantee
+  that there will be 3 tokens on the stack.
+
+  * an example of 'lookbehind' parsing expressions
+  --------+
+
+  # nom fragment
+  pop;pop;pop;
+
+   # only 2 tokens, first equation
+   # discard the semicolon 
+   "expr*;*" {
+     clear;
+     add "\\[\n"; get; add "\n"; add "\\]"; put;
+     clear; add "equation*"; push; .reparse
+   }
+
+   # the sequence expr* ';' preceded by an equation or list of equations.
+   E"expr*;*" {
+     B"equation*",B"equationset*" {
+       replace "expr*;*" "equation*"; push; push;
+       add "\\[\n"; --; get; add "\n"; add "\\]"; put;
+       # realign tape pointer
+       clear; ++; .reparse
+     }
+   }
+   push;push;push;
+
+  ,,,,
+

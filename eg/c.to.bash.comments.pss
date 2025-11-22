@@ -1,0 +1,19 @@
+#*
+   
+ A very early and naive attempt to convert c-style comments to bash one-line
+ comments. Not very good because it doesnt parse quoted text. 
+
+*#
+
+read;
+"/" { 
+   read; 
+   "//" { clear; add "# "; until "\n"; print; clear; } 
+   "/*" { 
+     clear; add "# "; until "*/"; clip; clip; 
+     replace "\n" "\n#";
+     print; clear;
+   } 
+ }
+ print;
+ clear;

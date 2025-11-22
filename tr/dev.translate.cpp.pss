@@ -1,0 +1,1560 @@
+#* 
+
+##   translate.cpp.pss 
+
+   (in dev, not working) A parse-script which translates parse-scripts into c++
+   code.
+   
+   , using the 'pep' tool. The script will create a standalone 
+   compilable c++ program.
+   
+   The virtual machine and engine is implemented in plain c at
+   http://bumble.sf.net/books/pars/gh.c. This implements a script language
+   with a syntax reminiscent of sed and awk (much simpler than awk, but
+   more complex than sed).
+   
+STATUS
+
+   just begun from tr.java.pss
+
+NOTES
+   
+   We use labelled loops and break/continue to implement the 
+   parse> label and .reparse .restart commands. Breaks are also
+   used to implement the quit and bail commands.
+
+TODO
+TESTING
+
+   * testing the multiple escaped until bug
+   >> pep.jas 'r;until"c";add".";t;d;' 'ab\\cab\cabc'
+
+  ----
+    pep -f translate.cpp.pss eg/mark.html.pss > eg/cpp/mark.html.cpp
+    g++ 
+    cat pars-book.txt |  
+  ,,,,
+
+CPP SYNTAX 
+
+ * check if a string ends with prefix
+ ------
+  if (fullString.length() >= ending.length()) {
+    return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else { return false; }
+ ,,,,
+
+ * another way, or use compare, is better but more verbose
+ ----
+ if(argument.substr(0, prefix.size()) == prefix) {
+    std::string argumentValue = argument.substr(prefix.size());
+ }
+ ,,,,
+
+ * check if string starts with text
+ ----
+   std::string s = "tititoto";
+   if (s.rfind("titi", 0) == 0) { // pos=0 limits the search to the prefix
+   // s starts with prefix }
+ ,,,
+ 
+  * read one character from stdin
+  ---
+    c = std::cin.get();
+    str += c;
+  ,,,
+  
+  >> std::cout << str3  << '\n';
+
+  * bind 'out' to a file or stdout
+  ---------
+    std::streambuf * buf;
+    std::ofstream of;
+    if(!condition) {
+      of.open("file.txt");
+      buf = of.rdbuf();
+    } else { buf = std::cout.rdbuf(); }
+    std::ostream out(buf);
+  ,,,
+
+  * write string input to file 
+  ----
+    std::ofstream out("output.txt");
+    out << input;
+    out.close();
+  ,,,
+
+GOTCHAS
+BUGS
+   
+  unescape needs to walk the string.
+
+  Its a bit strange to talk about a multicharacter string being "escaped"
+  (eg when calling 'until') but this is allowed in the pep engine.
+
+  add "\{"; will generate an "illegal escape character" error
+  when trying to compile the generated java code. I need to 
+  consider what to do in this situation (eg escape \ to \\ ?)
+
+  check "go/mark" code. what happens if the mark is not found?? 
+  throw error and exit I think.
+
+SOLVED BUGS
+ 
+  found a bug in "replace" code, which was returning from inline code.
+
+  Found and fixed a bug in the (==) code ie in java (stringa == stringb)
+  doesnt work. 
+
+  found and fixed a bug in java whilenot/while. The code exits if the 
+  character is not found, which is not correct.
+
+TASKS 
+SEE ALSO
+   
+   At http://bumble.sf.net/books/pars/
+
+   tr/translate.*.pss
+     scripts for translating into other languages.
+     eg c,ruby,python,java,tcl 
+
+   compile.pss
+     compiles a script into an "assembly" format that can be loaded
+     and run on the parse-machine with the -a  switch. This performs
+     the same function as "asm.pp" 
+
+HISTORY
+
+  8 august 2021
+    A bit more editing
+  15 july 2021
+    just started to adapt this from java code
+
+*# 
+
+  read;
+  #--------------
+  [:space:] {
+    clear; .reparse
+  }
+
+  #---------------
+  # We can ellide all these single character tests, because
+  # the stack token is just the character itself with a *
+  # Braces {} are used for blocks of commands, ',' and '.' for concatenating
+  # tests with OR or AND logic. 'B' and 'E' for begin and end
+  # tests, '!' is used for negation, ';' is used to terminate a 
+  # command.
+  "{", "}", ";", ",", ".", "!", "B", "E" {
+    put; add "*"; push; .reparse 
+  }
+
+  #---------------
+  # format: "text"
+  "\"" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear; add '"';
+    until '"'; 
+    !E'"' { 
+      clear; add 'Unterminated quote character (") starting at ';
+      get; add ' !\n'; 
+      print; quit;
+    }
+    put; clear;
+    add "quote*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # format: 'text', single quotes are converted to double quotes
+ # but we must escape embedded double quotes.
+  "'" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear;
+    until "'"; 
+    !E"'" { 
+      clear; add "Unterminated quote (') starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    clip; escape '"'; put; clear;
+    add "\""; get; add "\"";
+    put; clear; add "quote*";
+    push; .reparse 
+  }
+
+  #---------------
+  # formats: [:space:] [a-z] [abcd] [:alpha:] etc 
+  # should class tests really be multiline??!
+  "[" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating bracket character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear; add "[";
+    until "]"; 
+    "[]" {
+      clear; add "pep script error at line "; lines;
+      add " (character "; chars; add "): \n";
+      add "  empty character class [] \n";
+      print; quit;
+    }
+    !E"]" { 
+      clear; add "Unterminated class text ([...]) starting at "; get; 
+      add "
+      class text can be used in tests or with the 'while' and 
+      'whilenot' commands. For example: 
+        [:alpha:] { while [:alpha:]; print; clear; }
+      ";
+      print; quit;
+    }
+
+    # need to escape quotes so they dont interfere with the
+    # quotes cpp needs for .matches("...") ?
+    # check!
+    escape '"';
+    # the caret is not a negation operator in pep scripts
+    replace "^" "\\\\^";
+
+    # save the class on the tape
+    put;
+    clop; clop;
+    !B"-" {
+      # not a range class, eg [a-z] so need to escape '-' chars
+      # java requires a double escape and cpp?
+      clear; get; replace '-' '\\\\-'; put;
+    }
+    B"-" {
+      # a range class, eg [a-z], check if it is correct
+      clip; clip; 
+      !"-" {
+        clear;
+        add "Error in pep script at line "; lines;
+        add " (character "; chars; add "): \n";
+        add " Incorrect character range class "; get;
+        add "
+   For example:
+     [a-g]  # correct
+     [f-gh] # error! \n";
+        print; clear; quit;
+
+      }
+    }
+    clear; get;  # restore class text
+    B"[:".!E":]" { 
+      clear; add "malformed character class starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    B"[:".!"[:]" {
+      clip; clip; clop; clop;
+      # unicode posix character classes
+      # Also, abbreviations (not implemented in gh.c yet.)
+      "alnum","N" { clear; add "\\\\p{Alnum}"; }
+      "alpha","A" { clear; add "\\\\p{Alpha}"; }
+      "ascii","I" { clear; add "\\\\p{ASCII}"; }
+      "blank","B" { clear; add "\\\\p{Blank}"; }
+      "cntrl","C" { clear; add "\\\\p{Cntrl}"; }
+      "digit","D" { clear; add "\\\\p{Digit}"; }
+      "graph","G" { clear; add "\\\\p{Graph}"; }
+      "lower","L" { clear; add "\\\\p{Lower}"; }
+      "print","P" { clear; add "\\\\p{Print}"; }
+      "punct","T" { clear; add "\\\\p{Punct}"; }
+      "space","S" { clear; add "\\\\p{Space}"; }
+      "upper","U" { clear; add "\\\\p{Upper}"; }
+      "xdigit","X" { clear; add "\\\\p{Xdigit}"; }
+      !B"\\\\p{" {
+        put; clear;
+        add "Pep script syntax error near line "; lines;
+        add " (character "; chars; add "): \n";
+        add "Unknown character class '"; get; add "'\n";
+        print; clear; quit;
+      }
+
+    }
+    #*
+     alnum - alphanumeric like [0-9a-zA-Z] 
+     alpha - alphabetic like [a-zA-Z] 
+     blank - blank chars, space and tab 
+     cntrl - control chars, ascii 000 to 037 and 177 (del) 
+     digit - digits 0-9 
+     graph - graphical chars same as :alnum: and :punct: 
+     lower - lower case letters [a-z] 
+     print - printable chars ie :graph: + space 
+     punct - punctuation ie !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~. 
+     space - all whitespace, eg \n\r\t vert tab, space, \f 
+     upper - upper case letters [A-Z] 
+     xdigit - hexadecimal digit ie [0-9a-fA-F] 
+    *#
+
+    put; clear;
+    # add quotes around the class and limits around the 
+    # class so it can be used with the string.matches() method
+    # (must match the whole string, not just one character)
+    add '"^'; get; add '+$"'; put; clear;
+    add "class*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # formats: (eof) (EOF) (==) etc. 
+  "(" {
+    clear; until ")"; clip;
+    put; 
+    "eof","EOF" { clear; add "eof*"; push; .reparse } 
+    "==" { clear; add "tapetest*"; push; .reparse } 
+    add " << unknown test near line "; lines;
+    add " of script.\n";
+    add " bracket () tests are \n";
+    add "   (eof) test if end of stream reached. \n";
+    add "   (==)  test if workspace is same as current tape cell \n";
+    print; clear;
+    quit;
+  }
+
+  #---------------
+  # multiline and single line comments, eg #... and #* ... *#
+  "#" {
+    clear; read;
+    "\n" { clear; .reparse }
+
+    # checking for multiline comments of the form "#* \n\n\n *#"
+    # these are just ignored at the moment (deleted) 
+    "*" { 
+      # save the line number for possible error message later
+      clear; lines; put; clear;
+      until "*#"; 
+      E"*#" {
+        # convert to /* ... */ c++ multiline comment
+        clip; clip;
+        put; clear; add "/*"; get; add "*/";
+        # create a "comment" parse token
+        put; clear; 
+        # comment-out this line to remove multiline comments from the 
+        # compiled code.
+        # add "comment*"; push; 
+        .reparse  
+      }
+      # make an unterminated multiline comment an error
+      # to ease debugging of scripts.
+      clear; 
+      add "unterminated multiline comment #* ... *# \n";
+      add "stating at line number "; get; add "\n";
+      print; clear;
+      quit;
+    }
+
+    # single line comments. some will get lost.
+    put; clear; add "//"; get; until "\n"; clip;
+    put; clear; add "comment*"; push; 
+    .reparse 
+  }
+
+ #----------------------------------
+ # parse command words (and abbreviations)
+
+ # legal characters for keywords (commands)
+ ![abcdefghijklmnopqrstuvwxyzBEKGPRUWS+-<>0^] {
+   # error message about a misplaced character
+   put; clear;
+   add "!! Misplaced character '";
+   get;
+   add "' in script near line "; lines;
+   add " (character "; chars; add ") \n";
+   print; clear; quit;
+ }
+
+   # my testclass implementation cannot handle complex lists
+   # eg [a-z+-] this is why I have to write out the whole alphabet
+
+   while [abcdefghijklmnopqrstuvwxyzBEOFKGPRUWS+-<>0^];
+   #----------------------------------
+   # KEYWORDS 
+   # here we can test for all the keywords (command words) and their
+   # abbreviated one letter versions (eg: clip k, clop K etc). Then
+   # we can print an error message and abort if the word is not a 
+   # legal keyword for the parse-edit language
+
+   # make ll an alias for "lines" and cc an alias for chars
+   "ll" { clear; add "lines"; }
+   "cc" { clear; add "chars"; }
+   # one letter command abbreviations
+   "a" { clear; add "add"; }
+   "k" { clear; add "clip"; }
+   "K" { clear; add "clop"; }
+   "D" { clear; add "replace"; }
+   "d" { clear; add "clear"; }
+   "t" { clear; add "print"; }
+   "p" { clear; add "pop"; }
+   "P" { clear; add "push"; }
+   "u" { clear; add "unstack"; }
+   "U" { clear; add "stack"; }
+   "G" { clear; add "put"; }
+   "g" { clear; add "get"; }
+   "x" { clear; add "swap"; }
+   ">" { clear; add "++"; }
+   "<" { clear; add "--"; }
+   "m" { clear; add "mark"; }
+   "M" { clear; add "go"; }
+   "r" { clear; add "read"; }
+   "R" { clear; add "until"; }
+   "w" { clear; add "while"; }
+   "W" { clear; add "whilenot"; }
+   "n" { clear; add "count"; }
+   "+" { clear; add "a+"; }
+   "-" { clear; add "a-"; }
+   "0" { clear; add "zero"; }
+   "c" { clear; add "chars"; }
+   "l" { clear; add "lines"; }
+   "^" { clear; add "escape"; }
+   "v" { clear; add "unescape"; }
+   "z" { clear; add "delim"; }
+   "S" { clear; add "state"; }
+   "q" { clear; add "quit"; }
+   "s" { clear; add "write"; }
+   "o" { clear; add "nop"; }
+   "rs" { clear; add "restart"; }
+   "rp" { clear; add "reparse"; }
+
+   # some extra syntax for testeof and testtape
+   "<eof>","<EOF>" { put; clear; add "eof*"; push; .reparse }
+   "<==>" { put; clear; add "tapetest*"; push; .reparse }
+
+   "jump","jumptrue","jumpfalse",
+   "testis","testclass","testbegins","testends",
+   "testeof","testtape" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "can be used in pep assembly code but not scripts. \n";
+     print; clear; quit;
+   }
+   
+   # show information if these "deprecated" commands are used
+   "Q","bail","state" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "is no longer part of the pep language (july 2020). \n";
+     add "use 'quit' instead of 'bail', and use 'unstack; print;' \n";
+     add "instead of 'state'. \n";
+     print; clear; quit;
+   }
+   
+   "add","clip","clop","replace","upper","lower","cap","clear","print",
+   "pop","push","unstack","stack","put","get","swap",
+   "++","--","mark","go","read","until","while","whilenot",
+   "count","a+","a-","zero","chars","lines","nochars","nolines",
+   "escape","unescape","delim","quit",
+   "write","nop","reparse","restart" {
+     put; clear;
+     add "word*";
+     push; .reparse
+   }
+   
+   #------------ 
+   # the .reparse command and "parse label" is a simple way to 
+   # make sure that all shift-reductions occur. It should be used inside
+   # a block test, so as not to create an infinite loop. There is
+   # Is there a "goto" in c++ ?
+   # implement .reparse/parse>
+   "parse>" {
+     clear; count;
+     !"0" {
+       clear; 
+       add "script error:\n";
+       add "  extra parse> label at line "; lines; add ".\n";
+       print;
+       quit;
+     }
+     clear; add "// parse>"; put;
+     clear; add "parse>*"; push;
+     # use accumulator to indicate after parse> label
+     a+; .reparse 
+   }
+
+   # --------------------
+   # implement "begin-blocks", which are only executed
+   # once, at the beginning of the script (similar to awk's BEGIN {} rules)
+   "begin" {
+     put; add "*"; push; .reparse 
+   }
+
+   add " << unknown command on line "; lines; 
+   add " (char "; chars; add ")"; 
+   add " of source file. \n"; 
+   print; clear; quit;
+
+# ----------------------------------
+# PARSING PHASE:
+
+# Below is the parse/compile phase of the script. Here we pop tokens off the
+# stack and check for sequences of tokens eg "word*semicolon*". If we find a
+# valid series of tokens, we "shift-reduce" or "resolve" the token series eg
+# word*semicolon* --> command*
+#
+# At the same time, we manipulate (transform) the attributes on the tape, as
+# required. 
+#
+
+parse>
+
+#-------------------------------------
+# 2 tokens
+#-------------------------------------
+  pop; pop;
+
+  # All of the patterns below are currently errors, but may not
+  # be in the future if we expand the syntax of the parse
+  # language. Also consider:
+  #    begintext* endtext* quoteset* notclass*, !* ,* ;* B* E*
+  # It is nice to trap the errors here because we can emit some
+  # (hopefully not very cryptic) error messages with a line number.
+  # Otherwise the script writer has to debug with
+  #   pep -a asm.pp -I scriptfile 
+  #
+
+  "word*word*","word*}*","word*begintext*","word*endtext*", "word*!*",
+  "word*,*","quote*word*", "quote*class*", "quote*state*", "quote*}*",
+  "quote*begintext*", "quote*endtext*", "class*word*", "class*quote*",
+  "class*class*", "class*state*", "class*}*", "class*begintext*",
+  "class*endtext*", "class*!*", "notclass*word*", "notclass*quote*",
+  "notclass*class*", "notclass*state*", "notclass*}*" {
+    add " (Token stack) \nValue: \n"; get; 
+    add "\nValue: \n"; ++; get; --; add "\n";
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script (missing semicolon?) \n";
+    print; clear; 
+    quit;
+  }  
+
+  "{*;*", ";*;*", "}*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script: misplaced semi-colon? ; \n";
+    print; clear; quit;
+  }
+
+  ",*{*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra comma in list? \n";
+    print; clear; quit;
+  }
+
+  "command*;*","commandset*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra semi-colon? \n";
+    print; clear; quit;
+  }
+
+  "!*!*" {
+    push; push;
+    add "error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: \n double negation '!!' is not implemented \n";
+    add " and probably won't be, because what would be the point? \n";
+    print; clear; quit;
+  }
+
+  "!*{*","!*;*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced negation operator (!)? \n";
+    add " The negation operator precedes tests, for example: \n";
+    add "   !B'abc'{ ... } or !(eof),!'abc'{ ... } \n";
+    print; clear; quit;
+  }
+
+  ",*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced comma? \n";
+    print; clear; quit;
+  }
+
+  "!*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (at char "; chars; add ") \n"; 
+    add " The negation operator (!) cannot precede a command \n";
+    print; clear; quit;
+  }
+
+  ";*{*", "command*{*", "commandset*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: no test for brace block? \n";
+    print; clear; quit;
+  }
+
+  "{*}*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: empty braces {}. \n";
+    print; clear; quit;
+  }
+
+  "B*class*","E*class*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script:\n  classes ([a-z], [:space:] etc). \n";
+    add "  cannot use the 'begin' or 'end' modifiers (B/E) \n";
+    print; clear; quit;
+  }
+
+  "comment*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: comments cannot occur between \n";
+    add " a test and a brace ({). \n";
+    print; clear; quit;
+  }
+
+  "}*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: extra closing brace '}' ?. \n";
+    print; clear; quit;
+  }
+
+  #*
+  E"begin*".!"begin*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: Begin blocks must precede code \n";
+    print; clear; quit;
+  }
+  *#
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; add "continue script;";
+      # not required because we have labelled loops, 
+      # continue script works both before and after the parse> label
+      # "0" { clear; add "continue script;"; }
+      # "1" { clear; add "break lex;"; }
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    "reparse" {
+      clear; count; 
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      "0" { clear; add "break lex;"; }
+      "1" { clear; add "continue parse;"; }
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; add " of script:  \n";
+    add " misplaced dot '.' (use for AND logic or in .reparse/.restart \n";
+    print; clear; quit;
+  }
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the cpp 
+  "comment*command*","command*comment*","commandset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #
+  # This is a new more elegant way to negate a whole set of 
+  # tests (tokens) where the negation logic is stored on the 
+  # stack, not in the current tape cell. We just add "not" to 
+  # the stack token.
+
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+
+  "!*quote*","!*class*","!*begintext*", "!*endtext*",
+  "!*eof*","!*tapetest*" {
+    # a simplification: store the token name "quote*/class*/..."
+    # in the tape cell corresponding to the "!*" token. 
+    replace "!*" "not"; push;
+    # this was a bug?? a missing ++; ??
+    # now get the token-value
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  #-----------------------------------------
+  # format: E"text" or E'text'
+  #  This format is used to indicate a "workspace-ends-with" text before
+  #  a brace block.
+  "E*quote*" {
+     clear; add "endtext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for end-test (E"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #   A 'B' preceding some quoted text is used to indicate a 
+  #   'workspace-begins-with' test, before a brace block.
+  "B*quote*" {
+     clear; add "begintext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for begin-test (B"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #--------------------------------------------
+  # ebnf: command := word, ';' ;
+  # formats: "pop; push; clear; print; " etc
+  # all commands need to end with a semi-colon except for 
+  # .reparse and .restart
+  #
+  "word*;*" {
+     clear;
+     # check if command requires parameter
+     get;
+     "add", "until", "while", "whilenot", "mark", "go",
+     "escape", "unescape", "delim", "replace" {
+       put; clear; add "'"; get; add "'";
+       add " << command needs an argument, on line "; lines; 
+       add " of script.\n";
+       print; clear; quit;
+     }
+
+     "clip" { 
+       clear; 
+       # are these length tests really necessary
+       add "if (!mm.work.empty()) { /* clip */\n";
+       add "  mm.work.erase(mm.work.size() - 1); }";
+       put; 
+     }
+     "clop" { 
+       clear; 
+       add "if (!mm.work.empty()) { \n";
+       add "  mm.work.erase(mm.work.begin()); }   /* clop */";
+       put; 
+     }
+     "clear" { 
+       clear; add 'mm.work.clear();          /* clear */'; put; 
+     }
+     "upper" { 
+       clear; add "out << \"upper not done!!\"); /* upper */"; put; 
+     }
+     "lower" { 
+       clear; add "out << \"lower not done!!\"); /* lower */"; put; 
+     }
+     "cap" { 
+       clear; add "out << \"cap not done!!\"); /* cap */"; put; 
+     }
+     "print" { 
+       clear; add "out << mm.work;    /* print */"; put; 
+     }
+     "pop" { clear; add "mm.pop();"; put; }
+     "push" { clear; add "mm.push();"; put; }
+     "unstack" { 
+        clear; add "while (mm.pop());          /* unstack */"; put; }
+     "stack" { 
+        clear; add "while(mm.push());          /* stack */"; put; }
+     "put" { 
+       clear; 
+       add "mm.tape.at(mm.cell) = mm.work;     /* put */";
+       put; }
+     "get" { 
+       clear; 
+       add "mm.work += mm.tape.at(mm.cell); /* get */";
+       put;
+     }
+     "swap" { clear; add "mm.swap();"; put; }
+     "++" { 
+       clear; add "mm.increment();          /* ++ */"; put; }
+     "--" { 
+       clear; 
+       add "if (mm.cell > 0) { mm.cell--; } /* -- */"; put;
+     }
+     "read" { clear; add "mm.readNext();    /* read */"; put; }
+     "count" { 
+       clear; 
+       add "mm.work += mm.counter;  /* count */"; put; 
+     }
+     "a+" { clear; add "mm.counter++; /* a+ */"; put; }
+     "a-" { clear; add "mm.counter--; /* a- */"; put; }
+     "zero" { clear; add "mm.counter = 0; /* zero */"; put; }
+     "chars" { 
+       clear; add "mm.work += mm.charsRead;   /* chars */"; put; 
+     }
+     "lines" { 
+       clear; add "mm.work += mm.linesRead; /* lines */"; put; 
+     }
+     "nochars" { clear; add "mm.charsRead = 0; /* nochars */"; put; }
+     "nolines" { clear; add "mm.linesRead = 0; /* nolines */"; put; }
+     # use a labelled loop to quit script.
+     "quit" { clear; add "break script;"; put; }
+     "write" { clear; add 'mm.writeToFile("sav.pp");'; put; }
+     # just eliminate since it does nothing.
+     "nop" { clear; add "/* nop: no-operation eliminated */"; put; }
+
+     clear; add "command*";
+     push; .reparse
+   }
+
+  #-----------------------------------------
+  # ebnf: commandset := command , command ;
+  "command*command*", "commandset*command*" {
+    clear;
+    add "commandset*"; push;
+    # format the tape attributes. Add the next command on a newline 
+    --; get; add "\n"; 
+    ++; get; --;
+    put; ++; clear; 
+    .reparse
+  } 
+
+  #-------------------
+  # here we begin to parse "test*" and "ortestset*" and "andtestset*"
+  # 
+
+  #-------------------
+  # eg: B"abc" {} or E"xyz" {}
+  # transform and markup the different test types
+  "begintext*,*","endtext*,*","quote*,*","class*,*",
+  "eof*,*","tapetest*,*",
+  "begintext*.*","endtext*.*","quote*.*","class*.*",
+  "eof*.*","tapetest*.*",
+  "begintext*{*","endtext*{*","quote*{*","class*{*",
+  "eof*{*","tapetest*{*" {
+
+    #//if (s.rfind("titi", 0) == 0) { // pos=0 limits the search to the prefix
+    B"begin" { clear; add "mm.work.rfind("; }
+    B"end" { clear; add "mm.work.endsWith("; }
+    B"quote" { clear; add "mm.work.equals("; }
+    B"class" { clear; add "mm.work.matches("; }
+    # clear the tapecell for testeof and testtape because
+    # they take no arguments. 
+    B"eof" { clear; put; add "mm.eof"; }
+    B"tapetest" { 
+      clear; put; 
+      add 
+        "(mm.work.equals(mm.tape[mm.tapePointer])"; 
+    }
+    get; !B"mm.eof" { add ")"; }
+    put; 
+    #*
+    #  maybe we could ellide the not tests by doing here
+    B"not" { clear; add "!"; get; put; }
+    *#
+    clear; add "test*"; push;
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # negated tests
+  # eg: !B"xyz {} !(eof) {} !(==) {}
+  #     !E"xyz" {} 
+  #     !"abc" {}
+  #     ![a-z] {}
+  "notbegintext*,*","notendtext*,*","notquote*,*","notclass*,*",
+  "noteof*,*","nottapetest*,*",
+  "notbegintext*.*","notendtext*.*","notquote*.*","notclass*.*",
+  "noteof*.*","nottapetest*.*",
+  "notbegintext*{*","notendtext*{*","notquote*{*","notclass*{*",
+  "noteof*{*","nottapetest*{*"
+  {
+
+    B"notbegin" { clear; add "!mm.work.startsWith("; }
+    B"notend" { clear; add "!mm.work.endsWith("; }
+    B"notquote" { clear; add "!mm.work.equals("; }
+    B"notclass" { clear; add "!mm.work.matches("; }
+    # clear the tapecell for testeof and testtape because
+    # they take no arguments. 
+    B"noteof" { clear; put; add "!mm.eof"; }
+    B"nottapetest" { 
+      clear; put; 
+      add 
+        "(!mm.work.equals(mm.tape[mm.tapePointer])"; 
+    }
+    get; !B"!mm.eof" { add ")"; }
+    put; clear; add "test*"; push; 
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # 3 tokens
+  #-------------------
+
+  pop;
+
+  #-----------------------------
+  # some 3 token errors!!!
+ 
+  # not a comprehensive list
+  "{*quote*;*","{*begintext*;*","{*endtext*;*","{*class*;*",
+  "commandset*quote*;*", "command*quote*;*" {
+    push; push; push;
+    add "[pep error]\n invalid syntax near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script (misplaced semicolon?) \n";
+    print; clear; quit;
+  }  
+
+  # to simplify subsequent tests, transmogrify a single command
+  # to a commandset (multiple commands).
+  "{*command*}*" {
+    clear; add "{*commandset*}*"; push; push; push;
+    .reparse
+  }
+
+  # errors! mixing AND and OR concatenation
+  ",*andtestset*{*",
+  ".*ortestset*{*" {
+    # push the tokens back to make debugging easier
+    push; push; push; 
+    add " error: mixing AND (.) and OR (,) concatenation in \n";
+    add " in pep script near line "; lines;
+    add " (character "; chars; add ") \n";
+    add ' 
+  For example:
+     B".".!E"/".[abcd./] { print; }  # Correct!
+     B".".!E"/",[abcd./] { print; }  # Error! \n';
+    print; clear; quit;
+  }
+
+  #--------------------------------------------
+  # ebnf: command := keyword , quoted-text , ";" ;
+  # format: add "text";
+
+  "word*quote*;*" {
+    clear; get;
+    "replace" {
+       # error 
+       add "< command requires 2 parameters, not 1 \n";
+       add "near line "; lines;
+       add " of script. \n";
+       print; clear; quit;
+    }
+
+    # check whether argument is single character, otherwise
+    # throw an error
+    "escape", "unescape", "while", "whilenot" {
+      # This is trickier than I thought it would be.
+      clear; ++; get; --; 
+      # check that arg not empty, (but an empty quote is ok 
+      # for the second arg of 'replace'
+      '""' {
+        clear; 
+        add "[pep error] near line "; lines;
+        add " (or char "; chars; add "): \n"; 
+        add "  command '"; get; 
+        add '\' cannot have an empty argument ("") \n';
+        print; quit;
+      }
+
+      # quoted text has the quotes still around it.
+      # also handle escape characters like \n \r etc
+      clip; clop; clop; clop;
+      # B "\\" { clip; } 
+      clip; 
+      !"" {
+        clear; 
+        add "Pep script error near line "; lines;
+        add " (character "; chars; add "): \n"; 
+        add "  command '"; get; 
+        add "' takes only a single character argument. \n";
+        print; quit;
+      }
+      clear; get;
+    }
+
+    "mark" {
+      clear;
+      add "/* mark */ \n";
+      add "mm.marks[mm.tapePointer].setLength(0); // mark \n"; 
+      add "mm.marks[mm.tapePointer].append("; ++; get; --; 
+      add "); // mark";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "go" {
+      clear;
+      add "/* go */\n";
+      add "for (var ii = 0; ii < mm.marks.length; ii++) \n";
+      add "  if (mm.marks[ii].equals("; ++; get; --; 
+      add ")) \n";
+      add "    { mm.tapePointer = ii; }";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "delim" {
+      clear;
+      # this.delimiter.setCharAt(0, text.charAt(0));
+      # only the first character of the delimiter argument is used. 
+      add "mm.delimiter.setLength(0); /* delim */\n"; 
+      add "mm.delimiter.append("; ++; get; --; 
+      add "); ";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "add" {
+      clear;
+      add "mm.work.append("; ++; get; --; 
+      # handle multiline text
+      replace "\n" '"); \nmm.work.append("\\n';
+      add "); /* add */";
+      put; clear; add "command*"; push; .reparse
+    }
+
+   
+    "while" {
+      clear;
+      add "while ((char) mm.peep == "; ++; get; --;
+      add ".charAt(0)) /* while */\n "; 
+      add " { if (mm.eof) {break;} mm.read(); }"; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "whilenot" {
+      clear;
+      add "while ((char) mm.peep != "; ++; get; --;
+      add ".charAt(0)) /* whilenot */\n ";
+      add " { if (mm.eof) {break;} mm.read(); }"; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "until" {
+       clear; add "mm.until("; 
+       ++; get; --; 
+       # error until cannot have empty argument
+       'mm.until(""' { 
+         clear; 
+         add "Pep script error near line "; lines;
+         add " (character "; chars; add "): \n";
+         add " empty argument for 'until' \n";
+         add " 
+   For example:
+     until '.txt'; until \">\";    # correct   
+     until '';  until \"\";        # errors! \n";
+         print; quit;
+       }
+       # handle multiline argument
+       replace "\n" "\\n";
+       add ');'; put; clear;
+       add "command*"; push; .reparse
+     }
+
+    # But really, can't the "replace" command just be used
+    # instead of escape/unescape?? This seems a flaw in the 
+    # machine design.
+    "escape","unescape" {
+       clear; add "mm."; get; add "Char"; 
+       add "("; ++; get; --; add '.charAt(0));'; put; clear;
+       add "command*"; push; .reparse
+     }
+
+     # error, superfluous argument
+     add ": command does not take an argument \n";
+     add "near line "; lines;
+     add " of script. \n";
+     print; clear;
+     #state
+     quit;
+   }
+
+   #----------------------------------
+   # format: "while [:alpha:] ;" or whilenot [a-z] ;
+
+   "word*class*;*" {
+     clear; get;
+
+     "while" {
+       clear;
+       add "/* while */ \n";
+       add "while (Character.toString((char)mm.peep).matches("; ++; get; --;
+       add ")) { if (mm.eof) { break; } mm.read(); }"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     "whilenot" {
+       clear;
+       add "/* whilenot */ \n";
+       add "while (!Character.toString((char)mm.peep).matches("; ++; get; --;
+       add ")) { if (mm.eof) { break; } mm.read(); }"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     # error 
+     add " < command cannot have a class argument \n";
+     add "line "; lines; add ": error in script \n";
+     print; clear; quit;
+   }
+
+
+  # arrange the parse> label loops
+  (eof) {
+    "commandset*parse>*commandset*","command*parse>*commandset*",
+    "commandset*parse>*command*","command*parse>*command*" {
+      clear; 
+      # indent both code blocks
+      add "  "; get; replace "\n" "\n  "; put; clear; ++; ++;
+      add "  "; get; replace "\n" "\n  "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      add "lex: { \n";
+      get; add "\n}\n"; ++; ++;
+      # indent code block
+      # add "  "; get; replace "\n" "\n  "; put; clear;
+      add "parse: \n";
+      add "while (true) { \n"; get;
+      add "\n  break parse;\n}"; 
+      --; --; put; clear;
+      add "commandset*"; push; .reparse
+    }
+  }
+
+  # -------------------------------
+  # 4 tokens
+  # -------------------------------
+
+  pop;
+
+  #-------------------------------------
+  # bnf:     command := replace , quote , quote , ";" ;
+  # example:  replace "and" "AND" ; 
+
+  "word*quote*quote*;*" {
+    clear; get;
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      clear; 
+      add "/* replace */ \n";
+      add "if (!mm.work.empty()) { \n";
+      add "  temp = mm.work.replace(";
+      ++; get; add ", ";
+      ++; get; add ");\n"; 
+      add "  mm.work.clear(); \n";
+      add "  mm.work.append(temp);\n} ";
+      --; --; put;
+      clear; add "command*"; push; .reparse
+    }
+
+    add "pep script error on line "; lines; 
+    add " (character "; chars; add "): \n";
+    add "  command does not take 2 quoted arguments. \n";
+    print; quit;
+  }
+
+  #-------------------------------------
+  # format: begin { #* commands *# }
+  # "begin" blocks which are only executed once (they
+  # will are assembled before the "start:" label. They must come before
+  # all other commands.
+
+  # "begin*{*command*}*",
+  "begin*{*commandset*}*" {
+     clear; 
+     ++; ++; get; --; --; put; clear;
+     add "beginblock*";
+     push; .reparse
+   }
+
+   # -------------
+   # parses and compiles concatenated tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+   # these 2 tests should be all that is necessary
+   "test*,*ortestset*{*",
+   "test*,*test*{*" {
+     clear; get; add " || ";
+     ++; ++; get; --; --; put; clear; 
+     add "ortestset*{*";
+     push; push;
+     .reparse
+   }
+
+   # dont mix AND and OR concatenations 
+
+   # -------------
+   # AND logic 
+   # parses and compiles concatenated AND tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+   # it is possible to elide this block with the negated block
+   # for compactness but maybe readability is not as good.
+
+   # negated tests can be chained with non negated tests.
+   # eg: B'http' . !E'.txt' { ... }
+
+   "test*.*andtestset*{*",
+   "test*.*test*{*" {
+     clear; get; add " && ";
+     ++; ++; get; --; --; put; clear; 
+     add "andtestset*{*";
+     push; push; .reparse
+   }
+
+  #-------------------------------------
+  # we should not have to check for the {*command*}* pattern
+  # because that has already been transformed to {*commandset*}*
+
+  "test*{*commandset*}*",
+  "andtestset*{*commandset*}*",
+  "ortestset*{*commandset*}*" { 
+     clear; 
+     # indent the java code for readability
+     ++; ++; add "  "; get; replace "\n" "\n  "; put; --; --; 
+     clear; add "if ("; get; add ") {\n";
+     ++; ++; get;
+     add "\n}"; 
+     --; --; put; clear;
+     add "command*";
+     push;
+     # always reparse/compile
+     .reparse
+   }
+
+  # -------------
+  # multi-token end-of-stream errors
+  # not a comprehensive list of errors...
+  (eof) {
+    E"begintext*",E"endtext*",E"test*",E"ortestset*",E"andtestset*" {
+      add "  Error near end of script at line "; lines;
+      add ". Test with no brace block? \n";
+      print; clear; quit;
+    }
+
+    E"quote*",E"class*",E"word*"{
+      put; clear; 
+      add "Error at end of pep script near line "; lines; 
+      add ": missing semi-colon? \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+
+    E"{*", E"}*", E";*", E",*", E".*", E"!*", E"B*", E"E*" {
+      put; clear; 
+      add "Error: misplaced terminal character at end of script! (line "; 
+      lines; add "). \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+  }
+
+  # put the 4 (or less) tokens back on the stack
+  push; push; push; push;
+
+  (eof) {
+    print; clear;
+
+    # create the virtual machine object code and save it
+    # somewhere on the tape.
+    add '
+
+ /* C++ code generated by "translate.cpp.pss" */
+ // NOTE: script in developement.
+
+ #include <iostream>
+ #include <fstream>
+ #include <string>
+ using namespace std;
+ class Machine {
+   // how does cpp do unicode?
+   private:
+
+   int counter;      // counter for anything
+   int peep;             // next char in input stream
+   int charsRead;        // No. of chars read so far
+   int linesRead;        // No. of lines read so far
+   string work;          // text buffer for all manipulations.
+   vector<string> stack;  // parse token stack
+   int LENGTH = 100;      // current tape length
+   vector<string> tape;   // array of token attributes 
+   vector<string> marks;  // tape marks
+   int cell;              // pointer to current cell
+   Reader input;          // text input stream
+   bool eof;              // end of stream reached?
+   string escape;         // char used to "escape" others "\\"
+   string delimiter;      // push/pop delimiter (default is "*")
+   
+   public:
+   /** make a new machine with a character stream reader */
+   // and an output stream?
+   Machine(Reader reader) {
+     this.input = reader;
+     this.eof = false;
+     this.flag = false;
+     this.charsRead = 0; 
+     this.linesRead = 1; 
+     this.escape = "\\\\"
+     this.delimiter = "*";
+     this.counter = 0;
+     this.work = "";
+     //this.stack = vector<string>(); ??
+     this.cell = 0;
+
+     for (int ii = 0; ii < this.SIZE; ii++) {
+       this.tape.push_back(""); 
+       this.marks.push_back("");
+     }
+
+     this.peep = this.input.read();
+
+   } /* init */
+
+   /** read one character from the input stream and 
+       update the machine. */
+   void readNext() {
+     int iChar;
+     if (this.eof) { exit(0); }
+     this.charsRead++;
+     // increment lines
+     if ((char)this.peep == \'\\n\') { this.linesRead++; }
+     this.work += this.peep;
+     this.peep = this.input.read(); 
+     if (this.peep == -1) { this.eof = true; }
+   }
+
+   /** increment tape pointer by one */
+   void increment() {
+     this.cell++;
+     if (this.cell >= Machine.LENGTH) {
+       for (int ii = 0; ii < 50; ii++) {
+         this.tape.push_back(""); 
+         this.marks.push_back("");
+       }
+     }
+   }
+   
+   /** remove escape character  */
+   void unescapeChar(char c) {
+     if (work.length() > 0) {
+       string s = this.work.replace("\\\\"+c, c+"");
+       this.work.setLength(0); work.append(s);
+     }
+   }
+
+   /** add escape character  */
+   void escapeChar(char c) {
+     if (!this.work.empty()) {
+       string s = this.work.replace(c+"", "\\\\"+c);
+       work.setLength(0); work.append(s);
+     }
+   }
+
+   /** whether trailing escapes \\\\ are even or odd */
+   // untested code. check! eg try: add "x \\\\"; print; etc
+   bool isEscaped(string ss, string sSuffix) {
+     int count = 0; 
+     if (ss.length() < 2) return false;
+     if (ss.length() <= sSuffix.length()) return false;
+     if (ss.indexOf(this.escape.charAt(0)) == -1) 
+       { return false; }
+
+     int pos = ss.length()-sSuffix.length();
+     while ((pos > -1) && (ss.charAt(pos) == this.escape.charAt(0))) {
+       count++; pos--;
+     }
+     if (count % 2 == 0) return false;
+     return true;
+   }
+
+   /* a helper to see how many trailing \\\\ escape chars */
+   int countEscaped(string sSuffix) {
+     string s = "";
+     int count = 0;
+     int index = this.work.lastIndexOf(sSuffix);
+     // remove suffix if it exists
+     if (index > 0) {
+       s = this.work.substring(0, index);
+     }
+     while (s.endsWith(this.escape)) {
+       count++;
+       s = s.substring(0, s.lastIndexOf(this.escape));
+     }
+     return count;
+   }
+
+   /** reads the input stream until the workspace end with text */
+   // can test this with
+   void until(string sSuffix) {
+     // read at least one character
+     if (this.eof) return; 
+     this.readNext();
+     while (true) {
+       if (this.eof) { return; }
+       if (this.work.endsWith(sSuffix)) {
+         if (this.countEscaped(sSuffix) % 2 == 0) { return; }
+       }
+       this.readNext();
+     }
+   }
+
+   /** pop the first token from the stack into the workspace */
+   bool pop() {
+     if (this.stack.isEmpty()) { return false; }
+     this.work.insert(0, this.stack.pop_back());     
+     if (this.cell > 0) { this.cell--; }
+     return true;
+   }
+
+   /** push the first token from the workspace to the stack */
+   bool push() {
+     string sItem = "";
+     // dont increment the tape pointer on an empty push
+     if (this.work.empty()) { return false; }
+     int iFirstStar = 
+       this.work.indexOf(this.delimiter);
+     if (iFirstStar != -1) {
+       sItem = this.work.substring(0, iFirstStar + 1);
+       this.work.delete(0, iFirstStar + 1);
+     }
+     else {
+       sItem = this.work;
+       this.work = "";
+     }
+     this.stack.push_back(sItem);     
+     this.increment(); 
+     return true;
+   }
+
+   /** swap current tape cell with the workspace */
+   // trivial in c++ ?
+   void swap() {
+     this.work.swap(this.tape[this.cell];
+   }
+
+   /** save the workspace to a file */
+   void writeToFile(string filename) {
+     std::ofstream out(filename);
+     out << this.work;
+     out.close();
+   }
+
+   /** parse/check/compile the input */
+   void parse(InputStreamReader input) {
+     //this is where the actual parsing/compiling code should go 
+     //but this means that all generated code must use
+     //"this." not "mm."
+   }
+
+ }; /* end of machine class definition
+
+  /* we could read from a file or stdin here */
+  int main() { 
+    string temp = "";    
+    // this calls the default constructor in c++
+    Machine mm; \n';
+
+    # save the code in the current tape cell
+    put; clear;
+
+    #---------------------
+    # check if the script correctly parsed (there should only
+    # be one token on the stack, namely "commandset*" or "command*").
+    pop; pop;
+
+    "commandset*", "command*" {
+      clear;
+      # indent generated code (6 spaces) for readability.
+      add "      "; get; 
+      replace "\n" "\n      "; put; clear;
+      # restore the java preamble from the tape
+      ++; get; --;
+      add '
+    script: 
+    while (!mm.eof) {\n'; get;
+
+      add "\n    }";
+      add "\n  }";
+      add "\n}\n";
+      # put a copy of the final compilation into the tapecell
+      # so it can be inspected interactively.
+      put; print; clear; quit;
+    }
+
+    "beginblock*commandset*", "beginblock*command*" {
+      clear; 
+      # indent begin block code  
+      add "    "; get; 
+      replace "\n" "\n    "; put; clear; 
+      # indent main code for readability.
+      ++; add "      "; get; 
+      replace "\n" "\n      "; put; clear; --;
+      # get java preamble from tape
+      ++; ++; get; --; --;
+
+      get; add "\n"; ++; 
+      # a labelled loop for "quit" (but quit can just exit?)
+      add "    script: \n";
+      add "    while (!mm.eof) {\n"; get;
+      add "\n    }";
+      add "\n  }";
+      add "\n}\n";
+      # put a copy of the final compilation into the tapecell
+      # for interactive debugging.
+      put; print; clear; quit;
+    }
+
+    push; push;
+    # try to explain some more errors
+    unstack;
+    B"parse>" {
+      put; 
+      clear; 
+      add "[error] pep syntax error:\n";
+      add "  The parse> label cannot be the 1st item \n"; 
+      add "  of a script \n"; 
+      print; quit;
+    }
+    put; clear;
+
+    clear;
+    add "[error] compiling with 'translate.cpp.pss' (at EOF): \n ";
+    add "  parse error in input script. \n ";
+    print; clear; 
+    unstack; put; clear;
+    add "Parse stack: "; get; add "\n";
+    add "   * debug script ";
+    add "   >> pep -If script -i 'some input' \n ";
+    add "   *  debug compilation. \n ";
+    add "   >> pep -Ia asm.pp script' \n ";
+    print; clear; 
+    quit;
+
+  } # not eof
+
+  # there is an implicit .restart command here (jump start)
+

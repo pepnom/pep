@@ -1,0 +1,120 @@
+
+#*
+ABOUT 
+
+  A very naive attempt to remove *bad* words from output [html].
+  Not for production use. Not finished.
+
+  This script is supposed to remove "bad" words or part words from text
+  comments and also add some minimal html markup (like <p> for empty lines) But
+  its really not so easy. Because offensive comments are difficult to 
+  really control. At least it demonstrates letter by letter parsing.
+ 
+STATUS 
+
+  just started
+
+TOKENS 
+
+  space* whitespace 
+  char* one unicode character
+  word* a set of non whitespace characters
+
+NOTES
+
+  I may delete punctuation in words except ' and . 
+  I will probably just print each word as found, no
+  parse a whole document
+
+HISTORY
+ 
+ 10 feb 2025
+   began
+
+*#
+
+  begin {
+    # a dummy initial space to start the parsing
+    add "space*"; push;
+  } 
+
+  # The script lexing phase
+
+  read;
+  # whitespace 
+  [:space:] { put; clear; add "space*"; push; .reparse }
+  ![:space:] { put; clear; add "char*"; push; .reparse }
+
+  # make character counter relative to each line for more helpful
+  # error messages
+  # [:space:] { "\n" { nochars; } clear; }
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.fk
+  add "* line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  # -----------
+  # one token 
+  pop; 
+  
+  (eof) {
+    "word*" { clear; get; add "\n"; print; clear; }
+    "space*" { clear; get; print; clear; }
+  }
+  #-----------------
+  # 2 tokens
+  pop;
+
+  # build words 
+  "word*char*" {
+     clear; get; ++; get; --; put; 
+     # here we can check for bad words eg this is very very very
+     # naive and probably should not be used
+     E"shit" { replace "shit" "s**t"; }
+     E"cunt" { replace "cunt" "c**t"; }
+     E"fuck" { replace "fuck" "f**k"; }
+     "rape" { replace "rape" "r**e"; }
+     put; clear;
+     add "word*"; push; .reparse
+  }
+
+  # print words 
+  "word*space*" {
+     clear; get; print; clear; 
+     # transfer space attrib
+     ++; get; --; put; clear;
+     add "space*"; push; .reparse
+  }
+
+  # ellide spaces 
+  "space*space*" {
+     clear; get; ++; get; --; put; clear;
+     add "space*"; push; .reparse
+  }
+
+  # start words 
+  "space*char*" {
+     clear; get; 
+     # print one space
+     !"\n\n" { clear; add " "; print; clear; }
+     # print html paragraph 
+     "\n\n" { clear; add "\n<p>\n"; print; clear; }
+     # transfer char attrib
+     clear; ++; get; --; put; 
+     clear; add "word*"; push; .reparse
+  }
+
+  #-----------------
+  # 3 tokens
+  pop;
+
+  #-----------------
+  # 4 tokens
+  pop;
+
+  push; push; push; push;
+

@@ -1,0 +1,10 @@
+
+
+## THE NOM "CLOP" COMMAND 
+
+  *clop* one character from the *beginning* of the workspace buffer. 
+  
+  The clop command is the counterpart of the nom://clip command.
+
+  * print only quoted words without the quotes
+  >> r; '"' { until '"'; clip; clop; print; } clear;

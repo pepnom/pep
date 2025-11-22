@@ -1,0 +1,16 @@
+
+## The machine documentation folder
+
+  Information about the [pep] virtual machine and its elements.
+
+  The file file://doc.dir.index.html contains a list of documents 
+  availble in this folder, including a document for each element 
+  of the virtual machine.
+
+  This folder contains information about the PEP *Parsing Engine for Patterns*
+  virtual machine. 
+  
+  The document file://pep.machine.html contains an overview of the virtual
+  machine, and each element of the machine (register etc) is documented in a
+  seperate file. For example the pep *workspace* buffer is documented in the
+  file file://pep.workspace.html .

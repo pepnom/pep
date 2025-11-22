@@ -1,0 +1,92 @@
+    
+## NOM EXAMPLE SCRIPTS
+
+ This folder contains some example scripts in the [nom] script language.
+ Scripts have the file extension ".pss". These examples can be run using the
+ interpreter and debugger (the "pep" interpreter) or by translating to
+ [nom:translation.links] and then (maybe compiling and) running.
+ 
+ /doc/doc.dir.index.html contains a list of scripts and documents 
+ in this folder.
+
+ Documentation for the [nom] language and [pep] virtual machine is 
+ in the /doc/ folder.
+
+ The scripts which begin with *ro.* are solutions (or attempted solutions)
+ to problems on the www.rosettacode.org site. For example 
+ the script file://ro.balanced.brackets.pss solves the 
+ rosetta://balanced.brackets problem .
+
+ * examples can be run with the interpreter by typing
+ ----
+  pep -f eg/script.pss <inputfile>
+  # or
+  pep -f eg/script.pss -i <inputtext>
+ ,,,,
+
+ Examples can be translated into [nom:translation.links] by running
+ the appropriate translation script.
+
+ * translate a nom script into go, compile and run
+ ---
+   pep -f tr/translate.go.pss eg/script.pss > script.go
+   go build script.go
+   echo "<input>" | ./script
+ ,,,,
+
+ Also the script /eg/nom.to.pss will translate a script with a simple 
+ prompt.
+
+ * translate a script to 'rust' with nom.to.pss and compile (with rustc) 
+ >> pep -f nom.to.pss -i 'translate script.pss to rust'
+
+ Some scripts also have *self-translation* (for example /eg/json.check.pss
+ and /eg/maths.tolatex.pss and /eg/text.tohtml.pss) 
+
+### SOME EXAMPLE SCRIPTS
+
+  - /eg/xml.parse.pss is an [xml] parser and error checker
+  - /eg/nom.reference.syntax.pss is a syntax checker for the [nom]
+    language which provides precise error messages.
+  - /eg/json.check.pss checks the syntax of a [json] text data file.
+  - /eg/text.tohtml.pss transforms a "plain-text" (minimal mark-up) document
+     into html
+  - /eg/sed.tojava.pss transpiles a gnu [sed] script into the [java] language
+    (branch syntax with 't' etc is not supported because java has not [goto]
+     statement )
+  - /eg/maths.parse.pss parses and error checks arithmetic infix
+     expressions.
+  - /eg/maths.tolatex.pss transforms arithmetic, symbolic and logical
+     expressions into printable [latex] formulas.
+  - /eg/exp.tolisp.pss transforms an arithmetic infix expression into 
+    [lisp] This is a simpler and older version of the 2 scripts above
+  - /eg/toybnf.pss translates simple [bnf] type grammar rules into
+    [nom] scripts. This is the basis for a *bnf* style parsing 
+    and compiling language
+  - /eg/natural.language.pss implements a limited natural language (English) 
+    parser. I plan to expand this with a better 'phrase grammar'
+  - /eg/tocfoot.tohtml.pss demonstrates creating a table of contents 
+    and a *footer* (for footnotes) and using markers in the source document
+    to place the table of contents and footers (this uses [toc] and [foot]
+    as markers.
+
+### NAMING
+
+ *.noself.* in the filenames means that there is no self-translation or
+ self-help or self-testing in the script.
+
+ The scripts are often named for the format or language that they translate
+ to such as text.tohtml.pss or nom.tolatex.pss
+
+### IDEAS FOR EXAMPLE SCRIPTS
+
+  - dictionary or glossary formatting:
+     A script to format a plain-test dictionary into html and [latex]
+     using a standard dictionary format.
+  - a drawing/animation language:
+    or invent a new drawing/animation/gaming language (getting ambitious which
+    has a slightly more sensible syntax than that of the "logo" language.
+    I started this in /eg/drawlang.pss which transpiles to python, but 
+    I haven't continued.
+
+#: The ---+ delimiter means that what follows is nom code.

@@ -1,0 +1,102 @@
+
+## THE NOM TRANSLATION SCRIPTS
+
+  Translating the Nom language into other (computer) languages.
+
+  A set of nom "translation" nomsf://tr/  scripts exist which allow any nom
+  script to be translated into other languages. Translation scripts exist for
+  "Go" nomsf://tr/translate.go.pss "Java" nomsf://tr/translate.java.pss
+  "Javascript" nomsf://tr/translate.js.pss "Ruby" nomsf://tr/translate.ruby.pss
+  "Python" nomsf://tr/translate.py.pss and "TCL" nomsf://tr/translate.tcl.pss
+  and other translation scripts are being developed for Swift, Perl, Rust,
+  Dart and (hopefully one day) Forth. 
+
+  The translation scripts can translate any [nom] script which means that 
+  they can translate themselves or another language translation script.
+
+  * The nom-to-ruby translation script translating itself
+  >> pep -f tr/translate.ruby.pss tr/translate.ruby.pss > nom.to.ruby.rb
+
+  Notice that what is produced is a ruby script that can translate 
+  [nom] scripts to ruby.
+
+### SECOND GENERATION TRANSLATION
+
+  A somewhat strange corollary of this *self-translation* feature is 
+  that we can do 2nd Generation translation, as follows
+
+  * showing 2nd generation nom-to-ruby translation with the html formatter
+  ----+
+    pep -f tr/translate.ruby.pss tr/translate.ruby.pss > nom.to.ruby.rb
+    chmod a+x nom.to.ruby.rb
+    cat eg/text.tohtml.pss | ./nom.to.ruby.rb > text.tohtml.rb
+    chmod a+x text.tohtml.rb
+    cat index.txt | ./text.tohtml.rb > index.html
+  ,,,
+
+  * now use this ruby "engine" to translate and run any other nom script
+  -----+
+    # translate the palindrome recogniser script to ruby and run
+    cat eg/palindrome.pss | ./nom.to.ruby.rb > palindrome.rb
+    chmod a+x palindrome.rb
+    echo "refer to hannah and her sisters" | ./palindrome.rb
+  ,,,,
+
+  This is so remarkable, that I find it hard to believe that it works,
+  but it does. The same thing is possible with all the other translation
+  scripts (at least the ones that are not still being debugged).
+
+  The practical purpose of 2nd generation translation is that you can 
+  completely dispense with the original "pep" file:///doc/peptool interpreter
+  and run all nom scripts through the language compiler of your choice. 
+  This has the advantage of adding "Unicode" https://home.unicode.org
+  support to your nom scripts (depending on how good it is in the 
+  translation language).
+
+  Also, 3rd , 4th , 5th etc generation compilation is possible, but 
+  I dont really know what its practical use would be.
+
+### THINGS TO CHANGE
+
+  All of the translation scripts currently just create a standalone script or
+  compilable source code (in the case of [go] or [java] ).  It would be better
+  for the translated script to be placed in a *parse()* method which could read
+  and write to any input and output stream. This allows the nom script
+  translation to be used within other programs in that particular language.
+
+  Put the nom syntax error checking code after the nomsyn://parse> label in one
+  block so that I can use the same syntax error-checking in every 
+  translation script and also in nomsf://compile.pss
+
+  Make a standard syntax error message for all translation scripts.
+
+### NOTES
+
+  I am in the process (feb 2025) of "reforming" some of the translation 
+  scripts. For example, the nom-to-perl translation script (which is 
+  in development) uses a much better and simpler grammar than some of the 
+  older translation scripts. Also, I would like to make the error checking
+  and error message better and standard across all the translation scripts,
+  and introduce a new parse token "script*" which will indicate a 
+  complete valid nom script has been recognised.
+
+  The grammar of the early translation scripts was based upon the nom syntax
+  grammar contained in the nom language compiler nomsf://compile.pss . But 
+  that script uses a special (and somewhat elaborate) grammar because of 
+  the need to compile to a (pseudo) assembly language (the [pep] assembly
+  language).
+
+### NOM AND FORTH
+
+  The [forth] translation script is actually the most important because 
+  it would allow the whole pep/nom system to run on an extremely small
+  but capable virtual machine. Unfortunately the forth translation is also
+  the most difficult because all memory management has to be done by 
+  the programmer. The [pep] pep://machine contains an array of mutable,
+  expandable strings (which I call the pep://tape because it has a pointer
+  to the current tape cell) and that may be tricky to implement in Forth.
+
+  If it is possible, we would have a system in which expressive languages 
+  could be implemented and run on very small machines such as 
+  microcontrollers.
+

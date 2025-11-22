@@ -1,0 +1,109 @@
+
+#*
+
+ABOUT 
+
+  This script takes code in a particular format and language and creates a 
+  nom translation script for that language. The idea of the script is to 
+  take advantage of the LLM AI engines that can do a very decent job of 
+  translating code from one language to another, especially in the case of 
+  the pepnom engine which is a more or less simple text-register virtual
+  machine.
+
+  This script relies on a code text file in the target language which contains 
+  the pep machine class, methods, as well as a set of 'snippets' of code
+  which get used to create the different machine commands (such as 
+  nom://add nom://push etc). Each of these snippets is preceded by a 
+  comment containing the name of the command
+
+  The code will be translated from perl by the AI engine because the 
+  perl translator /eg/nom.toperl.pss is quite complete. The template is 
+  at /tr/template.translator.txt
+
+TOKENS
+
+  nl* newline
+  snippet* a comment line ending in the text "-snippet:" This contains
+           the name of the nom command which the following code implements.
+  word* space delimited word (or code)
+  text* multiple words on one line
+  line* one line of text
+  lines* multiple lines
+
+NOTES
+
+  The order that the snippets of code appear needs to be the same as 
+  in the translation script (eg in perl).
+
+HISTORY
+
+  2 sep 2025
+    began
+
+*#
+
+  read;
+  "\n" { 
+    nochars; put; clear; add "nl*"; push; .reparse
+  }
+
+  [ \t\f\v\r] {
+    while [ \t\f\v\r]; clear; (eof) { .reparse } .restart
+  }
+
+  [:space:] {
+    clear; (eof) { .reparse } .restart
+  }
+
+  whilenot [:space:]; put; clear; 
+  add "word*"; push; .reparse
+
+parse>
+
+  pop;
+  # ----------------------
+  # 2 tokens
+  pop;
+  # ----------------------
+  # 3 tokens
+  pop;
+
+  # try to parse the comment flag line. The AI engine will translate 
+  # the comment character into the target language so we dont know 
+  # what it is necessarily. 
+  # eg: // add-snippet:
+
+  "nl*word*word*","nl*text*word*" {
+    clear; ++; ++; get; --; --;
+    E"-snippet:" {
+      replace "-snippet:" ""; put;
+      clear; add "snippet*"; push; .reparse
+    }
+    clear; ++; get; ++; get; --; put; --;
+    clear; add "nl*text*"; push; push; .reparse
+  }
+
+  # lines
+  "nl*text*nl*","nl*text*nl*" {
+    clear; ++; get; --; put;
+    clear; add "line*nl*"; push; push; .reparse
+  }
+
+  # lines
+  "line*line*nl*","line*lines*nl*" {
+    clear; get; ++; get; --; put;
+    clear; add "lines*nl*"; push; push; .reparse
+  }
+
+  # ----------------------
+  # 4 tokens
+  pop;
+
+  # ----------------------
+  # 5 tokens
+  pop;
+ 
+  (eof) {
+    quit;
+  }
+  push; push; push; push; push;

@@ -1,0 +1,817 @@
+
+#*
+# print in blue with enscript
+~color{0 0 1}
+
+## maths.parse.pss
+
+ABOUT 
+
+ Parsing arithmetic and logical expressions and equations with numbers
+ (decimals) and variables and the operators "+,-,/,*,^" and comparison
+ operators <= >= == != <> 
+
+ This parser handles assignement with := , logical comparison and 
+ concatenation with && || AND and OR as well as numerical comparison
+ with < <= etc It also contains function names like sqrt(...). 
+ The script uses negative token lookahead, so that this script can 
+ more-or-less be cut and paste into a language parser/compiler to 
+ handle the parsing of expressions (although some modifications may
+ be necessary, depending on the syntax of the language).
+
+ This is a significant development and rewrite of the script eg/exp.tolisp.pss
+ where I parse the arithmetic and logical infix expression. I will try to add
+ functions like sqrt() for square-root and I will try to make the 'lookahead'
+ code better so that it can be used in any language expression parser.
+
+ The expression parser also includes its own error handling and help system
+ where each topic has a help text. These help texts can be combined 
+ with categories. (see the maths.help* token)
+
+NOTES
+
+ This script is now a template for how to write scripts. It has 
+ error token throwing with a built in help system.
+
+ I add brackets around each expression to show in what order
+ things are being parsed.
+
+ numbers and variable names are resolving nicely to expressions
+ even before new tokens because I used a negative lookahead test.
+
+DONE
+
+  Converted this to the "error.token" method where errors put an 
+  error token on the stack and .reparse 
+  see the example nomsf://eg/drawbasic.pss for an example of this.
+
+  also throwing a "help" token, where the type 
+  of help is put into the attribute. This allows the error token
+  to print some relevant help about the situation.
+
+  Made the error checking better. Think about tokens that cant 
+  start a sequence like ")" because they should have already 
+  reduced. 
+
+  Put a line char number in the (* token attribute so that if there is 
+  an extra opening brace, we know where it is.
+
+  Made the lookahead code better. Ie use negative testing for 
+  operator precedence. eg if x+y not followed by * or / or ^ then 
+  reduce. See file:///doc/howto/nom.lookahead.html for an example
+  of this. This also simplified the code
+
+  Add "functions" like sqrt tan cos etc.  
+  eg: sqrt(x + y)
+
+TODO
+
+  
+STATUS 
+
+  14 mar 2025: 
+    working, better error checking. better lookahead.
+    added functions.
+
+TOKENS 
+
+  literal tokens: ( ) . ; =
+  expr* an arithmetic expression
+  equation* an expression terminated with ';' 
+  natnum* a natural number [0-9]
+  decnum* a positive decimal number
+  op.and* for logic '&&' or 'AND'
+  op.or* for logic '||' or 'OR'
+  op.compare < <= > >= == != <> comparison operators
+  op.power* '^'
+  op.mul* either * or / but what should be the precedence here?
+  op.add* either +/-
+  variable* any variable name
+  function* a function name like 'sqrt' or 'squareroot'
+            functions are written sqrt(...)
+  sign* either +/- but only preceeding an expression
+
+  #lits: ().;
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+NOTES
+  
+  When implementing lookahead with pep/nom it is better to use 
+  a "negative" approach, i.e. say "if this sequence is NOT followed
+  by token x (which has higher precedence) then reduce, otherwise
+  dont.
+
+  
+TESTING 
+
+  >> pep -f eg/maths.parse.pss -i "-.21*(0.33+e)"
+
+  * demonstrate operator precedence. 
+  >> pep -f eg/maths.parse.pss -i "a+b*c*(d+e)"
+  output:  (+ a (* (* b c) (+ d e))) 
+
+  * test reformating of an arithmetic expression
+  >> pep -f eg/maths.parse.pss -i "6 + (6+7*8)*var"
+
+  * make a stand-alone executable of this expression parser/translator
+  --------
+    pep -f ../tr/translate.c.pss maths.parse.pss > maths.parse.c
+    gcc -o maths.parse.ex -Lbooks/pars/object -lmachine -Ibooks/gh/object
+    # not unicode aware
+  ,,,
+
+  * run the stand-alone executable with input from "stdin"
+  >> echo "a+b*c*(d+e)" | ./maths.parse.ex
+
+NOTES
+
+  Negative variables I think are not implemented but this would
+  be trivial. 4x 10size (implicit multiplication of variable)
+  is also not implemented. Space is ignored so all expressions and 
+  equations can span multiple lines.
+
+EXAMPLES 
+
+ assignments, logic and/or, comparisons, functions, variables.
+
+ eg: (-4+3)*6.1/-0.77777
+ eg: (4+x^2 == y^3) AND (x != y);
+ eg: x+1 > sqrt(1*2*3);
+ eg: (9*count^4) + var * 123.456
+ eg: (var + 88) + -44.33 * 2 
+ eg: x := (x^2 && (y^2 != 100));
+
+HISTORY
+ 
+ 14 mar 2025
+   added logic operators and parse tokens op.and* op.or* and 
+   comparison operators with op.compare* token. also ';' equation*
+   (which is expression terminated with ';')
+
+ 13 mar 2025
+   converted from eg/exp.tolisp.pss
+
+*#
+
+  # The script lexing phase
+
+  read;
+
+  # spaces are actually significant because they cannot occur in
+  # decimal numbers, eg: '4. 03' is probably an error
+  # make character counter relative to each line for more helpful
+  # error messages
+  [\n] { nochars; } 
+  [:space:] { 
+    clear;
+    !(eof) { .restart }
+    (eof) { .reparse }
+  }
+
+  # ; is end of an expression/equation this is needed to reduce
+  #   comparison operators.
+  [;] { put; add "*"; push; .reparse }
+  
+  [<>:!=|&] { 
+    while [<>:!=|&]; put; 
+    # this is use for 'assignment'
+    ":=" { clear; add "=*"; push; .reparse }
+    "&&" { clear; add "AND"; put; clear; add "op.and*"; push; .reparse }
+    "||" { clear; add "OR"; put; clear; add "op.or*"; push; .reparse }
+
+    "<","<=",">",">=","==","!=","<>" {
+      # synonyms
+      "<>" { clear; add "!="; }
+      put; clear; add "op.compare*"; 
+      push; .reparse
+    }
+    clear; add "operators"; swap; ++; put; --;
+    clear; add "maths.help*"; push;
+    add "  unknown operator '"; get; add "'\n"; 
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  # plus and minus
+  "+","-" { put; clear; add "op.add*"; push;  }
+  # multiply and divide
+  "*","/" { put; clear; add "op.mul*"; push;  }
+  # to the power of, but what is the lisp power operator ???
+  "^" { clear; add "^"; put; clear; add "op.power*"; push;  }
+  # brackets for grouping
+  "(" { 
+    # it useful to have a line and char for extra
+    # opening brackets.
+    clear; add " near line:"; lines; add " char:"; chars; put; 
+    clear; add "(*"; push; 
+  }
+  ")" { put; add "*"; push; }
+  # for decimal number
+  "." { put; clear; add "dot*"; push; }
+  [0-9] {
+    while [0-9]; put; 
+    clear; add "natnum*"; push;
+  }
+  # What characters are variable names ?
+  [:alpha:] {
+    while [:alpha:]; put; 
+    "AND" { clear; add "op.and*"; push; .reparse }
+    "OR" { clear; add "op.or*"; push; .reparse }
+    "sqrt","squareroot","cuberoot","4throot","5throot",
+    "tan","cos","sin" {
+      clear; add "function*"; push; .reparse
+    }
+    clear; add "variable*"; push;
+  }
+
+  # a trick to catch bad characters. 
+  # better would be a !"text" test
+  !"" { 
+    put; 
+    clear; add "characters"; swap; ++; put; --;
+    clear; add "maths.help*"; push;
+    add "  strange character '"; get; add "' encountered."; put; 
+    clear; add "maths.error*"; push; .reparse
+  }
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.fk
+  add "* line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+
+  #---------------
+  # error analysis
+  # we can group all error analysis here to make the script more 
+  # organised. This section helps to provide good error messages to
+  # the user.
+
+  pop;
+  
+  # the error token which traps all errors pushed onto the stack 
+  "maths.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "! arithmetic expression syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; 
+    # print;
+    # add "  The parse stack:";
+    # print; --; print; clear;
+    print;
+    # provide help from the maths.help* token if one was 
+    # put on the stack. 
+    clear; pop; "maths.help*" { push; .reparse } 
+    quit;
+  }
+
+  # using a parse help token to display help
+  "maths.help*" {
+    # the topic or category to display help for is in the
+    # attribute
+    clear; swap; 
+    # 'brackets' is topic, 'all' is a categories
+
+    "functions","all" {
+      swap; add "
+      functions are predefined words applied to an expression. 
+      like 'tan' 'cos' 'sin' 'sqrt' 'cuberoot' '4throot'
+      eg:
+         sqrt (3^4+1)    correct
+         sqrt 5          incorrect ";
+    }
+
+    "variables","all" {
+      swap; add "
+      variables are any alphabetic name that is not a function
+      such as x abc longVar etc
+      eg:
+         var        correct
+         var.var    incorrect ";
+    }
+
+    "characters","all" {
+      swap; add "
+      legal characters for expressions 
+        arithmetic: ^+-*/
+        comparison: < <= > >= == != <>
+        logic: && || AND OR
+        grouping: ()
+        numbers: [-+0-9.]
+        equations: := ;  (assignment and termination)
+        names: any alphabetic character (for functions and variables)
+        whitespace: is ignored.
+      eg:
+         3*size+2^0.5;    correct
+         time := (sin(x) > sin(y));    correct
+         4#+3            incorrect (# is not a recognised operator) ";
+    }
+
+    "operators.summary","operators","all" {
+      swap; add "
+      Recognised operators are:
+        comparison: <= < >= > == != <>
+        arithmetic: + - * / ^
+        logic: && || AND OR
+        grouping: ( ) ";
+    }
+
+    "assignment.operator","operators","all" {
+      swap; add "
+      The assignment operator is ':=' and the left-hand-side
+      must be a simple variable name. Assignments must end in a 
+      semicolon.
+      eg:
+         x := y^2+z^2;         correct";
+    }
+
+    "logic.operators","operators","all" {
+      swap; add "
+      The logic operators are && || 'AND' 'OR'
+      AND and OR (uppercase) are synonyms for && and ||
+      eg:
+         && 2*x          incorrect";
+    }
+
+    "compare.operators","operators","all" {
+      swap; add "
+      The comparison operators are <= < >= > == != <>
+      != means not equal to and '<>' is a synonym for that
+      eg:
+         
+         (x==4) AND (x^2 != y)   correct (expression)
+         sqrt(x+y^2) == x+y*3;   correct (equation)
+         == 2*x                  incorrect";
+    }
+
+    "operators","all" {
+      swap; add "
+      Operators must be between numbers or expressions. 
+      The exception to this are +/- signs which can precede
+      expressions
+      eg:
+         4^3*(3+1)       correct
+         -(4^2) + +3.1   correct
+         /4+3            incorrect ";
+    }
+
+    "multiply.and.divide","operators","all" {
+      swap; add "
+      Multiplication is indicated by the asterisk '*' and division
+      by the forward-slash '/' character. These characters must be 
+      placed between 2 'expressions' (any combination of operators,
+      variables and functions). The mathematical syntax 
+      '4x+3y' is not implemented so far - i.e implicit multiplication 
+      (but why not?)
+      eg:
+         4*3/(1.234 ^ 6)   correct
+         -(3+2/)         incorrect (divide with no right expression) ";
+    }
+
+    "power.operator","all" {
+      swap; add "
+      The power operator is ^ and must occur between 2 numbers 
+      or expressions
+      eg:
+         12.345^(1/2)    correct (square root)
+         ^4              incorrect ";
+    }
+
+    "brackets","all" {
+      swap; add "
+      brackets () are used to group expressions and must be 
+      balanced
+      eg: 
+        ((5.1+3)*10.0)*6^2      correct 
+        (5.1+3)*10.0)*6^2       incorrect (extra close bracket) ";
+    }
+
+    "dots","all" {
+      swap; add "
+        The dot (.) is only used in positive and negative decimal
+        numbers. I believe that decimals with no leading 0 are not permitted
+        I may change this.
+        egs: 5.13 -0.1234 +456.78 0.05";
+    }
+    "power","all" {
+      swap; add "
+        The power operator is '^' and has greater precedence
+        than all other operators.
+        eg: 5/6^2+2 will parse as ((5/(6^2))+2) ";
+    }
+    add "\n\n"; print; quit; 
+  }
+  # ----------------
+  # 2 token errors
+  pop;
+
+  # look for tokens that can't start a sequence
+  B")*".!")*" {
+    clear; add "brackets"; put;
+    clear; add "maths.help*"; push;
+    add "  extra close bracket ) in expression?"; put; 
+    clear; add "maths.error*"; push; .reparse
+  }
+
+  # literal token errors
+
+  B"dot*".!E"natnum*" {
+    clear; add "dots"; put;
+    clear; add "maths.help*"; push;
+    add "  Misplaced dot or incorrect decimal number ? ";
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  E"dot*".!B"natnum*" {
+    clear; add "dots"; put;
+    clear; add "maths.help*"; push;
+    add "  Misplaced dot (eg .123 is not implemented) ? ";
+    put; clear; add "maths.error*"; push; .reparse
+
+  }
+
+  # the not equals test is superfluous but here for clarity
+  B"(*".!"(*" {
+    E"op.mul*",E"op.power*",E")*" {
+      clear; add "brackets"; put;
+      clear; add "maths.help*"; push;
+      add "  misplaced bracket or operator? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  #lits: ().
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+  # op.compare <= >= == != <> 
+  # needs more thought
+  B"op.compare*".!"op.compare" {
+    E"op.mul*",E"op.power",E")*",E".*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+
+  # look for sequences
+  B"op.add*".!"op.add" {
+    E"op.mul*",E"op.power",E")*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  # allow ** as power?
+  B"op.mul*".!"op.mul*" {
+    E"op.add",E"op.power",E")*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"op.power*".!"op.power*" {
+    E"op.add",E"op.power*",E"op.power",E")*" {
+      clear; add "power.operator"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator or bracket? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  #lits: ().
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+  B"natnum*".!"natnum*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"decnum*".!"decnum*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"expr*".!"expr*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  #lits: ().
+  # expr* natnum* decnum* op.power* op.mul* op.add* sign* 
+  # variable function
+
+  B"variable*".!"variable*" {
+    E"variable*",E"function*",E"expr*",E"natnum*",E"decnum*",
+    E"(*",E".*" {
+      clear; add "variables"; put;
+      clear; add "maths.help*"; push;
+      clear; add "  misplaced variable name?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"function*".!"function*".!E"(*" {
+    clear; add "functions"; put;
+    clear; add "maths.help*"; push;
+    clear; add "  incorrect function syntax?"; put;
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  (eof) {
+    # try to diagnose missing close bracket errors at end of script
+    # eg (*expr*
+    # we have a line/char number in the open bracket tape cell
+    B"(*" {
+      clear;
+      add "* missing close bracket ) ?\n";
+      add "  At "; get; add " there is an opening bracket which does \n";
+      add "  not seem to be matched with a closing bracket ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+
+    E"dot*" {
+      # provide dot help with a help parse token
+      clear; add "dot"; put; 
+      clear; add "maths.help*"; push;
+      clear; add "  Misplaced dot '.' at end of expression. \n"; put;
+      clear; add "maths.error*"; push; .reparse
+    }
+    E"op.add*",E"op.mul*",E"op.power*" {
+      clear; add "operators";
+      swap; ++; put; --; # preserve operator in tape.cell+1
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator at '"; get; add "' end of expression.";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  push; push;
+
+  # end of error analysis
+  # ---------------
+
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  "decnum*","variable*" {
+     clear; get; put; clear;
+     add "expr*"; push; .reparse
+  }
+
+  # reduce natnum to expression at end of file, no!!!
+  (eof) {
+    "natnum*" { 
+       # check not preceded by dot (could be decimal)
+       pop;
+       !"dot*natnum*" { 
+         replace "natnum*" "expr*"; push; push; .reparse 
+       }
+       push;
+     }
+  }
+
+  #-----------------
+  # 2 tokens
+  pop;
+
+  # reduce natnums to expressions if not followed by a dot
+  # this creatly reduces complexity of parsing rules later
+  # already ensured not "natnum*natnum*" in error checks above.
+  B"natnum*".!"natnum*".!E"dot*" {
+    replace "natnum*" "expr*"; push; push; .reparse
+  }
+
+  "sign*expr*" {
+    clear; add "("; get; ++; get; --; add ")"; put; clear;
+    add "expr*"; push; .reparse
+  }
+  
+  # There may be an issue with reducing sign*natnum in other
+  # cases
+  (eof) {
+    "sign*natnum*" {
+      clear; add "("; get; ++; get; --; add ")"; put; clear;
+      add "expr*"; push; .reparse
+    }
+  }
+  #-----------------
+  # 3 tokens
+  pop;
+
+  # These are signs at the beginning of the expression
+  # only 2 tokens
+  "op.add*natnum*","op.add*expr*" {
+    replace "op.add*" "sign*"; push; push; .reparse
+  }
+
+  # +/- at beginning, 3 tokens
+  B"sign*expr*".!"sign*expr*" {
+    replace "sign*expr*" "expr*"; push; push;
+    # need to compose attributes and transfer other attributes
+    # compose sign/exp attribute in Lisp syntax
+    --; --; add "("; get; ++; get; add ")"; --; put; clear; ++; ++;
+    # transfer invisible token attribute
+    get; --; put; clear; ++;  
+    clear; .reparse
+
+  }
+
+  # convert +/- oppadd* token to a sign* token where appropriate
+  # If only 2 tokens (not 3) then start of document
+  E"op.add*expr*".!B"expr*" {
+    replace "op.add*expr*" "sign*expr*";
+    push; push; push; .reparse
+  }
+  E"op.add*natnum*".!B"expr*" {
+    replace "op.add*natnum*" "sign*natnum*";
+    push; push; push; .reparse
+  }
+
+
+  # we dont need any look ahead here because '^' the power operator
+  # has precedence over multiply/divide/add/subtract.
+  # precedence. But natnum* only becomes and expr* when it sees 
+  # the following token. So need another 4 token rule
+  "expr*op.power*expr*" {
+    clear; 
+    add "("; get; ++; get; ++; get; add ")"; 
+    --; --; put; clear; 
+    add "expr*"; push;
+    .reparse
+  }
+  
+  # parse positive decimal numbers like 02.345
+  "natnum*dot*natnum*" {
+    clear; get; ++; get; ++; get; --; --; 
+    # or parse to decnum* here to make negation better
+    put; clear; add "expr*"; push;
+    .reparse
+  }
+
+  # an interesting trick to parse a 4 token pattern before
+  # a 3 token pattern. Be aware about popping nothing (empty stack) 
+  "(*expr*)*" {
+     pop;
+     # eg: sqrt(4+9)
+     "function*(*expr*)*" {
+       clear; get; add "{"; ++; ++; get; add "}"; --; --; put;
+       clear; add "expr*"; push; .reparse
+     }
+     # only push if something was popped
+     !"(*expr*)*" { push; }
+     clear; add "("; ++; get; add ")"; --; put; clear;
+     add "expr*"; push; .reparse
+  }
+
+
+  (eof) {
+    # natnums have already been "reduced" to expr* at end of stream 
+    "expr*op.add*expr*","expr*op.mul*expr*" {
+       clear; 
+       add "("; get; ++; get; ++; get; add ")"; 
+       --; --; put; clear; 
+       add "expr*"; push;
+       .reparse
+    }
+  } 
+
+  #-----------------
+  # 4 tokens parse token reductions
+
+  pop;
+ 
+  # a better lookahead, this will work within another language
+  # it only looks for operators with more precedence.
+
+  # op.mul (*/) and op.power (^) have more precedence that +/- 
+  B"expr*op.add*expr*".!"expr*op.add*expr*" {
+    !E"op.mul*".!E"op.power*" {
+      replace "expr*op.add*expr*" "expr*"; push;push;
+      # assemble attribs for new exp token,
+      --; --; add "("; get; ++; get; ++; get; add ")"; --; --; put;
+      # transfer unknown token attrib 
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    }
+  }
+
+  # op.power (^) has more precedence that */
+  B"expr*op.mul*expr*".!"expr*op.mul*expr*" {
+    !E"op.power*" {
+      replace "expr*op.mul*expr*" "expr*"; push;push;
+      --; --; add "("; get; ++; get; ++; get; add ")"; --; --; put;
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    }
+  }
+
+  # natnum/var/decnum only become expressions when the following
+  # token is seen, this is why we need a 'lookahead' rule here. 
+  B"expr*op.power*expr*".!"expr*op.power*expr*" {
+    #!E"op.power*" {
+      replace "expr*op.power*expr*" "expr*"; push;push;
+      --; --; add "("; get; ++; get; ++; get; add ")"; --; --; put;
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    #}
+  }
+
+
+  # eg: x^2 != y^3 ; 
+  "expr*op.compare*expr*;*" {
+    clear; get; ++; get; ++; get; add ";"; --; --; put;
+    clear; add "equation*"; push; .reparse
+  }
+
+  # reduce this to an equation only at EOF to allow assignments.
+  # eg: x^2 OR y^3 ; 
+  "expr*op.and*expr*;*","expr*op.or*expr*;*" {
+    clear; get; add " "; ++; get; add " "; ++; get; add ";"; --; --; put;
+    clear; add "expr*;*"; push; push; .reparse
+  }
+
+  # this is the only assignment rule. assignments are not allowed
+  # inside of other expressions (unlike c)
+  # eg:  ; 
+  "expr*=*expr*;*" {
+    # check that it is a simple variable name. Slightly tricky because
+    # variables are instantly reduced to expressions.
+    clear; get; 
+    ![:alpha:] {
+      clear; add "assignment.operator"; put;
+      clear; add "maths.help*"; push;
+      add "  Left-hand-side of equation not a variable? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+
+    clear; get; add " "; ++; get; add " "; ++; get; add ";"; --; --; put;
+    clear; add "equation*"; push; .reparse
+  }
+
+  #-----------------
+  # 5 tokens parse token reductions
+  pop;
+
+  # example to parse comparisons, so we only reduce comparisons 
+  # when surrounded by brackets or terminated with ; 
+  # eg: (x^2 != y) 
+  "(*expr*op.compare*expr*)*" {
+    clear; add "("; ++; get; ++; get; ++; get; add ")"; 
+    --; --; --; put;
+    clear; add "expr*"; push; .reparse
+  }
+
+  # only reduce logic when terminated in ';' or in brackets
+  # (x==4) AND (x^2 != y);
+  "(*expr*op.and*expr*)*","(*expr*op.or*expr*)*" {
+    clear; add "("; ++; get; add " "; ++; get; add " "; ++; get; add ")"; 
+    --; --; --; put;
+    clear; add "expr*"; push; .reparse
+  }
+
+  push; push; push; push; push;
+
+  (eof) {
+    pop; pop;
+    "expr*;*" {
+      clear; get; add ";"; put; 
+      clear; add "equation*"; push; .reparse
+    }
+    push; push;
+  }
+
+  (eof) {
+    pop; pop;
+    "expr*","equation*" {
+      clear;  
+      # add "Yes, its an expression! \n";
+      get; add "\n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "No, it doesn't look like a single valid arithmetic \n";
+    add "'in-fix' expression. The parse stack was: ";
+    print; clear; unstack; add "\n"; print;
+    quit;
+  }

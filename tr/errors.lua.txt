@@ -1,0 +1,12 @@
+
+Test results for translating nom scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.lua.pss
+Language: lua
+Date: Sat 26 Jul 2025 10:08:02 PM CDT
+Tests 1st gen: 51
+Errors 1st gen: 0
+Time Taken 1gen: 0
+Tests 2nd gen: 0
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 

@@ -1,0 +1,169 @@
+
+#*
+ 
+ABOUT 
+
+  This script just tests the parsing of image text in a 'minimal markup'
+  format, for example. This script will be incorporated into 
+  pars/eg/text.tohtml.pss
+  
+  * make a circular image that floats to the left with width '3em'
+  >> <:0:>>:3em:imagename.jpeg>
+
+  * make a rectangular image that floats right taking up 30% of page width
+  >> <:<<:50%:imagename.jpeg>
+
+  * make an image with its original size
+  >> <imagename.jpeg>
+
+IMAGE TEXT ATTRIBUTES
+
+  * Attributes must appear in correct order
+  >> <:corners:alignment:width:imagename.ext>
+
+  * valid image text attribute values.
+  -----
+    O|0|o circular image
+    r R small/large rounded corners
+    >> << cc float right/ float left/ centre align
+    50% 5em 20pt image width specification.
+  ,,,,,
+
+SEE ALSO
+  
+  pars/eg/text.tohtml.pss
+    A script that convert a minimal markup format to html
+  pars/www/blog.sh
+    A bash script that manages blogs and uses these scripts.
+
+NOTES
+
+  An idea: if we parse in the image* token section (after the parse> tag)
+  then we can call reparse after each attribute (corners/align/width) which
+  will allow those attributes to occur in any order? But its a bit
+  trickier than that because we are juggling original text and html text
+  with "swap;". Could use tape ++; to save orginal text on tape, but 
+  only "image*" is always a trailing token in reductions. If you see
+  what I mean.
+
+HISTORY
+
+  13 feb 2025 
+    started work on this. the 3 attribute corners/align/width + filename
+    seem to be parsing correctly but testing has been minimal.
+
+*#
+
+  # the lexing phase of the script 
+
+  begin { 
+    add "parsing image text like <:0:<<:5em:imagename.jpg> \n";
+    print; clear;
+  }
+
+  read; 
+  # make the character count relative to the line number.
+  [\n] { nochars; }
+  "<" { 
+    whilenot [:space:]; put; 
+    B"<".E">".!"<>" {
+      E".png>",E".jpg>",E".jpeg>",E".bmp>",E".gif>" { 
+        # an example image text format may be 
+        # <:0:>>:4em:name.gif> or <:20%:name.gif> 
+        # The order of the attributes is important but the attributes 
+        # are optional eg: <:<<:r:20pt:name.jpg> wont work because the 
+        # float attribute '<<' comes before the rounded corner attribute 'r'
+
+        clip; clop; put; clear;
+        add "<img "; swap; 
+        # we use swap to juggle the built html and the original
+        # minimal markup text.
+
+        # :0: is the circle image (avatar) indicator,
+        B":0:",B":O:",B":o:" {
+          swap; add "style='border-radius:50%' ";
+          swap; clop; clop;
+        }
+        # small rounded corners on the image
+        B":r:" {
+          swap; add "style='border-radius:5%' ";
+          swap; clop; clop;
+        }
+        # large rounded corners 
+        B":R:" {
+          swap; add "style='border-radius:5%' ";
+          swap; clop; clop;
+        }
+        # the float right indicator, it needs to come after :0:
+        B":>>:" {
+          swap; add "class='float-right' "; 
+          swap; clop; clop; clop;
+        }
+        # float left 
+        B":<<:" {
+          swap; add "class='float-left' "; 
+          swap; clop; clop; clop;
+        }
+        # centre indicator  
+        B":cc:" {
+          swap; add "class='align-center' "; 
+          swap; clop; clop; clop;
+        }
+        # now we have eg ":5em:name.jpg" or ":90%:name.gif" or just
+        # "name.png" The ":5em:" is a image width specification or 
+        # attribute and will just be passed to the HTML, latex etc
+        # I will use a trick to 'split' the workspace on ':' by
+        # pushing the width spec onto the stack. (We assume that the 
+        # filename has no colons in it, which is a bit dodgy).
+
+        B":" { clop; }
+
+        replace ":" "*"; push;
+
+        # only imagename.ext
+        "" {
+          # build the html with imagename    
+          pop; swap; add "src='"; get; add "'/>"; swap;
+          clear;
+        }
+        # width:imagename.ext, width is on the stack
+        !"" {
+          # I pushed the width on the stack so have to realign
+          # the tape pointer to where I am building the html <img> tag.
+          --; swap; add "src='"; get; add "' "; swap; ++;
+          clear; pop; 
+          # now have eg "6em*" in workspace
+          clip; swap; add "style='width:"; get; add "'/>\n";
+          put; clear;
+        }
+
+        clear;
+        add "image*"; push; .reparse
+      }
+    }
+    clear; add "! not image: "; get; add "\n"; 
+    print; clear;
+  }
+  clear; 
+    
+#-----------
+# here lexing ends and parsing begins
+parse>
+
+ # To view parse-stack token reduction uncomment the lines below
+ #lines; add ":"; chars; add " "; print; clear; 
+ #unstack; add "\n"; print; clip; stack; 
+
+  #------------
+  # 1 token
+  pop; 
+
+  "image*" {
+    clear; add "* image: "; get; add "\n"; print; clear;
+  }
+
+  (eof) {
+
+    unstack; print; clear; quit;
+  }
+

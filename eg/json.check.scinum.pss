@@ -1,0 +1,215 @@
+
+#* 
+
+ABOUT 
+
+  Parse and check just [json] scientific number format.
+
+  this script just parses/checks crockfords json number format, eg:
+
+  * examples 
+  ----
+    -0, 0, -123.333, 123, 100, 0.123, -0.200, 0.00
+    -1.44e55, 0.1E0123, 8e012, 1E+02, 2E-123
+  ,,,,
+
+NOTES
+
+  The grammar used in this script has no relation to the
+  grammar shown at www.json.org. This is often the case for
+  pep scripts. The grammar needs to be designed to suit the
+  machine. This entire script just parses the following
+  regular expression:
+
+    >> [-]?(0|[1-9][0-9]*)(\.[0-9]+)([eE][-+][0-9]+)
+
+  As can be seen the regular expression is far more succinct
+  and easier to read, so the question may be... "why on earth
+  would we use a pep script to do this, instead of a regex??". 
+
+  The answer may be as follows: The pep script may be faster
+  (I will be interested to check this) and pep script can give
+  error messages with a line/character number about what is
+  wrong with the number.
+
+  Whitespace is completely ignored in this script.
+
+TESTING
+  
+  * test this script
+  >> pep -f eg/json.number.pss -i ' -0.123e+0123 '
+   
+HISTORY
+ 
+  18 july 2020
+
+    correcting some errors in the script. Also, may
+    produce output in the form -0.1 x (10^33)
+
+  11 july 2020
+
+    rewrote script completely. based on parsing integers with "while [0-9]"
+    Appears to be working well. should be simplifiable.
+
+  9 july 2020
+
+     script begun. There are some tricky elements to it, 
+     considering 0-9 and 1-9. what is an integer fraction exponent.
+     need to choose token types carefully
+*#
+
+ begin {
+   add "
+   Checking number is in json scientific format 
+   (eg -123.456E+0012) See www.json.org for the 
+   number grammar 
+   \n";
+   print; clear;
+ }
+
+# -------
+# lexing phase of the script- create parse tokens
+
+  read;
+  [:space:] { clear; }
+  [+-.] { put; add '*'; push; .reparse }
+  [0-9] { while [0-9]; put; clear; add "int*"; push; .reparse }
+  'e','E' { 
+    clear; add "*(10^"; put; 
+    clear; add "e*"; push; .reparse 
+  }
+
+# --------
+# parsing phase
+
+parse>
+
+  #---------
+  # 2 tokens
+  pop; pop;
+
+  #---------
+  # some errors 
+
+  E".*".!".*" {
+    !B"int*".!B"-int*" {
+      clear; add "Misplaced decimal point in '.' at char "; chars; add "\n";
+      print; quit;
+    }
+  }
+
+  E"+*".!"+*" {
+    !B"e*" {
+      clear; add "Misplaced '+' at char "; chars; add "\n";
+      print; quit;
+    }
+  }
+
+  E"e*".!"e*" {
+    !B"decimal*".!B"int*".!B"-int*" {
+      clear; add "Misplaced 'e' at char "; chars; add "\n";
+      print; quit;
+    }
+  }
+
+  #---------
+  # reductions
+
+  ".*int*" {
+    clear; get; ++; get; --; put; clear;
+    add "fraction*"; push; .reparse
+  }
+
+  "+*int*" {
+    clear; 
+    # the plus symbol + should be redundant here
+    ++; get; --; put; clear;
+    add "+int*"; push; .reparse
+  }
+
+  "-*int*" {
+    clear; get; ++; get; --; put; clear;
+    add "-int*"; push; .reparse
+  }
+
+  "+int*fraction*" {
+    clear;
+    add "json numbers cannot have a '+' prefix \n";
+    print; quit;
+  }
+
+  "int*fraction*","-int*fraction*" {
+    clear; get; 
+    B"-" { clop; }
+    !B"0","0" {
+      clear; get; ++; get; --; put; clear;
+      add "decimal*"; push; .reparse
+    }
+    clear;
+    add "Multi-digit json numbers must begin with 1-9 ("; get; add ") \n";
+    print; quit;
+  }
+
+  "int*exponent*","-int*exponent*" {
+    clear; get; 
+    B"-" { clop; }
+    !B"0","0" {
+      clear; get; ++; get; --; put; clear;
+      add "number*"; push; .reparse
+    }
+    clear;
+    add "Multi-digit json numbers must begin with 1-9 ("; get; add ") \n";
+    print; quit;
+  }
+
+  "e*int*","e*-int*","e*+int*" {
+    clear; get; ++; get; --; add ")"; put; clear;
+    add "exponent*"; push; .reparse
+  }
+
+  "decimal*exponent*" {
+    clear; get; ++; get; --; put; clear;
+    add "number*"; push; .reparse
+  }
+
+  push; push;
+
+  (eof) {
+    pop; pop;
+
+    "int*" {
+      clear; get; 
+      B"0".!"0" {
+        clear; 
+        add "json multidigit numbers must start with '1': "; 
+        get; add "\n"; print; quit;
+      }
+      clear; add "int*";
+    }
+
+    "-int*" {
+      clear; get; B"-" { clop; }
+      B"0".!"0" {
+        clear; 
+        add "json multidigit numbers must start with '1': "; 
+        get; add "\n"; print; quit;
+      }
+      clear; add "-int*";
+    }
+
+    "+int*" {
+      clear; 
+      add "json numbers cannot have a '+' prefix "; 
+      get; add "\n"; print; quit;
+    }
+
+    "number*","decimal*","-int*","int*" {
+      clear; 
+      add "Valid json scientific number: "; get; add "\n"; 
+      print; quit;
+    }
+    push; push;
+    add "Invalid json number \nParse stack was: "; print; clear;
+    unstack; replace "*" " "; add "\n"; print; clear; quit;
+  }
+

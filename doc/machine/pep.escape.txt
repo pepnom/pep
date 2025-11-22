@@ -1,0 +1,32 @@
+
+
+## THE NOM ESCAPE CHARACTER REGISTER
+
+  The escape character register in the [pep] machine
+
+  The pep,nom machine contains a (one) character register which contains
+  the current escape character that is recognised by nom scripts.
+  This is particularly important for the nom://until command because the 
+  *until* command 'reads past' end delimiters which are escaped.
+
+  The pep escape character can be set with the nom://echar command.
+  Also, escaping and unescaping of text in the pep://workspace buffer
+  is handled by the nom://escape and nom://unescape commands respectively.
+
+### NOTES
+
+  The management of escape and unescape logic is somewhat more delicate 
+  than would at first appear. For example should a character in the 
+  workspace that is already escaped with the current machine escape 
+  character, be escaped by the nom://escape command? No, these character
+  sequences are left unchanged. So if the current escape character is 
+  "\\" and the workspace is "ab\\cd" then the command 'escape "c";' will
+  do nothing.
+
+  Also, escaping the escape character itself has some logical wrinkles 
+  that need to be handled carefully in the different implementations 
+  provided by the pepnom system (the pep interpreter and the various 
+  "translation" /tr/ scripts).
+
+
+

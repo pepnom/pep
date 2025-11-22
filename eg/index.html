@@ -1,0 +1,535 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       /* background-color: lightslategray; */
+       background-color: #DD8811; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/doc/pepnom.doc.journal.html'>journal </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  title='/image/doodle.on.program.900w.jpg' src='/image/doodle.on.program.900w.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   The monkey knows which tree it is climbing up.
+ 
+<cite>Colombian saying </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+
+<!-- doclist= -->
+<!-- doc=./eg/index.txt -->
+<!-- ------------------------------- -->
+<h2> &Nopf;&oopf;&mopf; example scripts</h2>
+
+<p>
+ This folder contains some example scripts in the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> script language.
+ Scripts have the file extension &ldquo;.pss&rdquo;.
+ These examples can be run using the
+ interpreter and debugger (the &ldquo;pep&rdquo; interpreter) or by translating to
+ 
+       <a href='/tr/nom.torust.pss' 
+          title='nom to rust translation script'>rust</a> |
+       <a href='/tr/nom.todart.pss' 
+          title='nom to dart translation script'>dart</a> |
+       <a href='/tr/nom.toperl.pss' 
+          title='nom to perl translation script'>perl</a> |
+       <a href='/tr/nom.tolua.pss' 
+          title='nom to lua translation script'>lua</a> |
+       <a href='/tr/translate.go.pss' 
+          title='nom to go translation script'>go</a> |
+       <a href='/tr/nom.tojava.doc.html' 
+          title='nom to java translation script'>java</a> |
+       <a href='/tr/translate.js.pss' 
+          title='nom to javascript translation script'>javascript</a> |
+       <a href='/tr/translate.ruby.pss' 
+          title='nom to ruby translation script'>ruby</a> |
+       <a href='/tr/translate.python.pss' 
+          title='nom to python translation script'>python</a> |
+       <a href='/tr/translate.tcl.pss' 
+          title='nom to python translation script'>tcl</a> |
+       <a href='/tr/translate.c.pss' 
+          title='nom to c translation script'>c</a>
+        and then (maybe compiling and) running.
+ <p>
+ <a href='/doc/doc.dir.index.html'><code>/doc/doc.dir.index.html</code></a> contains a list of scripts and documents 
+ in this folder.
+<p>
+ Documentation for the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> language and 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> virtual machine is 
+ in the <a href='/doc/'><code>/doc/</code></a> folder.
+<p>
+ The scripts which begin with <em>ro.</em> are solutions (or attempted solutions)
+ to problems on the <a href='http://www.rosettacode.org'>www.rosettacode.org</a> site. For example 
+ the script <a href='ro.balanced.brackets.pss'>ro.balanced.brackets.pss</a> solves the 
+ <a href='https://rosettacode.org/wiki/balanced_brackets' title='rosetta-code problem'>balanced_brackets</a> problem .
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ examples can be run with the interpreter by typing
+ </figcaption>
+<pre class='codeblock'>
+
+  pep -f eg/script.pss &lt;inputfile&gt;
+  # or
+  pep -f eg/script.pss -i &lt;inputtext&gt;
+ </pre>
+</figure>
+<p>
+ Examples can be translated into 
+       <a href='/tr/nom.torust.pss' 
+          title='nom to rust translation script'>rust</a> |
+       <a href='/tr/nom.todart.pss' 
+          title='nom to dart translation script'>dart</a> |
+       <a href='/tr/nom.toperl.pss' 
+          title='nom to perl translation script'>perl</a> |
+       <a href='/tr/nom.tolua.pss' 
+          title='nom to lua translation script'>lua</a> |
+       <a href='/tr/translate.go.pss' 
+          title='nom to go translation script'>go</a> |
+       <a href='/tr/nom.tojava.doc.html' 
+          title='nom to java translation script'>java</a> |
+       <a href='/tr/translate.js.pss' 
+          title='nom to javascript translation script'>javascript</a> |
+       <a href='/tr/translate.ruby.pss' 
+          title='nom to ruby translation script'>ruby</a> |
+       <a href='/tr/translate.python.pss' 
+          title='nom to python translation script'>python</a> |
+       <a href='/tr/translate.tcl.pss' 
+          title='nom to python translation script'>tcl</a> |
+       <a href='/tr/translate.c.pss' 
+          title='nom to c translation script'>c</a>
+        by running
+ the appropriate translation script.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate a &Nopf;&oopf;&mopf; script into go, compile and run
+ </figcaption>
+<pre class='codeblock'>
+
+   pep -f tr/translate.go.pss eg/script.pss &gt; script.go
+   go build script.go
+   echo "&lt;input&gt;" | ./script
+ </pre>
+</figure>
+<p>
+ Also the script <a href='/eg/nom.to.pss'><code>/eg/nom.to.pss</code></a> will translate a script with a simple 
+ prompt.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate a script to 'rust' with nom.to.pss and compile (with rustc) 
+ </figcaption>
+<pre class='codeline'>
+ pep -f nom.to.pss -i 'translate script.pss to rust'
+</pre>
+</figure>
+<p>
+ Some scripts also have <em>self-translation</em> (for example <a href='/eg/json.check.pss'><code>/eg/json.check.pss</code></a>
+ and <a href='/eg/maths.tolatex.pss'><code>/eg/maths.tolatex.pss</code></a> and /eg/text.tohtml.pss) 
+<p>
+<!-- ------------------------------- -->
+<h3> some example scripts</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> <a href='/eg/xml.parse.pss'><code>/eg/xml.parse.pss</code></a> is an 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> parser and error checker
+ </li>
+<li> <a href='/eg/nom.reference.syntax.pss'><code>/eg/nom.reference.syntax.pss</code></a> is a syntax checker for the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr>
+ language which provides precise error messages.
+ </li>
+<li> <a href='/eg/json.check.pss'><code>/eg/json.check.pss</code></a> checks the syntax of a 
+<abbr class='tek-acronym' 
+      title='Javascript object notation'>JSON</abbr> text data file.
+ </li>
+<li> <a href='/eg/text.tohtml.pss'><code>/eg/text.tohtml.pss</code></a> transforms a &ldquo;plain-text&rdquo; (minimal mark-up) document
+ into html
+ </li>
+<li> <a href='/eg/sed.tojava.pss'><code>/eg/sed.tojava.pss</code></a> transpiles a gnu 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> script into the 
+<abbr class='tek-acronym' 
+      title='Java Programming Language'>JAVA</abbr> language
+ (branch syntax with 't' etc is not supported because java has not [goto]
+ statement )
+ </li>
+<li> <a href='/eg/maths.parse.pss'><code>/eg/maths.parse.pss</code></a> parses and error checks arithmetic infix
+ expressions.
+ </li>
+<li> <a href='/eg/maths.tolatex.pss'><code>/eg/maths.tolatex.pss</code></a> transforms arithmetic, symbolic and logical
+ expressions into printable 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> formulas.
+ </li>
+<li> <a href='/eg/exp.tolisp.pss'><code>/eg/exp.tolisp.pss</code></a> transforms an arithmetic infix expression into 
+ 
+<abbr class='tek-acronym' 
+      title='List Processing Language'>LISP</abbr> This is a simpler and older version of the 2 scripts above
+ </li>
+<li> <a href='/eg/toybnf.pss'><code>/eg/toybnf.pss</code></a> translates simple 
+<abbr class='tek-acronym' 
+      title='Backus-Naur Form'>BNF</abbr> type grammar rules into
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> scripts. This is the basis for a <em>bnf</em> style parsing 
+ and compiling language
+ </li>
+<li> <a href='/eg/natural.language.pss'><code>/eg/natural.language.pss</code></a> implements a limited natural language (English) 
+ parser. I plan to expand this with a better 'phrase grammar'
+ </li>
+<li> <a href='/eg/tocfoot.tohtml.pss'><code>/eg/tocfoot.tohtml.pss</code></a> demonstrates creating a table of contents 
+ and a <em>footer</em> (for footnotes) and using markers in the source document
+ to place the table of contents and footers (this uses [toc] and [foot]
+ as markers.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> naming</h3>
+
+<p>
+ <em>.noself.</em> in the filenames means that there is no self-translation or
+ self-help or self-testing in the script.
+<p>
+ The scripts are often named for the format or language that they translate
+ to such as <code>text.tohtml.pss</code> or <code>nom.tolatex.pss</code>
+<p>
+<!-- ------------------------------- -->
+<h3> ideas for example scripts</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> dictionary or glossary formatting:
+ A script to format a plain-test dictionary into html and 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr>
+ using a standard dictionary format.
+ </li>
+<li> a drawing/animation language:
+ or invent a new drawing/animation/gaming language (getting ambitious which
+ has a slightly more sensible syntax than that of the &ldquo;logo&rdquo; language.
+ I started this in <a href='/eg/drawlang.pss'><code>/eg/drawlang.pss</code></a> which transpiles to python, but 
+ I haven&apos;t continued.
+</li>
+</ul>
+
+
+<div class='footer'><small><em>
+
+<img style='border-radius:50%;width:10em;' class='center'  title='/image/fig.deniliquin.jpg' src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+
+  </em></small></div></body></html>

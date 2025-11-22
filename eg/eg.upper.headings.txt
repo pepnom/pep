@@ -1,0 +1,7 @@
+
+FIRST LINE UPPER CASE HEADING
+ 
+  www.nomlang.org 
+UPPER CASE HEADING
+ NOT heading
+ ALSO NOT A HEADINg

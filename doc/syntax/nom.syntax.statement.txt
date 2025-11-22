@@ -1,0 +1,36 @@
+
+ ## STATEMENTS IN THE NOM LANGUAGE
+
+ A *statement* is a command followed by zero, one or two *parameters* (single
+ or double-quoted text) and a semi-colon. The parameters are **not** separated
+ by commas. 
+ 
+ All statements are terminated with a semi-colon except for 
+ nom://reparse , nom://restart and the nomsyn://parse> label. Sequences
+ of statements can be grouped together in "blocks" nomsyn://block . 
+ 
+ The nom://replace is the only command that takes 2 quoted parameters or
+ arguments.
+
+ * replace all occurrences of "try" with "do" in the workspace buffer
+ >> replace "try" "do";
+ 
+ All nomsyn://whitespace is optional in statements and in the nom language,
+ except within nomsyn://quotes and nomsyn://tests
+
+ * no spaces are required anywhere
+ >> read;replace"a""z";print;clear;  # this is ok
+
+ Also a single statements can span multiple lines.
+
+ * spreading out an "add" statement
+ ------+
+   read; 
+   add 
+
+    "."
+   ;
+ ,,,,
+
+### NOTES
+

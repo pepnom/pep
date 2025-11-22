@@ -1,0 +1,19 @@
+
+
+## CHARACTER CLASSES IN THE NOM LANGUAGE
+
+  Character classes are written [:space:] [:alnum:] etc. 
+  The *pep* the c language implementation of the parse machine and language uses
+  plain ctype.h character classes as a way of grouping characters.
+
+  Character classes are uses in nomsyn://tests before "blocks" nomsyn://block
+  These classes are important in a Unicode setting because they allow
+  specifying types of characters in a locale-neutral way.  The nom://while
+  and nom:whilenot commands can use character classes as their argument.
+
+  * check if the workspace is only alphanumeric characters 
+  >> r; ![:alnum:] { add " not alpha-numeric! \n"; print; } clear;
+
+  * read the input stream while the peep register is whitespace
+  >> while [:space:];
+

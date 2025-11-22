@@ -1,0 +1,832 @@
+
+#*
+
+ABOUT 
+
+ A script to translate scripts into other languages using 
+ bash (or maybe some other shell) and the nom translation scripts 
+ which are in the /tr/ folder
+
+ This should accept a phrase like "to ruby eg/palindrome.pss"
+ and it should generate the correct bash commands to do so. The core
+ of these commands would be a call to /tr/nom.toruby.pss but the 
+ script will also check for the existance of the files etc
+
+ The idea is to allow all scripts to translate themselves with a 
+ simple call to this script.
+
+NOTES
+
+ This could also translate text documents to html etc. In which case
+ I should call it just "to.pss"
+
+ Initially this will be based on code I wrote in /eg/xml.parse.pss
+
+HISTORY
+
+ 3 aug 2025
+   Began this. The script is working usefully for translation.
+
+*#
+
+  # check for an empty doc and trigger help if true
+  begin {
+    while [:space:]; clear;
+    (eof) {
+      # the category is help and the token too.
+      add "usage"; put; clear; 
+      add "help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be valid xml
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; while [:alpha:];
+      put; clear; while [:space:]; clear; while [:alpha:];
+      swap; get; put; clear;
+      add "help*"; push; .reparse
+    }
+  } # end of beginblock
+
+ # word by word parsing
+ while [:space:]; clear;
+ whilenot [:space:]; 
+ !"" { 
+   put; 
+   # classify the words here
+   E".txt",E".jpg",E".png" {
+     clear; 
+     add "The file '"; get; add "' is probably not a nom (.pss) script.\n";
+     add " This script currently only translates .pss script files \n";
+     put; clear; add "error*"; push; .reparse
+     quit;
+   }
+   E".pss" {
+     clear; add "file*"; push; .reparse
+   }
+   # paths for putting the result(s) somewhere else
+   B"/".E"/".!"/".!"//" {
+     clear; add "folder*"; push; .reparse
+   }
+
+   # make non-file words case-insensitive
+   lower; put;
+   "translate","convert","tr" {
+      replace "convert" "translate"; 
+      "tr" { replace "tr" "translate"; } put;
+      clear; add "action*"; push; .reparse
+   }
+   "test","try" {
+      replace "try" "test"; put;
+      clear; add "action*"; push; .reparse
+   }
+
+   # language or format names and abbreviations, 
+   "all","rust","rs","dart","perl","pl","lua","go","java",
+   "javascript","js","ruby","rb","python","py","tcl","c",
+   "latex","pdf","print","tex","html","web" {
+      # change language abbreviations to 
+      "py" { replace "py" "python"; }
+      replace "rs" "rust"; replace "pl" "perl";
+      replace "js" "javascript"; replace "rb" "ruby"; 
+      "tex" { replace "tex" "latex"; }
+      "web" { replace "web" "html"; }
+      "print" { replace "print" "pdf"; }
+      put; clear; add "lang*"; push; .reparse
+   }
+   # just ignore to
+   "to","into" { clear; .reparse }
+   clear; add "word*"; push; .reparse
+ }
+
+ parse>
+   # watch the parse stack reduce for debugging
+   add "# "; lines; add ":"; chars; add " "; print; clear;
+   unstack; print; stack; add "\n"; print; clear;
+
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allow implementing a help system
+  that can be triggered by an empty document or by help keywords
+ *#
+ "error*" {
+   # maybe get the parse stack here as well
+   clear; 
+   add "nom.to.pss: (convert and translate nom scripts)\n  ";
+   #add " near line:"; lines; add " char:"; chars; add "\n";
+   get; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   quit;
+ }
+
+ #*
+  Using a help* token to allow the script to document itself.
+  The swap commands below are used to save the help text in the tape
+  cell so that several or all help topics can be printed at once.
+ *#
+
+ "help*" {
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help","all" {
+     swap; add "
+   USAGE
+     pep -f nom.to.pss -i 'example.pss to ruby' 
+       translate the nom script 'example.pss' to ruby
+     pep -f nom.to.pss -i 'translate to perl example.pss' 
+       translate the nom script 'example.pss' to perl
+
+     A nom script to translate nom scripts into other languages. 
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All input which begin with '/' is considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f nom.to.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f nom.to.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f nom.to.pss -i /help
+       see all the help.
+
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /actions: action words 
+     - /langs: what languages the script knows about  
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+   ### About the input format 
+     - /en.words english words that this script can parse
+     - /flaws: known limitations with this script
+     - /eg: example input for this script
+
+   ### About translating this script
+     - /langs: available translation languages.
+     - /translate: show how to translate this script to another language
+     - /to<lang>: try to translate this script to some other language
+         using the nom translation scripts at www.nomlang.org/tr/ 
+          ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+          (eg: /toperl /tolua etc)
+
+     Also see the /testone <lang> help word for testing translated scripts
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /format: all information about the xml format 
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (not) frequently asked questions about /eg/nom.to.pss
+
+     Q: What does this script do?
+     A: It handles translating of nom scripts into other languages
+
+     Q: So it is a nom-script that translates nom-scripts?
+     A: Yes
+
+     Q: But don't all the translation scripts at the www.nomlang.org/tr/
+        do the same thing? 
+     A: Yes but each one of those translates to one specific language.
+        This script translates (or will) into any language specified by 
+        the interlocutor?
+
+     Q: But there are bash scripts and functions in /helper.pars.sh that 
+        already do that, no?
+     A: Yes, but I like the idea of nom scripts being able to translate and 
+        test themselves, hence this script
+
+     Q: It all sounds very self-referential?
+     A: Yes, but the practical advantage is that when you are using a script
+        you can also test it in another language.
+
+     Q: So how do I translate some script into another language?
+     A: type a sentence as input to this script such as 
+        'translate example.pss into ruby'
+
+     Q: Wow, so this does natural language parsing?
+     A: Weeeeell, not exactly, but you could say that it is a Tiny Language
+        Model, which is a cute reference to the LLM large language models
+        that are referred to as AI.
+
+     Q: So, does the script parse the sentence?
+     A: Yes, but it may just do it in the most basic of ways. And even if 
+        I get inspired and try to create a big English phrase grammar for 
+        this, it will still just be one of those funny phrase grammars that 
+        they teach to first-year linguistic students.
+
+     Q: Meaning?
+     A: That phrase grammars can't really parse human language, as is well
+        known, but nom is good at phrase grammars, and this technique could 
+        create an interesting and useful script.
+   
+     Q: What is this strange text format used in the help system?
+     A: Its the same format recognised and parsed by /eg/text.tohtml.pss
+        and no, its not markdown.
+
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "vocab","language","help" {
+     swap; add "
+       nom.to.pss can try to parse the following words:
+         translate, convert, tr, to, into
+       also it recognises the following language names and formats 
+        ALL|rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+        html|latex|pdf
+       The 'ALL' word will translate the given script into all 
+       available languages.
+     ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in pep:nom.
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   # give info about translation languages
+   "langs","translation","help" {
+     swap; add "
+     NOM TRANSLATION LANGUAGES
+      
+      This script can translate a pep:nom script to the following 
+      languages.
+ 
+        rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+
+      The 1st four translation scripts are more recently written and superior
+      to the others. The advantages are:
+        - all the code is in a parse() method so that the translated
+          code can be used from other code in that language.
+        - they include command line switches for testing the translated
+          code.
+        - a number of bugs have been elimited.
+        - the grammar has been reorganised 
+        - they are more conscious of the difference between a unicode 
+          grapheme cluster and a code point (although only the dart
+          version currently parses grapheme clusters).
+
+     This script also allows translation to html,latex,pdf (and man
+     pages - one day).
+
+     "; 
+     swap;
+   }
+
+   # this can become part of a 'test' action in the script.
+
+   # tests one one-line doc with this script
+   "testone" {
+     swap; add "
+       # TESTING ONE RANDOM (one-line) XML DOCUMENT
+       doc=$(pep -f nom.to.pss -i /goodinputlines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- XML: $doc   --> \"
+       pep -f nom.to.pss -i \"$doc\" 
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f nom.to.pss -i /testone | bash
+       # OR FOR (EG) LUA TRANSLATION
+       # echo '/testone' | ./xmlparse.lua
+       # OR FOR ANY TRANSLATION
+       # echo '/testone' | ./xmlparse.<ext>
+       # (first create the (e.g) lua translated script with:
+       # pep -f nom.to.pss -i /tolua | bash 
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # todo
+   "test" {
+     swap; add "
+       to do. implement self testing.
+     ";
+     swap;
+   }
+
+   # how to translate this script to another language, 
+   "translate","tr","about","help" {
+     swap; add "
+
+    HOW TO TRANSLATE NOM SCRIPTS
+
+      Nom scripts can be translated into other languages (and 
+      the translators are also nom scripts - cool hey? - but even cooler
+      is that the translators can translate themselves).
+
+      Below is an example of how you would translate this script 
+      into the rust language (and compile it). This works in the bash
+      shell, and possibly even in cmd.exe (although I havent tried it).
+
+      * translate this script to rust, compile and run (needs 'rustc')
+      ---
+        pep -f tr/nom.torust.pss nom.to.pss > text.tohtml.rs
+        rustc -o texttohtml.exe texttohtml.rs
+        echo ' some *strong* text ' | ./texttohtml.exe 
+      ,,,
+
+      But if that looks like a lot of typing, dont worry! In fact that is 
+      the reason I wrote the very nom script you are using now. Its job is
+      to translate any script into any of the available languages using 
+      an english text input. For example
+
+      * use this script to translate the 'palindrome' script into lua
+      >> pep -f nom.to.pss -i 'palindrome.pss to lua' | bash
+
+      Note that you need to pipe the output to bash for it to actually do
+      anything. This also means that the script can use itself to 
+      translate itself, for example
+
+      * translate nom.to.pss with itself
+      >> pep -f nom.to.pss -i 'nom.to.pss to perl' | bash
+
+      This will have the remarkable result of creating a perl script which 
+      does exactly what this pep/nom script does.
+
+     ";
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   B"flaw",B"fault","format","help" {
+     swap; add '
+    SCRIPT FLAWS AND PROBLEMS : 
+      - prepositions like "to" are just ignored   
+      - the interpreted languages may be working.
+      - compiled languages need work.
+      - the help system probably doesnt work with the older 
+        translation scripts.
+
+     ';
+     swap;
+   }
+
+   "eg.lines","example","format","help" {
+     swap; add '
+     # SOME EXAMPLE INPUT LINES
+       translate text.tohtml.pss to ruby
+       # translate is the default action
+       ruby palindrome.pss  
+       convert palindrome.pss rust
+       make to latex eg.pss
+       test palindrome.pss 
+       test eg.pss in ruby
+       in ruby try eg.pss
+       tr eg.pss into html
+     ';
+     swap;
+   }
+
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f nom.to.pss -i /words \n";
+     add "  to see valid help keywords";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ push;
+ # end of the error and help system.
+ # -------------------
+
+ pop; pop;
+
+ # reorder for simplicity
+ "lang*action*" {
+   clear; get; ++; swap; --; put; 
+   clear; add "action*lang*"; 
+   push; push; .reparse
+ }
+
+ "lang*file*" {
+   clear; get; ++; swap; --; put; 
+   clear; add "file*lang*"; 
+   push; push; .reparse
+ }
+
+ "file*action*" {
+   clear; get; ++; swap; --; put; 
+   clear; add "action*file*";
+   push; push; .reparse
+ }
+
+ pop;
+ "file*action*lang*" {
+   clear; get; ++; swap; --; put; 
+   clear; add "action*file*lang*";
+   push; push; push; .reparse
+ }
+
+ # missing information
+ (eof) {
+   "file*","action*file*" {
+      clear; 
+      add " No language or format name was given \n";
+      add " try: pep -f nom.to.pss -i /help  \n";
+      add "      for more help  \n";
+      put; clear; add "error*"; push; .reparse
+      quit;
+   }
+   # express puzzlement about this word
+   B"word*"{
+      # save the unknown word
+      clear; get; ++; put; --; clear;
+      add "vocab"; put; clear; 
+      add "help*"; push; 
+      add " This script doesn't know the word '"; get; add "'\n";
+      put; clear; add "error*"; push; .reparse
+      quit;
+   }
+ }
+
+ (eof) {
+   # default action is translate
+   "file*lang*" {
+     # transfer attributes.
+     clear; ++; get; ++; put; --; --;
+     clear; get; ++; put; --;
+     clear; add 'translate'; put;
+     clear; add "action*file*lang*";
+   }
+   # actions could be test/translate.
+   "action*file*lang*" {
+     clear; get;
+     "test" {
+        clear; 
+        add " The 'test' action has yet to be implemented. \n";
+        add " try: pep -f nom.to.pss -i /help  \n";
+        add "      for more help  \n";
+        put; clear; add "error*"; push; .reparse
+        quit;
+     }
+     "translate" { 
+       clear;
+       # get the language name
+       ++; ++; get; --; --;
+
+       # translate a script to another language 
+       # >> pep -f nom.to.pss -i 'eg.pss to lang' | bash
+           
+       "latex"{
+         swap; clear; add '
+         # run this with
+         # >> pep -f nom.to.pss -i "eg.pss to latex" | bash > test.tex
+         # Then compile to pdf with
+         # >> xelatex -synctex=1 -interaction=nonstopmode test.tex
+         translator=${PEPNOM}/eg/nom.tolatex.pss
+         if [ -f $translator ]; then
+           # echo "%% [ok] Found <lang> translator:"
+           # echo "%%     $translator"
+           echo " "
+         else
+           echo -e "[error] didnt find latex translator: $translator"
+           exit 1;
+         fi 
+         if [ ! -f '; ++;get; --; add ' ]; then
+           echo "[error] could not find file \''; ++; get; --; add '\'";
+           exit 1;
+         fi
+         pep -f $translator '; ++; get; --; add '\n'; 
+         replace "\n      " "\n";
+         print; quit;
+       }
+
+       "pdf" {
+         # improve the output name
+         swap; clear; add '
+         # run this with
+         # >> pep -f nom.to.pss -i "eg.pss to pdf" | bash 
+         translator=${PEPNOM}/eg/nom.tolatex.pss
+         if [ ! -f '; ++;get; --; add ' ]; then
+           echo "[error] could not find file ['; ++; get; --; add ']";
+           exit 1;
+         fi
+         pep -f $translator '; ++; get; --; add ' > test.tex
+         xelatex -synctex=1 -interaction=nonstopmode test.tex\n'; 
+         replace "\n      " "\n";
+         print; quit;
+       }
+
+       "html"{
+         swap; clear; add '
+         # run this with
+         # >> pep -f nom.to.pss -i "eg.pss to html" | bash 
+         translator=${PEPNOM}/eg/nom.tohtml.pss
+         if [ -f $translator ]; then
+           # echo " [ok] Found <lang> translator:"
+           # echo "     $translator"
+           echo " "
+         else
+           echo -e "[error] didnt find html translator: $translator"
+           exit 1;
+         fi 
+         if [ ! -f '; ++; get; --; add ' ]; then
+           echo "[error] could not find file \''; ++; get; --; add '\'";
+           exit 1;
+         fi
+         pep -f $translator '; ++; get; --; add '
+         # pipe to bash to run 
+         #    pep -f nom.to.pss -i "eg.pss to html" | bash 
+         '; 
+         replace "\n      " "\n";
+         print; quit;
+       }
+
+       # convert to all languages (but not html,latex,pdf etc)
+       "all" {
+         swap; clear; add '
+         # BASH COMMANDS TO TRANSLATE "'; ++; get; --; 
+         add '" TO all available languages
+         if [ ! -f '; ++;get; --; add ' ]; then
+           echo "[error] could not find file \''; ++; get; --; add '\'";
+           exit 1;
+         fi
+         if [ ! -d test/ ]; then
+           mkdir test/
+           if [ $? -ne 0 ]; then
+             echo "[error] couldnt make test/ folder"
+             exit 1;
+           else
+             echo "[ok] made test/ subfolder"
+           fi
+         else
+           echo "[ok] found test/ subfolder"
+         fi
+         # cd test/
+         ';
+         # now construct a set of calls to this script to translate
+         # into every language
+         ++;
+         add '&'; get; add ' rust" @';
+         add '&'; get; add ' perl" @';
+         add '&'; get; add ' lua" @';
+         add '&'; get; add ' go" @';
+         add '&'; get; add ' javascript" @';
+         add '&'; get; add ' ruby" @';
+         add '&'; get; add ' python" @';
+         add '&'; get; add ' tcl" @';
+         add '&'; get; add ' java" @';
+         # the dart compiler has to get dependencies
+         add '&'; get; add ' dart" @';
+         add '&'; get; add ' c" @';
+         --;
+         # a 'special' replace would be nice here. 
+         replace "&" "\n   pep -f ${PEPNOM}/eg/nom.to.pss -i \" ";
+         replace "@" "| bash ";
+         add '
+         # pipe to bash (eg: ... | bash) to run this \n';
+         replace "\n      " "\n";
+         swap;
+       }
+
+       # this uses a 'swap' trick to preserve the name of the language 
+       # so that the translate and compilation code can be adjusted according
+       # to the language.
+       "perl","lua","javascript","ruby","python","tcl" {
+          # we are swapping here in the action* token tape cell.
+          swap; clear; add '
+          # BASH COMMANDS TO TRANSLATE "'; ++; get; --; 
+          add '" TO <lang>
+
+          # run with: pep -f nom.to.pss -i "eg.pss to all" | bash
+          translator=${PEPNOM}/tr/translate.<lang>.pss
+          outfile="';
+          # here construct the output file name, maybe with no dots/spaces
+          # eg xmlparse
+          ++; get; --;
+          add '";
+          outfile=${outfile%.*}
+          outfile=${outfile//[ .]/}.<ext>
+          if [ -f $translator ]; then
+            echo "[ok] Found <lang> translator:"
+            echo "     $translator"
+          else
+            echo -e "
+             Could not find <lang> translator: ${PEPNOM}/tr/translate.<lang>.pss
+             set the $PEPNOM var to the nom translation folder with
+               export PEPNOM=/path/to/nom/tr
+             or permanently with
+               echo \'export PEPNOM=/path/to/nom/tr\' >> ~/.bashrc
+             (if required) download the translator from www.nomlang.org/tr/ and 
+             place in /tr/ subfolder
+             ";
+            exit 1;
+          fi
+          if [ ! -f '; ++;get; --; add ' ]; then
+            echo "[error] could not find file \''; ++; get; --; add '\'";
+            exit 1;
+          fi
+
+          # change this?
+          pep -f $translator '; ++; get; --; add ' > $outfile
+          if [ $? -eq 0 ]; then
+            echo "[ok] Created file {$outfile} (a translated script in <lang>)"
+          else
+            echo "[error] could not translate to <lang> " 
+            exit 1;
+          fi
+          chmod +x $outfile 
+          echo "     usage: cat somefile | ./$outfile"
+          echo "            echo \\"sometext\\" | ./$outfile"
+
+          if command -v <lang> &> /dev/null
+          then
+            echo "[ok] <lang> interpreter was found"
+          else
+            echo "[oops] you need to install the <lang> interpreter!"
+          fi
+
+          # pipe to bash (eg: ... | bash) to run this \n';
+         replace "\n      " "\n";
+         swap;
+
+         "perl" { swap; replace "<lang>" "perl"; replace "<ext>" "pl"; swap; }
+         "lua" { swap; replace "<lang>" "lua"; replace "<ext>" "lua"; swap; }
+         "ruby" { swap; replace "<lang>" "ruby"; replace "<ext>" "rb"; swap; }
+         "python" { swap; replace "<lang>" "python"; replace "<ext>" "py"; swap; }
+         "tcl" { 
+           swap; 
+           replace "<lang>" "tcl"; replace "<ext>" "tcl"; 
+           replace "command -v tcl" "command -v tclsh";
+           swap;
+         }
+         "javascript" { 
+           swap; 
+           replace "<lang>" "javascript"; 
+           replace "<ext>" "js"; 
+           replace "translate.javascript.pss" "translate.js.pss";
+           # fix the interpreter exists test for node
+           replace "command -v javascript" "command -v node";
+           swap; 
+         }
+       }
+       # now do the compiled languages
+       # rust|dart|go|java|c      
+       "rust","dart","go","java","c" {
+          swap; clear; add '
+          # BASH COMMANDS TO TRANSLATE "'; ++; get; --; 
+          add '" TO <lang> AND COMPILE
+          # run with
+          #   pep -f nom.to.pss -i "file to <lang>" | bash
+          # translator=${PEPNOM}/tr/nom.to<lang>.pss
+          translator=${PEPNOM}/tr/translate.<lang>.pss
+          # make output file base name, no dots/spaces
+          basename="'; ++; get; --; add '";
+          basename=${basename%.*}; basename=${basename//[ .]/}
+
+          outfile="${basename}<lang>.<ext>"
+          exefile="${basename}<lang>"
+          lang="<lang>"
+          compiler="<lang>c"
+          if [ -f $translator ]; then
+            echo -e "Found <lang> translator:\\n  $translator"
+          else
+            echo -e "[error] Could not find <lang> translator: 
+             \\${PEPNOM}/tr/translate.<lang>.pss
+             set the \\$PEPNOM var to the nom folder with
+               export PEPNOM=/path/to/pepnom
+             (and download the translator from www.nomlang.org/tr)
+             "
+            exit 1;
+          fi
+          if [ ! -f '; ++;get; --; add ' ]; then
+            echo "[error] could not find file \''; ++; get; --; add '\'";
+            exit 1;
+          fi
+          pep -f $translator '; ++; get; --; add ' > $outfile
+
+          if [ $? -eq 0 ]; then
+            echo "[ok] translated script to <lang> source code [$outfile]" 
+          else
+            echo "[error] could not translate to <lang> " 
+            exit 1;
+          fi
+
+          # chmod +x $outfile 
+          if command -v $compiler &> /dev/null
+          then
+            echo "[ok] <lang> compiler found ($compiler)"
+          else
+            echo "[error] <lang> compiler not found"
+            echo "        install or adjust path variable"
+            exit 1;
+          fi 
+          # example build commands
+          # go build -o $egdir/$newname $egdir/$newname.go
+          # dart compile exe -o $egdir/$newname $egdir/$newname.dart
+          # javac -classpath $egdir $egdir/$newname.java
+
+          if [[ "$lang" = "java" ]]; then
+            # change the class name to the filename 
+            sed -i "s/Machine/$exefile/g" $outfile 
+          fi
+
+          if [[ "$lang" = "dart" ]]; then
+            # make the pubspec and download the deps if needed
+            # pubspec is yaml and needs indents
+            echo -n "
+  name: $basename 
+  environment:
+    sdk: \'>=2.18.0 <3.0.0\'
+  dependencies:
+    characters: ^1.3.0 " > pubspec.yaml
+
+            # get dart characters package (for grapheme clusters)
+            dart pub get
+          fi
+          $compiler -o $exefile $outfile
+          if [ $? -eq 0 ]; then
+            echo "[ok] compiled <lang> source $outfile to [$exefile] " 
+          else
+            echo "[error] could not compile <lang> source [$outfile] " 
+            exit 1;
+          fi
+          echo "  usage: cat somefile | ./$exefile"
+          echo "         echo \\"sometext\\" | ./$exefile"
+          echo "  (java) echo \\"sometext\\" | java $exefile"
+
+          # try: pep -f nom.to.pss -i "eg.pss to rust" | bash
+          # to translate this script to the given language and compile.
+         \n';
+         replace "\n     " "\n";
+         swap;
+         "rust" { swap; replace "<lang>" "rust"; replace "<ext>" "rs"; swap; }
+         "dart" { 
+           swap; 
+           replace "<lang>" "dart"; replace "<ext>" "dart"; 
+           # also, need to install the "characters" library
+           # fix compiler command: but on windows this will add a .exe 
+           # extension.
+           replace 'compiler="dartc"' 'compiler="dart compile exe"';
+           swap;
+         }
+         "go" { 
+           swap; 
+           replace "<lang>" "go"; replace "<ext>" "go"; 
+           # fix the go compiler command
+           replace 'compiler="goc"' 'compiler="go build"';
+           swap;
+         }
+         "java" { 
+           swap; 
+           replace "<lang>" "java"; replace "<ext>" "java"; 
+           replace "$compiler -o $exefile" "$compiler";
+           swap;
+         }
+         "c" { swap; replace "<lang>" "c"; replace "<ext>" "c"; swap; }
+
+          #*
+          The commands for compiling the c translated files with 
+          a static library. But the static library is compiled separately.
+          file=$1
+          d=${PEPNOM}/object
+          gcc -o ${file%.?*} $file  -L$d -lmachine -I$d
+          *#
+
+       }
+       swap; print; quit;
+
+     # -----------
+     } # translate action
+   }
+   quit;
+ }
+ push; push; push;

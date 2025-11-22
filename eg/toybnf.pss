@@ -1,0 +1,298 @@
+
+#*  
+
+ABOUT 
+
+###  toybnf 
+
+  Creating a [bnf] style language with [nom] as the compile target.
+
+  It would be nice to have a more natural language that *targets* [nom]
+  Lets expand the script above to compile to [nom]. 
+
+  This is compiling very simple [xbnf] to [nom] . This is the first example of
+  using nom as the target of a nom script. Another strange oed://corollary
+  arises: that we can use this new language to implement a recogniser for
+  itself (but not a compiler because so far out new language has no compiling
+  syntax, just *ebnf* rule reductions. The script below parses the same syntax
+  as above but instead of just recognising the syntax, it actually creates
+  executable [nom] code.
+
+  * testing the toybnf language
+  >> pep -f toybnf.pss -i 'com = word param; block = word newword;'
+
+  * sample output of toyBNF when compiling with nom script 
+  ------+
+    # sample input BNF rules (white-space doesnt matter):
+    #   com = word param ; 
+    #   block = word newword ;
+    # output (produced by this script)
+    pop;pop;
+    "word*param*" {
+      clear; add "com*"; push; .reparse
+    }
+    push;push;
+    pop;pop;
+    "word*newword*" {
+      clear; add "block*"; push; push; push; .reparse
+    }
+    push;push
+  ,,,,
+
+  This is pretty cool, because we now have a toybnf-to-nom compiler
+  that produces executable and translatable (to go/java/tcl/python/ruby etc)
+  [nom] code. But we still need a *lexxing* syntax for our toyBNF 
+  language
+
+  The "redundant push/pop" problem has a pretty simple solution, but
+  we need to make sure there is no whitespace between.
+
+  * getting rid of redundant push/pops
+  -----
+   replace "push;push;push;pop;pop;pop;" "";
+   replace "push;push;pop;pop;" "";
+   replace "push;pop;" "";
+  ,,,
+
+  This toyBNF language may not be as efficient as hand coded [nom] because
+  it does redundant "pushes" nom://push and "pops" nom://pop between
+  code blocks, but it is easier to write and probably less prone to 
+  errors. But to make it more than a "recogniser" we have to add 
+  compiling syntax like this....
+
+  * proposed compiling syntax for toyBNF
+  ----
+    a = b c {
+     #0 = "<a href=".$1.">".$2."</a>" ;
+    }
+  ,,,,
+
+  In the syntax above '.' is the string concatenator and $1 refers to 
+  the attribute of the first token on the RHS right-hand-side of the 
+  bnf grammar rule. The compiling block takes the place of the ';' in
+  the syntax above.
+
+  We dont have any sensible way to actually create the 'tokens' yet.
+  (ie the lexing phase of the recogniser) but we can soon invent a 
+  syntax like this
+   
+  * proposed syntax for creating tokens from literal values
+  -----
+    # syntax to ignore something
+    ignore [:space:]+ ;
+    # compiled to nom as 
+    # [:space:] { while [:space:]; clear; }
+
+    # literals get compiled to a nom +* token but '*' must be 
+    # given a name.
+    literals: '+' '-' '*' '/'
+    word: [:alnum:]+ ;
+    newline: '\n' ;
+    # parse between two "" or print error message if last not found
+    # or do something else, like just instantiate the token anyway
+    quote: between '"' and '"' ,  { error "No end quote"  } ;
+
+    # compile to nom as 
+    comment: between '//' and '\n' ;
+    comment: between '/*' and '*/' ;
+    # have to use nom://until for multi character endings
+
+    [:alpha:]+ {
+      literals: 'and', 'is', 'go', 'stop' ;
+      identifier: <other> 
+    }
+
+    # eg syntax means read an alphanumeric sequence and 
+    #  check for keywords, but need an 'else' block
+    [:alnum:]+ 
+      { keyword: 'and' | 'is' | 'go' | 'stop'; } 
+    then
+      # if not keyword then if starts with a|b|c then 'command' token
+      { command := [^abc] ; } 
+    then
+      # text token matches anything else 
+      { text := *** ; } 
+      # if nothing matched then its an error, print a line and 
+      # character number and quit.
+    then
+      { error 'bad text'; } 
+    # or maybe
+    # this is very elaborate syntax, more like a fantasy. It has
+    # to conform to the capabilities of nom because it is going to 
+    # get compiled into pep/nom 
+  ,,,,
+ 
+  so the lexing assignment operator is different because otherwise
+  >> LHS = token '=' 
+
+  Lex rules can only have one token on the LHS but reduction
+  rules can have multiple.
+
+  in nom very basic lex rules, lexing assignment is ':=' not '='
+  -------+
+    pop;pop;pop;pop;
+    "token*:*char*;*" {
+       clear; add "lexrule*"; push; .reparse
+    }
+
+    pop;
+    "token*:*class*+*;*" {
+       clear; add "lexrule*"; push; .reparse
+    }
+    push;push;push;push;push;
+
+  ,,,
+    
+  Here is how this will be compiled by toyBNF.pss in [nom]
+
+  * lexxing in toyBNF
+  -----
+    # toyBNF syntax: word = [:alnum:]+ ;
+    # the final reparse may not be necessary
+    read; 
+    [:alnum:] { 
+      while [:alnum:]; put; clear; 
+      add "word*"; push; .reparse
+    }
+    # toyBNF syntax: newline = '\n' ;
+    '\n' { put; clear; add "newline*"; push; .reparse }
+  ,,,,
+
+  tokens: 
+   LHS  left-hand-side of the bnf rule
+   RHS  right-hand-side
+   sequence  a sequence/list of tokens
+   token     one grammar token
+   literal tokens:
+   '='  for grammar reduction
+   ':'  for tokenisation assignment
+   ';'  for statement end
+   
+
+  * a basic (toy) ebnf parser, compiling to nom.
+
+*#
+
+  read;
+  # line-relative char numbers 
+  [\n] { nochars; }
+
+  # ignore white-space
+  [:space:] { while [:space:]; clear; }
+  # literal tokens ; and =
+  ";","=" { add "*"; push; }
+
+  [:alpha:] { 
+    # add the default nom parse token delimiter '*'
+    while [:alpha:]; add "*"; put; clear; 
+    add "token*"; push; 
+  }
+  !"" { 
+    put; clear;
+    add "! [toyBNF]\n";
+    add " bad character '"; get; add "'"; 
+    add " at line:"; lines; add " char:"; chars; add "\n";
+    add " I just can't go on... sorry, goodbye";
+    print; quit;
+  }
+
+parse>
+  # An important grammar debugging technique for showing
+  # the parse-stack reductions.
+  # lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+
+  pop; pop;
+  "token*token*","sequence*token*" {
+    # count tokens to calculate "push;" later
+    a+;
+    clear; get; ++; get; --; put; 
+    clear; add "sequence*"; push; .reparse
+  }
+  "token*=*","sequence*=*" {
+    # later have to transform this count number into
+    # push; or push;push; etc
+    clear; get; a+; count; put; clear; 
+    # reset the token counter for the RHS 
+    zero; 
+    add "LHS*"; push; .reparse
+  }
+  "token*;*","sequence*;*" {
+    clear; get; a+; count; put;
+    clear; add "RHS*"; push; .reparse
+  }
+  "LHS*RHS*" {
+    clear; 
+    # first build the new token string
+    #  eg 'add "tok*tok*2"; push; push; '
+    # that is we need as many pushes as there are tokens and need to
+    # get rid of the trailing number
+
+    get; 
+    # not very elegant but....if you've got more than 6 tokens in a 
+    # row maybe you should reconsider your grammar
+    # could avoid all this with a 'stack' command that updates the 
+    # tape pointer properly
+    E"1" { clip; add '"; push;'; }
+    E"2" { clip; add '"; push; push;'; }
+    E"3" { clip; add '"; push; push; push;'; }
+    E"4" { clip; add '"; push; push; push; push;'; }
+    E"5" { clip; add '"; push; push; push; push; push;'; }
+    E"6" { clip; add '"; push; push; push; push; push; push;'; }
+    put; clear; add 'add "'; get; put;
+    clear;
+    
+    #* 
+      now need to build the rhs which becomes the nom testing format
+      this is bit more tricky than the LHS (left-hand-side). 
+      If we had "stack" it would be much easier (actually we do have 
+      stack - aug 2025)
+
+      # example output 
+      pop;pop; "c*d*" {
+      }
+      push;push;
+    *#
+    ++; 
+    get;
+    # build the "pushes" separately and store in tapecell+1
+    E"1" { clear; add "push;"; } 
+    E"2" { clear; add "push;push;"; } 
+    E"3" { clear; add "push;push;push;"; } 
+    E"4" { clear; add "push;push;push;push;"; } 
+    E"5" { clear; add "push;push;push;push;push;"; } 
+    E"6" { clear; add "push;push;push;push;push;push;"; } 
+    !E"push;" {
+      clear; add "! sorry 6 token sequence limit\n";
+      print; quit;
+    }
+    ++; put; --; 
+    # easier just replace push; with pop; and start building
+    # the start of the nom block
+    replace "push;" "pop;";
+    add '\n"'; get; clip; add '"'; put;
+    clear;
+    --;
+    # now assemble the nom block, but the LHS and RHS
+    # have already been built.
+    ++; get; --; add ' {\n';
+    add '  clear; '; get; add ' .reparse \n';
+    add '}\n';
+    # now get the prebuilt "pushes" which were saved up on tape.
+    ++; ++; get; --; --;
+    #print; 
+    put;
+    clear; add "rule*"; push; .reparse
+  }
+  "rule*rule*","grammar*rule*" {
+    clear; get; add "\n"; ++; get; --; put;
+    clear; add "grammar*"; push; .reparse
+  }
+  push; push;
+  
+  (eof) {
+    pop; "rule*","grammar*" {
+      clear; get; add "\n\n"; print; quit;
+    }
+  }
+

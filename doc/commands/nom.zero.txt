@@ -1,0 +1,31 @@
+
+## THE NOM "ZERO" COMMAND 
+         
+  Set the [pep] *accumulator* register to *zero*
+
+  The "zero" command sets the pep pep://machine *accumulator* or counter to
+  zero. The accumulator register may be used for any purpose as seen fit by the
+  intrepid linguist, for example for "counting" nom://count the number of words
+  per line. For counting characters or lines it may be easier to use the 
+  nom://lines command or the nom://chars command.
+  
+  * count words per line and display
+  -------+
+    while [\r\t\f ]; clear; 
+    whilenot [:space:]; a+; add " "; print; clear;
+    # print the line count after every line or at end of file
+    while [\n]; 
+    [\n],(eof) { 
+      clear; add "(# words: "; count; add ")\n"; print;
+      zero; clear;
+    } 
+    clear;
+    (eof) { quit; }
+  ,,,,
+
+### SEE ALSO
+
+  - nom://a+ increment the accumulator
+  - nom://a- decrement the accumulator
+  - nom://count append the accumulator as text to the 
+     pep://workspace buffer

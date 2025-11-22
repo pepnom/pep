@@ -1,0 +1,54 @@
+
+#*
+
+ABOUT 
+
+  An initial attempt to parse [lisp] syntax. This is quite 
+  simple but I havent worked much on this script. Incomplete.
+
+  Lisp has a simple syntax, and the pep/nom parser can easily recognise and
+  translate it.
+
+  Incomplete.
+
+HISTORY
+
+  7 july 2022
+    begun
+
+*#
+
+  read;
+  [0-9] { 
+    while [0-9]; put; clear; add "int*";
+    push; .reparse
+  }
+
+  [:alpha:] { 
+    while [:alnum:]; put; clear; 
+    add "id*"; push; .reparse
+  }
+  "(",")","." { put; add "*"; push; .reparse }
+  '"' { 
+    until '"'; put; clear; 
+    add "quoted*"; push; .reparse
+  }
+
+parse>
+  # ------------------
+  # 2 token reductions
+  pop; pop;
+  "id*int*","list*int*","int*int*","id*quoted*" {
+    # list, incomplete 
+  }
+  # ------------------
+  # 3 token reductions
+  pop;  
+  "int*.*int*" {
+    clear; get; add "."; ++; ++; get; --; --;
+    put; clear; add "number*"; push; .reparse
+  }
+
+
+
+

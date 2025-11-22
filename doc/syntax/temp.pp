@@ -1,0 +1,1 @@
+read;replace'a''b';print;clear; 

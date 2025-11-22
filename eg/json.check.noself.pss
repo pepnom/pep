@@ -1,0 +1,598 @@
+
+#*
+
+ABOUT 
+ 
+ This version does not include any self-translation or self-testing
+ or error* or help* tokens.
+
+ parse and check the syntax of [json] text-data input. No [unicode]
+ escape sequences. Recognises scientific numbers. I am not sure 
+ how *compliant* this is with the official *json* syntax.
+
+ This script parses "json" syntax using the parse-machine. It is  edging
+ towards a fully syntax compliant syntax checker.  I will not concern myself
+ with the complexities of unicode escape character parsing for the time being.
+ I include D. Crockford's (the inventor of json) json BNF grammar for
+ reference but the code actually uses a completely different grammar more
+ suited to the pep/nom parse-machine.
+
+ The interesting thing about Crockfords grammar is that it does
+ not use any "lexing" phase, nor does it use any EBNF extensions.
+
+NOTES
+ 
+ I could change this to use the error/help token system for 
+ error checking which is more systematic. 
+
+STATUS 
+
+ Seems to be working (including scientific numbers). Checks leading zeros in
+ numbers etc. The trick of displaying the stack at the parse> label, greatly
+ helped debugging. Still needs testing.
+
+ Doesnt include escaped unicode chars within strings such as eg \u4567
+ But that should not matter.
+
+TO DO 
+
+  Also, the "jq" program allows numbers like "+004e3" which crockfords
+  grammar would disallow. So I could make a "strict" script and a
+  non-strict one.
+
+  Make this script, or a similar one pretty print the json input.
+
+SEE ALSO
+  
+ - pars/eg/json.number.pss
+    Just check JSON number syntax. But the current script 
+    also does that.
+ - pars/translate.py.pss
+    This python translator should be able to translate the 
+    current script into python.
+
+PROBLEMS
+
+  Numbers are tricky to include in this grammar because they require a one
+  token (not character) "look ahead" in order to know where the number ends.
+  Eg -3 could become -3.22 which could become -3.22E+20 etc.  So we need to
+  use the , ] } tokens to know where the number ends.  This is a limitation of
+  the parse machine. However, there are some workarounds for this, for example
+  we could try
+
+  ---- 
+    # Here number is a terminal token, meaning that it can be resolved
+    # but integer* is not (because it could be followed by a decimal part
+    # etc, so cannot be resolved.
+    pop;pop;
+    "integer*,*" {
+      clear; add "number*,*"; push; push; .reparse
+    }
+
+    pop;
+    !",*number*", B",*number*" {
+      replace ",*number*" "items*";
+      push; push; push; # there are 3 tokens
+      .reparse
+    }
+  ,,,,
+
+TODO
+
+HISTORY
+
+   22 mar 2025
+    having another look
+   9 June 2021
+    Added scientific number format to this script, so I can now
+    change its name to json.check.pss. 
+    Improved the decimal number parser, prohibiting leading zeros 000
+
+   4 June 2021
+    Improving some 2 token error messages
+
+   1 June 2021
+    Working on including signed and decimal numbers, but it is 
+    much trickier than I imagined. It requires having a look ahead
+    token, which can only be achieved by adding the lookahead token
+    to the grammar.
+
+    Also start several new scripts, one that is a strict syntax
+    checker, another that gives warnings for empty objects etc.
+
+    Also, it would be good to compile scripts to the "go" language
+    (googles c successor).
+
+  24 july 2020
+
+    Advanced the script translate.java.pss to a sufficient level
+    that it appears to correctly translate this script into java.
+
+    For example we can translate this to java with
+    ----
+       pep -f translate.java.pss eg/json.parse.pss > Machine.java
+       javac Machine.java
+       # test the java json parser/checker
+       echo '{"time": [0,44,22]}' | java Machine
+    ,,,,
+
+  20 july 2020
+
+    Wrote json.number.pss which parses correctly json scientific
+    format numbers (eg -0.00123E+001). That script can be 
+    included here to provide a relatively complete json 
+    parser/checker.
+
+  15 june 2020
+    Addressing bug in error checking. Need to ensure that 2 tokens
+    are on the stack, not just 1. 
+
+  14 June 2020
+    Made good progress on this script. Arrays and objects parse
+    recursively. Number parsing is very
+    simplistic, and no attempt to parse escape sequences is made.
+
+  Early 2020
+    Began this script
+
+TESTING
+
+  Script appears to work with the translators for go,java,python,ruby
+  but not tcl (some bug in tcl implementation of the machine). The 
+  script does not run as quickly as 'jq' but not too bad.
+
+  The script can be tested with:
+  >> pep -f eg/json.parse.pss -i '{"location":55, "sum":[1,2,[3,4]]}
+
+  * use the helper functions in helpers.pars.sh to test translations
+  >> pep.jaff ...
+
+BNF GRAMMAR
+
+ * Douglas Crockfords recent json grammar (adapted from McKeeman form)
+ ------
+   # I have removed whitespace elements from this grammar.
+
+   json: element .
+   value: object | array | string | number | "true" | "false" | "null" .
+   object: '{' '}' | '{' members '}' .
+   members: member | member ',' members .
+   member: string ':' element .
+   array: '[' ']' | '[' elements ']' .
+   elements: element | element ',' elements
+   element: value 
+   string: '"' characters '"' .
+   characters: "" | character characters .
+   character: '0020' . '10FFFF' - '"' - '\' | '\' escape .
+   escape: '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'u' hex hex hex hex
+   hex: digit | 'A' . 'F' | 'a' . 'f' .
+   number: integer fraction exponent .
+   integer: digit | onenine digits | '-' digit | '-' onenine digits
+   digits: digit | digit digits
+   digit: '0' | onenine .
+   onenine: '1' . '9' .
+   fraction: "" | '.' digits .
+   exponent: "" | 'E' sign digits | 'e' sign digits .
+   sign: "" | '+' | '-' .
+   ws: "" | '0020' ws | '000A' ws | '000D' ws | '0009' ws .
+
+ ,,,,
+
+*#
+
+  read;
+  # Unlike Crockfords grammar, I will just completely ignore whitespace,
+  # but this may not be acceptable in a rigorous application. Also, I
+  # am just using the ctype.h definition of whitespace, whatever that 
+  # may be.
+
+  # make character number relative to line number 
+  [\n] { clear; nochars; (eof) { .reparse } .restart }
+  [:space:] { clear; (eof) { .reparse } .restart }
+
+  [0-9] { 
+    while [0-9]; 
+    put; clear; add "integer*"; push; .reparse 
+  } 
+
+  [a-z],[A-Z] { 
+    while [a-z]; 
+    !"true".!"false".!"null".!"e".!"E" {
+      # handle error
+      put; clear; 
+      add "Unknown value '"; get; 
+      add "' at line "; lines; add " (character "; chars;
+      add ").\n";
+      print; quit;
+    }
+    put; 
+    "e","E" { clear; add "E*"; push; .reparse }
+    clear; add "value*"; push; .reparse 
+  } 
+
+  '"' {
+    # save line number for error message
+    clear; lines; put; clear; until '"'; 
+    <eof> {
+      clear; 
+      add 'Unterminated quote (") char, starting at line '; 
+      get; add "\n"; print; quit;
+    }
+    clip; put; clear;
+    add "string*"; push; .reparse
+  }
+  # literal tokens
+  ".",",",":","-","+","[","]","{","}" { put; add "*"; push; .reparse }
+
+  # here check if the workspace is empty. If not it is an error.
+  !"" {
+    put; clear; 
+    add "JSON syntax error at line "; lines; 
+    add ", char "; chars; 
+    add ": unquoted '"; get; add "' character.\n"; 
+    print; quit;
+  }
+
+parse>
+
+  # for debugging, although no comments are allowed in json output
+ #add '// line '; lines; add " char "; chars; add ": "; print; clear; 
+ #unstack; print; stack; add '\n'; print; clear;
+
+
+# The parse/compile phase
+# --------------
+# 2 tokens
+  pop; pop;
+
+  #-----------
+  # Two token errors (not necessarily a complete list)
+  # comma errors 
+  "{*,*",",*}*","[*,*",",*,*",",*]*" { 
+    clear; 
+    add "JSON syntax error at line "; lines; 
+    add ", char "; chars; add " (extra or misplaced ',' comma)\n";
+    print; quit; 
+  }
+
+  # exponent errors (e/E must be followed by an int or signed int)
+  !"E*".B"E*".!E"integer*".!E"-*".!E"+*".!E"number*" { 
+    clear; 
+    add "JSON syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced exponent 'e' or 'E' \n";
+    add "In JSON syntax, e/E may only precede an int or signed int.\n";
+    add "for example: 33e+01 \n";
+    print; quit; 
+  }
+
+  # exponent errors (e/E must be followed by an int or signed int)
+  !"E*".E"E*".!B"integer*".!B"sign.integer*".!B"decimal*" { 
+    clear; 
+    add "JSON syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced exponent 'e' or 'E' \n";
+    add "In JSON syntax, e/E may only be preceded by an int, signed int.\n";
+    add "or decimal eg: 33e+01 \n";
+    print; quit; 
+  }
+
+  # sign errors (+/- must be followed by an integer
+  !"-*".B"-*".!E"integer*" { 
+    clear; 
+    add "Json syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced negative '-' sign\n";
+    add "In JSON syntax, - may only precede a number \n";
+    add "for example: -33.01 \n";
+    print; quit; 
+  }
+
+  # sign errors (+/- must be followed by an integer)
+  !"+*".B"+*".!E"integer*" { 
+    clear; 
+    add "Json syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced positive '+' sign\n";
+    add "In JSON syntax, + may only precede a number \n";
+    add "for example: +33.01 \n";
+    print; quit; 
+  }
+
+  # dot errors (. must be followed by an integer)
+  !".*".B".*".!E"integer*" { 
+    clear; 
+    add "Json syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced dot '.' sign\n";
+    add "In JSON syntax, dots may only be used in decimal numbers \n";
+    add "for example: -33.01 \n";
+    print; quit; 
+  }
+
+  # dot errors (. must be preceded by an integer or signed integer)
+  !".*".E".*".!B"integer*".!B"sign.integer*" { 
+    clear; 
+    add "JSON syntax error at line "; lines; 
+    add " (char "; chars; add "): misplaced dot '.' sign\n";
+    add "In JSON syntax, dots may only be used in decimal numbers \n";
+    add "for example: -33.01, but .44 is not a legal JSON number \n";
+    print; quit; 
+  }
+
+  # eg errors "items*:*","members*:*",",*:*","[*:*","{*:*" 
+  # A colon must be preceded by a string. Using <and> logic
+  E":*".!":*".!B"string*" {
+    clear; 
+    add "Json syntax error near line "; lines; 
+    add ", char "; chars; add " (misplaced colon ':') \n"; 
+    add "A ':' can only occur after a string key in an object structure \n"; 
+    add 'Example: {"cancelled":true} \n'; 
+    print; quit; 
+  }
+
+  # more colon errors 
+  !":*".B":*" {
+    E"}*",E",*",E"]*" {
+      clear; 
+      add "JSON syntax error near line "; lines; 
+      add ", char "; chars; add " (misplaced colon ':' or missing value?) \n"; 
+      add "A ':' only occur as part of an object member \n"; 
+      add 'Example: {"cancelled":true} \n'; 
+      print; quit; 
+    }
+  }
+
+  # catch object member errors 
+  # also need to check that not only 1 token in on the stack
+  # hence the !"member*" construct
+  B"member*",B"members*" {
+    !"member*".!"members*".!E",*".!E"}*" {
+      clear; 
+      add "JSON syntax error after object member near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # catch array errors 
+  B"items*".!"items*".!E",*".!E"]*" {
+    clear; 
+    add "Error after an array item near line "; lines; 
+    add " (char "; chars; add ")\n";
+    print; quit; 
+  }
+
+  B"array*",B"object*" {
+    !"array*".!"object*".!E",*".!E"}*".!E"]*" {
+      clear; 
+      add "JSON syntax error near line "; lines; 
+      add " char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # invalid string sequence
+  B"string*" {
+    !"string*".!E",*".!E"]*".!E"}*".!E":*" {
+      clear; 
+      add "JSON syntax error after a string near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # transmogrify into array item, start array
+  "[*number*","[*string*","[*value*","[*array*","[*object*" { 
+    clear; add "[*items*"; push; push; .reparse
+  }
+
+  # exponents (e-403, E+120, E04), this slightly simplifies number parsing
+  "E*sign.integer*","E*integer*" { 
+    clear; add "^"; ++; get; --; put; 
+    clear; add "exponent*"; push; .reparse
+  }
+
+  # JSON scientific format (23e-10, -201E+33)
+  "integer*exponent*","sign.integer*exponent*" { 
+    clear; get; 
+    # enforce multidigit zero rules
+    # But is "0e44" legal JSON number syntax? That would seem odd
+    # if it is.
+    B"+" {
+      clear; 
+      add "JSON syntax error at line "; lines; 
+      add " (char "; chars; add "): \n";
+      add "In JSON syntax, the number part may not have a positive sign \n";
+      add "eg: +0.12e34 (error!) \n";
+      add "eg: 0.12e+34 (OK!) \n";
+      print; quit; 
+    }
+    B"-" { clop; }
+    !"0".B"0" {
+      clear; 
+      add "Json syntax error at line "; lines; 
+      add " (char "; chars; add "): \n";
+      add "In JSON syntax, multidigit numbers must begin with 1-9 \n";
+      add "eg: -0234.01E+9 (error) \n";
+      print; quit; 
+    }
+    clear; get; ++; get; --; put; 
+    clear; add "number*"; push; .reparse
+  }
+
+  # JSON scientific format (-0.23e10, 10.2E+33)
+  "decimal*exponent*" { 
+    clear; get; ++; get; --; put; 
+    clear; add "number*"; push; .reparse
+  }
+
+  # where does a number terminate, this is the problem
+  # It terminates at the tokens ,* }* ]* and maybe space but 
+  # this script doesnt have a space* token.
+  "sign.integer*,*","integer*,*" { 
+    clear; add "number*,*"; push; push; .reparse
+  }
+
+  # transmog
+  "sign.integer*]*", "integer*]*" { 
+    clear; add "items*]*"; push; push; .reparse
+  }
+
+  "sign.integer*}*", "integer*}*" { 
+    clear; add "number*}*"; push; push; .reparse
+  }
+
+  # convert decimals to numbers with token lookahead
+  "decimal*}*", "decimal*]*","decimal*,*" { 
+    replace "decimal*" "number*"; push; push; .reparse
+  }
+  # signed numbers
+  "-*integer*","+*integer*" { 
+    clear; get; ++; get; --; put; clear;
+    add "sign.integer*"; push; .reparse
+  }
+
+  # signed numbers
+  "-*integer*","+*integer*" { 
+    clear; get; ++; get; --; put; clear;
+    add "sign.integer*"; push; .reparse
+  }
+
+  # empty arrays are legal json
+  "[*]*" { clear; add "array*"; push; .reparse }
+  # empty objects are legal json
+  "{*}*" { clear; add "object*"; push; .reparse }
+
+# --------------
+# 3 tokens
+  pop;
+
+  #---------------
+  # Some three token errors
+
+  # Object errors
+  # A negative logic doesnt work because of the lookahead required for numbers
+  "{*string*}*","{*integer*}*","{*sign.integer*}*","{*array*}*",
+  "{*object*}*","{*value*}*","{*decimal*}*" {
+    clear; 
+    add "Json syntax error near line "; lines; 
+    add ", char "; chars; add " (misplaced brace '}' or bad object) \n"; 
+    add "A '}' can only occur to terminate an object structure \n"; 
+    add 'Example: {"hour":21.00, "cancelled":true} \n'; 
+    print; quit; 
+  }
+
+  # transmogrify number into array item
+  "[*number*,*" {
+    clear; add "[*items*,*"; push; push; push; .reparse
+  }
+
+  # decimal numbers eg -4.334 or +4.3 or 0.1
+  "sign.integer*.*integer*" {
+    clear; get;
+    B"+" {
+      #error, no positive signed decimals in JSON
+      add "Json syntax error at line "; lines; 
+      add " (char "; chars; add "): misplaced positive '+' sign\n";
+      add "In JSON syntax, decimal numbers are not positively signed\n";
+      add "eg: +33.01 (error) \n";
+      print; quit; 
+    }
+    B"-0".!"-0" {
+      add "Json syntax error at line "; lines; 
+      add " (char "; chars; add "): \n";
+      add "In JSON syntax, multidigit numbers must begin with 1-9 \n";
+      add "eg: -0234.01E+9 (error) \n";
+      print; quit; 
+    }
+    clear; add "decimal*"; push; .reparse
+  }
+
+  # decimal numbers eg -4.334 or +4.3 or 0.1
+  "integer*.*integer*" {
+    clear; 
+    add "decimal*"; push; .reparse
+  }
+
+  # arrays, 
+  "[*items*]*","[*number*]*" {
+    clear; add "array*"; push; .reparse
+  }
+
+  # 
+  "items*,*string*", "items*,*value*", "items*,*array*", 
+  "items*,*object*", "items*,*number*" { 
+    clear; add "items*"; push; .reparse
+  }
+
+  # object members
+  #"string*:*integer*",
+  "string*:*number*",
+  "string*:*string*",
+  "string*:*value*",
+  "string*:*object*",
+  "string*:*array*" {
+    clear; add "member*"; push; .reparse
+  }
+
+  # multiple elements of an object
+  "member*,*member*","members*,*member*" {
+    clear; add "members*"; push; .reparse
+  }
+
+  #  
+  "{*members*}*","{*member*}*" {
+    clear; add "object*"; push; .reparse
+  }
+
+  pop; 
+  # --------------
+  # 4 tokens
+
+  "items*,*items*,*","items*,*number*,*" {
+    clear; add "items*,*"; push; push; .reparse
+  }
+
+  # numbers require a lookahead token, unfortunately 
+  "string*:*number*,*" {
+    clear; add "member*,*"; push; push; .reparse
+  }
+
+  # numbers require a lookahead token, unfortunately 
+  "string*:*number*}*" {
+    clear; add "member*}*"; push; push; .reparse
+  }
+
+  # multiple elements of an object with lookahead
+  "member*,*member*,*","members*,*member*,*" {
+    clear; add "members*,*"; push; push; .reparse
+  }
+
+  # multiple elements of an object with lookahead
+  "member*,*member*}*","members*,*member*}*" {
+    clear; add "members*}*"; push; push; .reparse
+  }
+
+  pop; 
+  # --------------
+  # 5 tokens
+  # need this clumsy rule for numbers which get resolved when
+  # a ] is seen. This is the lookahead
+  "[*items*,*items*]*","[*items*,*number*]*" {
+    clear; add "array*"; push; .reparse
+  }
+
+
+  push; push; push; push; push;
+
+  <eof> {
+    unstack; 
+    "object*","array*","value*","string*","integer*","decimal*","number*" {
+      stack; 
+      add "(Appears to be) valid JSON syntax. Top level structure was '"; 
+      print; clear;
+      pop; clip; add "'\n"; print; clear; quit;
+    }
+    stack; 
+    add "(maybe) Invalid JSON \n";
+    add "The parse stack was \n"; print; clear;  
+    unstack; add "\n"; print;
+  }
+
+ 

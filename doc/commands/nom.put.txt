@@ -1,0 +1,53 @@
+
+## THE NOM "PUT" COMMAND ....
+
+ put the contents of the workspace into the current tape cell
+
+ The put command places the entire contents of the workspace into the current
+ pep://tape cell, overwriting any previous value which that cell might have
+ had. The *put* command takes no parameters.
+
+ * parse (or lex) alphabetic words and save with put 
+ -----++
+   read;
+   [:alpha:] { 
+     while [:alpha:]; put; 
+     clear; add "word*"; push;
+     .reparse
+   }
+   # delete/ignore everthing else
+   !"" { clear; }
+  parse>
+   (eof) {
+     # get a word and print in reverse
+     pop; "word*" {
+       clear; get; add " "; print; clear;
+       .reparse
+     }
+     quit;
+   }
+ ,,,,
+
+  * put the text "one" into the current tape cell and the next one.
+  >>  clear; add "one"; put; ++; put; --;
+ 
+ The put command only affects the current tape cell of the virtual
+ machine. 
+
+ After a put command the workspace buffer is *unchanged*. This contrasts with
+ the nom nom://push command which pushes a certain amount of text (one parse
+ token) from the pep://workspace onto the stack and deletes the same amount of
+ text from the workspace buffer.
+
+ The put command is the counterpart of the nom://get command which retrieves or
+ gets the contents of the current item of the pep://tape data structure. Since the
+ tape is generally designed for storing the values or the attributes of parse
+ tokens, the put command is essentially designed to store values of
+ attributes. However, the put command overwrites the contents of the 
+ current tape cell, whereas the "get" command appends the contents of 
+ the current tape cell to the work space.
+
+ The put command can be used in conjunction with the 'increment' ++ and
+ 'decrement' -- commands to store values in the tape which are not the current
+ tape item. 
+

@@ -1,0 +1,24 @@
+
+## THE NOM "REPARSE" COMMAND 
+
+  Jump to the *parse>* label in the script.
+
+  The **.reparse** command combined with the nomsyn://parse> label
+  is an important technique for ensuring that all grammar rules or 
+  reductions will take place for a given parse token sequence.
+
+  Unless you are convinced that a previous parse nomsyn://block will
+  never be applicable, you should include a *.reparse* command in 
+  every block where new grammar parse tokens are created and 
+  "pushed" nom://push onto the [pep] pep://stack .
+
+  The ".reparse" command makes the interpreter jump to the "parse>" label. The
+  .reparse command takes no arguments, and is *not* terminated with a
+  semi-colon. The .reparse command is important for ensuring that all
+  shift-reductions occur at a particular phase of a script.
+   
+  If there is no 'parse>' label in the script, then it is a (compile-time)
+  error to use the ".reparse" command.
+
+### NOTES
+

@@ -1,0 +1,40 @@
+
+## THE PEP INTERPRETER OBJECT/ FOLDER
+
+  This folder contains the implementation of the pep interpreter
+  (in the c language with byte characters) and it also contains the 
+  files which are required when compiling a nom script to c with the 
+  script /tr/translate.c.pss
+
+  The pep interpreter includes a good interactive script debugger which 
+  can be activated with the '-I' switch. This allows you to "step through"
+  nom scripts and view the state of the pep virtual pep://machine after 
+  each instruction.
+
+  See the document /doc/howto/nom.debug.html for more information about 
+  debugging nom scripts.
+
+### Compiling
+
+  The code in this folder can be compiled with a c compiler such as gcc or tcc
+  and the script /object/make.pepnom.sh (but the script should be in the parent
+  folder).
+
+### Notes
+
+  This folder is hosted on the sourceforge nom site at nomsf://object/
+  and also at www.nomlang.org/object/
+
+### Other folders of interest
+
+   - /doc/ all documentation for the pep/nom system
+   - /download/ downloadable files for the pep/nom system 
+     (including a .tar.gz file)
+   - /post/ some blog posts about pep and nom
+   - /eg/ a set of nom example scripts
+   - /tr/ the nom scripts which translate nom into other languages 
+      such as [nom:translation.links]
+
+
+ 
+  

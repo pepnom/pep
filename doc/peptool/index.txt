@@ -1,0 +1,61 @@
+
+### THE PEPTOOL FOLDER
+
+ This documentation directory is about the interpreter which is 
+ called *pep* (It probably shouldn't have the same name as the 
+ virtual machine, but I won't worry about that for now).
+
+ The *pep* interpreter is written in "plain" c. That is, not c++
+ nor "rust" www.rust-lang.org . Just "good old" c. Actually, if I had
+ known about, or known "go" https://go.dev or *rust* or even "dart"
+ https://dart.dev then I probably would have used one of those languages.
+ But I didn't, so I didn't.
+
+ The pep interpreter has a very handy debugging or *interactive* mode
+ which can be activated with the *-I* switch (and it has nice 
+ colours as well)
+ <:4:>>:/image/peptool.interactive.22feb2025.png>
+
+ * watch the virtual machine as a nom script executes
+ >> pep -If eg/exp.tolisp.pss -i "(-b + (b^2-4*a*c)^(1/2))/(2*a)"
+
+ This is quite interesting to do, because you can see exactly how 
+ the *PEP* virtual machine is operating and you can also see all the 
+ nom statement in the *compiled* form (a sort of pseudo assembly).
+
+ The pep interactive or debug mode has many different commands, such
+ as *rrw* (run until the pep://workspace is a given text) or 
+ *ls* (list the compiled instructions). Type "hh" to see all commands.
+
+ Normally, you will not need the debug mode to actually debug scripts 
+ because there are easier ways: for example you can display the parse
+ tokens as in the following example.
+
+ * display the parse stack tokens during script execution.
+ ----
+ parse>
+   add "<!-- line "; lines; add " char "; chars; add ": "; print; clear; 
+   unstack; print; stack; add " -->\n"; print; clear;
+ ,,,,
+
+ But the *-I* switch was very handy during the implementation of the 
+ pep interpreter to make sure that the virtual machine was working
+ as expected. And it is one reason I have no desire to reimplement the 
+ interpreter in a different language.
+
+ But there is another reason: once I wrote the pep interpreter, I realised
+ that it was quite easy to write "translation" nomsf://tr/ scripts which
+ are *nom* scripts that translate *nom* scripts into other computer languages
+ such as *go* , *java* , *tcl* , *python* , *javascript* and *ruby* . There 
+ are a few more unfinished translators such as 
+ "perl" www.perl.org , swift, rust etc.
+ I intend to finish translators for rust, perl, dart, lisp and hopefully
+ "forth" https://forth-standard.org (please don't mention *forth* )
+
+ Since languages like *go* have good support for Unicode characters 
+ (I assume, and fervently hope) and also should be "memory safe" 
+ I feel that there is no reason to reimplement the pep interpreter in 
+ a more robust or modern language.
+
+
+

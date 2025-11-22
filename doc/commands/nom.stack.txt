@@ -1,0 +1,10 @@
+
+
+## THE NOM "STACK" COMMAND
+
+  Push the entire workspace onto the pep machine pep://stack regardless of token
+  delimiters. 
+  
+  This command behaves exactly like multiple nom://push commands until the
+  pep://workspace buffer is empty.
+

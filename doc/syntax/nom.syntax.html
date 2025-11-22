@@ -1,0 +1,851 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  title='/image/doodle.horse.duck.swirl.jpg' src='/image/doodle.horse.duck.swirl.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   If you want to learn how to do something, then 
+   watch the animals and insects, and learn from them.
+ 
+<cite>Kogi Saying </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/syntax/nom.syntax.txt -->
+<p>
+<p>
+<!-- ------------------------------- -->
+<h2> syntax of the "nom" language</h2>
+
+<p>
+ An overview of the syntax of the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> parsing language.
+<p>
+ The file <a href='/doc/syntax/doc.dir.index.html'>/doc/syntax/doc.dir.index.html</a> contains a list of 
+ the documents available in this folder and links to documents that 
+ explain each element of the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> syntax.
+<p>
+ The <em>nom</em> language (which is interpreted via the <em>pep</em> tool or compiled via
+ one of the language <a href='https://bumble.sf.net/books/pars/tr/'>translation </a> scripts - which are themselves
+ <em>nom</em> scripts) is implemented in the file <a href='https://bumble.sf.net/books/pars/compile.pss'>compile.pss </a>
+ and has a syntax somewhat similar to the &ldquo;sed&rdquo; text stream editor 
+ (but hopefully less cryptic).
+ <p>
+ <em>Nom</em> commands can be placed in <a title='nom syntax reference: block' href='http://nomlang.org/doc/syntax/nom.syntax.block.html'>blocks </a> which can be nested
+ as deeply as required. The statements in the <em>block</em> are only executed
+ if the <em>tests</em> return true.
+ <p>
+ Unlike sed, it also allows (and prefers) long names for commands (eg
+ <code class='nom-command'><a title='nom command reference: clear' href='http://nomlang.org/doc/commands/nom.clear.html'>clear</a></code> instead of &ldquo;d&rdquo;,
+ &ldquo;add&rdquo; instead of &ldquo;a"). Each command has a long&rdquo; and a short form.
+<p>
+ All commands must be terminated with a semicolon except for the following:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ commands not terminated by a semicolon
+ </figcaption>
+<pre class='codeline'>
+ .reparse .restart parse&gt;
+</pre>
+</figure>
+<p>
+ White-space is not significant in the syntax of the parse-script 
+ language, except within ' and " quote characters and square brackets []
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ random white-space
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-punct'>!</span>
+    <span class='nom-class'>[a-e]</span><span class='nom-punct'>{</span><span class='nom-command'>print</span><span class='nom-punct'>;</span><span class='nom-punct'>}</span>
+
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+ Braces &ldquo;{&rdquo; and &ldquo;}&rdquo; are used to define blocks of commands (as in
+ sed, awk and c).
+<p>
+<!-- ------------------------------- -->
+<h2> &Nopf;&oopf;&mopf; language features</h2>
+
+<p>
+ The script language (and it&rsquo;s syntax) is implemented in the file
+ <a href='https://bumble.sf.net/books/pars/compile.pss'>bumble.sf.net/books/pars/compile.pss</a> . Some commands, such as &ldquo;.reparse&rdquo; and &ldquo;.restart
+&rdquo; affect the flow of the program, but not the virtual machine. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ tests on the workspace buffer, followed by a block of commands
+ </figcaption>
+<pre class='codeline'>
+ [a-z] { print; clear; }
+</pre>
+</figure>
+ <p>
+ Most scripts start with <code class='nom-command'><a title='nom command reference: read' href='http://nomlang.org/doc/commands/nom.read.html'>read</a></code> or <em>r</em> (which is the abbreviated form).
+ There is no <em>implicit</em> read statement in a <em>nom</em> script (unlike in 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> ) so a
+ script that does not read anything with <code class='nom-command'><a title='nom command reference: read' href='http://nomlang.org/doc/commands/nom.read.html'>read</a></code> or <code class='nom-command'><a title='nom command reference: while' href='http://nomlang.org/doc/commands/nom.while.html'>while</a></code>
+ <code class='nom-command'><a title='nom command reference: whilenot' href='http://nomlang.org/doc/commands/nom.whilenot.html'>whilenot</a></code> or <code class='nom-command'><a title='nom command reference: until' href='http://nomlang.org/doc/commands/nom.until.html'>until</a></code> will do nothing and will have to be terminated
+ with [control-c] because it will never <code class='nom-command'><a title='nom command reference: quit' href='http://nomlang.org/doc/commands/nom.quit.html'>quit</a></code> .
+ <p>
+ The <code class='nom-command'>read</code> command reads one character from the input stream. Whereas sed
+ and awk are line oriented (they process the input stream one line at a time),
+ <em>nom</em> is character-orientated (the input stream is processed one character at a
+ time).
+<p>
+ As with sed and awk, <em>nom</em> scripts have an implicit loop. When the interpreter
+ reaches the end of the script, it jumps back to the first command (usually
+ <em>read</em> ) and continues looping until the input stream is finished. This 
+ behaviour is the same as the <code class='nom-command'><a title='nom command reference: restart' href='http://nomlang.org/doc/commands/nom.restart.html'>.restart</a></code> command but is implicit
+ in every script.
+<p>
+ In the code below <em>.restart</em> is not required because 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> automatically
+ jumps back to the 1<sup class='ordinal'>st</sup> statement after the <a title='nom syntax reference: begin' href='http://nomlang.org/doc/syntax/nom.syntax.begin.html'>begin</a> block (if 
+ there is one). The script is <strong><em>not</em></strong>
+ an infinite loop because the 
+ <em>read</em> command exits when it tries to read the &lt;eof&gt; end of file 
+ marker.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the &Nopf;&oopf;&mopf; script loop, with a superfluous .restart command
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>restart</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> cryptic-ness</h3>
+
+<p>
+ It is possible (or probable) that some people will find the syntax of the
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> language <abbr class='etymology' 
+      title='hidden: from latin 'cryptus''>cryptic</abbr> because it reflects the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> virtual <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a>
+ which underlies it. In order to program in <em>nom</em> you need to have the
+ virtual-machine &ldquo;in-mind&rdquo; (this sounds like some Martin Heidegger phrase) 
+<p>
+ But we can create a more natural language <em>on top</em> of 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr>
+ Lets do it....
+<p>
+ The code below recognises ebnf rules is the form
+ <pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>token</span><span class='nom-punct'>></span><span class='nom-unknown'>+</span> <span class='nom-unknown'>=</span> <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>token</span><span class='nom-punct'>></span><span class='nom-unknown'>+</span> <span class='nom-punct'>;</span>
+  </code></pre>
+
+ <p>
+ Obviously it is a &ldquo;toy&rdquo; ebnf parser because this version doesn&apos;t compile the
+ ebnf to 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> script but it is a good start. The script below took about 10
+ minutes to write. The debugging lines below the parse&gt; label are very handy
+ for seeing how the parse <a title='nom syntax reference: stack' href='http://nomlang.org/doc/machine/pep.stack.html'>stack</a> is shift-reducing as it reads the input
+ stream.
+<p>
+ See the following script below for a compiling version.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a toy ebnf parser (recogniser)
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span>
+
+    <span class='nom-comment'># ignore white-space</span>
+    <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+    <span class='nom-comment'># literal tokens ; and =</span>
+    <span class='nom-string'>";"</span><span class='nom-punct'>,</span><span class='nom-string'>"="</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-class'>[:alpha:]</span> <span class='nom-punct'>{</span> 
+      <span class='nom-command'>while</span> <span class='nom-class'>[:alpha:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"token*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>" ?? bad char \n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-comment'># An important grammar debugging technique for showing</span>
+    <span class='nom-comment'># the parse-stack reductions.</span>
+    <span class='nom-comment'># lines; add " char "; chars; add ": "; print; clear; </span>
+    <span class='nom-comment'># unstack; print; stack; add "\n"; print; clear;</span>
+
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"token*token*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*token*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"sequence*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"token*=*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*=*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"LHS*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"token*=*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*;*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"RHS*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"LHS*RHS*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"rule!!\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"rule*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span>
+
+  </code></pre>
+</figure>
+ <p>
+<!-- ------------------------------- -->
+<h3> toybnf </h3>
+
+<p>
+ See the file <a href='/eg/toybnf.pss'>/eg/toybnf.pss</a> for a development of the script below.
+ I call this implementation &ldquo;toybnf&rdquo; because it is not complete 
+ enough to be used practically (for example it doesn&apos;t have any
+ way to lex or scan and create parse tokens)
+<p>
+ Creating a better language with 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> as the compile target.
+<p>
+ It would be nice to have a more natural language that <em>targets</em> 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr>
+ Lets expand the script above to compile to [nom]. 
+<p>
+ This is compiling very simple 
+<abbr class='tek-acronym' 
+      title='Extended Backus-Naur Form'>EBNF</abbr> to 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> . This is the first example of
+ using <em>nom</em> as the target of a <em>nom</em> script. Another strange <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=corollary' title='oxford english dictionary'>corollary</a>
+ arises: that we can use this new language to implement a recogniser for
+ itself (but not a compiler because so far our new language has no compiling
+ syntax, just <em>ebnf</em> rule reductions. The script below parses the same syntax
+ as above but instead of just recognising the syntax, it actually creates
+ executable 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> code.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a basic (toy) ebnf parser, compiling to nom.
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-comment'>#*
+      tokens: 
+       LHS  left-hand-side of the bnf rule
+       RHS  right-hand-side
+       sequence  a sequence/list of tokens
+       token     one grammar token
+       '=' ';'   literal tokens
+    *#</span>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span>
+    <span class='nom-comment'># line-relative char numbers </span>
+    <span class='nom-class'>[\n]</span> <span class='nom-punct'>{</span> <span class='nom-command'>nochars</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># ignore white-space</span>
+    <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+    <span class='nom-comment'># literal tokens ; and =</span>
+    <span class='nom-string'>";"</span><span class='nom-punct'>,</span><span class='nom-string'>"="</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-class'>[:alpha:]</span> <span class='nom-punct'>{</span> 
+      <span class='nom-comment'># add the default nom parse token delimiter '*'</span>
+      <span class='nom-command'>while</span> <span class='nom-class'>[:alpha:]</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"token*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> 
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"! [toyBNF]\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>" bad character '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>" at line:"</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char:"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>" I just can't go on... sorry, goodbye"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-comment'># An important grammar debugging technique for showing</span>
+    <span class='nom-comment'># the parse-stack reductions.</span>
+    <span class='nom-comment'># lines; add " char "; chars; add ": "; print; clear; </span>
+    <span class='nom-comment'># unstack; print; stack; add "\n"; print; clear;</span>
+
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"token*token*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*token*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># count tokens to calculate "push;" later</span>
+      <span class='nom-command'>a+</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"sequence*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"token*=*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*=*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># later have to transform this count number into</span>
+      <span class='nom-comment'># push; or push;push; etc</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>a+</span><span class='nom-punct'>;</span> <span class='nom-command'>count</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-comment'># reset the token counter for the RHS </span>
+      <span class='nom-command'>zero</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"LHS*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"token*;*"</span><span class='nom-punct'>,</span><span class='nom-string'>"sequence*;*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>a+</span><span class='nom-punct'>;</span> <span class='nom-command'>count</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"RHS*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"LHS*RHS*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-comment'># first build the new token string</span>
+      <span class='nom-comment'>#  eg 'add "tok*tok*2"; push; push; '</span>
+      <span class='nom-comment'># that is we need as many pushes as there are tokens and need to</span>
+      <span class='nom-comment'># get rid of the trailing number</span>
+
+      <span class='nom-command'>get</span><span class='nom-punct'>;</span> 
+      <span class='nom-comment'># not very elegant but....if you've got more than 6 tokens in a </span>
+      <span class='nom-comment'># row maybe you should reconsider your grammar</span>
+      <span class='nom-comment'># could avoid all this with a 'stack' command that updates the </span>
+      <span class='nom-comment'># tape pointer properly</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"1"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"2"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"3"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push; push; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"4"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push; push; push; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"5"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push; push; push; push; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"6"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"; push; push; push; push; push; push;'</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'add "'</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      
+      <span class='nom-comment'>#* 
+        now need to build the rhs which becomes the nom test in format
+        this is bit more tricky than the LHS. If we had "stack" it
+        would be much easier
+        pop;pop; "c*d*" {
+        }
+        push;push;
+      *#</span>
+      <span class='nom-command'>++</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>get</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'># build the "pushes" separately and store in tapecell+1</span>
+      <span class='nom-punct'>E</span><span class='nom-string'>"1"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"2"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"3"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;push;push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"4"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;push;push;push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"5"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;push;push;push;push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"6"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"push;push;push;push;push;push;"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> 
+      <span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"push;"</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"! sorry 6 token sequence limit\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>}</span>
+      <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> 
+      <span class='nom-comment'># easier just replace push; with pop; and start building</span>
+      <span class='nom-comment'># the start of the nom block</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"push;"</span> <span class='nom-string'>"pop;"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>'\n"'</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>'"'</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'># now assemble the nom block, but the lhs and rhs</span>
+      <span class='nom-comment'># have already been built.</span>
+      <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>' {\n'</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>'  clear; '</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>' .reparse \n'</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>'}\n'</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'># now get the prebuilt "pushes" which were saved up on tape.</span>
+      <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'>#print; </span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"rule*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"rule*rule*"</span><span class='nom-punct'>,</span><span class='nom-string'>"grammar*rule*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"grammar*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span>
+    
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-string'>"rule*"</span><span class='nom-punct'>,</span><span class='nom-string'>"grammar*"</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>}</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+ <p>
+ You can save the script above as <code>toyBNF.pss</code>
+ and test it:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ testing the toyBNF language
+ </figcaption>
+<pre class='codeline'>
+ pep -f toyBNF.pss -i 'com = word param; block = word newword;'
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ sample output of toyBNF when compiling with &Nopf;&oopf;&mopf; script above
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-comment'># sample input BNF rules (white-space doesnt matter):</span>
+    <span class='nom-comment'>#   com = word param ; </span>
+    <span class='nom-comment'>#   block = word newword ;</span>
+    <span class='nom-comment'># output:</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"word*param*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"com*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"word*newword*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"block*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span>
+
+  </code></pre>
+</figure>
+<p>
+ This is pretty cool, because we now have a toybnf-to-nom compiler
+ that produces executable and translatable (to go/java/tcl/python/ruby etc)
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> code. But we still need a <em>lexxing</em> syntax for our toyBNF 
+ language
+<p>
+ The &ldquo;redundant push/pop&rdquo; problem may have a simple solution, but
+ we need to make sure there is no whitespace between.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ getting rid of redundant push/pops
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-command'>replace</span> <span class='nom-string'>"push;push;push;pop;pop;pop;"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span>
+   <span class='nom-command'>replace</span> <span class='nom-string'>"push;push;pop;pop;"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span>
+   <span class='nom-command'>replace</span> <span class='nom-string'>"push;pop;"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+ But be careful!! It may not be valid to remove push;pop; combinations
+ for reasons discussed elsewhere.
+<p>
+ This toyBNF language may not be as efficient as hand coded 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> because
+ it does redundant <a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>pushes </a> and <a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>pops </a> between
+ code blocks, but it is easier to write and probably less prone to 
+ errors. But to make it more than a &ldquo;recogniser&rdquo; we have to add 
+ compiling syntax like this....
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ proposed compiling syntax for toyBNF
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>add</span> <span class='nom-unknown'>=</span> <span class='nom-unknown'>b</span> <span class='nom-command'>chars</span> <span class='nom-punct'>{</span>
+     <span class='nom-comment'>#0 = "&lt;a href=".$1.">".$2."&lt;/a>" ;</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ In the syntax above '.' is the string concatenator and $1 refers to 
+ the attribute of the first token on the RHS right-hand-side of the 
+ bnf grammar rule. The compiling block takes the place of the ';' in
+ the syntax above.
+<p>
+ We don&rsquo;t have any sensible way to actually create the 'tokens' yet.
+ (ie the lexing phase of the recogniser) but we can soon invent a 
+ syntax like this
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ proposed syntax for creating tokens from literal values
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-unknown'>literals</span><span class='nom-error'>: ??</span> <span class='nom-string'>'-'</span><span class='nom-punct'>,</span><span class='nom-string'>'+'</span><span class='nom-punct'>,</span><span class='nom-string'>':'</span> <span class='nom-punct'>;</span>
+    <span class='nom-unknown'>digit</span><span class='nom-error'>: ??</span> <span class='nom-class'>[:digit:]</span> <span class='nom-punct'>;</span>
+    <span class='nom-unknown'>number</span><span class='nom-error'>: ??</span> <span class='nom-class'>[:digit:]</span><span class='nom-unknown'>+</span> <span class='nom-punct'>;</span>
+    <span class='nom-unknown'>word</span><span class='nom-error'>: ??</span> <span class='nom-class'>[:alpha:]</span><span class='nom-unknown'>+</span> <span class='nom-punct'>;</span>
+    <span class='nom-unknown'>newline</span><span class='nom-error'>: ??</span> <span class='nom-string'>'\n'</span> <span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+ Here is how this will be compiled by <code>toyBNF.pss</code> in 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ lexxing or scanning in toyBNF
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-comment'># toyBNF syntax: word: [:alnum:]+ ;</span>
+    <span class='nom-comment'># the final reparse may not be necessary</span>
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> 
+    <span class='nom-class'>[:alnum:]</span> <span class='nom-punct'>{</span> 
+      <span class='nom-command'>while</span> <span class='nom-class'>[:alnum:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"word*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-comment'># toyBNF syntax: newline: '\n' ;</span>
+    <span class='nom-string'>'\n'</span> <span class='nom-punct'>{</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"newline*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ and a more advanced syntax for keywords and identifiers 
+ </figcaption>
+<pre class='codeblock'>
+
+    [:alpha:]+ {
+      literals: "if","while","then","end";
+      # everthing else is an identifier in this block.
+      identifier: *; 
+    }
+  </pre>
+</figure>
+<p>
+ The literals will just become 'literal' tokens in <em>nom</em> (that is 
+ the token is the same as the character with an appended '*' character -
+ or whatever is the token delimiter).
+<p>
+ I use a different assignment character for lexing &ldquo;:&rdquo; instead 
+ of &ldquo;=&rdquo; because the process is different.
+<p>
+<!-- ------------------------------- -->
+<h3> notes</h3>
+
+<p>
+ <code class='nom-command'><a title='nom command reference: while' href='http://nomlang.org/doc/commands/nom.while.html'>while</a></code> <code class='nom-command'><a title='nom command reference: whilenot' href='http://nomlang.org/doc/commands/nom.whilenot.html'>whilenot</a></code> and <code class='nom-command'><a title='nom command reference: until' href='http://nomlang.org/doc/commands/nom.until.html'>until</a></code> do not exit when they
+ encounter the &lt;end-of-stream&gt; marker unlike read.
+<p>
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  title='/image/fig.deniliquin.jpg' src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

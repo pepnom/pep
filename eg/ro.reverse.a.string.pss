@@ -1,0 +1,14 @@
+#*
+
+  This script solves the rosetta code problem:
+  http://www.rosettacode.org/wiki/Reverse_a_string
+
+  A one-liner
+
+TOKENS
+  no tokens required.
+
+*#
+
+ read; get; put; clear;
+ (eof) { get; print; } 

@@ -1,0 +1,12 @@
+
+## THE NOM "WRITE" COMMAND
+
+  Apparently this command writes the workspace to the file
+  "sav.pp" I think that I initially implemented it with no 
+  quoted parameter because the compiler script nomsf://compile.pss actually
+  uses it in the process of compiling. 
+
+### SEE ALSO
+
+  - nom://writefile 
+  - nothing else

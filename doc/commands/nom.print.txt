@@ -1,0 +1,50 @@
+
+
+## THE NOM "PRINT" COMMAND
+
+  *print* the contents of the workspace buffer to *stdout*
+
+  The print command prints the contents of the pep://workspace to
+  the standard output stream (the console, normally). This is
+  analogous to the sed 'p' command (but its abbreviated form
+  is 't' not 'p' because 'p' means "pop").
+
+  * Print each character in the input stream twice:
+  >> read; print; print; clear;
+
+  * double space a file
+  ----+
+    read; [\n] { print; }
+    print; clear;
+  ,,,,
+
+  note: the implicit 'loop' at the bottom of the script
+
+  * Replace all 'a' chars with 'A's;
+  >> read; "a" { clear; add "A"; } print; clear;
+
+  * Only print text within double quotes:
+  >> read; '"' { until '"'; print; } clear;
+    
+## NOTES
+ 
+  The print command does not take any arguments or parameters.
+  The print command is basically the way in which the parse-language
+  communicates with the outside world and the way in which it
+  generates an output stream. The print command does not change
+  the state of the pep virtual machine in any way.
+
+  Unlike sed, the *nom* language does not do any "default" printing.  That is,
+  if the print command is not explicitly specified the script will not print
+  anything and will silently exit as if it had no purpose. This should be
+  compared with the default behavior of sed which will print each line of the
+  input stream if the script writer does not specify otherwise (using the -n
+  switch).
+
+  Actually the print command is not to be so extensively used as 
+  in sed. This is because if an input stream is successfully parsed
+  by a given script then only *one* print statement will be necessary,
+  at the end of the input stream. However the print command could be
+  used to output progress or error messages or other things. 
+ 
+

@@ -1,0 +1,34 @@
+
+## Error checking Nom syntax
+
+ This document outlines or sketches how to error check the nom syntax. It will
+ try to use new state-of-the-art error checking techniques that I have
+ discovered (like pushing an error* token to reduce the verbosity of the
+ script) and it will be a "green-fields" [nom] parser meaning that I will not
+ base the code on previous "translators" nomsf://tr/ or compilers. This will
+ allow me to use things that I have learnt since about 2019 when I first
+ managed to code a decent implementation of the [pep] engine and the [nom]
+ language.
+
+ I should be able to use this error checker as the basis for an html
+ *pretty-printer*
+
+ * A nom parser and error checker
+ ------+
+   read;
+
+   # literal tokens, for readability maybe 'dot*' and 'comma*'
+   [;,.{}] { add "*"; push; .reparse }
+
+   # command names
+   [:alpha:] {
+     while [:alpha:]; put; clear;
+     # check for valid command or abbreviation
+   }
+
+ parse>
+   # debug code here
+   
+ 
+ ,,,,
+ 

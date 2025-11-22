@@ -1,0 +1,9 @@
+
+#*
+  Just number the lines of the input text. That all
+*#
+
+  read;
+  [\n] { lines; add " "; }
+  print; clear;
+

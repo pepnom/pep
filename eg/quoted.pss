@@ -1,0 +1,40 @@
+#*
+
+  Only print text within quotes, without spanning multiple
+  lines. For example, print "this text" and "more".
+
+HISTORY
+
+  19 june 2022
+    written and appears to work.
+
+*#
+  read; 
+  # make character number relative to line.
+  "\n" { nochars; }
+  # dont print anything outside of quotes
+  !'"' { clear; }
+
+  '"' { 
+    whilenot ["\n]; 
+    (eof) { 
+      put; clear; 
+      add '[Unterminated quote character (") at line '; 
+      lines; add " char "; chars; add "]\n"; print; quit;
+    }
+    read; 
+    E'\n' {
+      nochars;
+      put; clear; 
+      add '[Unterminated quote character (") at line '; 
+      lines; add "]\n"; print; clear; .restart
+    }
+    '""' {
+      clear; add '[Empty quotes "" at line '; lines; 
+      add " char "; chars; add "]\n"; print; clear; .restart
+    }
+    E'"' {
+      add "\n"; print; clear;
+    }
+  }
+

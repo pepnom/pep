@@ -1,0 +1,36 @@
+
+## THE NOM "ESCAPE" COMMAND
+
+  The *escape* command puts an escape character in front of all 
+  occurences of the given character in the workspace buffer.
+
+  It is possible that this command was made redundant by the 
+  nom://replace command. I am not completely sure.
+
+  * use the nom replace command to escape characters
+  >> replace '"' '\"'; # or replace '"' '\\"';
+
+  This is actually a tricky topic because each language may have 
+  a different strategy for escaping characters.
+
+  An important nom command for "tokenising"
+  http://www.cs.man.ac.uk/~pjj/farrell/comp3.html the text input stream of a
+  given *pattern* or formal)language (which could be a text data format like
+  "JSON" www.json.org , "CSS" wp://css , a computer language like "lisp"
+  www.lisp-lang.org or a simple pattern like a "palindrome" oed://palindrome )
+  is the nom://until command. It reads the input stream *until* the 
+  workspace buffer end in the given text, or else ends with the text that 
+  is in the current pep://tape cell.
+
+  But for this command to work properly it needs to be aware of 
+  *escaped* characters. Lets take an example
+
+  * parse quoted text
+  -----+
+    read; 
+    '"' { 
+      until '"'; put; clear; add "quoted*"; push; .reparse
+    }
+  ,,,
+
+  to be continued ...

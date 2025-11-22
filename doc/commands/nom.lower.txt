@@ -1,0 +1,25 @@
+
+## THE NOM "LOWER" COMMAND 
+
+  Make all text in the workspace buffer *lower* case. 
+  
+  The *lower* command is one of the few nom commands that manipulate
+  the entire pep://workspace buffer at once. They include nom://replace
+  nom://clear nom://upper nom://cap etc 
+
+  * make all words "capital case" using upper and lower 
+  ----+
+    read; 
+    [:space:] { while [:space:]; print; clear; }  
+    ![:space:].!"" { 
+      upper; print; clear;
+      whilenot [:space:]; lower; print; clear;
+    }
+  ,,,,
+  
+### NOTES ABOUT UNICODE
+
+  This command should be "unicode aware" but since the *pep* interpreter is
+  written in plain c, (with normal c *char* byte character type), scripts run
+  through the interpreter will not be unicode aware. This can be solved by
+  running the script through one of the *nom* "translation" nomsf://tr scripts.

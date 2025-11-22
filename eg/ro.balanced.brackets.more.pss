@@ -1,0 +1,74 @@
+#*
+
+  Attempting to solve the problem at rosetta code
+  rosettacode.org/wiki/Balanced_brackets
+
+  One must determine if brackets [](){} are properly
+  balanced and nested. For example
+    [[][{}{}(())]] balanced 
+    [][()]] unbalanced 
+    [][[[(())][]]] balanced 
+
+  This version is a slight extension of the rosetta code problem. This version
+  allows brackets such as [] and {} and () and ignores all other characters and
+  will try to provide some helful error messages (eg line/char number of
+  bad brackets.
+
+HISTORY
+
+  15 June 2022 
+    Converting from ro.balanced.brackets.oss Appears to be working.
+    Have tested translating to python, tcl and java. 
+
+*#
+
+read; 
+"[","]","(",")","{","}" { add "*"; push; }
+!"" { clear; }
+
+parse>
+
+# using the accumulator as an error flag.
+count; !"0" {
+  clear; add "Unmatched bracket near line "; lines; add " char "; chars;
+  add ".\n"; print; quit;
+}
+clear;
+
+# To see the stack reductions for debugging, uncomment below
+# lines; add ":"; chars; add " "; print; clear; 
+# unstack; add "\n"; print; clip; stack; 
+
+pop; pop;
+"{*}*","(*)*","[*]*","ob*ob*" { clear; add "ob*"; push; .reparse }
+
+# Handling error messages provides a good case for bracketed
+# logic expressions, such as B"{*".(E"]*",E")*") This would allow
+# many conditions to be ellided. But I could use the accumulator 
+# here as an error flag.
+
+# 2 token errors
+B"{*" { E"]*",E")*" { put; clear; a+; .reparse } }
+B"(*" { E"}*",E"]*" { put; clear; a+; .reparse } }
+B"[*" { E"}*",E")*" { put; clear; a+; .reparse } }
+
+
+pop;
+"{*ob*}*","(*ob*)*","[*ob*]*" { clear; add "ob*"; push; .reparse }
+
+# 3 token errors. Use the accumulator as an error flag 
+B"{*ob*" { E"]*",E")*" { put; clear; a+; .reparse } }
+B"(*ob*" { E"}*",E"]*" { put; clear; a+; .reparse } }
+B"[*ob*" { E"}*",E")*" { put; clear; a+; .reparse } }
+
+# Also 'ob*}*' etc is an error if there are only 2 tokens
+"ob*]*","ob*}*","ob*)*" { put; clear; a+; .reparse } 
+
+(eof) { 
+  "ob*" { clear; add "brackets look balanced!\n"; print; quit; }
+  clear; add "brackets not balanced.\n"; print; quit;
+}
+
+push; push; push;
+
+

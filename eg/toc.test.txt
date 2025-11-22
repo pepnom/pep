@@ -1,0 +1,35 @@
+
+  Table of contents: [toc]
+
+# ABOUT
+  
+
+  This script is just to show how to parse and render an 'index'
+  or table of contents. 
+  foot(toc is an abbreviation for "table of contents")
+  The trick is to use the nom://go and nom://mark
+  commands to reserve a cell for the index
+
+# TOKENS
+
+  parse tokens foot(see chomsky for grammar theory) used in this script
+
+  heading* a line starting with #
+  word*    one word
+  text*    everything
+  nl*      a newline so that we preserve the line-breaks in the text
+  space*   all other whitespace
+
+# NOTES
+
+  This foot(this means not this in this context)
+  could include self-testing etc but for the time being I 
+  am keeping it simple 
+
+  [foot]
+
+# TESTING
+
+  sed -n '/#\*/,/\/p' toc.pss > toc.test.txt
+
+ 

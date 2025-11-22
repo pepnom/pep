@@ -1,0 +1,23 @@
+
+## Nom candidate commands
+
+  About commands that may be added to the nom language
+
+  Often when I am writing a nom script I think to myself "It would
+  be nice to have such-and-such command". But Usually I find a 
+  way to achieve the functionality with existing commands.
+
+  There is some value in deliberately limiting the commands that 
+  are available for manipulating the pep machine: it forces the 
+  script writer to treat the input as a language and not just 
+  character-soup.
+
+### A LIST OF CANDIDATE COMMANDS
+
+  - replace "text";  this would replace the given text with the 
+    contents of the current tape cell
+  - esc 'c'; change the current escape character used by the 
+    nom://escape and nom://unescape commands. This command is actually
+    required and will be added when I get around to it.
+  - eprint; print workspace to stderr not standard out.  
+

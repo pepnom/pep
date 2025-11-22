@@ -1,0 +1,83 @@
+
+
+## Notes on publishing and promoting the pep pattern parser language system
+  
+ [pep] and [nom] is an open source project which implements a simple but
+ interesting idea. [nom] is a "simple" language which can recognise and
+ translate/transform/compile languages and text data formats. It implements a
+ virtual machine which can create LR shift-reduce parsers/translators for some
+ context-free languages. 
+ 
+ I would like others to assess and collaborate with this system because I
+ think it has enormous potential for changing the way that the average
+ programmer approaches pattern and language problems. It might even be 
+ of use and interest to linguists. 
+
+### CONTACTS FOR PUBLISHING OR PROMOTING THE PATTERN PARSER
+
+ - robert nystrom (craftinginterpreters.com and dart language)
+ - newsgroups comp.compilers (.), comp.lang.c (.)
+ - The llvm community
+ - compiler course instructors- universities
+ - forth community
+ - antlr lex yacc flex and bison 
+ - javac 
+ - rob pike (sam, acme person, go language)
+ - r.m.stallman: I wrote an received an email reply.
+
+ Frank DeRemer and Tom Pennello: lalr people
+ d.knuth + students
+ eric s. raymond
+ n.wirth + students
+
+ dennis ritchie
+ brian kernighan
+ bill joy (tcp person).
+
+ * accent compiler compiler
+ ----
+   Friedrich Wilhelm Schröer
+   Fraunhofer Institute for Computer Architecture and Software Technology
+   f.w.schroeer@first.fraunhofer.de
+ ,,,,
+
+ * unsw compiler research 
+ ----
+   Jingling Xue jingling@cse.unsw.edu.au (also, compilers for embedded systems)
+   Manuel Chakravarty chak@cse.unsw.edu.au
+   Gabriele Keller gabriele.keller@unsw.edu.au
+   Hua Yan yanhuacs@outlook.com (research assistant)
+ ,,,,
+
+ * cs.cornell.edu
+ ---
+   andrew myers andru@cs.cornell.edu
+   rolph recto rr729@cornell.edu
+ ,,,,
+
+ * university of gottenburg
+
+  bnfc project
+
+  Benjamin Lyngfelt 
+  Professor 
+  Akademisk grad: Docent, 
+  benjamin.lyngfelt@svenska.gu.se 
+
+  Markus Forsberg, 
+
+ Alfred Aho, Monica Lam, Ravi Sethi, and Jeffrey Ullman, 
+   compiler book people.
+ alex aiken (stanford compiler course)
+ email	aiken@cs.stanford.edu
+
+### ROADMAP FOR PUBLISHING
+
+  mar 2025
+    continue to develop the website www.nomlang.org and write 
+    examples. Improve the translators.
+
+  a debian package etc ?
+  remove remaining memory bugs
+
+

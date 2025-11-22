@@ -1,0 +1,73 @@
+
+## WORD BY WORD PARSING WITH NOM
+
+ parsing word-by-word with the [nom] language
+
+ *nom* includes several commands for "lexing" wp://lexical.analysis (or
+ "scanning" ) the input-stream. These include the most fundamental which is
+ nom://read and also nom://until , nom://while and nom://whilenot . The last 3
+ words are designed to create parse-tokens from chunks of text (or chunks of
+ the input-stream). 
+ 
+ The nom://until command is convenient in cases where the *end* delimiter
+ is more than one character. nom://until also has the advantage that 
+ it automatically ignores an end delimiter if that delimiter is 
+ "escaped" with the escape character (which is \\ by default).
+ 
+ * parse quoted strings with until
+ -----+
+  # this will parse strings like "text\"text" and "text"
+  read; '"' { 
+    until '"'; put; 
+    clear; add "string*"; push; .reparse
+  }
+  # ignore everything else
+  !"" { clear; }
+  parse>
+  pop; 
+  "string*" { 
+    clear; get; clip; clop; 
+    add "\n"; print; clear;
+  }
+  push;
+ ,,,
+
+### PARSING WORDS
+
+ But for parsing words the nom://while and nom://whilenot commands 
+ are more useful.
+
+ * highlight repeated words 
+ -----+
+  read; [:alpha:] { 
+    while [:alpha:]; put; 
+    clear; add "word*"; push; .reparse
+  }
+  # ignore everything else
+  !"" { clear; }
+  parse>
+  pop;pop; 
+  "word*word*" { 
+    clear; get; ++; 
+    (==) { 
+      clear; add "**"; get; add " "; get; add "**\n";
+      print; clear; --; .reparse
+    }
+    --; clear;
+    add "word*word*"; 
+  }
+  push;push;
+ ,,,
+
+### NOTES
+
+ [nom] does not currently allow conjunction sets of characters
+ which means that you either have to explicitly name every character 
+ that you wish to include in your word* token, or else use one of the
+ predefined character "classes" /doc/pepnom.doc.classes.html such 
+ as *[:alpha:]* or [:alnum:]. This is a significant limitation
+ which is seen in the *nom* [xml] "parser/error-checker" 
+ /eg/xml.parse.pss because "names" in *xml* syntax can contain
+ '.' '-' or '_' or any [unicode] alphabetic character. But there is 
+ no easy way to add these three characters to the [:alpha:] unicode 
+ class.  

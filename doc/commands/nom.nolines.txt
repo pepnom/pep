@@ -1,0 +1,15 @@
+
+
+## THE NOM "NOLINES" COMMAND ....
+
+  Sets the line number character counter to zero (i.e to *nolines* )
+
+  * make line numbers relative to current paragraph
+  ----+
+    # untested
+    read; 
+    # find empty lines
+    "\n" { while [ \t\n]; E"\n".!"\n" { nolines; } }
+  ,,,,
+
+  See also: nom://lines , nom://chars , nom://nochars

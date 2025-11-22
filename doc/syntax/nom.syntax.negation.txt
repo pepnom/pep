@@ -1,0 +1,58 @@
+
+## NEGATION IN THE NOM LANGUAGE
+
+ About the nom *negation* operator *!*
+
+ The nom language uses the fairly standard *bang* operator "!" as a negation
+ operator. This can be put before all types of nomsyn://tests , such as class
+ tests (eg [:space:] ), text-is tests (eg "abc"), begins-with tests (eg:
+ B"abc") ends-with tests (eg: E"abc") etc.
+
+ * test that the workspace is not empty
+ ----+
+   read; 
+   [:space:] { clear; .restart }
+   [:alnum:] { 
+     while [:alnum:]; put; 
+     clear; add "word*"; push; .reparse
+   }
+  parse>
+   !"" { 
+     put; clear;
+     add "! Incorrect character '"; get; add "'\n";
+     add "! (only alpha-numeric allowed) \n"; 
+     print; quit;
+   }
+ ,,,,
+
+### NOTES
+
+  In the unix text-stream editor, [sed] the negation operator goes **after**
+  the test it is modifying, but in [nom] the negation operator goes **before**.
+
+  The idiom below **!"" {...} ** is a simple way to determine if there is a
+  character or characters in the input-steam which is acceptable in the current
+  language.  This snippet normal goes just before the nomsyn://parse> label
+  after all other characters and strings have been tokenised.
+
+  * a common use of the negation operator
+  ----+
+   !"" { 
+     put; clear;
+     add "! Incorrect character '"; get; add "'\n";
+     print; quit;
+   }
+  ,,,,
+  
+  Double negation (!!) is not permitted because it is fairly semantically
+  useless (no?), and the same applies to triple, quadruple etc negation.
+
+### SEE ALSO
+
+  - nomsyn://tests which are the tests which precede nom nomsyn://block
+    sections.
+  - nomsyn://classes which can be negated by the "!" operator when they 
+    are used as tests (not as an argument to the nom://while and 
+    nom://whilenot commands
+
+

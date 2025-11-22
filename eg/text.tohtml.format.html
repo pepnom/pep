@@ -1,0 +1,1212 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='http://bumble.sourceforge.net/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     span.nom-multiline-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='../../../doc'>documentation </a> |
+<a href='../../../eg'>examples </a> |
+<a href='../../../tr/index.html'>translators </a> |
+<a href='../../../download/index.html'>download </a> |
+<a href='http://bumble.sourceforge.net/post/index.html'>blog </a> |
+<a href='http://bumble.sourceforge.net/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  title='/image/basket.san.eduardo.jpg' src='http://bumble.sourceforge.net/image/basket.san.eduardo.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   Our civilization is going to collapse under the weight
+   of its own complexity.
+ 
+<cite>Chuck Moore, inventor of the incomparable Forth system</cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./eg/text.tohtml.format.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> the "nom" language and another minimal markup format </h2>
+
+<p>
+ An explanation of the text-format which is rendered by the 
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> script <a href='http://bumble.sourceforge.net/books/pars/eg/eg/text.tohtml.pss'>eg/text.tohtml.pss</a>
+<p>
+ <img style='border-radius:50%;width:5em;' class='float-right'  title='image/doodle.horse.duck.swirl.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.duck.swirl.300.jpg'/>
+
+<p>
+ The world definitely doesn&apos;t need another <em>minimal markup</em> format.
+ That much we know. But 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> is good at parsings and transpiling 
+ certain grammars, and less good at others (to put it politely).
+ And since I write quite a bit, I like to use my own format which looks
+ good to me.
+<p>
+ As with other &ldquo;minimal markup&rdquo; . &ldquo;formats&rdquo;,
+ the whole idea is to allow the author
+ to write and not get distracted for the fancy formatting or the visual
+ clutter of markup languages (like HTML, 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> , postscript etc). 
+<p>
+ This document, apart from explaining the text format which can be rendered
+ into [html], also serves as a test document for the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> script
+ <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a>
+<p>
+<!-- ------------------------------- -->
+<h2> links</h2>
+
+<p>
+ Links are pretty important in web docs, so I have included lots 
+ of ways to do this.
+<p>
+ There are lots and lots of link formats which I find convenient.
+ Here is a list:
+<p>
+ <!---- list ----->
+<ul>
+
+<li> just write the <em>filename</em> with a leading <em>/</em> like this 
+ <a href='http://bumble.sourceforge.net/eg/text.tohtml.format.html'>/eg/text.tohtml.format.html</a> and that should become a link
+ </li>
+<li> use <em>link://something</em> and <em>file://something</em> but this seems a bit
+ obsolete now given the above.
+ </li>
+<li> link to a 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> command with <em>nom://</em> or <em>nom:</em> for example: 
+ write <em>nom://add</em> to link to the documentation for the <code class='nom-command'><a title='nom command reference: add' href='http://nomlang.org/doc/commands/nom.add.html'>add</a></code> 
+ command which is on this site at <a href='http://www.nomlang.org'>www.nomlang.org</a>
+ </li>
+<li> just write the url with a <em>www.</em> at the start like this
+ <em>www.nomlang.org</em> which gets rendered at <a href='http://www.nomlang.org'>www.nomlang.org</a>
+ </li>
+<li> now amazingly, you can precede any of the above formats with 
+ some quoted text like this: <em>"words and text"</em> (it does have 
+ to be double quoted) so you can just write 
+ <pre class='codeline'>
+ "search engine" www.google.com
+</pre>
+
+ and it should render as <a href='http://www.google.com'>search engine </a>
+ </li>
+<li> And all this should work in lists too.
+ </li>
+<li> But we aren&apos;t finished - not nearly. There are lots of &ldquo;convenience
+&rdquo; formats like link to wikipedia with <em>wp://</em> or <em>wp:</em> . So just 
+ write <em>wp://carl.friedrich.gauss</em> and it should render as a link
+ to <a href='https://en.wikipedia.org/wiki/carl_friedrich_gauss'>en.wikipedia.org/wiki/carl_friedrich_gauss</a> and you may have noticed that I don&rsquo;t like 
+ writing <em>underscores</em> so just write dots instead
+ </li>
+<li> and you can put some link text in front of it like
+ <pre class='codeline'>
+ "Gauss" wp://carl.friedrich.gauss 
+</pre>
+
+ and you should get <a href='https://en.wikipedia.org/wiki/carl_friedrich_gauss'>Gauss </a> 
+ </li>
+<li> But there are lots of others too ... like link to the urban dictionary
+ with <em>urbandict://</em> like the word <a href='https://www.urbandictionary.com/define.php?term=palaver' title='urban dictionary'>palaver</a> or to
+ the Oxford English dictionary with <em>oed://</em> etc 
+ </li>
+<li> But wait there is more. There is <em>pep://</em> for the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> machine,
+ there is <em>nomsyn://</em> for 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> syntax and so on and so forth.
+ </li>
+<li> Then there is the <em>rosetta://</em> convenience schema, which links to
+ the <a href='http://www.rosettacode.org'>www.rosettacode.org</a> site. just write
+ <pre class='codeline'>
+ rosetta://balanced.brackets
+</pre>
+
+ or even
+ <pre class='codeline'>
+ rosetta:balanced.brackets
+</pre>
+
+ And you will get a link the the <a href='https://rosettacode.org/wiki/balanced_brackets' title='rosetta-code problem'>balanced_brackets</a> code
+ on that site. And yes you can put some quoted text in front of it like
+ this 
+ <pre class='codeline'>
+ "the balance brackets problem" rosetta://balanced.brackets
+</pre>
+
+ and you should get <a href='https://rosettacode.org/wiki/balanced_brackets' title='rosetta-code problem'>the balance brackets problem 
+ </a>
+ </li>
+<li> again amazingly, the quoted text doesn&apos;t even have to be on the 
+ same line as the url or the fake url. It can be on the line before
+ </li>
+<li> all this power and convenience is brought to you by the fact that 
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> is a proper parsing/compiling system, not some dodgy 
+ regex engine with extensions. So the formatting script, which 
+ is <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> can handle all this without any problem.
+ </li>
+<li> Did you know that you can convert the formatting script 
+ <code>eg/text.tohtml.pss</code> into 
+<abbr class='tek-acronym' 
+      title='Google's C Language Replacement'>GO</abbr> or 
+<abbr class='tek-acronym' 
+      title='Java Programming Language'>JAVA</abbr> or 
+<abbr class='tek-acronym' 
+      title='Tool Control Language'>TCL</abbr> or [ruby] or 
+ [javascript] and run it without even touching the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr>
+ interpreter? I know, bizarre hey? But true.
+ </li>
+<li> If you don&rsquo;t want to autolink a file name then you can write 
+ it without a starting <em>/</em> slash, or put it in quotes or 
+ <em>emphasise</em> it with asterisks.
+ </li>
+<li> And of course if you start a url with <em>http://</em> or <em>https://</em> or 
+ <em>nntp://</em> (lets not forget good old newsgroups) then even will get
+ nicely linked as it should. so just write:
+ <pre class='codeline'>
+ "the nom language" http://nomlang.org 
+</pre>
+
+ and you will get <a href='http://nomlang.org'>the nom language </a> as you
+ would expect.
+ </li>
+<li> I think I have actually run out of linking formats, but don&rsquo;t 
+ worry, more will probably get added at some point.
+ </li>
+<li> See below for hopefully more detailed info about all this, if 
+ you really need it, but I don&rsquo;t see why you would.
+</li>
+</ul>
+ To render a url as a link just write it beginning with http:// etc.
+ Delimited by spaces. To change the link text include a quoted word
+ or phrase before it. 
+ <p>
+ The formatter makes a link to a local file just with some quoted 
+ text and the file name
+<p>
+ <em>"The text.tohtml.pss format" text.tohtml.format.txt</em> will render as
+ <a href='text.tohtml.format.txt'>The text.tohtml.pss format </a>
+ <p>
+ or a <em>www</em> url: <em>"A www link" www.c3.org</em> <a href='http://www.c3.org'>A www link </a>
+ <p>
+<!-- ------------------------------- -->
+<h3> fake schema links </h3>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ All the following are ok
+ </figcaption>
+<pre class='codeblock'>
+
+    rosetta:// rosetta: link to rosettacode.org problem
+    urbandict://  urban dictionary
+    oed:// oxford english dict online
+  </pre>
+</figure>
+<p>
+ Also Wikipedia links should work with <em>wp://</em> and <em>wp:</em>
+ All the links can be preceded with some double quoted text
+ (with a maximum length of one line) which will become the 
+ visible text of the link. For example
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ visible link text 
+ </figcaption>
+<pre class='codeline'>
+ "click here" wp://parser for more info
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make a wikipedia link
+ </figcaption>
+<pre class='codeline'>
+ "BNF" wp:backus-naur_form
+</pre>
+</figure>
+<p>
+ which should render as <a href='https://en.wikipedia.org/wiki/backus-naur_form'>BNF </a>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make a google search link
+ </figcaption>
+<pre class='codeblock'>
+
+    google://"distance hobart to colombia"
+    google:"distance hobart to colombia"
+    "distance to hobart" google:"distance hobart to colombia"
+  </pre>
+</figure>
+<p>
+ <a href='https://www.google.com/search?q=distance+hobart+to+colombia'>www.google.com/search?q=distance+hobart+to+colombia</a> <br/>
+
+ <a href='https://www.google.com/search?q=distance+hobart+to+colombia'>www.google.com/search?q=distance+hobart+to+colombia</a> <br/>
+
+ <a href='https://www.google.com/search?q=distance+hobart+to+colombia'>distance to hobart </a> <br/>
+
+ <p>
+ The double quote must immediately follow the :
+<p>
+ I can link to a the documentation for a <em>Nom</em> script language command
+ with <code class='nom-command'><a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>push</a></code> or <a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>The Nom language 'push' command </a>
+ <p>
+ <a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>The pop; command </a> is to <code class='nom-command'><a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>pop</a></code> the stack
+ The <a title='pep machine reference: stack' href='http://nomlang.org/doc/machine/pep.stack.html'>stack </a> is also a part of the <em>PEP</em> machine
+ The <a title='nom syntax reference: tape' href='http://nomlang.org/doc/machine/pep.tape.html'>tape</a> is also part of the machine
+ <p>
+ We can link to the <a href='https://en.wikipedia.org/wiki/context_free_languge'>wikipedia context-free language page 
+ </a>
+<p>
+ Or look up the definition of <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=gargle' title='oxford english dictionary'>gargle </a> which is 
+ a <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=throat' title='oxford english dictionary'>throat</a> noise.
+<p>
+ Lookup the urban dictionary eg <a href='https://www.urbandictionary.com/define.php?term=automagically' title='urban dictionary'>automagically</a>
+ But you don&rsquo;t have to write <em>://</em> if you don't want to. Just
+ write: <em>urbandict:blamestorming</em>
+ For example: <a href='https://www.urbandictionary.com/define.php?term=blamestorming' title='urban dictionary'>blamestorming</a>
+<p>
+ Actually the Urban-dictionary just uses a space for multiple
+ words like this: <em>url?term=humble brag</em> or 
+ <em>url?term=humble%20brag</em> but this is a slight problem for our
+ plain-text parser <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> because it is a 
+ <em>word</em> parser (mainly). I could copy the code for the 
+ <em>google://</em> schema to solve this (by &ldquo;parsing ahead&rdquo; ) but 
+ I am not sure if I will.
+<p>
+<!-- ------------------------------- -->
+<h2> lists</h2>
+
+<p>
+ Unordered lists have been implemented (18 mar 2025) and are indicated
+ by items starting with the '- ' word which starts the line. There 
+ is no list-start token (just <em>- </em> ). Lists are terminated by a 
+ blank line or by the end of the file.
+<p>
+ Lists should be able to contain any other element such as links,
+ images, code-lines and blocks and even headings (which is rather silly).
+ There is no 'list heading' format at the moment.
+ <p>
+ <!---- list ----->
+<ul>
+
+<li> The 1<sup class='ordinal'>st</sup> line: Simple lists only contain text
+ </li>
+<li> With one line per item.
+ </li>
+<li> The parsing of lists was interesting to say the least.
+</li>
+</ul>
+ <!---- list ----->
+<ul>
+
+<li> How to make a list in this particular <em>plain-text</em> document
+ format. List items can span multiple lines and can contain 
+ any other type of element such as a centered image 
+ <img style='width:10em;' class='center'  title='/image/image.test.jpg' src='http://bumble.sourceforge.net/image/image.test.jpg'/>
+
+ </li>
+<li> lists are terminated with blank lines
+ </li>
+<li> which are lines containing only spaces or nothing.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h2> emphasis</h2>
+
+<p>
+ Here I am following the <a href='http://www.markdownguide.org/basic-syntax'>markdown </a> 
+ style of using <em>asterisks</em> &ldquo;*&rdquo; to delimit emphasis or a word or 
+ also of a phrase. The emphasis cannot extend over several lines. 
+<p>
+ It should not matter if the emphasised word has a trailing comma 
+ or dot, for example &ldquo;*word*,&rdquo; should still be emphasised like 
+ this <em>word</em>.
+ And the same applies for bold emphasis so &ldquo;**bold**.
+&rdquo; should become <strong><em>bold</em></strong>.
+
+<p>
+ Also you can use <em><code class='nom-token'>"**</code></em> double asterisks**" which should boldly emphasize text 
+ text like this <strong><em> double asterisks</em></strong>
+ or just emphasise a single <strong><em>word</em></strong>
+
+ <p>
+ I have limited these formats to a single line so that the entire 
+ document doesn&apos;t become <em>italic</em> or <strong><em>italic-bold</em></strong>
+ if you forget 
+ to put in the last &ldquo;*&rdquo; character. The same applies to double quoted 
+ text.
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ emphasise text
+ </figcaption>
+<pre class='codeblock'>
+
+   *italic text* or italic *word*
+   **bold italic text** or bold italic **word**
+  </pre>
+</figure>
+<p>
+ As John McEnroe used to say to the umpires <strong><em>You cannot be serious!!</em></strong>
+
+<p>
+<!-- ------------------------------- -->
+<h2> miscellaneous</h2>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ #: starting a line is a comment at the moment. It is removed from output
+ </figcaption>
+<pre class='codeline'>
+ #: is a comment
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make a horizontal "rule" (line) in the document
+ </figcaption>
+<pre class='codeline'>
+ &gt;---  (starting the line, end with space)
+</pre>
+</figure>
+<p>
+ Which should look like this (in Html just a &lt;hr/&gt; element).
+ <hr/>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ force a line break, this could be a "poor mans list"
+ </figcaption>
+<pre class='codeline'>
+ &gt;&gt; (not starting a line)
+</pre>
+</figure>
+ So we could <br/>
+ force a break <br/>
+ and make html put <br/>
+ a &lt;br/&gt; element
+ there.
+<p>
+<!-- ------------------------------- -->
+<h2> apostrophes</h2>
+
+<p>
+ I try to render apostrophes in words like doesn&apos;t can&apos;t isn&apos;t 
+ in some slightly elegant way. Also, since I often leave them
+ out I try to insert them is words like 
+<p>
+ <em>isnt doesnt thats its whats </em> and so on which should look like 
+ isn&apos;t doesn&apos;t that&apos;s it&rsquo;s what&apos;s 
+<p>
+<!-- ------------------------------- -->
+<h2> quotes</h2>
+
+<p>
+ Writers of 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> and html formatters seem to spend too much time
+ trying to produce nice &ldquo;quotes&rdquo;.
+ It can be nice to change
+ <em>dont</em> into don't with curly quotes, or &lt;cant&gt; into can&apos;t etc.
+ A normal apostrophe is like this's.
+<p>
+ I&apos;m you&apos;re he&apos;s she&apos;s it&apos;s we&apos;re they&apos;re aren&apos;t 
+ can&apos;t couldn&apos;t didn&apos;t doesn&apos;t hadn&apos;t hasn&apos;t haven&apos;t 
+<p>
+ Quoted text can occur before all links which changes the link 
+ text eg: <a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>The nom command </a>
+<p>
+<!-- ------------------------------- -->
+<h2> multiline blockquotes</h2>
+
+<p>
+ Multiline quotes begin with """ starting the line. and also
+ end with """ any where. These quotes will be rendered as a
+ <strong><em>quotation</em></strong>
+ .
+<p>
+ Also, we can precede a multiline quote with a line beginning with &ldquo;*&rdquo; and
+ that will be formatted as the <em>citation</em> for the blockquote. I think the
+ <em>"""</em> triple quotes has to start a line and be followed by at least 1 space,
+ but the terminating <em>"""</em> doesn&apos;t have to.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a blockquote with a citation, example
+ </figcaption>
+<pre class='codeblock'>
+
+    * John McEnroe, Tennis player
+    """ 
+      you cannot be serious 
+    """
+  </pre>
+</figure>
+<p>
+ Which should look like this. 
+ <p>
+ <blockquote class='quotation'>
+ You cannot be serious!  <cite> John McEnroe, Tennis player
+ </cite>
+</blockquote>
+
+<p>
+ The actual (quite nice) formatting of these &ldquo;quotes&rdquo; is done by the css in
+ <a href='http://bumble.sourceforge.net/site.blog.css'>/site.blog.css</a> which should be available to all blogs which are
+ created with the <a href='http://bumble.sourceforge.net/webdev/copy.blog.sh'>blog script </a>
+<p>
+<!-- ------------------------------- -->
+<h2> images</h2>
+
+<p>
+ My plain text image format uses &lt; and &gt; to indicate the image and 
+ it&rsquo;s attributes. The format is 
+ <pre class='codeline'>
+ &lt;:corners:size:alignment:filepath.ext&gt;
+</pre>
+
+<p>
+ The primitive static site generator script <a href='http://bumble.sourceforge.net/webdev/copy.blog.sh'>/webdev/copy.blog.sh</a> also
+ substitutes the image &ldquo;/image/doodle/doodle.duck.floating.300.jpg&rdquo; for a random image from the <a href='../../../image/index.html'>/image/</a> folder.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ put a random image on the page, with big rounded corners, floating left
+ </figcaption>
+<pre class='codeline'>
+ &lt;:R:&gt;&gt;:/image/doodle/doodle.duck.floating.300.jpg&gt;
+</pre>
+</figure>
+<p>
+ I use the format &ldquo;caption text&rdquo; &lt;image.file.ext&gt;
+ or &lt;image.file.ext&gt; for no caption. And maybe even 
+ &lt;:9:image.file.ext&gt; for a width specification
+<p>
+ For the css attributes to make the image circular, it 1<sup class='ordinal'>st</sup> needs to
+ be cropped to a square. Otherwise it will look like an egg etc
+ Images can be included in a document.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ making images.
+ </figcaption>
+<pre class='codeline'>
+ enclose the image file name in &lt;&gt; brackets: &lt;imagefile.jpg&gt;
+</pre>
+</figure>
+ <pre class='codeline'>
+ Include a caption with quoted text "An image caption" &lt;imagefile.jpg&gt;
+</pre>
+
+<p>
+ <img style='width:10em;'  title='image/doodle.horse.duck.swirl.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.duck.swirl.300.jpg'/>
+
+<p>
+ The image above has no attributes. It will probably just go to the 
+ left hand side of the page.
+<p>
+ <img style='border-radius:15%;width:10em;' class='float-right'  title='image/doodle.horse.duck.swirl.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.duck.swirl.300.jpg'/>
+
+<p>
+ Images without captions are working. Because there is a bit of a tricky
+ interaction between the &lt;figure&gt; tag, and the &lt;img&gt; tag. The <em>figure</em> tag is
+ required for the caption but the way to float left or right is slightly
+ different. Also, we need to have a width for images in &lt;figure&gt; tags. I
+ wonder if images float to left of the text above them. Or below them. The
+ answer is, they float around the text below them, I think. And if paragraph
+ tags &lt;p/&gt; make any difference.
+<p>
+ <img style='width:10em;' class='float-left'  title='image/doodle.horse.duck.swirl.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.duck.swirl.300.jpg'/>
+
+ Also, it is a good idea to have a sensible default size for an image
+ otherwise it can take over the whole HTML page.
+ Apart from a caption images can have a set of optional attributes
+<p>
+ 
+<figure class='float-left'>
+  <img style='border-radius:50%;width:20em;'  title='image/doodle.horse.duck.swirl.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.duck.swirl.300.jpg'/>
+  <figcaption class='image-caption'>
+  circular horse (caption, 20em width, default float) 
+ 
+  </figcaption>
+</figure>
+ 
+<p>
+ This text is between the circular horse image and the circular duck
+ which is floating right.
+<p>
+ 
+<figure class='float-right'>
+  <img style='border-radius:50%;width:10em;' class='float-right'  title='image/doodle.duck.star.900.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.duck.star.900.jpg'/>
+  <figcaption class='image-caption'>
+  A duck (50% border radius, floating right)
+ 
+  </figcaption>
+</figure>
+ 
+<p>
+ 
+<figure class='float-left'>
+  <img style='border-radius:5%;width:10em;'  title='image/doodle.duck.star.900.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.duck.star.900.jpg'/>
+  <figcaption class='image-caption'>
+  duck star (missing 1st ':',small rounded corners,no float,caption)  
+ 
+  </figcaption>
+</figure>
+ 
+ <p>
+ I don&rsquo;t think you can use <em>em</em> measurements for images, but I am not sure.
+ The image below is a duck and star with no float.
+<p>
+ 
+<figure class='float-left'>
+  <img style='border-radius:15%;width:10em;' class='float-left'  title='image/doodle.duck.star.900.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.duck.star.900.jpg'/>
+  <figcaption class='image-caption'>
+  duck star: big rounded corners,float left, caption 
+ 
+  </figcaption>
+</figure>
+ 
+<p>
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make a circular/ellipse image that floats to the left with width 100px
+ </figcaption>
+<pre class='codeline'>
+ &lt;:0:&gt;&gt;:image/doodle.network.200w.jpg&gt;
+</pre>
+</figure>
+ <pre class='codeline'>
+ &lt;:o:&gt;&gt;:image/imagename.jpeg&gt; # does the same
+</pre>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a circular image with width not specified and a caption
+ </figcaption>
+<pre class='codeline'>
+ &lt;:O:&gt;&gt;:imagename.jpeg&gt; 
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make a rectangular image that floats right taking up 30% of page width
+ </figcaption>
+<pre class='codeline'>
+ &lt;:&lt;&lt;:50%:imagename.jpeg&gt;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make an image with its original size
+ </figcaption>
+<pre class='codeline'>
+ &lt;imagename.jpeg&gt;
+</pre>
+</figure>
+<p>
+ duck (small rounded corner, float left)
+ <img style='border-radius:5%;width:10em;' class='float-left'  title='image/doodle.duck.floating.300.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.duck.floating.300.jpg'/>
+
+<p>
+ The text is supposed to &ldquo;flow around&rdquo; floating images.
+ A centre aligned image with big rounded corners with 50% width
+ But actually :cc: will do nothing because I am not parsing it,
+ just discarding it.
+<p>
+ <img style='border-radius:15%;width:10em;' class='center'  title='image/doodle.ink.ripples.600.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.ink.ripples.600.jpg'/>
+
+<p>
+ Text should not flow around centre aligned images.
+<p>
+<!-- ------------------------------- -->
+<h2> image text attributes</h2>
+
+<p>
+ Attributes need to appear in the correct order but all attributes
+ are optional.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ image text attribute order 
+ </figcaption>
+<pre class='codeline'>
+ &lt;:corners:width:alignment:imagename.ext&gt;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ valid image text attribute values.
+ </figcaption>
+<pre class='codeblock'>
+
+    O|o circular image
+    # width is multiple of 5em?
+    # 5emxN width specification.
+    r R small/large rounded corners
+    &gt;&gt; &lt;&lt; cc float right/ float left/ centre align
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Demonstrating optional attributes.
+ </figcaption>
+<pre class='codeline'>
+ &lt;:&gt;&gt;:image/file.jpg&gt;
+</pre>
+</figure>
+<p>
+ <img style='width:10em;' class='float-left'  title='image/doodle.horse.dog.swirl.900w.jpg' src='http://bumble.sourceforge.net/books/pars/eg/image/doodle.horse.dog.swirl.900w.jpg'/>
+
+<p>
+<!-- ------------------------------- -->
+<h2> code</h2>
+
+<p>
+ One of the points of this format is to document code. So I need 
+ to be able to include code in the text document. For <em>blocks</em> of 
+ code (multiple lines) I start the line with --- (at least 3
+ dashes) and end the block with a line starting with ,,, (at least 3
+ commas).
+<p>
+ For a single line of code I start the line with <br/>
+ (with at least 1
+ space after)
+<p>
+ The format allows providing a <em>caption</em> for the code (above it) 
+ by including a line starting with &ldquo;*&rdquo; (followed by a space) 
+ above the code line or block.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a &Nopf;&oopf;&mopf; script that deletes whitespace
+ </figcaption>
+<pre class='codeblock'>
+
+    read; [:space:] { clear; } 
+    print;
+  </pre>
+</figure>
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ run a one line &Nopf;&oopf;&mopf; script
+ </figcaption>
+<pre class='codeline'>
+ pep -e "read; print; clear;" -i "abcd"
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> &Nopf;&oopf;&mopf; code</h3>
+
+<p>
+ To display and possibly pretty print 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> code use
+ <pre class='codeline'>
+ ---+ and ,,,,
+</pre>
+
+ to delimit the code instead of ---
+<p>
+ The pretty printing is done by <a href='http://bumble.sourceforge.net/eg/nom.snippet.tohtml.pss'>/eg/nom.snippet.tohtml.pss</a> after the 
+ script <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> is run.
+<p>
+<!-- ------------------------------- -->
+<h2> acronyms</h2>
+
+<p>
+ Markup 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr> as an &lt;abbr&gt; with a title (tool tip) There is a big list of
+ this acronyms like 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> 
+<abbr class='tek-acronym' 
+      title='Object-Oriented C'>C++</abbr> 
+<abbr class='tek-acronym' 
+      title='Java Programming Language'>JAVA</abbr> 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> 
+<abbr class='tek-acronym' 
+      title='The Minix Minimal Unix Operating System'>MINIX</abbr> 
+<abbr class='tek-acronym' 
+      title='standard input stream'>stdin</abbr> 
+<abbr class='tek-acronym' 
+      title='standard output stream'>stdout</abbr>
+ etc
+<p>
+ The main purpose of them is to make the text <a href='https://www.urbandictionary.com/define.php?term=kinda' title='urban dictionary'>kinda</a> more
+ interesting and to provide a quick explanation of an <em>acronym</em> or a technical
+ (programming) idea.
+<p>
+<!-- ------------------------------- -->
+<h2> etymologies</h2>
+
+<p>
+ I also had the idea of providing interesting word-derivations as 
+ an 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr> <em>title=</em> attribute but I haven&apos;t really done any yet except
+ for <abbr class='etymology' 
+      title=' εὑρίσκω: what is found.'>heuristic</abbr> . Again, the idea here is just to have fun, none 
+ of this is particularly necessary.
+ <p>
+<!-- ------------------------------- -->
+<h2> icons and logos</h2>
+
+<p>
+ It would probable be nice to include an icon after a name 
+ such as Wikipedia. Maybe a format like [wikipedia] could do this.
+<p>
+<!-- ------------------------------- -->
+<h2> filenames </h2>
+
+ <p>
+ Filename like <a href='http://bumble.sourceforge.net/pars/tr/translate.go.pss'>/pars/tr/translate.go.pss</a> should be rendered 
+ differently. Also they will be linked if there is some quoted
+ text before them.
+<p>
+<!-- ------------------------------- -->
+<h2> headings </h2>
+
+<p>
+ Normally in my documents, I use all capital lines as a first level 
+ heading. Like this:
+ <pre class='codeline'>
+ SECTION 3
+</pre>
+
+ For second level headings I use all capitals followed by 4 dots:
+ <pre class='codeline'>
+ SUBSECTION 1 ....
+</pre>
+
+<p>
+ But for the sake of parsing simplicity, I am just using 
+<abbr class='tek-acronym' 
+      title='non-distracting text documents'>MARKDOWN</abbr>
+ headings with 3 levels. So lines starting with # or ## or ###
+ (followed by a space).
+<p>
+ I am also adding the all capital heading format, for compatibility
+ with existing documents (and the script headers).
+<p>
+<!-- ------------------------------- -->
+<h2> implementation</h2>
+
+<p>
+ The 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr> formatting is produced by a <em>nom</em> script called 
+ <a href='text.tohtml.pss'>text.tohtml.pss</a> which is a simplification of an older script
+ called <a href='mark.html.pss'>mark.html.pss </a> and <a href='http://bumble.sourceforge.net/books/pars/eg/mark.latex.pss'>A LaTeX formatter </a>
+<p>
+ The <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>HTML formatter </a> can be translated into other languages
+ such as c, go, java, javascript, perl, python, ruby, and tcl. This can
+ be done using the translation scripts in <a href='../../../tr/index.html'>/tr/ </a> folder 
+ on the <a href='http://nomlang.org'>nomlang.org</a> site . These scripts are also hosted on 
+ sourceforge at <a href='http://bumble.sf.net/books/pars/tr'>bumble.sf.net/books/pars/tr</a>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ how to build the html formatter script with go 
+ </figcaption>
+<pre class='codeblock'>
+
+    pep -f tr/translate.go.pss text.tohtml.pss &gt; text.tohtml.go
+    go build text.tohtml.go
+    echo ' "nom" http://nomlang.org ' | ./text.tohtml
+    # or 
+    cat doc.txt | ./text.tohtml &gt; doc.html
+ </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ create a python version of the formatter and run it
+ </figcaption>
+<pre class='codeblock'>
+
+   pep -f tr/translate.py.pss text.tohtml.pss &gt; text.tohtml.py
+   chmod a+x text.tohtml.py
+   cat doc.txt | ./text.tohtml.py &gt; doc.html
+ </pre>
+</figure>
+<p>
+ Similar translators exist for 
+<abbr class='tek-acronym' 
+      title='Java Programming Language'>JAVA</abbr> javascript, 
+<abbr class='tek-acronym' 
+      title='Tool Control Language'>TCL</abbr> c
+ (non-unicode) and others. )
+<p>
+<!-- ------------------------------- -->
+<h3> other text formats</h3>
+
+<p>
+ There are plenty of other good &ldquo;plain text&rdquo; formats and they are 
+ all useful for avoiding the torture of writing and rewriting 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr>
+ or 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> or 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> or some other maddening markup format. And 
+ let's not even talk about <em>wysiwyg</em> word processors.
+<p>
+ The big formats are: markdown and the wikimedia wiki format (from wikipedia).
+ I would like to write translators for my format into markdown and wikimedia
+ but I will wait until the formatter script is more or less &ldquo;mature&rdquo; and has
+ lists and ALL CAPITAL HEADINGS like this. 
+<p>
+<h2>HISTORY</h2>
+<p>
+ This format (and script) was begun in Feb 2025 with quite humble intentions
+ but has steadily grown an has been quite simple to debug. This is because I
+ use a mainly <em>word-by-word</em> parsing technique (with some exceptions) which
+ keeps the grammar quite simple. This is why the script
+ <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> has been quite successful and will almost
+ certainly be a permanent replacement for <a href='http://bumble.sourceforge.net/eg/mark.html.pss'>/eg/mark.html.pss</a> and
+ <a href='http://bumble.sourceforge.net/eg/mark.latex.pss'>/eg/mark.latex.pss</a> which became, to be brutally honest, <em>infernally</em>
+ complex because the grammar was complex.
+<p>
+ The format has been successfully used on the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> documentation site
+ <a href='http://www.nomlang.org'>www.nomlang.org</a> and also on a general blog that I write called
+ <a href='http://www.shrob.org'>www.shrob.org</a> .
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  title='/image/fig.deniliquin.jpg' src='http://bumble.sourceforge.net/image/fig.deniliquin.jpg'/>
+
+retro html <a href='http://bumble.sourceforge.net/eg/text.tohtml.format.html'>formatted </a> by <a href='http://bumble.sourceforge.net/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

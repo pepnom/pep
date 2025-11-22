@@ -1,0 +1,102 @@
+
+#*
+
+ABOUT 
+
+ Show bash functions in a file and the descriptive comments 
+ above them.
+
+ I often write comments above bash functions to explain what they do.
+ These can be multiple lines and may even have blank lines in them
+ of before the function name. The following script uses a line-by-line
+ parsing technique with the nom nom://until command to concatenate the 
+ comments and associate them with the bash function name which follows
+ them. This is the sort of example that becomes tricky with [sed] 
+ because there is multiline recognition taking place.
+
+ Adding the line* parse token below (which is any not 'function' bash
+ statement) complicates the grammar but is necessary because other 
+ wise every comment above a function name will be regarded as pertaining
+ to that function.
+
+NOTES
+
+  This [nom] script obviously doesn't completely parse bash syntax. 
+  Just # comments and function names in a pretty 'maybe-just-good-enough'
+  sort of way.
+
+HISTORY 
+
+  1 march 2025
+    created this script in nomlang.org/doc/scripts/nom.linebyline.txt
+    as an example. It seems to work ok.
+
+*#
+
+ # print bash function names and comments above them 
+ # just ignore empty lines
+ until "\n"; 
+ [:space:] { clear; }
+ !"" { 
+   put; 
+   # remove upto 5 leading/trailing spaces, a bit primitive, 
+   # or parse with whilenot [\n] etc
+   B"  " { clop; clop; } B"  " { clop; clop; } B" " { clip; }
+   E"  " { clip; clip; } E"  " { clip; clip; } E" " { clip; }
+   B"#" { 
+     replace "#" " "; put;
+     clear; add "comment*"; push; .reparse
+   }
+   B"function", E"()  {", E"() {", E"(){" { 
+     replace "function " ""; replace "{" ""; replace "()" ""; put; 
+     clear; add "function*"; push; .reparse
+   }
+   # comments above none function lines should be ignored
+   !"" { clear; add "line*"; push; .reparse }
+ }
+parse>
+ # for debugging
+ # unstack; print; stack; add "\n"; print; clear;
+ pop;pop; 
+
+ # ignore comments before non-function bash statement 
+ "comment*line*","line*line*" { clear; }
+
+ # concatenate comment lines
+ "comment*comment*" { 
+   clear; get; ++; get; --; put; 
+   clear; add "comment*"; push; .reparse
+ }
+
+ # print and delete function token 
+ "*function*comment*" { 
+   clear; get; print; 
+   # transfer comment text
+   clear; ++; get; --; put; 
+   clear; add "comment*"; push; .reparse
+ }
+
+ # just print, no need to reduce
+ "function*function*" { 
+   clear; get; ++; get; --; print; 
+   clear;
+ }
+
+ "function*line*" { clear; get; print; clear; }
+ "line*function*" { clear; ++; get; --; print; clear; }
+
+ # just print, no need to reduce? but print in order 
+ # function name with comment as description after (indented)
+ "comment*function*" { 
+   clear; 
+   # a swap trick to indent the (mulitline) comment and then
+   # prepend the function name.
+   #add "  "; get; replace "\n" "\n  ";
+   #++; swap; get; --; print; 
+   add "\n"; ++; get; --; get; print; 
+   clear;
+ }
+
+ push;push;
+ (eof) { quit; }
+

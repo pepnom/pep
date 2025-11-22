@@ -1,0 +1,57 @@
+#*
+
+ Print only words that are palindromes. This uses a simple 
+ "reverse-text" method to recognise palindromes, which is not 
+ really the point of [pep] and [nom].
+
+ A palindrome is the same backwards such as "hannah" or "anna" . 
+ The file eg/palindrome.pss has a more
+ grammatical approach to parsing palindromes, but is much more verbose.
+ Examples of palindrome words: radar civic rotator madam refer
+ 
+ * show all palindrome words in the unix english dictionary
+ >> pep -f pal.words.pss /usr/share/dict/words
+
+HISTORY
+
+ 3 sept 2021
+   some issue with the go translation not printing anything.
+ 4 july 2020
+   converted to standalone script. and added a 3 character
+   test
+
+*#
+    read; 
+    # the code in this block builds 2 buffers. One with 
+    # the original word, and the other with the word in reverse
+    # Later, the code checks whether the 2 buffers contain the 
+    # same text (a palindrome).
+    ![:space:] {
+      # save the current character
+      ++; ++; put; --; --;
+      get; put; 
+      clear;
+      # restore the current character
+      ++; ++; get; --; --;
+      ++; swap; 
+      get; put; clear; --;
+    } 
+
+    # check for palindromes when a space or eof found
+    [:space:],(eof) { 
+      # clear white space
+      [:space:] { while [:space:]; clear; }
+      # check if the previous word was a palindrome
+      get; ++; 
+      # if the word is the same as its reverse and not empty
+      # then its a palindrome. Dont print palindromes that are
+      # only punctuation or digits or only 3 chars
+      # state;
+      (==).!"".![:punct:].![:digit:] { 
+        clip; clip; clip;
+        !"" { clear; get; add "\n"; print; }
+      } 
+      # clear the workspace and 1st two cells
+      clear; put; --; put;
+    }
+

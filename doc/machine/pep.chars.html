@@ -1,0 +1,483 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/doodle/IMG_8752.jpeg'/>
+
+<p>
+
+
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/machine/pep.chars.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> the &Popf;&eopf;&popf; "chars" register</h2>
+
+<p>
+ The 'chars' register: automatic character counter of the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> machine.
+<p>
+ The pep virtual-machine contains a register in which is automatically stored
+ the number of characters (hopefully Unicode/UTF8/etc) that have been read
+ from the text <a href='/doc/pepnom.doc.inputstream.html'>input-stream </a> with the <em>nom</em>
+ commands <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.read.html'>read</a></code> , <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.while.html'>while</a></code> , <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.whilenot.html'>whilenot</a></code> and <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.until.html'>until</a></code> . Each of
+ these commands automatically updates the <em>chars</em> register in the pep machine.
+<p>
+ You can access and use the &ldquo;chars&rdquo; register with the nom commands
+ <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.chars.html'>chars</a></code> and <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.nochars.html'>nochars</a></code> which function in a similar way to the 
+ <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.lines.html'>lines</a></code> and <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.nolines.html'>nolines</a></code> commands for the pep <em>lines</em> register.
+<p>
+ <em>chars</em> appends the current character count onto the end of the 
+ <a href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> buffer and the <em>nochars</em> command resets the 
+ character counter to zero.
+<p>
+ Both the <em>chars</em> and <em>lines</em> registers and commands are important 
+ for providing reasonably good error messages when a nom script 
+ finds an error in the syntax of whatever language it is parsing.
+ For example when the nom compiler <a href='https://bumble.sf.net/books/pars/compile.pss'>bumble.sf.net/books/pars/compile.pss</a> (which is 
+ a nom script, cool hey?) encounters an unrecognised commands such
+ <em>boggle-boggle</em> it halts the compilation and provide a extremely
+ helpful error message informing the esteemed script writer about 
+ exactly where in their (otherwise amazingly good) script the error 
+ occurred.
+<p>
+ It is a common desire (or would be if <em>nom</em> were widely used) to make the
+ character count relative to the current line number (since the message
+ &ldquo;syntax error at character 14234&rdquo; may not be very helpful). This can be
+ implemented as follows
+<p>
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make the character count relative to the line number
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-class'>[\n]</span> <span class='nom-punct'>{</span> <span class='nom-command'>nochars</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ display the line and (relative) char numbers of the words 'tree' & 'leaf'
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-class'>[\n]</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>nochars</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+    <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>restart</span> <span class='nom-punct'>}</span>
+    <span class='nom-command'>whilenot</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-string'>"tree"</span><span class='nom-punct'>,</span><span class='nom-string'>"leaf"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* word '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"' at line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" chars "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> a self congratulatory digression</h3>
+
+<p>
+ The <a href='/doc/peptool/index.html'>pep </a> tool is remarkably fast considering that it
+ is an interpreter. On my not-particularly-special dell laptop I 
+ got the following timing result with the Gutenberg project copy of 
+ Charles Dickens book the 'Pickwick Papers'
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ timing the word search script above with a 1.8M (size) text file  
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+  <span class='nom-comment'># the script above is saved as 'wordsearch.pss'</span>
+  <span class='nom-unknown'>time</span> <span class='nom-unknown'>pep</span> <span class='nom-unknown'>-f</span> <span class='nom-unknown'>wordsearch</span><span class='nom-punct'>.</span><span class='nom-unknown'>pss</span> <span class='nom-unknown'>pickwick</span><span class='nom-punct'>.</span><span class='nom-unknown'>papers</span><span class='nom-punct'>.</span><span class='nom-unknown'>txt</span>
+  <span class='nom-comment'># pickwick.papers.txt is ~ 37000 lines and 1.8M in size</span>
+  <span class='nom-comment'># output</span>
+    <span class='nom-unknown'>real</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-error'>2 ??</span><span class='nom-error'>3 ??</span><span class='nom-error'>4 ??</span><span class='nom-command'>write</span>
+    <span class='nom-unknown'>user</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-error'>2 ??</span><span class='nom-error'>2 ??</span><span class='nom-error'>3 ??</span><span class='nom-command'>write</span>
+    <span class='nom-unknown'>sys</span>  <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-command'>zero</span><span class='nom-error'>1 ??</span><span class='nom-error'>2 ??</span><span class='nom-command'>write</span> 
+  </code></pre>
+</figure>
+<p>
+ Of course &ldquo;wc -w&rdquo; is much much faster, but in my hobby-programmer
+ defence, the pep/nom tool is doing a lot more than wc -w
+ (including compiling and loading the script)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ timing 'wc -w' on the same big text file
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-unknown'>time</span> <span class='nom-unknown'>wc</span> <span class='nom-unknown'>-w</span> <span class='nom-unknown'>pickwick</span><span class='nom-punct'>.</span><span class='nom-unknown'>papers</span><span class='nom-punct'>.</span><span class='nom-unknown'>txt</span> 
+    <span class='nom-comment'># output: </span>
+    <span class='nom-error'>3 ??</span><span class='nom-command'>zero</span><span class='nom-error'>3 ??</span><span class='nom-error'>1 ??</span><span class='nom-error'>1 ??</span><span class='nom-command'>zero</span> <span class='nom-unknown'>pickwick</span><span class='nom-punct'>.</span><span class='nom-unknown'>papers</span><span class='nom-punct'>.</span><span class='nom-unknown'>txt</span>
+
+    <span class='nom-unknown'>real</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-command'>zero</span><span class='nom-error'>3 ??</span><span class='nom-error'>3 ??</span><span class='nom-command'>write</span>
+    <span class='nom-unknown'>user</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-command'>zero</span><span class='nom-error'>3 ??</span><span class='nom-error'>1 ??</span><span class='nom-command'>write</span>
+    <span class='nom-unknown'>sys</span>  <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-command'>zero</span><span class='nom-command'>zero</span><span class='nom-error'>2 ??</span><span class='nom-command'>write</span> 
+  </code></pre>
+</figure>
+<p>
+ In fact, in some experiments, I have found that pep scripts that are 
+ translated to the go language and compiled <em>only</em> run 4X faster than
+ the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> interpreter. Can this possibly be true? Lets find out....
+<p>
+ (code below requires that you are in the 'pepnom' base folder of 
+ the extracted <a href='https://bumble.sf.net/books/pars/download'>download </a> file or else change the 
+ directory paths)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Translate the 'word search' script above to 'go', compile, run and time
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-comment'># save the script above as 'wordsearch.pss'</span>
+    <span class='nom-unknown'>pep</span> <span class='nom-unknown'>-f</span> <span class='nom-unknown'>tr</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>translate</span><span class='nom-punct'>.</span><span class='nom-command'>go</span><span class='nom-punct'>.</span><span class='nom-unknown'>pss</span> <span class='nom-unknown'>wordsearch</span><span class='nom-punct'>.</span><span class='nom-unknown'>pss</span> <span class='nom-punct'>></span> <span class='nom-unknown'>wordsearch</span><span class='nom-punct'>.</span><span class='nom-command'>go</span>
+    <span class='nom-command'>go</span> <span class='nom-unknown'>build</span> <span class='nom-unknown'>wordsearch</span><span class='nom-punct'>.</span><span class='nom-command'>go</span>
+    <span class='nom-unknown'>time</span> <span class='nom-unknown'>cat</span> <span class='nom-unknown'>pickwick</span><span class='nom-punct'>.</span><span class='nom-unknown'>papers</span><span class='nom-punct'>.</span><span class='nom-unknown'>txt</span> <span class='nom-error'>| ??</span> <span class='nom-punct'>.</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>wordsearch</span>
+    <span class='nom-comment'># output</span>
+      <span class='nom-unknown'>real</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-error'>2 ??</span><span class='nom-error'>9 ??</span><span class='nom-error'>6 ??</span><span class='nom-command'>write</span>
+      <span class='nom-unknown'>user</span> <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-error'>2 ??</span><span class='nom-error'>9 ??</span><span class='nom-error'>6 ??</span><span class='nom-command'>write</span>
+      <span class='nom-unknown'>sys</span>  <span class='nom-unknown'>zerom</span><span class='nom-command'>zero</span><span class='nom-punct'>.</span><span class='nom-command'>zero</span><span class='nom-error'>3 ??</span><span class='nom-error'>4 ??</span><span class='nom-command'>write</span>
+  </code></pre>
+</figure>
+ <p>
+ So, the 
+<abbr class='tek-acronym' 
+      title='Google's C Language Replacement'>GO</abbr> language translation is actually slower than the 
+ 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> interpreter! But there is a pretty simple and logical explanation
+ for this: <strong><em>Unicode</em></strong>
+ Go (I think) has good Unicode support and is 
+ searching a 
+<abbr class='tek-acronym' 
+      title='Unicode Text Format 8'>UTF8</abbr> text file. <em>utf8</em> is a variable length character
+ encoding, as you would all know, which means that 
+<abbr class='tek-acronym' 
+      title='Google's C Language Replacement'>GO</abbr> can&apos;t simply
+ do &ldquo;(char)++&rdquo; or whatever to get to the next character in the 
+ input stream. 
+<p>
+ The 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> interpreter on the other hand, is written in 'c' with
+ &ldquo;byte char&rdquo; characters (I know, I know, let's not talk about it) so
+ it can zoom through the input-stream like <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=quicksilver' title='oxford english dictionary'>quicksilver</a>
+<p>
+ But before you give up on 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> and go onto the next obscure, cryptic
+ language, remember that you can overcome the Unicode problem by translating
+ scripts into go, java, python, ruby etc (and hopefully in the future - of
+ 2025 - dart and rust). Or if you felt like helping you could just grep
+ through the <a href='https://bumble.sf.net/books/pars/object/pep.c'>pep.c </a> source code along with the 'objects'
+ in <a href='https://bumble.sf.net/books/pars/object/'>bumble.sf.net/books/pars/object/</a> and change <em>char</em> to <em>wchar</em> and hope against hope that
+ that works (...)
+<p>
+<p>
+<!-- ------------------------------- -->
+<h2> notes</h2>
+
+<p>
+ Actually, it just occurred to me that this trick to make the 
+ character number relative to the line number will return an incorrect
+ number if the <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.while.html'>while</a></code> or <em>whilenot</em> or <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.until.html'>until</a></code> commands are 
+ used to parse multiple lines of text. However, this problem is not 
+ terribly serious because it only means that the error message is not
+ as useful as it should be.
+ <p>
+ <p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb &lt;at&gt; nomlang.org</em> 
+<p>
+  </em></small></div></body></html>

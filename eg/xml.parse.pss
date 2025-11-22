@@ -1,0 +1,1001 @@
+
+#*
+
+ABOUT
+
+  Check the syntax of an xml file. This is currently only a recogniser.
+
+BUGS AND ISSUES
+
+  Does not accept <? etc ?>
+
+  Does not accept _.- in identifiers but should.
+  See code below.
+
+  Will not accept a dtd line
+
+## Parsing XML with Nom
+
+ The script below was prompted by a *rosettacode* problem which made 
+ me curious to see if [nom] could parse [xml] properly. The 
+ answer is yes, which was surprising to me as well. 
+
+ * some simple xml sample data
+ -------
+ <Students>
+  <Student Name="April" Gender="F" DateOfBirth="1989-01-02" />
+  <Student Name="Bob" Gender="M"  DateOfBirth="1990-03-04" />
+  <Student Name="Chad" Gender="M"  DateOfBirth="1991-05-06" />
+  <Student Name="Dave" Gender="M"  DateOfBirth="1992-07-08">
+    <Pet Type="dog" Name="Rover" />
+  </Student>
+  <Student DateOfBirth="1993-09-10" Gender="F" Name="&#x00C9;mily" />
+ </Students>
+ ,,,,
+
+ The following script parses the XML above and extract the 
+ names of each student. This is a problem from 
+ the "Rosetta Code" https://rosettacode.org/wiki/XML/Input site.
+
+ Another idea, to avoid putting all text in the >* token, use a flag after
+ reading a >* token, so that next read will read all the way to '<'
+ (implemented below, the pep://accumulator is used as a flag).
+
+GRAMMAR TOKENS
+
+  * tokens
+  ---------
+    literal: < > / =  
+    quoted*  quoted text within xml tags
+    name*    a tag or attribute name
+    attrib*  an attribute like time="now"
+    attribset* a set of attributes like {time="now" sky="blue"}
+    starttag*  a tag like this <book>
+    endtag*    an end tag </book>
+    tag*     a tag like <image/> or <book>...stuff...</book>
+    tagset*  a list of tags like the one above.
+    text* all text within tags, including tags within tags
+  ,,,,
+
+
+HISTORY
+
+   
+  28 july 2025
+    I have been adding a lot of self-help and self-translating and 
+    self-testing to this script. I think this is really useful and 
+    has a lot of potential but it does make the script very bloated.
+    I could move alot of this self-stuff into a separate script that 
+    could be called from any script.
+
+  27 july 2025
+    Fixed a bug where <book><author> was generating a text* token 
+    between the 2 tags. This is because ![:space:] returns true if the 
+    workspace is empty. So have to do ![:space:].!"" 
+
+    Also, tag*text* etc has to resolve to text*. Also fixed bugs in 
+    the lua and rust translators when .reparse didnt work in begin blocks.
+
+  24 july 2025
+    looking at this again. found a bug where .reparse wont work
+    inside a begin block in some translators which is 
+    understandable, because .reparse usually breaks out of a loop.
+    But some languages have a straight goto, which is why it does work.
+
+    Had the idea to using helpwords to test the script. Added a help system.
+    added self translation (but only working for perl sofar).
+
+NOTES
+
+  I didn't think that [nom] was really the ideal tool for parsing and 
+  transforming [xml] text data, but the script above seems to work
+  very well. I only spent a few hours writing it and it does some 
+  quite good syntax error checking.
+
+  The script below is close to being a valid [xml] recogniser or syntax
+  checker. It has reasonably good error checking to tell the xml writer where
+  the syntax error has occurred. We still havent solved the rosettacode
+  problem but it is not difficult, just check for a student tag and then a name
+  attribute. In fact could just ignore all other attributes. we can just remove
+  all the error checking for the rosettacode problem.
+
+### END TOKEN ERROR CHECKING
+
+  The script above uses better error handling than what I have written
+  previously (eg in nomsf://compile.pss or nomsf://tr/translate.go.pss )
+  and can be used as a template for error handling in other scripts.
+
+  It is useful to look for *end-tokens* in sub-patterns. For example 
+  in the xml
+  >> <book title="100 trees"> review: worth reading</book>
+
+  The literal token '>' is an *end-token* in a subpattern. So if that 
+  token still exists after it is parsed and reduced then something
+  is *really* wrong... So we can look for it in our 
+  error-checker
+
+  * look for a sub-pattern end-token
+  >>  pop;pop; B">" { #* error! * # } push;push;
+
+  The same is true of the text "100 trees" (eg quotedtext* token) 
+  which should reduce to an attribute* token *before* we get to 
+  the >* token, so  we can just say
+
+  * another sub-pattern end-token
+  >>  B"quotedtext*" { #* error! * # }
+
+  Because quotedtext* should never *begin* a token sequence, in 
+  the xml grammar I am using (and possibly not in any [xml] grammar)
+
+  We don't even have to check that there are 2 tokens, because these
+  tokens are errors at the beginning of the xml as well.
+
+  * don't have to do this 
+  >>  pop;pop; B"quotedtext*".!"quotedtext*" { #* error! * # } push;push;
+
+  This *idiom* above normally makes sure that there are 2 tokens 
+  on the stack (in case we are at the very beginning of the input)
+  but in this case it isn't necessary. So we can also do
+
+  >>  pop; B"quotedtext*".!"quotedtext*" { #* error! * # } push;
+
+
+*#
+
+  # check for an empty doc and trigger help if true
+  begin {
+    while [:space:]; clear;
+    (eof) {
+      # the category is help and the token too.
+      add "usage"; put; clear; 
+      add "help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be valid xml
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; while [:space:];
+      swap; get; put; clear;
+      add "help*"; push; .reparse
+    }
+  } # end of beginblock
+
+
+  count; 
+  # not zero means we are between tags
+  # read all text and set the 'text*' flag to false
+  # only add a text* token if there is actual text.
+  !"0" { 
+    clear; whilenot [<]; 
+    ![:space:].!"" {
+      zero; put; clear; add "text*"; push; .reparse
+    }
+    zero; clear;
+  }
+  "0" { clear; read; }
+
+  #*
+  # code to recognise '.-_' in identifiers: untested
+  # This technique reads the name* token attribute one character
+  # at a time, and uses an extra token part-name*
+  # 
+  put; clear; pop; 
+  "part-name*" {
+    push; get;
+    [:alnum:],".-_" {
+      clear; --; get; ++; get; --; put; ++; clear;
+      # .restart here?
+    }
+    (eof) {
+      nop;
+    }
+    pop; clear; add "name*"; push; .reparse
+  }
+  push;
+  get;
+
+  *#
+
+  [\n] { nochars; }    # line-relative char numbers, sort of 
+  [:space:] { 
+    # cant ignore space but won't save it.
+    while [:space:]; clear; add "space*"; push; .reparse
+  } 
+  # set the 'text*' flag to true (between tags)
+  ">" { a+; add "*"; push; .reparse }
+
+  '"' {
+    until '"'; put; clear;
+    add "quoted*"; push; .reparse
+  }
+
+  # single quotes are allowed in xml
+  "'" {
+    until "'"; put; clear;
+    add "quoted*"; push; .reparse
+  }
+
+  # literal tokens, but only within tags
+  "<","/","=" { add "*"; push; .reparse }
+  # need these for comments like <!-- etc -->
+  "!","-","?" { add "*"; push; .reparse }
+  # fix: "?" is not parsed.
+
+  # tagnames and attribute names, this should include - and _ and .
+  # but Nom is a bit limited like this. For example, I can't do
+  # [:alnum:],[-_.] because the character sets dont get 'unioned' by the 
+  # interpreter or the translation scripts. But this is necessary and 
+  # possible.
+  [:alnum:] {
+    while [:alnum:]; put; 
+    clear; add "name*"; push; .reparse
+  }
+
+  parse>
+    # watch the parse stack reduce
+    add "#<!-- "; lines; add ":"; chars; add " "; print; clear;
+    unstack; print; stack; add " -->\n"; print; clear;
+
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allow implementing a help system
+  that can be triggered by an empty document or by help keywords
+ *#
+ "xml.error*" {
+   # maybe get the parse stack here as well
+   clear; 
+   add "! xml syntax, ";
+   add " near line:"; lines; add " char:"; chars; add "\n";
+   get; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   quit;
+ }
+
+ #*
+  Using a help* token to allow the script to document itself.
+  The swap commands below are used to save the help text in the tape
+  cell so that several or all help topics can be printed at once.
+
+ *#
+
+ "help*" {
+   # wrap it all in an xml comment?.  
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help","all" {
+     swap; add "
+   USAGE
+     pep -f xml.parse.pss file.txt
+     pep -f xml.parse.pss -i '<xml>text and tags</xml>' 
+
+     A nom script to transform a text document into an HTML fragment
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All (xml) documents/input which begin with '/' are considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f xml.parse.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f xml.parse.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f xml.parse.pss -i /help
+       see all the help.
+
+     pep -f xml.parse.pss -i /toperl | bash
+       translate this script to perl 
+       
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+   ### Configuration 
+     - /makepath: show how to add the pep folder to the path so that the bash
+         scripts work (this should have already been done when you installed
+         pep).
+     - /makepeppath: make an environment variable that points to the 
+         pepnom base folder so that this script can find the translation 
+         scripts and others
+   ### About the xml format 
+     - /flaws: known limitations with how this script parses XML
+     - /format: show summary information about the XML text format.
+     - /tags: 
+     - /attributes: 
+   ### About testing this script
+     - /eg.lines: prints a set of one line xml documents that should 
+        be accepted by this recogniser script. These can be used by
+        other test words.
+     - /eg.bad.lines: a set of one-liners that should be rejected.
+     - /test.line <lang>: tests one random one-line xml document. If 
+        a language name is given (eg ruby, rust, go etc), then it tests the 
+        script that has been already translated with /to <lang>.
+     - /test: I could use this help word to test the script with simple
+         input like <book><tag></tag></book> at these tests could possibly
+         be used for the translated scripts as well????
+
+   ### About translating this script
+
+     - /langs: available translation languages.
+     - /translate: show how to translate this script to another language
+     - /to<lang>: try to translate this script to some other language
+         using the nom translation scripts at www.nomlang.org/tr/ 
+          ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+          (eg: /toperl /tolua etc)
+
+     Also see the /testone <lang> help word for testing translated scripts
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /format: all information about the xml format 
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   "makepath","config" {
+     swap; add "
+       # add pep temporarily to your path 
+       export PATH=/full/path/to/pepnom:$PATH | bash
+       # add it to you .bashrc file for more permanence 
+       echo 'export PATH=/full/path/to/pepnom:$PATH' >> ~/.bashrc
+     ";
+     # indent a bit less
+     replace "\n    " "\n";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (not) frequently asked questions about /eg/xml.parse.pss
+
+     Q: What does this script do?
+     A: It checks if the input is a valid XML document. So it can be 
+        called a 'recogniser' which means it parses the content against
+        a grammar and then says 'yes' or 'no'.
+
+     Q: Does it validate against a DTD or schema?
+     A: No.
+
+     Q: How good is this script? 
+     A: Actually, not that great (july 2025) because it needs to 
+        recognise DTDs and also accept _-. in identifiers
+
+     Q: There seems to be a lot of verbage in the help* token. Why?
+     A: That is because the help token does lots of things, like provide
+        documentation for the script, for the XML format, and it also
+        provides a way for the script to translate itself to other 
+        languages. And maybe it will also provide a way for the script 
+        to test itself. And maybe also, allow the script to be printed
+        to html/pdf and man pages. The help* token also has this very
+        FAQ that you are reading now.
+
+     Q: But why put all that in the script itself? Why not have separate
+        tools to do that?
+     A: Good question! I suppose I am just experimenting with other layers
+        of self-referentiality for the pep/nom system. And nom has lots 
+        and lots of that.
+
+     Q: How can I ...?
+     A: type: pep -f xml.parse.pss -i /words
+        which will give you a list of help-words which are basically 
+        help topics for this script and how to translate it to other 
+        languages, how to test it, and test the translations, and also,
+        what syntax it should recognise (XML syntax hopefully).
+
+     Q: Should I use this instead of my favourite XML validator?
+     A: No, I could not recommend that at all. This doesn't even 
+        recognise eg <?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+        or the following
+        <!DOCTYPE root_element SYSTEM 'path/to/your.dtd'>
+
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in pep:nom.
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   #
+   "eg.lines" {
+     swap; add "
+      <book></book>
+      <a><b><c><d/>abcd</c></b></a> <!-- text -->
+      <author>salinger</author>
+      <road name='ashfield'>go</road>
+      <steps><eat>food</eat><sleep>10 hours</sleep></steps>
+      <time h='10' m=\"00\" s='01'/>
+      <alphabet graph='A' glyph='#'/>
+      <!-- comment --> <book/>
+      <slip1 graph='#$%' glyph='#'><tag><idea></idea></tag></slip1><end/>
+     "; 
+     replace "\n    " "\n";
+     swap;
+   }
+
+   #
+   "eg.bad.lines" {
+     swap; add "
+       # mismatched tags
+       <book></boook>
+       # no top-level tag
+       <author>salinger</author> did not write 'The Farm'
+       # space after opening <
+       < alphabet graph='A' glyph='#'/>
+       # missing single quote
+       <road name='ashfield>go</road>
+     ";
+     swap;
+   }
+
+   # give info about translation languages
+   "langs","translation","help" {
+     swap; add "
+     NOM TRANSLATION LANGUAGES
+
+      Pep:nom translators exist for   
+        rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+
+      However the 1st four are more recently written and superior
+      to the others. The advantages are:
+        - all the code is in a parse() method so that the translated
+          code can be used from other code in that language.
+        - a number of bugs have been elimited.
+        - the grammar has been reorganised 
+        - etc
+
+     "; 
+     swap;
+   }
+   # tests one one-line XML doc with this script
+   "test.line" {
+     swap; add "
+       # TESTING ONE RANDOM (one-line) XML DOCUMENT
+       doc=$(pep -f xml.parse.pss -i /goodinputlines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- XML: $doc   --> \"
+       pep -f xml.parse.pss -i \"$doc\" 
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f xml.parse.pss -i /testone | bash
+       # OR FOR (EG) LUA TRANSLATION
+       # echo '/testone' | ./xmlparse.lua
+       # OR FOR ANY TRANSLATION
+       # echo '/testone' | ./xmlparse.<ext>
+       # (first create the (e.g) lua translated script with:
+       # pep -f xml.parse.pss -i /tolua | bash 
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # tests one one-line XML doc with this script translated into another
+   # language such as ruby,perl,go,rust etc
+   B"testone".!"testone" {
+     replace "testone" ""; 
+     "perl","lua","javascript","ruby","python","tcl" {
+       swap; add "
+         # TESTING ONE RANDOM (one-line) XML DOCUMENT
+         # WITH THE <lang> TRANSLATION OF xml.parse.pss
+
+         # assume for now that the translated script is in the 
+         # current folder
+         script=xmlparse.<ext>
+         if [ -f $script ]; then
+           echo -e \"# [ok] Found <lang> translation:  $script\"
+         else
+           echo -e \"
+            Could not find <lang> translation: xmlparse.<ext> 
+            You can create it with:
+              pep -f xml.parse.pss -i '/to<lang>'
+            Possible languages are:
+              rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+            \"
+           exit 1;
+         fi
+
+         if command -v <lang> &> /dev/null
+         then
+           echo '# [ok] <lang> interpreter was found'
+         else
+           echo '# [??] <lang> interpreter not found! please install'
+           exit 1;
+         fi
+
+         doc=$(pep -f xml.parse.pss -i /goodinputlines | \\
+           sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+         echo \"<!-- XML: $doc   --> \"
+         echo \"$doc\" | ./xmlparse.<ext>
+         # ------------------------
+         # RUN THIS WITH:
+         # pep -f xml.parse.pss -i '/testone <lang>' | bash
+         # OR ALSO RUN FROM ANY TRANSLATION
+         # echo '/testone <lang>' | ./xmlparse.<ext>
+         # (first create the translated script with:
+         # pep -f xml.parse.pss -i /to<lang> | bash 
+         ";
+       replace "\n      " "\n";
+       swap;
+       "perl" { swap; replace "<lang>" "perl"; replace "<ext>" "pl"; swap; }
+       "lua" { swap; replace "<lang>" "lua"; replace "<ext>" "lua"; swap; }
+       "ruby" { swap; replace "<lang>" "ruby"; replace "<ext>" "rb"; swap; }
+       "python" { swap; replace "<lang>" "python"; replace "<ext>" "py"; swap; }
+       "tcl" { swap; replace "<lang>" "tcl"; replace "<ext>" "tcl"; swap; }
+       "javascript" { 
+         swap; replace "<lang>" "javascript"; replace "<ext>" "js"; swap; 
+       }
+       swap;
+     }
+
+     # rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+     "rust","dart","go","java","c" {
+       swap; add "
+         # TESTING ONE RANDOM (one-line) XML DOCUMENT
+         # WITH THE '<lang>' TRANSLATION OF xml.parse.pss (xmlparse<lang>)
+
+         # assume for now that the translated script is in the 
+         # current folder
+         script=xmlparse<lang>
+         if [ -f $script ]; then
+           echo -e \"# [ok] Found <lang> translation:  $script\"
+         else
+           echo -e \"
+            Could not find <lang> translation: $script 
+            You can create it with:
+              pep -f xml.parse.pss -i '/to<lang>'
+            Possible languages are:
+              rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+            \"
+           exit 1;
+         fi
+
+         if command -v pep &> /dev/null
+         then
+           echo '# [ok] pep interpreter was found (to create test doc)'
+         else
+           echo '# [error] pep interpreter not found!  '
+           echo '          add the pep base folder to your path'
+           echo '          eg: export PATH=~/path/to/pepnom:$PATH'
+           exit 1;
+         fi
+
+         doc=$(pep -f xml.parse.pss -i /goodinputlines | \\
+           sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+         echo \"<!-- XML: $doc   --> \"
+         echo \"$doc\" | ./xmlparse<lang>
+         # ------------------------
+         # RUN THIS WITH:
+         # pep -f xml.parse.pss -i '/testone <lang>' | bash
+         # OR ALSO RUN FROM ANY TRANSLATION
+         # echo '/testone <lang>' | ./xmlparse<lang>.exe
+         # (first create the translated script with:
+         # pep -f xml.parse.pss -i /to<lang> | bash 
+         ";
+       replace "\n     " "\n";
+       swap;
+       # dont really need <ext>
+       "rust" { swap; replace "<lang>" "rust"; replace "<ext>" "rs"; swap; }
+       "dart" { swap; replace "<lang>" "dart"; replace "<ext>" "dart"; swap; }
+       "go" { swap; replace "<lang>" "go"; replace "<ext>" "go"; swap; }
+       "java" { 
+         swap; 
+         replace "<lang>" "java"; replace "<ext>" "java"; 
+         # fix the run command for java
+         replace "script=xmlparsejava" "script=xmlparsejava.class";
+         replace "./xmlparsejava" "java xmlparsejava";
+         swap;
+       }
+       "c" { swap; replace "<lang>" "clang"; replace "<ext>" "c"; swap; }
+       swap;
+     }
+     swap;
+   }
+
+   # todo
+   "test" {
+     swap; add "
+       to do. implement self testing.
+     ";
+     swap;
+   }
+
+
+   # just call the /eg/nom.to.pss script which does translation from
+   # a simple command like 'translate xml.parse.pss to ruby'
+   # >> pep -f xml.parse.pss -i /to<lang> | bash
+   B"to" {
+     clop; clop; put; clear;
+
+     add '
+      # run this with
+      #   pep -f xml.parse.pss -i /to<lang> | bash
+      translator=${PEPNOM}/eg/nom.to.pss
+      if [ -f $translator ]; then
+        echo -e "[ok] Found translator script: $translator"
+      else
+        echo -e "
+         [error] did not find translator: ${PEPNOM}/eg/nom.to.pss
+         (maybe) set the $PEPNOM environment var
+         (or)    download the translator from www.nomlang.org/eg/ 
+         ";
+        exit 1;
+      fi
+      pep -f $translator -i "translate xml.parse.pss to '; get; add '"';
+      add ' | bash\n';
+
+      replace "\n    " "\n";
+      print;
+      quit;
+   }
+
+   # how to translate this script to another language, 
+   "translate","tr","about","help" {
+     swap; add "
+
+    HOW TO TRANSLATE THIS SCRIPT
+
+      This script can be translated to other languages using nom 
+      translation scripts which are available at www.nomlang.org/tr/
+    
+      Currently nom scripts can be translated into the following languages.
+        rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+      Some of the translators are better than others. The translators are 
+      all nom scripts, and they can translate themselves (!?)
+      
+      * translate this script to rust, compile and run (needs 'rustc')
+      ---
+        pep -f tr/nom.torust.pss xml.parse.pss > xml.parse.rs
+        rustc -o texttohtml.exe texttohtml.rs
+        echo ' some *strong* text ' | ./texttohtml.exe 
+      ,,,
+
+      * translate a script to perl, and run with 'doc.txt' as input
+      ---
+        pep -f nom.toperl.pss xml.parse.pss > test.pl 
+        chmod +x test.pl
+        cat doc.txt | ./test.pl
+      ,,,
+
+     ";
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   B"flaw",B"fault","format","help" {
+     swap; add '
+    XML SCRIPT FLAWS As of july 2025: 
+   
+      The following a known issues with this script
+       - doesnt try to lex identifiers properly (just uses the [:alnum:]
+         class, but the rules for identifiers are more complex than that)
+       - doesnt try to parse <? etc ?>
+       - doesnt verify against a schema or dtd
+
+     ';
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   "attributes","format","help" {
+     swap; add '
+    ATTRIBUTE FORMAT
+     ';
+     swap;
+   }
+
+   # document heading format.
+   "tags","format","help" {
+     swap; add "
+    TAG FORMAT
+     ";
+     swap;
+   }
+   
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f xml.parse.pss -i /words \n";
+     add "  to see valid help keywords";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ push;
+ # end of the error and help system.
+ # -------------------
+    
+    #-------------
+    # 2 token errors
+
+    # The accumulator is used as a text* flag 
+    # The xml tag parse rules only apply
+    # if we are inside a tag like this <...> otherwise we are just dealing
+    # with text. 
+
+    # An idea, this is very verbose, what about pushing an
+    # error token with a message. ?
+
+    clear;
+    pop; pop;
+    # '<' can only be followed by '/' or '?' or a name (space is not allowed) 
+    # or ! in a comment like <!-- etc -->
+    # we need to check that that the token stack is not *just* '<*'
+    # for the beginning of the script.
+    B"<*".!"<*".!E"!*".!E"/*".!E"name*" {
+      clear; 
+      add "* < must be followed by / or ! or a name. No spaces please."; 
+      put; clear; add "xml.error";
+    }
+
+    B"!*".!"!*".!E"-*" {
+      clear; add "* ! is only used in comments like <!-- etc -->";
+      put; clear; add "xml.error";
+    }
+
+    B"/*".!"/*".!E">*".!E"name*" {
+      clear; 
+      add '* "/" must be followed by ">" or a name. Sorry, no spaces.\n';
+      put; clear; add "xml.error";
+    }
+
+    B"</*".!"</*".!E"name*" {
+      clear; 
+      add '* </ must be followed by > or a name. Sorry, no spaces.\n';
+      put; clear; add "xml.error";
+    }
+
+    B"=*".!"=*".!E"space*".!E"quoted*" {
+      clear; 
+      add "* = must be followed by quoted text\n";
+      put; clear; add "xml.error";
+    }
+
+    # anything beginning with quoted text is an error because 
+    # is should have become an attrib* token
+    B"quoted*".!"quoted*" {
+      clear; 
+      add "* misplaced quoted text?";
+      put; clear; add "xml.error";
+    }
+    B"name*".!"name*" {
+      !E"attrib*".!E"attribset*".!E"name*".!E"=*".!E">*".
+      !E"space*".!E"/*".!E"/>*" {
+        clear; 
+        add "* names must be followed by '>','/','='";
+        add "  eg: name='anon' or <name/> or <name>\n";
+        put; clear; add "xml.error";
+      }
+    }
+
+    # If a > or /> starts a sequence then the tag* token etc did
+    # not reduce properly.
+    B">*",B"/>*" {
+      clear; add "* misplaced > or /> ?\n";
+      put; clear; add "xml.error";
+    }
+
+    # see if tagnames match
+    "starttag*endtag*" {
+      clear; get; ++;   
+      !(==) {
+        clear; 
+        add "! XML syntax: (near line "; lines; add " char "; chars; add ")";
+        add "\n  mismatched tags? bye.\n";
+        print; quit; 
+      }
+      --; clear; add "starttag*endtag*";
+    }
+
+    #----------------
+    # 3 token errors
+
+    # we could push an xml.error* token with the messsage ?
+    pop; 
+    B"!*-*".!"!*-*".!E"-*" {
+      clear; 
+      add "* ! and - are only used in comments like <!-- etc -->\n";
+      put; clear; add "xml.error";
+    }
+
+    # don't bother with =quoted errors because =quoted should alway
+    # reduce to attrib* or attribset*
+
+    B"name*=*".!"name*=*".!E"quoted*".!E"space*" {
+      clear; 
+      add '* Incomplete attribute? good example: age="32"\n';
+      put; clear; add "xml.error";
+    }
+    B"name*name*".!"name*name*".!E"=*".!E"space*" {
+      clear; 
+      add "* incomplete attribute? Or some other problem.\n";
+      put; clear; add "xml.error";
+    }
+    B"</*name*".!"</*name*".!E">*".!E"space*" {
+      clear; 
+      add "* Bad end-tag syntax. Should be </name> or </name > \n";
+      put; clear; add "xml.error";
+    }
+
+    B"<*name*".!"<*name*".!E"name*".!E"/*".!E"/>*".!E">*".!E"space*".
+    !E"attrib*".!E"attribset*" {
+      clear; 
+      add "* Bad xml tag syntax. \n";
+      put; clear; add "xml.error";
+    }
+
+    # the error block, this also allows standard error messages 
+    "xml.error" {
+      clear;
+      add "! xml syntax,";
+      add " near line:"; lines; add " char:"; chars; add "\n";
+      get; print; quit; 
+    }
+
+    # see if tagnames match, if we push an error token here we
+    # can use the same error block as above.
+    "starttag*text*endtag*" {
+      clear; get; ++; ++;
+      !(==) {
+        #state;quit;
+        clear; 
+        add "! XML syntax: (near line "; lines; add " char "; chars; add ")";
+        add "\n  mismatched tags? bye.\n";
+        print; quit; 
+      }
+      --; --; clear; 
+      add "starttag*text*endtag*";
+    }
+
+    # also errors for mismatched tags.
+
+    push;push;push;
+
+    # end of errors
+    #--------------------------------------
+    # 2 token reductions
+
+    pop; pop;
+
+    "/*>*" { clear; add "/>*"; push; .reparse }
+    "<*/*" { clear; add "</*"; push; .reparse }
+
+    # 2 space tokens should never happen but just in case.
+    "space*space*" { clear; add "space*"; push; .reparse }
+
+    B"space*".!"space*" {
+      replace "space*" ""; push; get; --; put; ++; clear;
+    }
+
+    # space is either not significant or an error
+    E"space*".!"space*" { replace "space*" ""; push; clear; }
+
+    # vanish unimportant whitespace, probably a more elegant way to do
+    # see above
+    "name*space*","=*space*","quoted*space*","attrib*space*","attribset*space*"
+    {
+      replace "space*" ""; push; .reparse
+    }
+
+    "attrib*attrib*","attribset*attrib*" {
+      clear; add "attribset*"; push; .reparse
+    }
+    "starttag*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+
+    "tag*tag*","tagset*tag*" {
+      clear; add "tagset*"; push; .reparse
+    }
+    "text*tag*","tag*text*","text*text*" {
+      clear; add "text*"; push; .reparse
+    }
+
+
+    #-----------
+    # 3 token parse token reductions
+    pop;
+    "name*=*quoted*" {
+      clear; get; ++; get; ++; get; --; --; put;
+      clear; add "attrib*"; push; .reparse
+    }
+    "<*name*>*" { 
+      clear; ++; get; --; put;
+      clear; add "starttag*"; push; .reparse
+    }
+    "<*name*/>*" {
+      clear; ++; get; --; put;
+      clear; add "tag*"; push; .reparse
+    }
+    "</*name*>*" {
+      clear; ++; get; --; put;
+      clear; add "endtag*"; push; .reparse
+    }
+
+    # I dont actually know where text* can go outside of a 
+    # xml tag, so I will parse this later. Anywhere I think
+    "starttag*text*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+    "starttag*tag*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+    "starttag*tagset*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+
+    #-----------
+    # 4 token parse token reductions
+    pop;
+
+    # comments like <!-- text --> just ignore
+    "<*!*-*-*" {
+      clear; until "-->"; clear;
+    }
+    "<*name*attrib*/>*","<*name*attribset*/>*" {
+      # here we can check for a "student" tag and the name
+      # attribute. for the rosetta code problem
+      clear; ++; get; --; put;
+      clear; add "tag*"; push; .reparse
+    }
+    "<*name*attrib*>*","<*name*attribset*>*" {
+      clear; ++; get; --; put;
+      clear; add "starttag*"; push; .reparse
+    }
+    
+    #-----------
+    # 5 token parse token reductions
+    pop;
+
+    push;push;push;push;push;
+
+    (eof) {
+      pop;pop;
+      !"tag*".!"tagset*" {
+        push; push;
+        add "! xml syntax, at end of input\n";
+        add "* xml might not to be valid\n";
+        add "  The parse-stack was: "; print; clear;
+        unstack; add "\n\n";
+        add "  Note: currently parser doesnt take [-_.] \n"; 
+        add "        in tag/attribute names. Also, tag text is not\n";
+        add "        properly handled.\n";
+        # return -1 as the exit code as 'non-success'
+        print; zero; a-; quit; 
+      }
+      clear;
+      add "*{good xml syntax}* (we hope) \n"; 
+      # The accumulator is the script exit code, and since this is 
+      # valid xml we return zero for 'success'.
+      print; zero; quit;
+    }

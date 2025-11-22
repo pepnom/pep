@@ -1,0 +1,26 @@
+
+
+## THE NOM "SWAP" COMMAND
+  
+  *Swap* the contents of the workspace buffer with the current tape cell
+
+  Swaps the contents of the current tape-cell with the "workspace" buffer.
+  The swap command allows the tape-cell to be added to the beginning of 
+  the workspace, not the end, using the *swap* nom://get command 
+  combination.
+
+  The swap command is sometimes useful for 'juggling' the contents of 
+  the pep://workspace with the current pep://tape cell. For example 
+  if we need to compile the attribute for a new parse-token but at the 
+  same time preserve the value of the original parse token (the parse
+  token that is being "reduced"
+  https://stackoverflow.com/questions/72553167/how-does-a-shift-reduce-parser-know-what-rule-to-apply )
+  
+  * prepend the current tape cell to the workspace buffer
+  >> swap; get;
+
+### NOTES
+
+  All [nom] commands have a one letter abbreviation. For 
+  *swap* the abbreviation is 'x' 
+

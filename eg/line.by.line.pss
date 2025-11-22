@@ -1,0 +1,22 @@
+#* 
+
+  A not very good example of line by line reading of the input stream.
+
+*#
+
+read;
+
+"\n" { clear; }
+until "\n"; E"\n" { clip; } put; 
+[= ].E"==" {
+  clear; add "underline*"; push; .reparse 
+} 
+clear; add "line*"; push; .reparse 
+
+parse>
+  pop; 
+  "line*" { clear; get; add "\n"; print; clear; .reparse }
+  clear;
+
+
+

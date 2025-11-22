@@ -1,0 +1,114 @@
+
+#*
+ABOUT 
+
+  This script has the purpose of testing the pep interpreter as well
+  as the translation scripts. The helpers.pars.sh bash script already has 
+  some quite good testing functions which use one line scripts that are 
+  contained in the file /tr/translate.test.txt but I thought this might
+  be useful as well.
+
+  The script starts off by assuming that equals and not equals tests 
+  already work.
+
+NOTES
+HISTORY
+  1 Sept 2025
+    Began.
+
+*#
+
+ !"" {
+   add "[error] non-empty workspace"; print; a+; quit;
+ }
+
+ add "123"; clear;
+ !"" {
+   add "[error] clear or add"; print; a+; quit;
+ }
+
+ clear; add "abc"; 
+ !"abc" {
+   clear; add "[error] add"; print; a+; quit;
+ }
+
+ put; get;
+ !"abcabc" {
+   clear; add "[error] put/get"; print; a+; quit;
+ }
+
+ # The line register should be initially 1 but it seems to be 0 
+ # in the c machine.
+ clear; lines; !"1".!"0" {
+   put; clear; add "[error] lines was "; get; print; a+; quit;
+ }
+
+ clear; chars; !"0" {
+   put; clear; add "[error] chars not initially zero (was "; get; add ")"; 
+   print; a+; quit;
+ }
+
+ clear;
+ add "[ok] lines + chars tests\n"; print; clear;
+
+ # ---------------------------------------
+ # escape tests, escaping can be tricky
+
+ # unescape should do nothing to a character that is not escaped
+ clear; add "abc"; unescape "a";  
+ !"abc" {
+   put; clear; add "[error] unescape (== "; get; add ")"; print; a+; quit;
+ }
+ 
+ escape "b";  
+ !"a\\bc" { 
+   put; clear; add "[error] escape ("; get; add ")"; 
+   print; a+; quit;
+ }
+
+ unescape "b";  
+ !"abc" { 
+   put; clear; add "[error] unescape: ("; get; add ")"; 
+   print; a+; quit;
+ }
+
+ unescape "b";  
+ !"abc" { 
+   add "[error] unescape: do nothing "; print; a+; quit;
+ }
+
+ clear; add "[ok] escape + unescape tests\n"; print; clear;
+
+ # ---------------------------------------
+ add "abc"; push;
+ !"" { 
+   add " [error] push"; print; a+; quit; 
+ }
+
+ pop;
+ !"abc" { 
+   add " [error] pop: no delimiter "; print; a+; quit; 
+ }
+
+ add "*"; push; 
+ !"" { 
+   add " [error] push: 1 token "; print; a+; quit; 
+ }
+
+ pop; 
+ !"abc*" { 
+   add " [error] pop "; print; a+; quit;
+ }
+
+ add "d*"; push;
+ !"d*" { add "[error] push 2 token "; print; a+; quit; }
+
+ clear; add "[ok] push and pop tests\n"; print; clear;
+ # ---------------------------------------
+
+
+
+
+
+
+

@@ -1,0 +1,27 @@
+
+## THE NOM ECHAR COMMAND
+
+ Change the escape character used by nom://escape and nom//unescape
+ and also used by the nom://until command. The default escape character
+ for all nom scripts is the backslash \\ but this can be changed 
+ anywhere in the script with the *echar* command.
+
+ * change the default escape character to "
+ -------+
+   begin { echar '"'; }
+   read; '"' { until '"'; print; }  
+   clear; 
+ ,,,,
+  
+ In the script above, only text between quotes will be printed
+ but the nom://until command will 'read past' doubled double quotes
+ because it will regard them as 'escaped'.
+
+## NOTES
+
+ To tell the truth, I have never actually used this command in any 
+ nom script. But I can think of plenty of times when it would be 
+ necessary. Unfortunately, there are probably a number of languages and 
+ formats where the escape character is actually multiple characters
+ and the pep pep://machine is currently (sept 2025) unable to 
+ accomodate this.

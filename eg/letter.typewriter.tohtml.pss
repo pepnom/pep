@@ -1,0 +1,549 @@
+
+#*
+ABOUT
+
+  A nom script to turn a letter into a typewritten letter in html
+  which can be converted to pdf and printed. The letter is in the 
+  format.
+
+  -----
+   Return Address  (right floated, left aligned)
+   Road Suburb City
+   Date
+
+   Recipient Address (left aligned)
+   text
+
+  ,,,,,
+
+  A google derived "typewriter" font is used in the output. The main 
+  point of this script is to produce something that looks like it was 
+  typed on a typewriter (and then signed) even when it was not. 
+  This is because I like typed letters, not because I want to trick 
+  somebody.
+
+TOKENS
+
+  I have found it very useful to keep a list of tokens used 
+  when parsing.
+
+  line* lines* par* pars* empty*
+
+  empty* an empty or whitespace line
+  line* one line of text
+  lines* multiple lines
+  par* one paragraph between empty lines
+  pars* plural paragraphs.
+    
+NOTES
+
+  I could add the self-translation/help/testing code to this that is 
+  now in scripts like /eg/bash.history.pss and /eg/json.check.pss
+
+  This script is an example of how a pep:nom script can actually
+  have its own built in help system, which seems to me really helpful 
+  especially when you return years later to a script and want to know
+  "what on earth does this do?".
+
+  I am trying to do the minimal amount of parsing, and just use 
+  the nom://replace command to create fancy html stuff
+
+  This should replace <email> with 🖂  and other symbols?
+
+  As usual these so called "simple" scripts are trickier to write than
+  I expect, but it seems to work and has some advantages.
+
+  some colours for text.
+  #912690 purple
+  #f16721 ochre
+  #f6931e yellow brown
+
+HISTORY
+
+  16 july 2025
+    started and more or less working.
+  18 july 2025
+    I am adding a few features to this to be able to include images
+    (which are useful as signatures in a letter).
+
+*#
+
+ begin { 
+   while [:space:]; 
+   (eof) {
+     # the error token doesn't call help.
+     clear; add " An empty letter, why and wherefor? ";
+     put; clear; add "error*"; push; .reparse
+   }
+   clear;
+ }
+    
+ while [ \t]; clear; 
+ until "\n"; put; 
+ # trigger the help system if the 1st line of the letter is a help word
+ clear; lines;
+ "1","2" {
+   clear; 
+   get; E"\n" { clip; } 
+   "help","about","?","example","eg","insert","ins","helpwords",
+   "faq","trouble","debug" {
+     put; clear; add "help*"; push; .reparse
+   }
+ }
+ clear; get;
+
+ ![:space:].!"\n" {
+   # Ignore comment lines in the letter
+   B"##" { clear; .reparse }
+
+   # change the < and >  
+   B"<sig " { 
+     replace "<sig" "[sig"; replace "sig>" "sig]";
+   }
+   B"<im " { 
+     replace "<im" "[im"; replace "im> " "im]";
+   }
+
+
+   replace "<email>" "🖂 "; replace "<speech>" "🗨️"; replace "<phone>" "🕻";
+   replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; 
+   replace "9th " "9<sup>th</sup> ";
+   replace "8th " "8<sup>th</sup> ";
+   replace "7th " "7<sup>th</sup> ";
+   replace "6th " "6<sup>th</sup> ";
+   replace "5th " "5<sup>th</sup> ";
+   replace "4th " "4<sup>th</sup> ";
+   replace "3rd " "3<sup>rd</sup> ";
+   replace "2nd " "2<sup>nd</sup> ";
+   replace "1st " "1<sup>st</sup> ";
+
+   # make a center aligned hyphen divider
+   B"---".[-\n] { 
+     clear; 
+     add "<p style='font-size:larger;text-align:center;'>";
+     add "+~~~~~~~~~~~~~~~~~~~~~~~~~~~~+</p>\n";
+   }
+
+   # make a small header 
+   B"**" { 
+     clop; clop; put; clear; 
+     add "<h3>"; get; add "</h3>\n";
+   }
+
+   # insert a signature or any image 
+   B"[sig " { 
+     replace "[sig " "<img style='width:30%;height:auto;' src='";
+     replace " sig]" ".png'/>";
+   }
+   B"[im " { 
+     replace "[im " "<img style='width:30%;height:auto;' src='";
+     replace " im]" ".png'/>";
+   }
+
+   replace "\n" "<br/>\n";
+   put; clear; add "line*"; push; .reparse
+ }
+ put; clear; add "empty*"; push; .reparse
+
+parse>
+ 
+ # watch the stack as it parses: very helpful for debugging the script grammar
+ # Comment-out the next 2 lines when the grammar is working well.
+ #add "<!-- * line "; lines; add " char "; chars; add ": "; print; clear; 
+ #unstack; print; stack; add " -->\n"; print; clear;
+
+ # --------------
+ # error and help tokens.
+ pop;
+
+ # This just prints the given error message and exits.
+ "error*" {
+   clear; get; 
+   add "
+
+    This is 'nomlang.org/eg/letter.typewriter.tohtml.pss'
+      A pep:nom script to format a plain text letter into printable 
+      html in a 'typewritten' style.
+   ";
+   print; 
+   clear; add "helpwords"; put; clear; add "help*"; push; .reparse
+   quit;
+ }
+
+ "help*" {
+   # the topic or category to display help for is in the attribute
+   clear; swap; 
+   # a list of help words. 
+   "helpwords" {
+     swap; add "
+
+     Type: 
+       'help/about' to see a general description of this script
+       'insert/ins' to see what symbols/images can be inserted in the letter
+       'helpwords' to see this message
+       'example/eg' to see an example plain text letter.
+       'faq/trouble/debug' if things really look bad.
+
+      For more information about pep:nom scripts see www.nomlang.org
+     ";
+   }     
+   "help","about","?" {
+     swap; add "
+     Hi, this is the nomlang.org/eg/letter.typewriter.tohtml.pss script
+     This script is supposed to turn a simple letter into a typewritten
+     letter in a traditional British style (with the return address at the 
+     top, floated to the right of the page).
+
+     All text in the first paragraph is floated to the right, but left aligned.
+     <sig name sig> or <im file im> will be converted into an
+     image (useful for inserting handwritten signatures). The filename 
+     should be something like 'name.png or' 'file.png'
+
+     At the moment, all line breaks in the source text are respected.
+
+       ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+
+   # things that can be inserted in a letter.
+   "insert","ins" {
+     swap; add "
+       www.nomlang.org/eg/letter.typewriter.tohtml.pss 
+        
+       ** heading
+         lines starting with two *s are formatted as a heading.
+       ---
+         (3 or more hyphens on a line by itself)
+         Creates a centre aligned hyphen divider in the letter 
+       <email> 
+         inserts an envelope unicode symbol into the letter.
+       <sig name sig> or <im name im>
+         inserts the image 'name.png' into the letter with a width of
+         40% of the page width. 
+        
+     ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+   # trouble  
+   "trouble","debug","faq" {
+     swap; add "
+        
+  www.nomlang.org/eg/letter.typewriter.tohtml.pss
+
+  The (totally not) Frequently Asked Questions FAQ
+
+   Q: What happens if I see a message like 'Type-writer meltdown ...'?
+   A: Ok, that's bad. That's serious. Basically it means that the 
+      pep:nom script writer is an idiot.
+
+   Q: Who is the script-writer?
+   A: Me...
+
+   Q: Can you answer the question seriously?
+   A: Sure. That message means that the pep:nom script did not parse
+      properly; or, in other words, that the grammar that I invented to
+      parse and transform the plain-text letter into html was less than
+      optimal.
+
+   Q: Does a letter really have a *grammar* ?
+   A: Well not really, but its a set of lines, and the lines make 
+      paragraphs, so that is sort of a grammar.
+
+   Q: What on earth is this pep:nom stuff?
+   A: Its a pretty amazing parsing/translating language that I invented.
+     
+   Q: I've never heard of it.
+   A: That's not a question.
+
+   Q: Okay, Okay, 'Why have I never heard etc. etc?'
+   A: I'm sorry to hear that but you can find out all sorts of interesting
+      stuff about it at www.nomlang.org
+
+   Q: That link didn't work. 
+   A: All things are ephemeral. You could try the internet archive. 
+      I spent alot of time on that code and website, but that's just how
+      things go.
+
+   Q: Who ever heard of a tiny little html formatting script having a
+      whole help system along with its very own FAQ?
+   A: Cool hey? This whole thing is almost as discursive as 
+      'The Poignant Guide to Ruby'
+    
+   Q: But why?
+   A: Because pep:nom is sort of weirdly amazing. You can create error*
+      tokens and push them on the stack, and then create help* tokens*
+      and push them on the stack. It's sort of unheard of. But noone 
+      seems to care much. People think that ANTLR is better. 
+
+   Q: Whats ANTLR? And why so many acronyms?
+   A: That's 2 questions, but ANTLR is some poncy rubbish from some Ivy 
+      League gringo university. I mean if its so great, why didn't 
+      Rob Pike write 'go' in it? Same question for 'swift' and 'dart' 
+      and 'rust' and 'zig'? Yeah? Can't answer that can you?
+
+   Q: What does poncy mean?
+   A: I think its British slang.
+
+   Q: I think I touched a nerve with 'ANTLR'?
+   A: Umm, well its probably one of the many reasons that no-one 
+      uses pep:nom
+
+   Q: Why 2 names for this pep:nom thing?
+   A: Well, PEP is sort of 'Pattern Engine for Parsing' and 'Nom' just 
+      sounds OK, a bit like some indo-european word for name and maybe 
+      even a reference to the inimitable linguist Noam ... and its the 
+      language. Pep is a VM and nom is a syntax.
+      Nom is written in nom and can be translated (by nom) into all sorts
+      of amazing modern and ancient coding languages like Rust, Perl, 
+      TCL, Java, Python, Lua .... Cool no? 
+
+   Q: Is an FAQ inside a little text-to-html script really the right place 
+      to be documenting some weird DSL language that nobody uses?
+   A: Probably not. How did you know the acronym DSL by the way?
+
+   Q: Hang on, aren't I the one asking the questions?
+   A: Okay, but DSL means 'domain specific language' to answer my own
+      non-question.
+   
+   Q: Isn't it strange that you can say \"Aren't I?\"? I mean you can't
+      say 'I are'
+   A: True. Grammar is strange but interesting. That's why I wrote 
+      nom or pep or whatever you want to call it.
+
+   Q: I had a look at this script, and it seems ridiculously verbose for 
+      a little text-to-html thingy.
+   A: Gonna start with the carping are we? And that wasn't a question. 
+      And the scripts got a whole FAQ in it, so what do you expect?
+
+   Q: Can we get back to that error message so that I can actually 
+      print off the letter that you promised?
+   A: OK, basically I dont know what when wrong, the parse tokens didn't
+      reduce as they were suppose to, canopus did not align with 
+      alpha centauri, probably because I forgot to 
+      include a particular parse token sequence in the grammar. The 
+      best I can suggest is just to change the text of your letter a 
+      bit and hope that it works. Sorry.
+
+   Q: How do I run this script?
+   A: Well, you wouldn't see this question unless you have already run
+      it, so that is a pretty silly question, but basically do:
+      >> pep -f letter.typewriter.tohtml.pss letter.txt
+
+   Q: How do I translate it to some other language that you mentioned 
+      before?
+   A: *Glad you asked* as they used to say on the 'Curiosity Show' but 
+      I am just going to refer you to www.pepnom.org/tr/ for more info.
+      Basically it depends on whether you are translating to a compiled
+      language like rust or dart or java (is java compiled?) or some 
+      interpreted language like ruby or perl or python or tcl. I know
+      thats a lot of languages and pep:nom can do it all. 
+
+   Q: Is there an easier way to translate this script into another 
+      language?
+   A: Yes, use the script /eg/nom.to.pss with a simple prompt like
+      pep -f eg/nom.to.pss -i 'letter.typewriter.tohtml.pss to rust'
+
+   Q: Do you think pep:nom will become widely used?
+   A: Can we not talk about that please?
+
+   Q: What does Richard Stallman think of pep:nom?
+   A: He wrote me a long carefully worded email saying that it is 
+      a complete waste of time. I happily ignored him.
+
+   Q: Why didn't you just write a tiny little sed/awk/perl/python/ruby
+      script to achieve exactly what you have done here in hundreds of 
+      lines?
+   A: Thanks for the vote of confidence...because I probably couldn't or 
+      wouldn't include an enormous FAQ in one of those languages just 
+      to produce a bit of html.
+
+    Q: That seems like a sort of circular, self-referential answer.
+    A: Thankyou.
+
+    Q: But, really, wouldn't a 'sed' script have done the trick?
+    A: Probably, but I wanted to try out pep:nom with this sort of stuff
+       and it was sort of fun, and the script seems to work and I can add 
+       little silly things to it, like superscripts for ordinal numbers and
+       arrow symbols and stuff.
+
+    Q: Does pep:nom have regular expressions?
+    A: What? (splutters) Definitely not! Do you know how much harm regexes
+       have caused over the years? People try to write XML parsers with 
+       them, for pities sake.
+
+    Q: Isn't that the programmers fault? Can't blame the regex for that, surely?
+    A: But it's just too tempting. You know what I mean. It's like trying not 
+       to look at cleavage.
+
+    Q: So...what do you use instead in pep:nom
+    A: Try parsing the pattern properly. It's more verbose, but you get 
+       there in the end and you learn about real grammar and patterns in 
+       the process.
+   
+    Q: Any more questions?
+    A: Not for now thank you.
+
+    Q: I can't see this whole FAQ on one screen.
+    A: Use 'less' or 'more' or something.
+
+     ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+
+   # example letter  
+   "example","eg" {
+     swap; add "
+       ## Text on a line after '##' is ignored (so it wont be 
+       ## included in the letter) and can be used to include comments, notes
+       ## in the letter
+       10 Somewhere St.
+       Squeaktown
+       Tasmania 7000
+       1st Jan 1941
+
+       ## Text in the first paragraph is floated right, but aligned left 
+       ## All remaining text is floated left and aligned left.
+       ## Ordinal numbers like 15th should get superscripted.
+
+       ## You can make a heading with a line that starts with two **
+       ** AN IMPORTANT MESSAGE 
+
+       Dear Friend,
+       why do you not write to me?
+       ## You can use 3 or more hyphens to create a curly divider line
+       ## but it doesn't look so good.
+       -----
+       yours ardently,
+
+       ## include a signature in the output page as follows
+       ## This will include the image file ../img/sophie.png in the html
+       <sig ../img/sophie sig>
+       Sophie Soft 
+       \n";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+
+ push;
+
+ # ----------
+ # 2 token parsing
+ pop; pop; 
+
+ # ignore empty lines at the start of the doc
+ "empty*" {
+   clear; .reparse
+ }
+
+ "empty*empty*" {
+   clear; get; ++; get; --; put;
+   clear; add "empty*"; push; .reparse
+ }
+
+
+ "line*line*","lines*line*" {
+   clear; get; ++; get; --; put;
+   clear; add "lines*"; push; .reparse
+ }
+
+ "line*empty*","lines*empty*" {
+   # count paragraphs, the first and second (the date) should 
+   # be right aligned.
+   clear; add "<p>\n";get; ++; get; --; add "</p>\n"; put; clear;
+   a+; count; "1" {
+     clear; 
+     get; replace "<p>" "<p style='float:right;text-align:left;'>"; 
+     add "<p style='clear:right;'/>\n"; put;
+     clear;
+   }
+   clear; add "par*"; push; .reparse
+ }
+ "par*empty*","pars*empty*" {
+   # count paragraphs, the first and second (the date) should 
+   # be right aligned.
+   clear; get; ++; get; --; put;
+   clear; add "par*"; push; .reparse
+ }
+
+ "par*par*","pars*par*" {
+   clear; get; ++; get; --; put;
+   clear; add "pars*"; push; .reparse
+ }
+
+ (eof) {
+   "par*line*","pars*lines*" {
+     clear; get; ++; get; --; put;
+     clear; add "pars*"; push; .reparse
+   }
+ }
+
+ (eof) {
+   "par*","pars*","line*","lines*" {
+     clear;
+     # now create the whole webpage to make the document look nicer
+     # use a google typewriter font
+
+     add '<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+ <meta charset="utf-8">
+ <title>Flyer</title>
+ <style>
+   body {
+     /* a typewriter font */
+     font-family: "Special Elite", sans-serif; 
+     margin: 10px;
+   }
+   tt {
+     /* This is a pixel game font */
+     font-family: "Press Start 2P"; 
+   }
+   table.flyer {
+     border: 4px solid purple; 
+     border-radius: 30px;    
+     border-collapse: separate; /* Important for radius to work with cells */
+   }
+   table td:nth-child(1) {
+     text-align: right;
+   }
+   table td:nth-child(2) {
+     text-align: left;
+   }
+   table td {
+    padding: 2px 4px;
+    vertical-align:top;
+   }
+
+</style>
+  </head>
+  <body>
+    <!-- page content -->
+
+ ';
+     get;
+     add "\n</body>\n</html>\n"; put; print;
+     quit;
+   }
+   # error
+   stack;
+   add "
+    Type-writer meltdown (olivetti,smith corona,olympia):
+      - parse error in the script
+      - the parse stack was:
+      "; print; clear;
+   unstack; print; clear;
+   add "faq"; put; clear; add "help*"; push; .reparse 
+   quit;
+ }
+ push; push; 
+

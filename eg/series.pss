@@ -1,0 +1,40 @@
+
+#*
+  
+  This script just shows how to parse strings of characters such as 'aaaa'
+  'bbbb'. The code may seem complex compared to the simple task that it does.
+  The script eg/palindrome.pss and eg/palindrome.nospace.pss achieves this
+  list parsing. 
+
+  incomplete!
+
+HISTORY
+
+  25 july 2020
+    begun
+
+TESTING
+
+*#
+
+    begin { mark "top"; add "top*"; push; }
+    [a-z] { put; clear; add "char*"; push; }
+  parse>
+    "char*char*" {
+      clear; ++; get; --; 
+      (==) { 
+        mark "here"; go "top"; put; 
+        go "here"; get; put; clear;      
+        add "series*"; push; .reparse
+      }
+    }
+    "series*char*" {
+      clear; ++; get; --; 
+      mark "here"; go "top"; 
+      (==) { 
+        go "top"; put; --; get; put; clear;      
+        add "series*"; push; .reparse
+      }
+    }
+  ,,,,
+

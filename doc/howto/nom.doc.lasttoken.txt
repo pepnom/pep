@@ -1,0 +1,41 @@
+
+## GET THE LAST TOKEN IN A SEQUENCE
+
+  How to get the last token attribute in a variable number of 
+  tokens.
+
+  Some times we may match, for example, 3 tokens or less but we need 
+  to get the attribute of the last token in the sequence. This document
+  explains how to do it.
+
+  In the code below we know that the last token in the sequence is
+  called list* but we don't know exactly how many tokens are in the 
+  token sequence. It could be 1,2 or 3, with a maximum of 3.
+  So we can use the trick below to get the attribute of the list*
+  token. The trick basically involves to keep pushing until the 
+  workspace is empty and then nom://pop the last token off the 
+  stack
+
+  * get the attribute of the last token
+  ----------+
+    pop;pop;pop;
+    E"list*" {
+      push; !"" { push; !"" { push; } }
+      pop; clear; 
+      # now get the list* token attribute
+      get;
+      # do something with the attribute etc 
+      .reparse
+    }
+    push;push;push;
+  ,,,,
+
+### NOTES
+
+  Remember that three nom://pop commands don't necessarily mean
+  that there are 3 parse tokens in the pep://workspace text buffer.
+  In fact, there may be 0,1,2 or 3 tokens depending on how many 
+  tokens were on the stack before the pop commands. 
+
+  This can be a source of logic errors in scripts because it is 
+  easy to assume that there must be 3 tokens in the workspace.

@@ -1,0 +1,2721 @@
+
+## A work journal about the Pep/Nom system
+
+  A journal of work carried out on pep and nom.
+
+  Here I make notes about work I am carrying out on the [pep] and [nom] system.
+  (September 2019 seems to be the date that I finally had a decent
+  implementation in 'c'). This file shows a long litany of programming work
+  carried out, a lot of it in Colombia probably because time goes slower in
+  that country.
+
+  Comments, suggestions and contributions to *mjb at nomlang.org*
+
+  This document serves as a catch-all for 'to do' lists and lists of 
+  ideas to implement.
+
+### 26 Oct 2025
+  
+  I have been working on a language phrase tutor in dart/flutter and 
+  haven't done any more work on pep or nom. I did have the idea to 
+  create a nom script to generate flutter apps. This would be a parsing 
+  experiment where the input would be a json-like format (maybe with
+  less quotation marks). The output would be a set of dart screens 
+  each reflecting an object in the input format:
+
+  * an example of the input format for the nom to flutter script
+  ----------
+    screen.user-details {
+      text: "Please enter your details below",
+      textbox: ....
+    }
+  ,,,,
+
+  But this is pretty similar to the flutter format any way.
+
+### 13 Oct 2025
+  
+  I haven't been working on the nom system but have been working on the 
+  "four apps" in Dart and Flutter that I mentioned elsewhere. I will probably
+  use nom parsers and renderers in those apps after translating them to 
+  dart.
+
+  My work on nom is currently stopped at the stage of creating the AI 
+  code translation script which was only just begun. It would be handy to 
+  create new nom translation scripts like those at www.nomlang.org/tr/ 
+  Also, I would like to add the machine diagrams to the website. The 
+  /eg/machine.tohtml.pss script I think is reasonably good but it has to
+  be integrated into /eg/text.tohtml.pss (using the same techniques as is 
+  used for code listings).
+
+  Also I would like to create a latex equivalent of /eg/text.tohtml.pss 
+  so that I can actually create a printable book of some of the nom 
+  documentation. I feel like if I am able to do that I will feel like I 
+  have really "achieved" something with pep/nom . Also I could send the 
+  books to people.
+
+### 28 Sept 2025
+
+  I have been having a mini-break from the nomlang system. But the 
+  major tasks that I would like to finish are the AI translation helper
+  script, which I have started by can't remember what I called it.
+  The idea was just to allow easy AI (gemini etc) translations of the 
+  translation scripts in /tr/ so that many other translation languages
+  can be added to nomlang.
+
+  Other important tasks for the advancement of nom and pep.
+
+   - add machine diagrams to the documentation with 
+     /eg/machine.tohtml.pss 
+   - make the nom -> latex translator
+   - make a nom book and print it off.
+
+### 1 Sept 2025
+
+  Idea: A nom self-test script for example
+  -----+
+    clear; add "abc" !"abc" { ...error }
+    unescape "a"; !"abc" { error }
+    # and so on.
+  ,,,,
+
+  This is called /eg/self.test.nom.pss at the moment and is in a very 
+  incipient phase. It has the weakness that the script needs to assume 
+  that some syntax or commands do initially work (such as nom://print
+  and tests and nomsyn://block s etc)
+
+  Idea: a translation template that can be fed into an AI engine to 
+  generate new nom translators. This would be based on the lua/perl
+  or dart code, or which ever is the currently best translation script.
+  And it would allow the automatic generation of the new translation
+  script.
+
+  This translation template consists of 2 parts: the code that needs 
+  to be translated, including the pep machine class and methods and the 
+  main() method with command line switches. This code also includes the 
+  snippets that implement the commands such as nom://add Above each 
+  snipped will be a special comment line, that will allow a nom script
+  or bash script to extract that snippet from the (AI) translated code 
+  and insert it into the template. This first file is the code that will
+  be translated by an AI engine and the code will be based on a good 
+  existing translation script (eg perl or dart).
+
+  The second part is the template itself which contains place-holders for
+  the snippets and the machine class and methods. Then we require some 
+  script or code to combine the two parts to create the translated translator.
+  The second part could just be a nom script but it would have to rely on
+  the order of the snippets.
+
+  Or I could rely on the nom://system command to insert the found translated
+  snippets into the template file 
+
+  * how to parse the translated code with nom
+  ------+
+    # read line by line or word by word
+    # the snippet file will have the format
+    #   (comment syntax in target language) add-snippet:
+    #   (code to add to workspace in target language) eg: this.work += '; get; 
+    # so the previous line indicates what is coming next
+    # Tokens: line* lines* nl* snipname*
+    parse>
+      pop; pop;
+      "line*line*","lines*line*" {
+        # maybe add the nom add command and quotes here ?
+        clear; get; ++; get; --; put;
+        clear; add "lines*"; push; .reparse
+      }
+
+      "nl*text*word*","nl*word*word*" {
+        clear; ++; ++; get; --; --;
+        "snippet:" {
+          replace "-snippet:" ""; put;
+          clear; add "snipname*"; push; .reparse 
+        }
+      }
+      # maybe need a lookahead token? so that we know when to call
+      # the system command to insert into the template file - 
+      # or build the 'sed' command now ?
+      B"snipname*line".!"snipname*line*".!"snipname*lines*" {
+        replace "snipname*lines*" "";  
+        replace "snipname*line*" ""; push;
+        --; 
+        add "sed -i 's/'"; get; add "-snippet:/
+        ++;
+        # build a sed inline replace here? or build the new translator
+        # I think build the new translator here in this script is better.
+        # but the snippets need to appear in the correct order...
+        # transfer the unknown token attrib here ...
+      }
+  ,,,,
+
+  Made an inline interpret switch for the nom.toperl.pss translator.
+
+### 31 August 2025
+
+  Made the interpret() method of /eg/nom.toperl.pss work, with 
+  minimal testing. It is hard to believe that it works but it does.
+
+  The important tasks for pep and nom seem to me to be: todo!
+  - add self script interpretation to /eg/nom.tolua.pss as well as 
+    the self help system. 
+  - debug the perl translation of /eg/palindrome.pss
+  - write a resetMachine() method for /eg/nom.toperl.pss and also the 
+    other scripting languages, because it is handy for running in 
+    interpreter mode. (done for nom.toperl.pss)
+  - fix the segmentation fault bugs in the pep interpreter (done?)
+  - rewrite the nom compiler /compile.pss so that it uses the new 
+    grammar and script organisation from the more recent translation 
+    scripts.
+  - write a better download script and a better way to update the 
+    downloadable files
+  - fix the old translators - or update them
+  - add better self-help, self-translation and self-testing to the 
+    nom translation scripts.
+  - fix class illegal escape chars in the translators
+  - write a text to latex translator
+  - update and rewrite the /eg/toybnf.pss script so that it can 
+    lex as well as parse
+  - write a tr/nom.toforth.pss translator to translate nom scripts
+    into the forth language (with DIY memory management).
+  - write translators for zig, julia, R.
+  - write an example type-checker, initially with no scope and 
+    just a limited number of variables. This could form the basis
+    of a more comprehensive and realistic type-checker which is an
+    important hurdle for nom to be 'taken seriously' in the field of 
+    programming language construction (or compiler construction).
+  - revise the meaning of [:blank:] in pep and the translation scripts.
+    This should mean any white-space character except the "\\n" newline
+    character?. No, I think it is only space and tab. 
+    This may be its most useful definition because it allows
+    easy line-by-line parsing. I think "\\r" can be safely ignored. 
+
+  This maybe a pathway to "finishing" my work on pep/nom, or at least getting
+  to the stage where I feel that this system could be presented at a conference
+  with some level of confidence. None of these tasks seems greatly
+  insurmountable, but rewriting the older translation scripts (such as java,
+  tcl, c, ruby, python) is a time-consuming task, even with the help of a LLM
+  translator such as google gemini.
+
+### 30 August 2025
+
+  Looking at the interpret() method in the /eg/nom.toperl.pss nom -> perl
+  translation script. Fixed a small bug in the input switches.
+  
+  Probably would be good to add the help system to the translation scripts,
+  which could also be used to create 2nd Generation scripts with a help word
+  like /gen2. This would create the parser parser, and maybe run the input
+  script. This system could use the /eg/nom.to.pss script to generate the
+  translator with itself.
+
+### DONE 
+
+  - made the interpret() method work in /tr/nom.toperl.pss This is 
+    pretty remarkable.
+  - changed the nom://quit command to return the number in the accumulator
+    as the exit code. This allows scripts to act as pure 'recognisers' for 
+    patterns and formal languages, meaning that they only return zero if 
+    the input is a valid *sentence* in the given language, or a non-zero
+    value, if not.
+  - seemed to have fixed the nom://restart and .reparse bug in nomsyn://begin
+    blocks for the perl translator.
+  - added the *system* command to the pep interpreter. Need to add to the 
+    translation scripts.
+  - implemented nom://system command ...
+
+### 29 August 2025
+
+  Working on segmentation faults and memory leaks in the pep interpreter.
+  The 'until' code in the interpreter is bad, but that may not be the 
+  only problem. I may have fixed the nom://until code and nom://untiltape
+  code but valgrind still complains about unitialised value at line 560
+  in /object/machine.interp.c in the strcmp() function. I think this is 
+  because for some reason the instruction ii->a.text parameter is not 
+  valid.
+
+### 26 August 2025
+
+  Added the accumulator as an exit code for the nom://quit command to 
+  the pep interpreter. Desultory testing.
+
+### 22 August 2025
+
+  Working on /eg/machine.tohtml.pss which is supposed to create a nice
+  visual (html) representation of the pep machine, tape and (compiled)
+  program listing.
+
+  I am not sure of the point of this massive ongoing coding effort, but 
+  the system still seems potentially revolutionary. 
+
+### 13 August 2025
+
+  Did lots of interesting work on /eg/timeline.tohtml.pss Added self-testing
+  and translation and reformed the grammar.
+
+  The token reduction technique in /eg/timeline.tohtml.pss is really 
+  quite amazingly good. It gets rid of, or 'evaporates' component parse
+  tokens when they are out of context, meaning that they dont form
+  part of the larger pattern. This technique is much more flexible and
+  succinct than previous methods I have used, and will become a 
+  standard parsing technique.
+
+  It also means that there is no reason not to add lots of new parse tokens
+  (eg for punctuation) because it is easy to get rid of them when they
+  are not longer wanted.
+
+  Started to add the self-help, self-translate and self-test to the 
+  script /eg/grammar.en.pss which is an adaptation of /eg/natural.language.pss
+
+  Also, improved the self-testing in /eg/text.tohtml.pss but I am starting to
+  get lots of segmentation faults when I add to this script (which is now
+  pretty big). These are thrown by the *pep* interpreter (which is written
+  in plain 'c' so that is probably not surprising). I need to hunt down
+  what is happening.
+
+  I tried to make file links appear as <code> style. So /eg/index.txt should
+  look use a code font and so should /tr/index.txt 
+  
+### 11 August 2025
+
+  Also adding all the selfs to /eg/maths.parse.pss and it all seems to 
+  work nicely, including creating and opening a pdf from a random 
+  test input with the help word /test.line.pdf
+
+  Added self-translation, self-testing, and self-help to the old script
+  /eg/json.check.pss It seems to be working well and is now probably the 
+  model to copy for adding this to other scripts. With a simple phrase like
+
+  >> pep -f json.check.pss -i /toall 
+
+  We can translate this script to all the available nom translation languages
+  (eg [nom:tr.links] ) But that is not all! We can also reformat to 
+  latex/pdf/html with *pep -f json.check.pss -i /topdf etc* This is possible 
+  because of the script /eg/nom.to.pss and because of the different translation
+  scripts and formatting scripts in the /tr/ and /eg/ folders.
+
+### 10 August 2025
+
+  working on the 'all' method for the script /eg/nom.to.pss which translates
+  a nom script to all languages for which there is a translator. It 
+  appears to be working.
+
+### 9 August 2025
+
+  Some ideas for the system: 
+   - nom://until with multiple end delimiters
+   - a horizontal list format using css for succinct lists 
+   - change the nom home page to "what is nom?" and "what can nom do?"
+   - change example script.
+  
+   
+### 4 August 2025
+
+
+  wrote the script /eg/tocfoot.tohtml.pss which demonstrates adding a 
+  table-of-contents and a footnote list to a document using markers such
+  as [toc] and [foot]. The script is a variant of /eg/toc.tohtml.pss but 
+  is much better because the index lists can be placed anyway in the 
+  document with the markers, and they can also be repeated. The script 
+  uses the same technique of building the lists in nom://mark ed taped cells
+  at the top of the pep://tape . 
+
+  * example to detect ## starting a line
+  ----+
+    read;
+    "#" { 
+      while [#]; B"##" {
+        clear; pop; "nl*" {
+          push; until "\n"; put; 
+          clear; add "heading*"; push; .reparse
+        }
+        # '##' doesnt start the line, so its just a normal word.
+        push; whilenot [:space:]; put;
+        clear; add "word*"; push; .reparse
+      }
+    }
+  ,,,,
+
+  The pep interpreter still throws the occasional segmentation fault
+  when adding stuff to the /eg/text.tohtml.pss file I wonder if that has 
+  to do with program size limits? Because that script is pretty big 
+  now.
+  
+### 3 August 2025
+
+  I wrote the script /eg/nom.to.pss based on the code in 
+  /eg/xml.parse.pss . I could also make this a testing script as well
+  using the existing code. This script responds to very simple sentences
+  like 'translate eg.pss to ruby' or 'to ruby eg.pss'
+
+  The advantage of having this script, is that I can now include it in 
+  the help system of all other scripts in order to provide 'self-translation'
+
+  Thinking about the etymologies idea for the text to html formatter, but I
+  would like to style the pop up to display the etymologies in 2 columns.
+
+   Ideas and things to do.
+     - add multiple end delimiters for nom://until 
+       * example
+       >> until ")","\n";
+       This is useful when the end delimiter of a pattern is more 
+       that one character. The nom://while command can do that but 
+       then you have to nom://read the extra character and consume it.
+       This introduces problems with *reading* on EOF (which will 
+       exit silently and cause considerable head-scratching when you 
+       are trying to debug).
+     - write the nom://system command. This needs to be put into the 
+       pep interpreter and all the translators
+     - fix the perl translator /tr/nom.toperl.pss so that it can become
+       an interpreter and then use that code as a model for ruby, python
+       etc.
+     
+### 2 August 2025
+ 
+ Added a ligature for ae words like aeroplane or gynaecology.
+ archaeology,and julius caesar.
+
+ Experimenting with substituting ligatures for character sequences in 
+ /eg/text.tohtml.pss not for any practical purpose I can think of.
+
+ * bandjalang words with the ng character
+ ------
+    "yolngu" "yolŋu" this is a phonetic spelling for the australian 
+      language which is used in some texts..and Bandjalang.
+    yuŋga - to go, to walk
+    jaŋga - to sing
+    muŋga - to sleep
+    ŋuŋgi - to sit
+    ŋali - we (dual, including the person being spoken to)
+    ŋa:wih - a long way
+    ŋari - a person, a man
+    ŋami - a mother
+ ,,,,
+
+ * some greek etymologies
+ ----
+    Academy" "Ακαδημία"
+   "Acoustics" "Ακουστική"
+   "Acrobat" "Ακροβάτης"
+   "Alphabet" "Αλφάβητο"
+   "Angel" "Άγγελος"
+   "Atmosphere" "Ατμόσφαιρα"
+   "Catastrophe" "Καταστροφή"
+   "Chaos" "Χάος"
+   "Climate" "Κλίμα"
+   "Cosmos" "Κόσμος"
+   "Democracy" "Δημοκρατία"
+   "Ecstasy" "Έκσταση"
+   "Economy" "Οικονομία"
+   "Genesis" "Γένεση"
+   "Horizon" "Ορίζοντας"
+   "Myth" "Μύθος"
+   "Planet" "Πλανήτης"
+   "Rhythm" "Ρυθμός"
+   "Sphere" "Σφαίρα"
+   "Telephone" "Τηλέφωνο"
+ ,,,,
+
+ * umlaut or diaresis words in English
+ -------
+  "cooperate" "coöperate"
+  "naivete" "naïveté"
+  "reelect" "reëlect"
+  "aerie" "aërie"
+  "Noel" "Noël"
+  "Chloe" "Chloë"
+  "Zoe" "Zoë"
+  "Moeller" "Moëller"
+  "Curacao" "Curaçao"
+
+  Umlaut (in borrowed German words):
+  "uber" "über"
+  "doppelganger" "doppelgänger"
+  "fuhrer" "Führer"
+  "gemutlichkeit" "Gemütlichkeit"
+  "schadenfreude" "Schadenfreude"
+
+  ,,,,
+
+  * ligature words for text.tohtml.pss
+  ------
+    ﬁ (f + i)
+    ﬀ (f + f):
+
+    unusual spellings
+    "fairy" "faerie"
+    "fairy" "færie"
+    "eon" "æon"
+    "aetiology" "ætiology"
+    "encyclopaedia" "encyclopædia"
+    "archaeology" "archæology"
+    "mediaeval" "mediæval"
+    "primaeval" "primæval"
+    "caesura" "cæsura"
+    "Caesarean" "Cæsarean"
+    "anaemia" "anæmia"
+    # just the base of the word
+    "anaemi" "anæmi"
+    "faec" "fæc"
+    "faec" "fæc"
+    "diaeresis" "diæresis"
+    "diaresis" "diæresis"
+    "dieresis" "diæresis"
+    "leucaemia" "leucæmia"
+    "paediatrics" "pædiatrics"
+    "orthopaedic" "orthopædic"
+
+    œ Ligature Words:
+
+    "foetus" "fœtus"
+    "foetid" "fœtid"
+    "fetid" "fœtid"
+    "gynaecology" "gynæcology"
+    "homoeopathy" "homœopathy"
+    "oesophagus" "œsophagus"
+    # just the root of the word
+    "oesophag" "œsophag"
+    "Oedipus" "Œdipus"
+    "diarrhoea" "diarrhœa"
+    "oeconomics" "œconomics"
+    "manoeuvre" "manœuvre"
+    "phoenix" "phœnix"
+    "amoeba" "amœba"
+
+  ,,,,
+
+  ideas:
+    - style the title attribute *tool-tips* for etymologies and cognate
+      words. Greek, latin, arabic, indonesian, spanish, portuguese.
+    - these etymologies could be got from an external text file with 
+      the nom://system command (1 aug 2025: not implemented).
+    - what ligatures can be used in English words, and what unusual
+      spellings.
+    - make a "drop-cap" function for /eg/text.tohtml.pss so that the 
+      pattern <P> at the start of a line will be converted to a 
+      drop capital (within the paragraph text).
+    - an example script showing footnotes and table of contents, and 
+      showing how to include one or more [TOC] and [FOOT] markers in the 
+      source text.
+    - make pep -I output the machine state with program to a text file
+      in the same way as now, but with no colours. This can be used as 
+      input for the generated booklet about pep/nom
+    - write /eg/machine.tohtml.pss which converts a plain text 
+      representation of the pep,nom machine (with a part program list)
+      into html, or postscript or latex etc or EPUB.
+      * pep parsing with the xml.parse.pss script 
+      ----- 
+        Partial Program Listing (size:1390 ip:106 cap:20000)
+        103: testclass [class:alnum]
+        104: jumpfalse [int:7]
+        105:     while [class:alnum]
+        106>       put
+        107:     clear
+        108:       add [text:name*]
+       --------- Machine State -----------
+       (Buff:16/39 +r:0) Stack[starttag*</*] Work[book] Peep[>]
+       Acc:0 Flag:TRUE Esc:\ Delim:* Chars:12 Lines:1
+       --------- Tape --------------------
+       Tape Size: 500
+          4/10 )  0  [book]
+          4/10 )  1  [book]
+          0/10 )  2> []
+          0/10 )  3  []
+      ,,,,
+
+   **Ideas for a [TOC] and [FOOT] script** : This script would be a 
+   development of /eg/toc.tohtml.pss which creates an html table of 
+   contents from a plain text document. The script would be called 
+   /eg/tocfoot.tohtml.pss and would allow the inclusion of one or more
+   [TOC] and [FOOT] markers in the source text. These markers would be converted 
+   to a table of contents and a list of footnotes respectively.
+   
+   * Here is a sketch of the script
+   -------+
+     # name and reserve 2 cells at the top of the tape for 
+     # the table of contents and footnote list.
+     begin { mark "toc"; ++; mark "foot"; ++; }
+     whilenot [:space:]; 
+     !"" { 
+       put; lower;
+       "[toc]" { clear; add "toc*"; push; .reparse }
+       "[foot]" { clear; add "foot*"; push; .reparse }
+       clear; add "word*"; push; .reparse
+     }
+     # .... here actually build the toc with headings and the 
+     # .... foot with footnotes.
+     while [:space:]; clear; 
+     parse>
+     pop; pop;
+     "word*word*","text*word*" {
+       clear; get; add " "; ++; get; --; put;
+       clear; add "text*"; push; reparse
+     }
+     # this code should allow multiple table-of-contents in one
+     # document.
+     (eof) {
+       "text*toc*" {
+         clear; get; mark "here"; go "toc"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+       "toc*text*" { 
+         clear; ++; get; --; mark "here"; go "toc"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+       "text*foot*" {
+         clear; get; mark "here"; go "foot"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+       "foot*text*" { 
+         clear; ++; get; --; mark "here"; go "foot"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+       "foot*toc*" { 
+         clear; mark "here"; go "foot"; get; go "toc"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+       "toc*foot*" { 
+         clear; mark "here"; go "toc"; get; go "foot"; get; go "here"; put;
+         clear; add "text*"; push; .reparse
+       }
+     }
+     push; push;
+   ,,,,
+
+
+### 1 August 2025
+
+  Working on /eg/timeline.tohtml.pss which seems to work without any
+  huge amount of testing. It can also test itself with:
+
+  * test the timeline script
+  >> pep -f timeline.tohtml.pss -i /test | bash
+
+  But this script doesnt have any self-translation facilities (unlike
+  the xml.parse.pss script). I wrote a separate script that 
+  translates scripts to different languages (based on the code in 
+  /eg/xml.parse.pss ) and then calls that from within the script help-words
+  This is called /eg/script.translation.pss
+
+### 31 July 2025
+
+  script ideas
+
+    - the machine.todiagram script for displaying the machine state
+      with a program
+    - timeline for formatting a timeline: /eg/timeline.tohtml.pss
+    - index.parser for showing how to parse a table of contents or
+      index This is called /eg/toc.pss and seems to work. 
+
+  Also, I wrote /eg/toc.tohtml.pss which converts a list of headings
+  into a html table of contents with links. This is somewhat useful and 
+  it contradicts what I have assumed for a few years: That if I use
+  the 1st few cells of the tape as a kind of buffer array for saving 
+  values, then the normal script operation will interfer with, or 
+  overwrite those cells.
+
+  But this, I think, *isnt true* because basically, the nom:pop and 
+  nom:push commands are designed to do nothing on an empty pep:stack
+  and an empty pep:workspace buffer respectively. This is important in
+  the context of writing a *type-checking* parser, where the parser
+  is trying to verify that a variable is being assigned the correct
+  type of variable for example
+    >> x = "hello";
+  Now if 'x' has been defined as an integer, our language may wish to 
+  complain bitterly about trying to sausage-in a piece of text (string)
+  into our 32/64 (whatever) bit piece of memory. 
+
+  The key to this, when using pep/nom as a parser, is maybe to save the type of
+  each variable in the top tape cells. However there are some significant
+  additional problems: *scope* (which maybe doable with some kind of dot
+  notation) and also the fact we have no idea how many variables need to be
+  checked (unless we do 2 passes) and therefore don't know how many tape-cells
+  to allocate for this purpose. 
+
+### 28 July 2025
+
+  the /to<lang> word seems to work for rust/dart/go/java and compiles, and 
+  the translated script can be tested with /testone<lang>. Also with
+  lua/ruby.
+
+  I have been working on the /testone <lang> help word in the 
+  /eg/xml.parse.pss (limited) xml recogniser. This word, combined with
+  the /to <lang> help word (which translates the script to another language)
+  tests the script, or a translation of the script with some sample xml
+  input. The system seems very useful and transferable to other scripts.
+  It is probably even worth-while extracting it to a separate nom script
+  which I will call something like /eg/discuss.nom.pss
+
+  The discuss.nom.pss script is supposed to be a "Tiny Language Model"
+  (a TLM) which can receive phrases like 
+  
+  - 'translate the file xml.parse.pss into ruby' 
+  - 'translate that to python'
+  - 'test the translation'
+  - 'test it'
+
+  (Actually the script /eg/nom.to.pss can do this but not 
+   with the 'it' words, at least not yet)
+   
+  So, the TLM, powered by pep/nom will accept simple English sentences
+  and parse them into actions or queries. Words like 'it' 'that' 'this'
+  require some *state* to be saved and this will be done by nom using 
+  the nom://system command (or maybe read!) which will execute a system
+  command and read the result of the command into the workspace.
+
+### 27 July 2025
+ 
+  Fixed a couple of bugs in /eg/xml.parse.pss
+
+  I seem to have fixed the ".reparse with begin block" bug. But only for the
+  lua and rust translators.  Now I have to fix it for the other translators.
+  My help system in the scripts often uses a .reparse within a begin block to
+  trigger the help system when an empty document is found, or an invalid first
+  character.
+
+### 26 July 2025
+
+  Discovered that the nom://reparse command does not work within the begin
+  blocks for some translators. This is because .reparse either
+  uses a goto or a break; or continue; command. The break; command won't work
+  because the begin {} block is completely separate to the lex and parse
+  blocks.
+
+### 25 July 2025
+
+  found bugs in /tr/nom.tolua.pss and /tr/nom.torust.pss when translating
+  /eg/xml.parse.pss and /eg/text.tohtml.pss This was caused by 
+  the nom://restart and nom://reparse commands in a nomsyn://begin block
+
+  Scripts could also test themselves.
+
+### 24 July 2025
+
+  done:
+    - /eg/nom.to.pss a nom script that accepts instructions like 
+      "translate file.pss to ruby" and will carry out the instruction or 
+      else just print out the necessary commands.
+    - /eg/timeline.tohtml.pss the same but for an historical timeline.(done)
+    - not much.
+
+  Some ideas: 
+    - read! or nom://system command which is a new command that reads a 
+      shell process into the workspace. (not implemented)
+    - a 'BB' and 'EE' test: test if the workspace ends with or start with 
+      the current pep://tape cell.
+    - self translation: in the help system in any script (implemented by the 
+      help* token) it is possible to put a /to<lang> help word that will 
+      translate the current script into another language. (DONE)
+    - faq.pss translate a simple FAQ text format into html
+    - text.toman.pss create a man page for a document
+    - /toprint helpword to create a printable version of the script.
+
+  I made some progress adding self translation to the /eg/text.tohtml.pss
+  This seems very promising and could be added to any significant script.
+
+  I seem to have abandoned the ideas and todo files of this documentation and
+  will probably just put everything here.
+
+### 23 July 2025
+
+  Added the beginnings of a help system to /eg/text.tohtml.pss 
+  Had the idea of a TLM a "Tiny Language Model", which is just a 
+  nom script which parses simple commands and then possibly executes
+  it. Also, a "random" command, which selects a random section of text
+  between 2 delimiters.
+
+### 22 July 2025
+
+  I like the idea of implementing help/error tokens in even simple
+  scripts. These help systems can also be triggered by keywords at the 
+  start of the 'document', possibly wrapped in comment syntax for the 
+  output language. I will try to add such a help system to 
+  /eg/text.tohtml.pss
+
+### 21 July 2025
+
+  Added some ideas to the /eg/natural.language.pss script and also
+  add an example phrase grammar to the comment section. 
+  
+  I had the idea that a simple natural language parser could be used to
+  generate frequently used bash commands such as "reducing the size of an
+  image", "making an image black and white", and so forth. But this would
+  probably have to be combined with some repl loop written in dart/rust/ruby or
+  anything else to actually execute the commands. So the nom script would 
+  parse the input and generate the bash command or commands, and then the 
+  script written in ruby would actually execute the commands. The ruby 
+  script could also handle reference words like "that" or "this" which would 
+  refer to filenames that have previously been mentioned. This requires
+  remembering state in a way that would be difficult, if not impossible in 
+  pep/nom.
+  
+   * some example commands
+   ------
+     choose an image to edit
+     choose image
+     show it's dimensions
+     show dimensions
+     shrink it by half. Shrink by 50% 
+     make this black and white.
+   ,,,,
+
+   This idea came from a simpler one: given a command like "translate to ruby"
+   a nom script will generate the bash commands necessary to translate a 
+   nom script into the ruby language. From there is seems an easy step to 
+   actually execute the commands...
+
+### 20 July 2025
+
+  revised the /eg/flyer.typewriter.tohtml.pss script to include an
+  error* and help* token. Thought about presenting the idea of pep/nom
+  at some language conference. O'reilly's "Emerging Languages" Conference
+  would have been ideal (even though nom is not emerging anywhere) but 
+  that conference is no longer. 
+
+### 18 July 2025
+
+  I wrote a simple letter-to-html formatting script called
+  /eg/letter.typewriter.tohtml.pss which may be interesting because it 
+  includes its own help system with documentation. This seems a nice 
+  way for the script to be "self-documenting".
+
+### 13 July 2025
+
+  I haven't been doing any work on the pep:nom system except to write a 
+  somewhat dodgy script at /eg/script.tag.pss which is supposed to remove 
+  html <script> tags from an html document. It could be described (charitably)
+  as "naive". Also, it alerted me to the problem of trying to use 
+  the nom://until command in a case-insensitive manner: i.e. it is not 
+  possible and makes the *until* command not very useful for case 
+  insensitive language patterns.
+
+  I have been looking again at Dart/Flutter with the idea to create a kind of
+  "sociedad" in the spanish sense of the word. Or a "company" of Colombian
+  programmers for the creation of apps.  2 app ideas that seem useful to me
+  are: A language learning app with an emphasis on listening to phrases and
+  only viewing the transcription and translation occasionally. So the app would
+  be "audio-biased" and would implement several of my ideas for language
+  learning.  The other app idea is "LocalPaper" which is a kind of simple-ish
+  blog and writing app which would allow the creation of a local paper or
+  newsheet. This would include the usual sort of blog or writing functions but
+  also a way to produce a printable (pdf/ps) newsheet that could be put in
+  local cafes. The newsheet could contain local events, local education
+  courses, local classifieds and some news and articles.  The local paper could
+  also be published to the web, if desired so the rendering engine would
+  support html and pdf/ps/LaTeX
+
+  I like these ideas. The local paper app could include a compiled 
+  pep:nom script which would render to html and pdf/ps (via latex 
+  possibly).
+
+### 15 June 2025
+
+  NOTE: I abandoned the 'flag' register idea, because I can just use 
+  a nom://mark ed tape cell as the 'flag' and then access it with
+  nom://mark 'here'; nom://go 'flag'; nom://get ; nom://go 'here' ; 
+  etc etc. This works fine in /eg/toc.tohtml.pss and in fact I don't 
+  know why I thought it wasnt going to work. The top pep://tape cell is 
+  protected from being overwritten after nom://pop by the design of 
+  the *pop* command.
+
+  it would be nice for text.tohtml.pss to be able to include a float
+  right map, or map-tile image. I could use the same format as for 
+  images but the image would be an OSM map.
+
+  **NO gave up this idea, see above**
+
+  Also, I think a "flag" register would be good, which could be 
+  used for states like "in.comment" etc. It could work like this
+
+  * example flag register use
+  -----+
+    clear; add "in.comment"; flag; clear;
+    # now check the text in the flag register
+    clear; tell; "in.comment" {
+      clear; 
+      # do parsing specific to comment blocks
+    }
+  ,,,,,
+
+  At the moment I use the accumulator register with the nom://zero
+  etc commands. But the accumulator was really designed for 
+  counting stuff, not keeping track of parsing state.
+
+### 14 June 2025
+
+  I think I will try to read some compiler books to give me some 
+  context for my work on pep/nom: Here is the list from 
+  Bob Nystrom's twitter post
+
+    - The Art of the Metaobject protocol: Gregor Kiczales et al
+    - Structure and Interpretation of Computer Programs: 
+       Harold Abelson and Gerald Jay Sussman
+    - The Ruby Programming Language: Flanagan and Matsumoto
+    - The Design and Evolution of C++: Stroustrup
+    - Build your own Lisp: Holden
+    - Algorithms + Data Structures = Programs: Wirth
+    - Compilers: Aho et al
+    - Writing an Interpreter in Go: Thorsten Ball
+    - Writing Compilers and Interpreters: Ronald Mak
+    - Lisp in Small Pieces: Queinecc
+    - Programming Language Pragramatics: Scott
+    - Engineering a Compiler: Cooper and Torczon
+    - Types and Programming Languages: Pierce
+    - the Garbage Collection Handbook: Jones, Hosking et al.
+
+### 25 May 2025
+
+  Just started working on the nom --> zig translator. I used an automatic
+  translation from google gemini to translate the rust machine struct and
+  methods into zig. I am not sure how accurate it will be. Zig could be 
+  a quite big learning curve because all memory is explicitly allocated
+  and deallocated. I still haven't fixed the interpret() method in 
+  the nom ==> perl compiler but will get round to it at some stage. 
+  The Ruby and Python translators could also have an interpret() method
+  because, apparently, they can both execute a string as code.
+
+### 21 May 2025
+
+  fixed the escape and unescape methods in /tr/nom.tolua.pss /tr/nom.torust.pss
+  and /tr/nom.toperl.pss so that the escape character is escaped properly.
+  Also, in /object/machine.interp.c and /object/machine.methods.c
+
+### 20 May 2025
+
+  rewrote the escapeChar() method in the perl translator to fix a 
+  bug where the escape character (by default \\) was not being escaped
+  properly. This code needs to go into all the translators and 
+  the interpreter and also probably into unescapeChar method.
+
+### 18 May 2025
+
+  All first generation tests in the perl translator are now working.
+  But this script probably just works on code points not grapheme 
+  clusters using utf8
+
+### 17 May 2025
+
+  working on the perl translator /tr/dev.nom.toperl.pss or /tr/nom.toperl.pss
+  which is based on the rust one.
+
+### 12 May 2025
+
+  The rust translator is now working well with first and second generation
+  tests all working as well as being able to translate big scripts 
+  in the "example" /eg/ folder. The translator is still a unicode 
+  *code-point* translator (not grapheme clusters) so that is a limitation,
+  but converting to grapheme clusters is not a big job using a rust
+  crate (external library).
+ 
+  I am always surprised when second generation tests actually work, but
+  they do, and it always seems remarkable.
+
+  Also, I discovered that the google gemini AI engine can actually 
+  translate the pep machine very well into other languages if it is 
+  given a good script to work with (eg the rust translator) and I will
+  use it to speed up the work of translating to other languages like 
+  perl, haskell, swift, R, julia, and lisp.
+
+### 4 May 2025
+
+  Working on the rust translator /tr/nom.torust.pss I am writing it as a
+  unicode code-point parser. If I get it working well I will write another
+  version for unicode grapheme clusters. The rust version has taken a bit more
+  time because the compiler is strict and there is lots of "illegal borrowing"
+  marlarkey. 
+
+### 2 May 2025
+
+  Adding some utf8 support to the /tr/nom.tolua.pss translator.
+  Also, the "lua reference manual" https://www.lua.org/manual/5.1/manual.html#7.1
+  has a complete ebnf syntax for the language which may be interesting
+  for me to try to implement in nom.
+
+### 1 May 2025
+
+  Some debugging of the lua translation script which seems to be 
+  working quite well.
+
+### 30 april 2025
+  
+  /tr/nom.tolua.pss is working for tests in /tr/translate.test.txt
+
+### 27 april 2025
+
+  - Added links to translation script documents (but not all) in 
+   "[nom:translation.links]" in the /eg/text.tohtml.pss script
+    which should render like this [nom:translation.links] 
+  - read about the LLVM system and considered using it as a 
+    target for nom scripts. I should at least try to compile the 
+    c code with **clang** so that it is compatible with LLVM
+  
+### 26 april 2025
+
+  Wrote /eg/text.snippet.tohtml.pss which can work with /eg/nom.tohtml.pss
+  to render a nom script into html with the doc header rendered as a 
+  document in the same format as these pages. also wrote a bash
+  function which assembles this into a page, which is in the 
+  blog.sh script 
+
+  I just realised that a simple way to ensure there are at least 
+  2 parse tokens in the workspace is:
+  >> E"*word*",E"*text*" {...}
+
+  The leading "*" in the ends-with test means that there must be 
+  at least 2 tokens.
+
+### 24 april 2025
+
+  Doing some work on the documents in /doc/ Added the "echar" command
+  to the machine, but not tested and not added to nomsf://asm.pp 
+  (but has been added to nomsf://compile.pss ). Fixed very minor 
+  issues in /eg/text.tohtml.pss with quotes and emphasised text.
+
+  need to check the nom://stack and nom://unstack commands in the 
+  file /object/machine.interp.c to make sure that they update the 
+  tape pointer. 
+
+### 20 april 2025
+  
+  I have been editing some documents in the /doc/ folder and created
+  a system for including random quotes at the beginning of each page.
+  This uses the /eg/quotes.tolua.html.pss which extracts all the 
+  quotes from /doc/misc.quotes.txt and creates a lua "table" (associative
+  array) and a short lua script to get one random quote from the 
+  array. The blog.rq function in /webdev/copy.blog.sh will make this 
+  lua script from the quote file. 
+
+  This is a pretty convoluted way to achieve this, but it seems to 
+  work.
+
+### 16 april 2025
+
+  The lua translator is getting better but I have some difficulties
+  with how to read or consume the input-stream/file/string etc. 
+  I have been splitting files into lines but it is probably better 
+  just to read the whole file into a variable and then read the
+  input buffer 'character' by 'character'. One problem is that there 
+  is no such thing as a character, at least in the view of unicode.
+  A unicode character can consist of a sequence of codepoints which
+  is a base character or glyph combined with 'combining marks' (diacritics
+  emoji characters etc).
+
+### 14 april 2025
+
+  The script /eg/brainfork.c.pss seems to be working well with 
+  multiple commands reduced to one with parsing techniques and 
+  using the accumulator register. 'Brainfork' is my name for the 
+  brainf**k esoteric language.
+
+### 13 april 2025
+
+  May have finally fixed the escape/unescape bug in
+  nomsf://object/machine.interp.c where a character was escaped by the
+  nom://escape command even when it was already escaped.  Also, updated in
+  nomsf://object/machine.methods.c but not tested.  Also added mark; and go;
+  syntax to machine.interp.c without testing need to add the same to
+  machine.methods.c
+
+### 12 april 2025
+
+  having another look at /eg/brainfork.c.pss which is an experiment in
+  reducing multiple brainfork commands to one. Eg *+++----*
+  can become *-* or *>>>><<* can become *>>* . This is a simple 
+  optimisation in the code production phase of the nom script.
+  I use list tokens to do this but it complicates the script grammar
+  because you have to lookahead to see what the next token is.
+
+### 11 april 2025
+  
+  still working on the lua translator, simple scripts working. 
+  Decided I need a 'reserve' command for the machine which will reserve
+  a section at the top of the pep://tape array for use as a kind
+  of symbol table. Type checking, scope, type inference etc seems to 
+  be the last big hurdle that nom has in order to be a fully fledged
+  compiler compiler or parser parser.
+
+### 9 april 2025
+
+  Starting to work on the nom --> lua translator . I built and installed
+  lua from source which was easy and fast. At the moment the 
+  dart translator seems to work well, but still has a bug with the 
+  output when parsing a string. Some dart StringBuffer issue.
+
+### 5 april 2025
+
+  All first generation tests are working with /eg/nom.todart.pss 
+  from stdin input. I would like to allow file and string input and 
+  output as well, to make the script useable from within other 
+  dart code. I will start to work on /eg/dev.nom.torust.pss at least 
+  to try to get something to compile.
+
+### 2 april 2025
+ 
+  Working on the dart translator nom.todart.pss or dev.nom.todart.pss
+  Adding unicode categories,scripts, blocks to RegExp matching 
+  with nom://while nom://whilenot and class tests 
+  eg: [:Greek:] will match greek letters. Dart seems to support all 
+  categories, scripts etc. But do they clash?
+
+### 31 mar 2025
+
+  Have been struggling with getting some rust code to compile in
+  the /eg/nom.torust.pss Will probably have to comment out a lot of 
+  things.
+
+
+### 29 mar 2025
+
+  Doing work on the rust translator /tr/nom.torust.pss
+
+### 28 mar 2025
+
+  Looking again at the remarkable work of "fabrice bellard" https://bellard.org
+  and his refreshingly simple html. Life is too short for html and css. But
+  I do it anyway.
+
+  Had the idea that nom could also be used for binary files. Matching 
+  binary patterns it also useful. For example UTF8 text.
+
+  Also, I need to rethink the whole approach to Unicode and grapheme
+  clusters, which are sets of Unicode code points that amalgamate to
+  form one visible character (eg certain letters with accents). 
+  This is a tricky issue. Nom should normally nom://read one cluster at 
+  a time, *not* one Unicode code point at a time. But there may be 
+  rare cases where we want to get one Unicode char at a time.
+
+  So the default behaviour of nom://read should be read one cluster
+  like the dart characters api. But there could be a variant read command 
+  that reads one Unicode character (Rune?) and also maybe 
+  one byte char. The byte-read command could be used for parsing
+  binary files....
+
+  Have been reading about PEG parsing expression grammars which seems
+  to be what nom is good at parsing, with some caveats.
+  Playing with more formats in /eg/text.tohtml.pss eg No. 123
+  and maybe horizontal bar-charts. which could just go in lists.But 
+  you probably need a table to line up the starts of the bars.
+
+  * example bar-chart format
+  ------
+    - [bar:nom:42/100:%]
+    - [bar:lua:12/100:%]
+    - [bar:wren:54/100:%]
+  ,,,,
+
+  The % is a unit name and the 42/100 is a bar width. This number 
+  should be printed inside the bar at the end. "nom" "lua" etc are 
+  the labels printed before the bar. Need to calculate width in 
+  *em* or *ex* as below. But percent is relative to container.
+
+  * css calc expressions
+  -------
+    /* calc(expression) */
+    calc(100% - 80px)
+
+    /* Expression with a CSS function */
+    calc(100px * sin(pi / 2))
+
+    /* Expression containing a variable */
+    calc(var(--hue) + 180)
+
+    /* Expression with color channels in relative colors */
+    lch(from aquamarine l c calc(h + 180))
+  ,,,,,
+
+  * example html for a barchar from wren.io
+  -----
+    <table class="chart">
+      <tr>
+        <th>wren</th><td>
+        <div class="chart-bar wren" style="width: 14%;">0.12s&nbsp;</div></td>
+      </tr>
+      <tr>
+        <th>luajit (-joff)</th><td>
+        <div class="chart-bar" style="width: 18%;">0.16s&nbsp;</div></td>
+      </tr>
+      <tr>
+        <th>ruby</th><td>
+        <div class="chart-bar" style="width: 23%;">0.20s&nbsp;</div></td>
+      </tr>
+      <tr>
+        <th>python3</th><td>
+        <div class="chart-bar" style="width: 91%;">0.78s&nbsp;</div></td>
+      </tr>
+    </table>
+   ,,,,,
+
+### 27 mar 2025
+
+  still working on the /eg/nom.todart.pss which is now working with
+  about 3 commands and <stdin>  Added No. abbrevation to text.tohtml
+  
+### 21 mar 2025
+ 
+  The script /eg/nom.tolatex.pss is now working more or less ok. 
+  The colours are not great, but that is easy to change. I invented
+  a new and interesting parsing technique for escaping special [latex]
+  characters and styling each component of a [nom] script.
+
+  Added some abbreviations to vim about translation to go, and 
+  also a shortcut in /eg/text.tohtml.pss for links to translation scripts 
+  like this [nom:translation.links] and also a list 
+  like this [nom:translation.list]
+
+### 20 mar 2025
+
+  working on the /eg/nom.tolatex.pss script which has proved tricky
+  because I couldn't use the listing package nor the minted package
+  for code listings so I had to write my own formatter. which seems to
+  be working.
+
+  The script /eg/nom.tolatex.notunicode.pss does print nice [nom]
+  code listings but can't handle any unicode characters in the 
+  source, which is silly.
+
+### 19 mar 2025
+
+  Finished the script /eg/nom.tohtml.pss which prints colourised 
+  [nom] in [html] using <span> tags. Also wrote /eg/nom.snippet.tohtml.pss
+  which only pretty prints withing <code class='nom-lang'> tags.
+  This allows it to work with /eg/text.tohtml.pss
+
+  I reformatted most of the documentation with the new pretty printed
+  [nom] example code. Also just plain file names that start with 
+  */* get linked in html now. Also made a new codeblock syntax
+  starting with ---+ and ending ,,, which is specifically for nom 
+  code.
+
+### 18 mar 2025
+
+  Added unordered lists to eg/text.tohtml.pss . The parsing was sort of 
+  bizarre because there is no start token for an unordered list in my
+  quirky plain-text document "format" /eg/text.tohtml.format.html 
+  Lists are just started with a list-item indicator which is a dash word
+  '-' which starts a line. Lists are terminated with a blank line or 
+  the end of the document, so I reduce the lists in reverse: that is,
+  when I find the end of the list I add an endlist* token and then
+  reduce all the item*text*endlist* sequences and keep "reparsing"
+  nom://reparse until there are none left. 
+
+  I was sort of surprised that it works, but it seems to.
+
+  - More things to do with lists:
+  - Add a definition list. I think that I can live without 
+    *ordered* lists, but def lists are pretty handy.
+  - Test the list rendering code in file:///eg/text.tohtml.pss
+  - Try to find bugs in the renderer, like test empty items
+  - use the lists to make documents nicer and clearer,
+    not just for no reason.
+  - Add a *caption* element to the list so that there is a 
+    kind of "heading". But this might required some kind of start
+    token. 
+  - Or I could let the list* token live for a bit longer and 
+    parse *starline*list* sequences, just like I do for block
+    quotations.
+
+### 17 Mar 2025
+
+ * image format reminder, width 4 is 20em ie n*5em
+ >> <:0:4:>>:/image/name.gif> or <name.gif>
+
+ Added equationset* token to maths.tolatex.pss This script is producing 
+ really nice output from simple ascii arithmetic expressions (Unicode
+ symbolic expressions should work when the [nom] script is translated
+ to go or [java] etc. add more [latex] symbols like greek letters.
+ Still dont have derivative and partial derivative symbols.
+ 
+ * An example of using eg/maths.tolatex.pss with the quadratic equation
+ ------
+   pep -f eg/maths.tolatex.pss \
+       -i 'x == (-b :plusminus sqrt(b^2-4*a*c))/(2*a);' > test.tex
+   pdflatex test.tex; 
+   # see below for rendering
+ ,,,,
+
+ <:r:3:cc:/image/maths/formula.quadratic.png>
+
+ * another example 
+ ------
+   pep -f eg/maths.tolatex.pss \
+       -i ' cuberoot(:Theta + x/(x+1))/(x^-0.5 + 1/2) '
+   # see below for rendering with pdflatex
+ ,,,,
+
+ <:r:2:cc:/image/maths/formula.cuberoot.png>
+
+ made abbreviation code in eg/nom.syntax.reference.pss much better. also
+ added a help system (but still need to write it)
+
+ Made a template script eg/nom.template.pss which has an error and help
+ token and a parse-stack watch and some common parsing code
+ 
+### 16 Mar 2025
+
+  Looking at making some html colourized output. The css is in 
+  /site.blog.css I inspected elements at the wren.io site for ideas.
+
+  Added comments in documents (lines that start with #: ) in 
+  eg/text.tohtml.pss
+
+### 15 mar 2025 (Saturday)
+
+  Yesterday, I created eg/maths.to.latex.pss which transforms 
+  formulas like *x:=sqrt(x^2+y^2)/(2*x^-1.23) * into really nice 
+  [latex] formatted mathematics. I am impressed with my own 
+  work. It works.
+
+  I also invented the following lookahead rule which does a lot
+  of work. This is a *positive* grammar lookahead rule, because 
+  it reduces a set of token sequence if any of the sequences 
+  *IS* followed by ) or , or ; Because it is a positive rule I 
+  can combine several sequences into one rule. 
+
+  * the equivalent xbnf (expr* is 'e' here for brevity)
+  ---------
+    e := e op.compare e | e op.and e | e op.or e 
+         (LOOKAHEAD 1: ')' | ',' | ';' ) 
+  ,,,,
+
+  The bracketed expression means only perform the reductions if
+  the following parse token - in this case a 'literal' value - is
+  one of the 3 alternatives.
+
+  * an advanced "positive" look ahead rule
+  -------+
+  # when surrounded by brackets or terminated with ; or ,
+  # eg: (x^2 != y) or x && y, 
+  B"expr*op.compare*expr*",B"expr*op.and*expr*",B"expr*op.or*expr*" {
+    !"expr*op.compare*expr*".!"expr*op.and*expr*".!"expr*op.or*expr*" {
+      E")*",E",*",E";*" {
+        replace "expr*op.and*expr*" "expr*";
+        replace "expr*op.or*expr*" "expr*";
+        replace "expr*op.compare*expr*" "expr*";
+        push;push;
+        # assemble attribs for new exp token,
+        --; --; add " "; get; ++; get; ++; get; add " "; --; --; put;
+        # transfer unknown token attrib 
+        clear; ++; ++; ++; get; --; --; put; clear;
+        # realign tape pointer 
+        ++; .reparse
+      }
+    }
+  }
+  ,,,,
+
+### 14 mar 2025
+
+  I have been reforming and developing the arithmetic expression 
+  parser which is now called eg/maths.parse.pss It now includes 
+  good error handling and a help-text system (for explaining the 
+  syntax of the expression parser). I also added an assignment operator
+  (:=) logic operators (&& || AND OR) comparison operators
+  (== != < <= > >= etc) and functions like sqrt(...) 
+  It is now basically a template for how to write a language with 
+  [nom] and it also forms a reasonably big chunk of any kind of 
+  computer language parser/compiler. It can be more or less 
+  cut-and-paste into other scripts.
+
+### 13 mar 2025
+
+  Things to do on the [pep] and [nom] system. 
+   - rewrite translate.perl.pss using the new syntax at  
+     eg/nom.syntax.reference.pss
+   - make script nom.syntax.recognise.pss based on script above 
+     which just says "yes: nom syntax ok" or "no: etc" This script would 
+     become the basis of an non-error checking nom parser.
+   - add help system to eg/drawbasic.pss 
+   - add upper case headings to text.tohtml.pss
+   - generate headers in eg/ to html with text.tohtml.pss
+   - make a new script text.tolatex.pss for printing a book
+   - revise the docs at nomlang.org/doc to generate printed material
+   
+### 11 mar 2025
+
+  Starting to write the parser for a simple [logo] *ish* drawing 
+  language. The language is file:///eg/drawbasic.pss but I hope 
+  to change that name if the language gets good. [chess:queen]
+
+  Also, I was working today on file:///eg/nom.to.listing.pss
+  which is supposed to be a simple precursor to a 
+  *nom.to.html.pss* html pretty-printer.
+
+### 8 mar 2025
+
+  Have uploaded some solutions to problems at the www.rosettacode.org
+  site. The [nom] syntax checker *nom.syntax.reference.pss* is close
+  to complete. I will use this script as a "reference* for what 
+  the syntax of nom is and should be. 
+
+### 7 march 2025
+  
+  Need to think about the nom://mark and nom://go syntax. It might 
+  be better to use the workspace value as the *mark* I am not sure.
+
+  I will no longer permit ridiculous ranges in classes 
+  *silly ranges: [\n-\f]* I think in the [pep] interpreter these 
+  are currently accepted, but what does it even mean? I will just 
+  allow simple ranges like [a-g]  Also, I need to remove '<' and 
+  '>' as abbreviations for nom://++ and nom://-- because they
+  clash with <eof> etc. Also, remove 'll' and 'cc' as aliases for 
+  nom://chars and nom://lines . 
+
+  Have been working on the file:///eg/nom.syntax.reference.pss which is a syntax
+  checker for the [nom] script language. I have made good progress 
+  and have added some new parse tokens, such as statement* and 
+  statementset* (for a list of statements). And command* is now just 
+  the command word like nom://add or nom://push and not the 
+  whole statement. "eof" and "reparse" are parsed as the word* grammar
+  token and reduced later to test* and statement* later.
+
+### 6 march 2025
+
+  Trying to write an *nom* error checking script without adapting 
+  an existing "translation" file:///tr/ script. So I am writing it
+  from scratch and in the process I am discovering strange things about 
+  the existing grammar that I have been using. For example I use
+  '>' and '<' as abbreviations for nom://++ and nom://-- but this 
+  clashes with the *<eof>* syntax . So I will remove these abbreviations
+  and also the '+' '-' abbreviations for nom://a+ and nom://a- 
+  because it is really silly to have 1 character abbreviations for 
+  2 characters commands. 
+
+  Also, I should have a command* token for nom://add nom://clear 
+  nom://upper for example and then a statement* token for 
+
+  >> add "hi"; replace "x" ""; clear;
+  
+  Also just use a word* token for "eof" "reparse" etc. Things that are 
+  not valid commands or tests but part of.
+
+### 4 march 2025
+
+  I made symlinks for the nomsf://tr and nomsf://eg folders on this site
+  so that the example scripts and translators will also be available here.
+  And I will create a document index for them.
+
+  Yesterday I wrote quite a large chunk of an [xml] "parser"
+  /doc/scripts/nom.xml.html (it is still in a documentation page).  I was
+  surprised how easy it was. I thought xml parsing was going to be difficult
+  because it seemed to have multiple levels of *nesting* Firstly on an internal
+  tag-level (a list of attributes withing the tag) etc. 
+  
+  I also discovered some new techniques for error checking and reporting. For
+  example: look for a parse-token which is at the end of a sub-pattern, in the
+  case of [xml] an example is
+  >* and />* (literal tokens). These should always resolve to a 
+  tag* parse token, so if you check for this token followed by anything else
+  you will trap a lot of errors.
+
+  * trapping errors with a 'last' token
+  -------+
+    # a fragment
+    pop;pop;
+    B">*",B"/>*" {
+      # error, the tag* token didn't resolve or reduce as 
+      # it should have.
+    }
+    push;push;
+  ,,,,
+
+  Also, I realised that you can just create the error message and 
+  then print it with line number etc at the end of the error block. 
+  I now favour putting all errors in a big block just after the 
+  parse label (although [eof] errors will probably still need to 
+  go at the end of the script). Also, 2 token error checking seems to
+  be the most useful in general. Also, its a good idea to have a 
+  list of tokens at the start of your script, and then just look
+  at them to see which ones can follow others.
+
+### 2 Mar 2025
+
+   I have been doing a lot of work on the http://nomlang.org site (where this
+   file is) including writing a quite useful [bash] "script"
+   /webdev/copy.blog.sh which manages this website.  This site *nomlang.org* is
+   now the sort-of "home" of the pep/nom system, or at least of all the
+   "documentation" file:///doc/
+
+   While writing the primitive-but-good static site generator in [bash] I also
+   wrote a new [nom] script to format the *plain-text* into [html] . This
+   script is called "eg/text.tohtml.pss" nomsf://eg/text.tohtml.pss and it
+   works remarkably well as far as I can see. I actually started off with
+   very humble aims for the script in fact I just wanted to do something
+   like this
+
+   * text-to-html
+   ------+
+     begin { add "<html><body>\n"; print; clear; }
+     until "\n";
+     replace "<" "&lt;"; replace ">" "&gt;"; replace "&" "&amp;";
+     [:space:] { clear; add "<p>\n"; }
+     B"###" { 
+       clop;clop;clop; put; clear;
+       add "<h3>"; get; add "</h3>\n";
+     }
+     B"##" { 
+       clop;clop; put; clear;
+       add "<h3>"; get; add "</h2>\n";
+     }
+     B"#" { 
+       clop; put; clear;
+       add "<h3>"; get; add "</h1>\n";
+     }
+     print; clear;
+     (eof) { add "</body></html>\n"; print; quit; }
+   ,,,,
+
+   In other words, it would just mark paragraphs and sort-of
+   [markdown] headings. But it just grew and grew and it has been 
+   really successful because I can just add *syntax* to it 
+   willy-nilly and if it breaks I can easily fix it. So I will almost 
+   certainly never use "eg/mark.html.pss" nomsf://eg/mark.html.pss again
+   because it is hard to debug.
+
+### 1 mar 2025
+
+   Wrote a nom script "eg/bash.show.functions.pss" 
+   /eg/bash.show.functions.pss which prints bash functions in a file 
+   and the comments above them.
+
+### 19 feb 2025
+
+   I am revisiting this system after almost 3 years of not doing anything on
+   it. It still seems like a remarkably new way of parsing and compiling and
+   worth pursuing. I updated the website at nomlang.org and improved some
+   example scripts (like nomsf://eg/exp.tolisp.pss) and created a new
+   text-to-html formatter nomsf://eg/text.tohtml.pss which is much simpler to
+   maintain than nomsf://eg/mark.html.pss because it uses a less complex
+   grammar.
+
+### 28 Aug 2022
+
+   Working on the mark.latex.pss script which now supports most 
+   syntax including images. The script is quite complex. It should 
+   be strait-forward to translate it to other targets such as 
+   "markdown", html, man [groff] etc.
+
+### 19 Aug 2022
+
+   Made a magical interpret() method in the perl translator which 
+   will allow running of scripts.
+
+   Working on a simplified grammar for tr/translate.perl.pss which
+   I hope to use in all the translator scripts. So far so good. Also
+   introducing a new expression grammar for tests eg:
+   >> (B"a",B"b").E"z" { ... } 
+
+   This allows mixing AND and OR logic in tests. 
+   Also, a nom script that extracts all unique tokens from a script 
+   would be useful.
+
+### 17 Aug 2022
+
+   Looking at [antlr] example grammars, for ideas of simple languages
+   such as "logo", "abnf", [bnf] , "lambda", "tiny basic"
+   Reforming grammars of the translators, writing good "unescape"
+   and "escape" functions that actually walk and transform the  
+   workspace string. Converting perl translator to a parse method
+   Need an "esc" command to change the escape char in all translators.
+   The perl translator is almost ready to be an interpreter.
+
+### 13 august 2022
+
+   Debugged the [tcl] translator- appears to be working well except
+   for second generation scripts.
+
+   Current tasks: finish translators, perl/c++/rust/tcl  
+   start translators: lisp/haskell/R (maybe)
+   Write a new command "until" with no arguments.(done in some translators)
+   Make the translators use a "run" or "parse" method, which
+   can read and write to a variety of sources.
+   Make the tape in object/pep.c dynamically allocated.
+   See if begin { ++; } create space for a variable. And use this
+   strategy for variable scope.
+
+### 28 July 2022
+
+   Starting to create date-lists in eg/mark.latex.pss to render lists
+   such as this one. Also, had the idea of a new test
+    >> F:file.txt:"int" { ... }
+   This would test if the file "file.txt" contain a line starting
+   with "int" and ending with ":" + workspace. This test would allow
+   checking variable types and declarations. It would also allow better
+   natural language parsing, because a list of nouns/adj/verbs etc
+   could be stored in a simple text file and looked up.
+
+   * Also, variable scope could be included in the file e.g.
+   -----
+     int.global:x
+     int.fn:x
+     string.global:name
+     string.local:name
+     etc
+   ,,,,
+   Also, another test
+    >> F:name.txt: { ... }
+   Would check the file name.txt for a line which begins with the tape
+   and ends with the workspace.
+
+### 21 July 2022
+
+   A lot of work on the Javascript translator tr/translate.js.pss
+   1st gen tests are working. Working on the rust translator and 
+   the eg/sed.tojava.pss translator.
+
+### 13 July 2022
+
+   New ideas: create a lisp parser, create a brainf*** compiler 
+   (done see: /eg/brainfork.c.pss )
+   create a "commonmark" markdown translator. This should be 
+   not too hard, using the ideas in nomsf://eg/mark.latex.pss
+   will create a 'date list' format for mark.latex.pss and mark.html.pss
+
+### 7 July 2022
+
+   Started a lisp parser eg/lisp.pss
+   Worked on eg/mark.latex.pss which is now producing 
+   reasonable pdf output (from .tex via pdflatex). Also realised
+   that the accumulator could be used to simplify the grammar
+   by counting words.
+
+### 5 July 2022
+
+   Developed a [sed] to java script, "eg/sed.tojava.pss" which has 
+   progressed well. Still lacking branching commands and some other
+   gnu sed extensions.
+
+### 30 June 2022
+
+   Wrote a simple [sed] parser and formatter/explainer at
+   eg/sed.parse.pss (commands a,i,c not parsed yet).
+
+### 24 June 2022
+
+   Some work on the javascript and perl translators. 
+
+### 18 June 2022
+
+   Introducing an 'increment' method into the various machine classes
+   in the target languages. This allows the 'tape' and 'marks' arrays
+   to grow if required.
+
+### 17 June 2022
+
+   Looking at translation scripts. Changing tape and mark arrays 
+   to be dynamically growable in various target languages. 
+
+### 14 sept 2021
+
+   reviewing documentation, tidying.
+
+### 9 sept 2021
+
+   Working on the pl/0 scripts. eg/plzero.pss and eg/plzero.ruby.pss
+   eg/plzero.pss now checks and formats a valid pl/0 program.
+
+### 4 sept 2021
+
+   Working on the palindrome scripts eg/pal.words.pss and 
+   eg/palindrome.pss . Both are working well and can be translated
+   to various languages (go, ruby, python, c, java)
+   I would like to add hyphen lists to mark.latex.pss and date
+   lists (such as this one)
+
+### 28 aug 2021
+
+   Go translator now working well. I would like to write a 
+   translator for the Kotlin, R (the statistical language), swift
+   rust. The script function pep.tt (in helpers.pars.txt) greatly 
+   helps debugging translation scripts.
+
+### 20 aug 2021
+
+   More progress. A number of the translation scripts are now 
+   quite bug free and can be tested with the helper function 
+   pep.tt <langname>  This script also tests 2nd generation 
+   script translation, which is very useful where the original
+   pep engine is not available (for example, on a server). 
+
+### 15 July 2021
+
+   Continuing work. Starting many translation scripts such as
+   tr/translate.cpp.pss and trying to debug and complete others.
+
+### 14 July 2021
+
+   working on tr/translate.c.pss good progress. simple scripts translating 
+   and compiling and running. Did not eliminate dependencies so that 
+   scripts need to be compiled with libmachine.a in the object/ folder.
+
+### 5 July 2021
+   working on the Ruby translator in tr/translate.ruby.pss
+   Should try to make a 'brew' package with ruby for pep.
+
+### 17 June 2021
+   Some work on the Makefile. Renamed gh.c to pep.c
+   Made pep look for asm.pp in the current folder or else in the 
+   folder pointed to by the "ASMPP" environment variable.
+   Need to add "upper" "lower" and "cap" to the translation scripts
+   in pars/tr/
+
+### 15 June 2021
+
+  Things done:
+
+   - implemented "nochars" "nolines" "upper" "lower" "cap" (capital case 
+     for workspace) in machine.interp.c. nochars and nolines are already
+     in a number of translation scripts.
+   - clean up the pars folder (get rid of stray gh.c files etc).
+   - fixed the add "\\" bug which was cause by a bad implementation of 
+     until in machine.interp.c (need to count preceding escape chars)
+     Need to fix the same in the translation scripts
+
+  Here are some immediate tasks to make the pep engine more complete.   
+
+   - write a "make configure" script to install pep somewhere
+   - fix up the website at www.peptool.org and include some docs there 
+   - try to write an html translator for the commonmark spec and contact
+     jgm - the pandoc guy to try to generate some interest in pep.
+   - write some code on rosettacode site. (done) Send to linguists.
+   - write a go translator for a modern compiled script engine. (done)
+   - finish tcl translator
+
+### 8 June 2021
+
+   Have made some more good progress over the last few days. Modified
+   the script nomsf://eg/json.check.pss so that it recognises
+   all [json] numbers (scientific etc)
+
+   Fixed /books/pars/tr/translate.py.pss so that it can translate scripts as
+   well as itself. Started to fix /books/pars/tr/translate.tcl.pss. Still
+   have an infinite loop when .restart is translated, and this is a general
+   problem with the "run-once" loop technique (for languages that dont have
+   labelled loops or *goto* statements, for implementing .reparse and .restart).
+   The solution is a flag variable that gets set by .restart before the 
+   parse> label (see translate.ruby.pss)
+   
+   The script eg/mark.latex.pss is progressing well. It transforms a 
+   markdown-ish format (like the current doc) into LaTeX. Need to do
+   lists/images/tables/dates
+
+### 18 April 2021
+
+   Having another look at this system. I still see enormous potential
+   for the system, but dont know how to attract anyones attention!
+   I updated the eg/json.check.pss script to provide helpful
+   error messages with line+character numbers. Also, that script 
+   incorporates the scientific number format (crockford) in 
+   eg/json.number.pss. However, Crockfords grammer for scientific numbers
+   seems much stricter than what is often allowed by json parsers
+   such as the "jq" utility.
+
+   I became distracted by a bootable x86 forth stack-machine system
+   I was coding at /books/osdev/os.asm That was also interesting, and
+   I had the idea of somehow combining it with this. Hopefully these ideas 
+   will come to fruition.
+
+   I think the best idea would be to edit the /books/pars/pars-book.txt
+   document, generate a pdf, print it out, and send it to someone
+   who might be interested. This parsing/compiling system is 
+   revolutionary (I think), but nobody knows about it!!
+
+### 15 December 2020
+
+   I have not done any work on this project since about August 2020 but the
+   idea remains interesting. Finishing the "translate.c.pss" script would be
+   good (done: sept 2021), make "translate.go.pss" for a more modern audience
+   (done: sept 2021).
+
+### 27 august 2020
+
+   Working on the script "translate.c.pss" to create c code from a 
+   pep script. I may try to eliminate dependency files and include
+   all the required structures and functions in the script. That
+   should facilitate converting the output to wide chars "wchar".
+
+### 11 august 2020
+   Ideas: write a bash script to test each script 
+   translator (such as translate.tcl.pss translate.java.pss ....)
+   [done: the pep.tt function]
+
+   In the java "translator" nomsf://tr/translate.java.pss , make the
+   parse/compile script a method of the class, with the input stream as a
+   parameter.  So that the same method can be used to parse/compile a string, a
+   file, or [stdin], among other things. (note: not yet done: march 2025)
+
+   This technique can be used for any language but is easier with
+   languages that support data-structures/classes/objects.
+
+### 7 august 2020
+
+   Continuing to work on the scripts translate.py.pss and translate.tcl.pss.
+   Had the idea to split the pars-book.txt into separate [man] pages just like
+   the [tcl] system "man 3tcl string" etc. (could generate man pages from 
+   the command documentation at http://nomlang.org/doc/commands/ )
+
+### 24 July 2020
+
+   Made great progress on the script "translate.java.pss"
+   nomsf://tr/translate.java.pss which could become a template for a whole set
+   of scripts for translating to other languages.
+
+### 23 July 2020
+
+   Continuing to work on translate.java.pss
+   Still need to convert the nom://push nom://pop code and test and debug.
+   Many methods have been in-lined and the Machine class code 
+   is now in the script. 
+   
+### 22 July 2020
+
+   Rethinking the translation scripts nomsf://tr/translate.java.pss and
+   nomsf://tr/translate.js.pss These scripts can be greatly simplified. I will
+   remove all trivial methods from the Machine object and use the script to
+   emit code instead. Hopefully *translate.java.pss* will become a template for
+   other similar scripts. Also, I will include the Machine object within the
+   script output so that there will be no dependency on external code.
+
+### 20 July 2020
+
+   Wrote the script /books/pars/eg/json.number.pss which parses
+   and checks numbers in json scientific format (Eg -0.00012e+012)
+   This script can be included in the script eg/json.parse.pss to 
+   provide a reasonable complete json parser/checker.
+
+### 3 July 2020
+
+  Working on the script /books/pars/eg/mark.html.pss The script is working
+  reasonably well for transforming the pars-book.txt file into html.  
+  It can be run with:
+   >> pep -f eg/mark.html.pss pars-book.txt > pars-book.html
+
+### 15 June 2020
+
+  Cleaning up the files in the /books/pars/ folder tree. 
+  Renaming the executable to "pep" from "pp". I think "pep" will be
+  the tools definitive name.
+
+### 14 June 2020
+
+  I will rename the tool and executable to "pep" which would stand for "parsing
+  engine for patterns". I think it is a better name than "pp" and only seems to
+  conflict with "python enhancement process" in the unix/linux world.
+
+  Wrote a substantial part of the script 
+  /books/pars/eg/json.parse.pss which can parse and check the 
+  json file format. However, the parser is incomplete because at 
+  the moment it only accepts integer numbers. Recursive object 
+  and array parsing is working.
+ 
+  I will try to improve the mark.html.pss "markdown" transform 
+  script. I would still like to promote this parsing VM since
+  I think it is a good and original idea.
+
+### 23 august 2019
+   
+  Did some work on mark.html.pss 
+
+### 20 august 2019
+
+  Cleaned up memory leaks (with valgrind). Also some
+  one-off errors and invalid read/writes. The double-free segmentation
+  fault seems to be fixed. Still need to fix a couple of memory bugs
+  in interpret()  (one is in the UNTIL command).
+
+### 17 august 2019
+
+  Trying to clean up the pars-book.txt file which is the primary 
+  documentation file for the project. 
+
+  Posted on comp.compilers and comp.lang.c to see if anyone might
+  find this useful or interesting...
+
+### 16 august 2019
+   
+  The implementation at http://bumble.sourceforge.net/books/pars/object
+  has arrived at a usable *beta* stage (barring a segmentation fault
+  when running big scripts).
+
+###  22 feb 2015 
+   (approximately)
+
+   Started the current implementation in the c language. I created
+   a simple loop to test each new command as it was added to the 
+   machine, and this proved a successful strategy as it motivated
+   me to keep going and debug as I went.
+
+
+###  2009 
+
+   Wrote an incomplete c version of this machine called "chomski".
+
+### 2006 - 2014
+
+   Wrote incomplete versions in c++ and java. The java Machine object at
+   /books/pars/object.java/ got to a useful stage and will be a useful target
+   for a script, very similar to /books/pars/tr/translate.c.pss (and will be
+   called "translate.java.pss" ). This script creates compilable java code
+   using the java Machine object. In fact, we will be able to run this script
+   on itself (!). In other words we can run:
+     >> pep -f tr/translate.java.pss tr/translate.java.pss
+   The output will be compilable java code that can compile any parse machine
+   script into compilable java code. Having this java system we are
+   able to use unicode characters in scripts. 
+
+   It will be interesting to see how much slower the java version is.
+
+### 2005
+
+   Started to think about a tape/stack parsing machine.
+
+
+ The coding of this version was begun around mid-2014. A number of other
+ versions have been written in the past but none was successful or
+ complete. 
+
+### 20 Aug 2022
+   will try to add a new until command (until ends with tape)
+   also "w filename;" also "quit <code>;"
+### 15 June 2021
+
+   Trying to get this to look for ASMPP env variable to find the "asm.pp"
+   file which it needs to actually compile and run scripts, here is a 
+
+   * code snippet
+   ----- 
+      printf("test\n");
+      const char* s = getenv("PATH");
+      printf("PATH :%s\n",(s!=NULL)? s : "getenv returned NULL");
+      printf("end test\n");
+   ,,,,
+
+### 23 April 2021
+
+   First new code for a while. I will add a switch that prints the stack when
+   .reparse is called. (note: no, we can just print the stack after the
+   nomsyn://parse> label with the nom://stack and nom://unstack commands) This
+   should help in debugging complex grammars (such as mark.html.pss or
+   newmark.pss) But it may be easier to add this to the compile.pss script
+   since .reparse is just a jump to the parse label.
+
+### 14 March 2020
+
+   Trying to use an environment variable to locate 'asm.pp'
+   
+### 6 September 2019
+  
+   Added nom://stack and nom://unstack commands. But they don't update
+   the tape pointer (yet).
+
+### 28 august 2019
+
+   Small adjustments to "compile.pss".  Starting to rewrite compilable.c.pss to
+   convert back to a single class test and also convert to changes made to
+   compile.pss (eg negation and "ortestset*" compilation). This is a
+   maintainance problem trying to keep compile.pss and compilable.c.pss in sync
+   so that they recognise the same syntax. (note: the translation scripts don't
+   really need to use the grammar as the nomsf://compile.pss compiler with
+   *ortestset* etc because they don't have to compile assembly-style 
+   "jumps". )
+
+   * a simpler way to reduce test* tokens 
+   ----+
+     # fragment.
+     # we use a leading or trailing comma to make a test*
+     # parse-token. This is sort-of "context parsing"
+     pop;pop; 
+     "quoted*,*","class*,*",",*quoted*",",*class*" {
+       replace "quoted*" "test*"; replace "class*" "test*";
+       push; push; .reparse
+     }
+     pop;    
+     "test*,*test*" {
+     push;push;push;
+   ,,,,
+
+   All the ",*" comma tokens above get confusing to look at when
+   in a test with commas, so it could be better to actually make a 
+   "comma*" token.
+
+### 24 august 2019
+
+   Added the nom://delim command which changes the stack token delimiter
+   for nom://push and nom://pop commands.
+
+### 23 august 2019
+
+   Rewrote *quoteset* parsing in nomsf://compile.pss Much better now, doesnt
+   use "hops". Also, replaced nomsf://asm.pp with an asm.pp generated 
+   the nom compiler. 
+
+     * generate a new 'candidate' compiler with the nom script compiler
+     >> pep -f compile.pss compile.pss > asm.test.pp
+
+   This means that [nom] is now *self-hosting* yaaaay.
+   Thought it would be nice to have a javascript machine object ...
+  
+   * create a javascript script parser/compiler 
+   >> pep -f translate.js.pss translate.js.pss > pep.js
+
+   (not implemented, need to write the machine object and command
+    methods, and the convert script. The convert script is a 
+    straightforward conversion of the "compilable.c.pss" script,
+    but the machine object will take a little longer to write -
+    but presumable, much less time than writing the struct machine
+    object in c). 
+
+    Once we have these things we will be able to run scripts in a browser which
+    will be nice for testing. And we will also be able to use [unicode]
+    characters!!
+
+### 20 august 2019: sunny
+
+   Writing a man page for pep. But I will use the asciidoc system and convert
+   to html and troff. Also wrote ghman in the bash "helper"
+   nomsf://helpers.pars.sh functions file which installs the page 
+   (in [linux] at least).
+
+   Cleaning up memory leaks with valgrind. Still one problem in UNTIL in
+   execute() function in machine.interp.c Also an initialised value bug in
+   TESTIS (need a newParameter func?) But TESTIS should not be called unless
+   the parameter .text value is set...
+
+### 19 august 2019: public holiday, Bogota.
+   
+   Fixed a "one-off" bug. Also, found a bug in "until" in the execute()
+   function in machine.interp.c (via valgrind). Can fix with endsWith() in
+   buffer.c. Memory leaks when growing cells and buffer needs to be fixed. 
+   Valgrind on osx doesn' work properly so I need to use [linux] for
+   this job.
+
+   Discovered many memory leaks and "one-off" errors and other more obvious
+   bugs using valgrind.
+
+### 14 august 2019
+
+   Bogota, Colombia - raining
+   
+   Added begin-blocks to compile.pss, asm.pp and compilable.c.pss
+   These work in a similar way to awk's begin {} rules.
+   Added negated text tests to compile.pss and compilable but 
+   not to asm.pp . So now we can do 
+    >> pep -f compile.pss -i ' !""{a"not empty!!";}t;d;'
+   to check if the workspace is empty
+
+   made the script eg/exp.recogniser.pss work and also
+   eg/exp.tolist.pss
+
+   Need to deal with a segmentation fault. I think it has to 
+   do with "scriptFile" not being closed properly, but am not 
+   sure. Also, when we do the "quit" command we should free
+   the machine and inputstreams no?
+
+   Changed the enum boolean because true and false were back to 
+   front.
+
+   Can compile test/test.natural.language.pss with the 
+   script compilable.c.pss (see the "pepcl" helper bash function)
+   and it runs as a standalone.
+
+   Compiled the files in the object/ folder to a static library
+   libmachine.a and then compiled the output of translate.c.pss
+   successfully with "gcc -o test test.c -Lobject/ -lmachine"
+
+   So, we can generate standalone executable parsing/transforming
+   programs from a script with
+     pep -f translate.c.pss script.pss > script.c
+     gcc -o scriptx script.c -Lobject/ -lmachine
+
+### 13 august 2019
+
+   Continued to separate the code in pep.c into separate 'object' 
+   files in the pars/object/ folder. Currently up to machine.c 
+   now will do machine.interp.c  The code is compiling with the bash 
+   function ppco which is in the file pars/helpers.pars.sh . I am
+   not using 'make' to compile, currently.
+
+### 12 august 2019
+
+   Reorganising the source code files. The main c file is now
+   pars/object/pep.c and this includes the other 'object' files which
+   are in this directory. Moved the old pep.c source code files 
+   to the folder Monolith.gh (because everything was in the one
+   file).
+
+   Made the files in the pars/object folder the canonical source code for
+   the machine. This means I need to make ppc etc compile with these
+   files.
+
+   Discovered a bug in classtests. An empty workspace returns
+   true for a range test. 
+
+   Because eg/expression.pss to parse arithmetic expressions such as "(7 + 100)
+   * -100". Need to arrange the grammar so that it has a "lookahead" of 1 token
+   so that operator precedence can be handled. Also thought that "/" would be a
+   better token delimiter. Need a command to set the token delimiter character
+   on the machine. Also need a way to give statements to a script that are only
+   executed once, when the script starts. Perhaps the (eof) section/test should
+   work in the same way (be a script section, rather than a state-test).
+
+   Also, thought that the machine needs a "testhas" test, which 
+   would return true if the workspace currently contains the 
+   text in the current tapecell. This would allow parsing strings
+   such as "eeee", "fffff". Also a "testtapeend" which returns true
+   if the workspace currently ends with the text in the current 
+   tapecell.
+
+   Also, maybe need a "untiltape" command which reads until the 
+   workspace ends with the text in the current tape cell. 
+   This would allow parsing [sed] syntax "s#...##" or "s/...//" where
+   the delimiter character can be anything which occurs after 
+   the "s" character.
+
+### 10 august 2019
+
+   trying to organise the nomsf://pep.c source code into separate objects
+   in the pars/object/ folder.
+
+### 8 august 2019
+   Continued working on translate.c.pss
+   split the class* token into charclass*, range* and list* 
+   with corresponding negated classes.
+
+### 7 august 2019
+
+   Worked on translate.c.pss
+
+### 6 august 2019
+
+   would be handy to have multiline quotes.... (implemented)
+   working on compile.ccode.pss (note: this was the ancestor of 
+   nomsf://tr/translate.c.pss and the other translation scripts)
+
+### 4 august 2019
+
+   I think I finally tracked down the "until" bug, which was
+   actually a bug in readc(). A character pointer lastc was
+   assigned before a growBuffer() call (which calls realloc()).
+   When realloc() assigned a new memory block the character
+   pointer was no longer valid.
+
+### 3 august 2019
+  
+   Still looking at the "until" bug. Basically the problem
+   occurs when the text read with until is greater than
+   about 950 bytes. This is caused because <950 bytes realloc()
+   basically did nothing, hence no problem!
+
+### 30 July 2019
+
+   A useful command for calculating jumps: "+int" which
+   will add the given integer to all integers in the workspace.
+   This command may be necessary when certain forward jumps are 
+   not known during compilation.
+
+   Maybe, it could be useful to have a very basic pattern matching syntax for
+   tests. Similar to a filename match: eg /word*?\*\* / where ? matches any one
+   character, * matches multiple, and \* is a literal asterix. This could be
+   useful in error handling blocks, so as not to have to write out every single
+   combination of tokens. However, it would not be very readable.
+
+   nomsf://compile.pss appears to be working. It is more readable and
+   maintainable than nomsf://asm.pp but in the case of quoteset* it
+   compiles not very efficient code (multiple jumps where 
+   asm.pp compiles only one). See the asm.pp file for a much
+   better error handling idea.
+
+   * comparison of compile.pss and asm.pp
+   ----
+     compile.pss 664 lines
+         asm.pp 1485 lines
+   ,,,,
+
+   Had the idea for an "expand" command in which the machine will
+   convert an abbreviated command into its full form in the 
+   workspace. Probably not.
+
+   Converting asm.pp into compile.pss which is much more compact
+   and readable. Finished converting, but not debugged. 
+
+   Creating notclass* syntax in asm.pp. eg ![a-z] { nop; }
+
+   Realised that I can just directly translate asm.pp into
+   a compiling script. It will be convenient to have ![class] {}
+   syntax. We can implement this in asm.pp quite easily.eg:
+     notclass* <- !*class*
+     command* <- notclass*{*commandset*}*
+   Started translating asm.pp into parse-script language. It seems
+   quite straight forward. Also, we could write a script that
+   compiles "recognisers", just like the 2 bnf grammar rules above
+   eg:
+     notclass <- ! class
+     command <- notclass { commandset } 
+
+### 29 July 2019
+
+   Continued converting execute() into functions in machine.methods.c
+   Realised that I have to modify how jumps and tests work when
+   creating executable scripts. In fact it may be necessary to use
+   the c "goto" instruction in order to implement ".reparse" and
+   ".restart".
+   
+   * file sizes: 
+   ------
+       pep.c 187746 bytes
+       pep    99432 bytes
+       machine.methods.c 16761 bytes
+   ,,,,
+
+
+### 28 July 2019
+  
+   created some machine methods in machine.methods.c by copying 
+   code from execute(). The process seems straight forward.
+
+   Added an "-i" switch to make it easier to provide input
+   when running interactively. (we will be able to do
+   echo "abcd" | pep -f palindrome.pss  eventually)
+   Looking again at the test.palindrome.pss script, which doesnt
+   quite work because of ".restart" on eof.
+
+### 27 July 2019, in Bogota, Colombia
+
+   Wrote a palindrome detector which seems very complicated for the simple
+   task that it does, and also it does not actually work in all cases. 
+   
+   I implemented "quotesets" with a few nifty tricks. quotesets allow
+   multiple equals tests for a given block. The difficulty is that they are
+   parsed before the braces are encountered in the stream, so it is not
+   possible to resolve the forward jump. But there was a solution to this,
+   best understood by looking at the source code in "asm.pp". So multiple
+   tests for one block are possible with "quotesets" which are implemented
+   in asm.pp and resolve into tests for blocks. They are very useful
+   because they allow syntax like this:
+
+     "noun*verb*object*", 
+     "article*verb*object*",
+     "verb*object" {
+        # translate here 
+     }
+    
+### 26 July 2019
+
+   Discovered that the "until" instruction was not growing the 
+   workspace buffer properly, leading to bugs. The same bug will
+   apply to "while". See the bugs: section for more information.
+   For some reason readc() is not growing the workspace properly
+   at the right time. The bug become apparent when parsing 
+   test.commands.pss and trying to read past a large multi-line
+   comment block. eg:
+     >> pep -If test.commands.pss input.txt
+ 
+### 25 July 2019
+
+  Worked on test.commands.pss which acts like a kind of syntax check
+  and demonstration for all commands and structures implemented in
+  asm.pp
+
+  working on the asm.pp compiler. wrote the .reparse keyword and 
+  the "parse>" parse label. Finished end- and beginstest and blocks.
+
+  Implemented the "replace" machine instruction but not really debugged.
+  Added replace to the asm.pp compiler so that it can be used in
+  scripts as well.
+  
+### 24 July 2019
+
+  Writing the parameterFromText() function. This will allow parsing
+  multiple parameters to an instruction. The tricky bit is that 
+  parameterFromText() has to return the last character scanned 
+  to that the next call to it, will start and the current scan
+  position. Once I have multiple parameters, then I can write the 
+  "replace" command: eg replace "one" "two";
+
+  Realised that I need a replace command, and this requires the use of 2
+  parameters. Maybe a bit of infrastructure will have to be written. An
+  example of the use of "replace" is converting c multi-line comments into
+  bash style comments.  It would be possible to parse line by line and
+  achieve this without "replace" but it is a lot more work.
+
+### 23 July 2019
+
+  various bits of tidying up. Still cant accept input from standard-in 
+  for some reason (program hangs and waits for console input)
+
+### 22 July 2019
+
+  Implemented the swap instruction (x) to swap current tape cell
+  and the workspace buffer.
+
+  Fixed a bug in the get command which did not allocate
+  enough memory for the stack/workspace buffer.
+
+### 20 July 2019
+
+  * Its all working more or less!. We can write
+  >> pep -f script.pss input.txt
+
+  and the system compiles the script to assembler, loads it, and runs it
+  against the input stream in input.txt. No doubt there are a number of bugs,
+  but the general idea works.
+
+  Made progress with "asm.pp". Class blocks seem to be working.
+  Some nested blocks now work. Asm.pp is at a useful stage. It
+  can now compile many scripts. Still need to work out how
+  to implement the -f switch (segmentation fault at the moment).
+  In theory the process is simple... load asm.pp, run it on
+  the script file (-f), then load sav.pp (output of asm.pp) and
+  run it on the inputstream.
+
+### 19 July 2019
+
+  Bug! When the program grows during loading a segmentation fault
+  occurs.
+
+  Created test.commands.pss which contains simple commands which
+  can be parsed and compiled by the asm.pp script.
+  
+  Also, realised that the compilation from assembler should stop
+  with errors when an undefined instruction is found. Dealt with
+  a great many warnings that arise when one uses "gcc -Wall"
+
+  implemented:
+
+   command 'cc' adds the input stream character count to the 
+   workspace buffer
+   Also made an automatic newline counter, which is incremented
+   every time a \n character is encountered. And the 'll'
+   command which appends the newline counter as a string onto the 
+   end of the workspace buffer.
+
+   Since the main function of this parse-machine is to compile "languages" from
+   a text source, the commands above are very useful because they allow the
+   compilation script to give error messages when the source document is not in
+   the correct format (with line number and possibly character count).
+
+   Did some work on "asm.pp" which is the assembler file which 
+   compiles scripts. Sounds very circular but it works.
+   Realised that after applying bnf rules, need to jump back to
+   the "parse:" label in case other previous rules apply.
+
+### 18 July 2019
+
+   Discovered a bug when running nomsf://asm.pp in [unix] filter mode
+   "Abort trap: 6" which means writing to some memory location
+   that I should not be. Strangely, when I run the same script
+   interactively (with "rr") it works and doesnt cause the 
+   abort.
+
+   Created a "write" command, on the machine, which writes the
+   current workspace to a file called "sav.pp". This has a parallel
+   in sed (which also has a 'w' write command). This command 
+   should be useful when compiling scripts and then running them
+   (since they are compiled to an intermediate "assembler" phase,
+   and then loaded into the machine).
+
+   Made some progress to use the pattern-machine as a unix-style filter
+   program. Added some command line options with getopt(). 
+   The parser should be usable (in the future) like sed: eg
+     >> cat somefile | pep -sf script.pp > result.txt
+   or 
+     >> cat somefile | pep -sa script.ppa > result.txt
+
+   where script.ppa is an "assembler" listing which can be loaded into
+   the machine.
+
+### 16 July 2019
+  
+   Working on parsing with asm.pp. Seem to have basic commands 
+   parsing and compiling eg: add "this"; pop; push; etc
+   Simple blocks are parsing and compiling.
+   There are still some complications concerning the order of 
+   shift-reductions.
+      
+   * Made execute() have a return value e.g:
+   -----
+     0: success no problems
+     1: end of stream reached
+     2: undefined instruction
+     3: quit/crash executed (exit script)
+     4: write command could not open file sav.pp for writing
+   ,,,,
+
+   More work. Some aesthetic fixes to make it easier to see what 
+   the machine is doing. Wrote showMachineTapeProgram() to give a nice
+   view of pretty much everything that is going on in the machine at once.
+   Working on how to collate "attributes" in the tape array register.
+   Made an optional parameter to printSomeTape() that escapes \n \r etc
+   in the tape cells which makes the output less messy.
+
+### 15 July 2019 
+
+   A lot of progress. Starting to work on asm.pp again. Have
+   basic shift-reduction of stack tokens working. Now to get
+   the tape "compiling" attributes as well. 
+
+   The bug seems to be: that JUMP is not treated as a relative
+   jump by execute() but is being compiled as a relative jump
+   by instructionFromText(). So, either make, JUMPs relative or ...
+
+   Made the "labelTable" (or jumpTable) a property of the program.
+   This is a good idea. Also made the command 'jj' print out the 
+   label table. Still using "jumptable" phrase but this is not 
+   a good name for this.
+
+   I should organise this file: first structure definitions.
+   rhen prototype declarations, and then functions. I havent done
+   this because it was convenient to write the function immediately
+   after the structure def (so I could look at the properties). 
+   But if I rearrange, then it will be easier to put everything in
+   a header file, if that is a good idea.
+
+   Lots of minor modifications. made searchHelp also search the 
+   help command name, for example. Added a compileTime (milliseconds)
+   property to the Program structure, and a compileDate (time_t).
+   81 instructions (which is how many instructions in asm.pp at the 
+   moment) are taking 4 milliseconds to compile. which seems pretty
+   slow really.
+
+   * file sizes:
+   ----
+     pep.c 138430 bytes
+     pep   80880 bytes (compiled c code)
+   ,,,,
+
+   Trying to eliminate warnings from the gcc compiler, which are actually
+   very handy. Also seem to have uncovered a bug where the "getJump" 
+   function was actually after where it was used (and this pep.c does
+   not use any header files, which is very primitive). So the 
+   label jumptable code should not have been working at all...
+   changing lots of %d to %ld for long integers. Also, on BSD unix
+   the ansi colour escape code for "grey" appears to be black.
+
+### 13 July 2019
+
+   Looking at this on an OSX macbook. The code compiles (with a number of 
+   warnings) and seems to run. The colours in this bash environment are 
+   different.
+   
+### 12 Dec 2018
+
+   After stepping through the "asm" nomsf://asm.pp program I discovered that
+   unconditional jump targets are not being correctly encoded. This probably
+   explains why the script was not running properly. Also I may put labels into
+   the deassembled listings so that the listings are more readable.
+
+### 19 sept 2018
+
+   Revisiting. 
+   Need to create command line switches: eg -a <name> for loading
+   an assembler script. and -f <name> to load a script file.
+   Need to step through the asm.pp script and 
+   work out why stack reduction is not working... (see above for
+   the answer). An infinite
+   loop is occurring. Also, need to write the treemap app for iphone
+   android, not related to this. Also, need to write a script that
+   converts this file and book files to an asciidoctor format for 
+   publishing in html and pdf. Then send all this to someone more 
+   knowledgeable.
+
+### 5 sept 2018
+
+   * file sizes
+   ----
+     pep.c 133423 bytes
+     pep   78448 bytes
+   ,,,,
+
+   Would be handy to have a "run until 10 more chars read" function.
+   This would help to debug problematic scripts. (note: these things 
+   have all been implemented with the *pep -I" switch which means
+   *interactive* or really *debug*
+
+   Segmentation fault probably caused by trying to "put" to 
+   non-existant tape cell (past the end). Need to check tape size
+   before putting, and grow the tape if necessary.
+
+   Could try to make a palindrome parser. Getting a segmentation fault
+   when running the asm.pp program right through. Wrote an INTERPRET 
+   mode for testing- where commands are executed on the machine
+   but not compiled into the current program. Wrote runUntilWorkspaceIs()
+   and adding a testing command to invoke this. This should make is easier
+   to test particular parts of a script.  found and fixed a problem with
+   how labels are resolved, this was cause by buildJumpTable() not ignoring
+   multiline comments.
+
+### 4 sept 2018
+
+   Made multiline comments (#* ... *#) work in assembler scripts.  Made the
+   machine.delimiter character visible and used by push and pop in
+   execute(). There is no way to set the delimiter char or the escape char
+   in scripts
+
+### 3 sept 2018
+
+   Added multiline comments to asm.pp (eg #* ... *#) as well
+   as single line comments with #.
+   Idea: make pep.c produce internal docs in asciidoctor format
+   so we can publish to html5/docbook/pdf etc.
+   working on the asm.pp script. Made "asm" command reset the 
+   machine and program and input stream. Added quoted text and
+   comments to the asm.pp script parsing, but no stack parsing yet.
+
+   Need to add multiline comments to the loadAssembledProgram() function.
+   while and whilenot cannot use a single char: 
+   eg: whilenot "\n" doesnt work. So, write 'whilenot [\n]' instead
+   Also should write checkInstruction() called by 
+   instructionFromText() to make sure that the instruction has 
+   the correct parameter types. Eg: add should have parameter type
+   text delimited by quotes. Not a list [...] or a range [a-z]
+
+   If the jumptable is a global variable then we can test 
+   jump calculations interactively. Although its not really 
+   necessary. Would be good to time how long the machine 
+   takes to load assembler files, and also how long it takes
+   to parse and transform files. 
+
+### 2 sept 2018
+
+   wrote getJump() and made instructionFromText() lookup the label
+   jump table and calculate the relative jump. It appears to be 
+   working. Which removes perhaps the last obstacle to actually writing 
+   the script parser. Need to make program listings "page" so I can
+   see long listings.
+
+### 1 Sept 2018
+
+   writing printJumpTable() and trying to progress. Looking at
+   Need to add "struct label table[]" jumptable parameter 
+   to instructionFromText(), and compile().
+   asciidoctor.
+
+### 31 aug 2018
+
+   Continued to work on buildJumpTable. Will write printJumpTable.
+   Renamed the script assembler to "asm.pp"
+   Made a bash function to insert a timestamp. Created an
+   "asm" command in the test loop to load the asm.pp file into the program.
+   Started a buildTable function for a label jump table. These
+   label offsets could be applied by the "compile" function.
+
+### 30 August 2018
+
+   "pep.c" source file is 117352 bytes.
+   Compiled code is 72800 bytes. I could reduce this dramatically
+   by separating the test loop from the machine code.
+
+   Revisiting this after taking a long detour via a forth bytecode
+   machine which currently boots on x86 in real mode (see
+   http://bumble.sourceforge.net/books/osdev/os.asm ) and then trying
+   unsuccessfully to port it to the atmega328p architecture (ie arduino) at
+   http://bumble.sf.net/books/arduino/os.avr.asm
+
+   The immediate task seems to be to write code to create a label
+   table for assembly listings, and then use that code to replace
+   labels with relative jump offsets. After that, we can start to write
+   the actual code (in asm.pp) which will parse and compile scripts.
+
+   So the process is: the machine loads the script parser code (in
+   "asm" format) from a text file. The machine uses that program to
+   parse a given script and convert to text "asm" format. The machine 
+   then loads the new text asm script and uses it to parse and
+   transform ("compile") an input text stream.
+
+### 20 dec 2017
+   Allowed assembly listings with no line numbers as default. It 
+   would be good idea to allow labels in assembly listings, eg 'here:' to
+   make it easier to hand code assembly. So, need a label table. Look at
+   the info arrays for the syntax... Made conditional jumps relative so
+   that they would be easier to "hand-code" as integers (although labels
+   are really needed).  Also, need to add a loadAsm() function which is
+   shorthand to load the script assembler. 
+
+### 17 december 2017
+
+  For some reason, the code was left in a non compilable
+  state in 2016. I think the compile() and instructionFromText()
+  functions could be rewritten but seem to be working at 
+  the moment.
+
+### 13 dec 2017
+
+  The code is not compiling because the parameter to the "compile()"
+  function is wrong. When we display instructions, it would be good to
+  always indicate the data type of the parameter (eg: text, int, range etc)
+  Modify "test" to use different parameter types, eg list, range, class.
+
+### 29 september 2016
+
+  used instructionFromText() within the compile() function and changed
+  compile to accept raw instruction text (not command + arguments) wrote
+  scanParameter which is a usefull little function to grab an argument up
+  to a delimiter. It works out the delimiter by looking at the first char
+  of the argument and unescapes all special chars. Now need to change
+  loadAssembled to use compile(). 
+
+### 28 sept 2016
+
+  Added a help-search / and a command help search //. Added escapeText() and
+  escapeSpecial(), and printEscapedInstruction().  add writeInstruction() which
+  escapes and writes an instruction to file. Added instructionFromText() and a
+  test command which tests that function.
+
+  Worked on loadAssembledProgram() to properly load formats such as "while
+  [a-z]" and "while [abc\] \\ \r \t]" etc.  All this work is moving towards
+  having the same parse routine loading assembled scripts from text files as
+  well as interactively in the test loop.
+
+### 26 sept 2016
+
+  Discovered that swap is not implemented.
+
+### 22 sept 2016
+
+  Added loadlast, savelast, runzero etc. a few convenience functions
+  in the interpreter. One hurdle: I need to be able to write
+    testis "\n" etc where \n indicates a newline so that we can
+    test for non printing characters. So this needs to go into the 
+    machine as its ascii code.
+  Also, when showing program listings, these special characters
+  \n \t \r should be shown in a different colour to make it 
+  obvious that they are special chars...
+  Also: loadprogram is broken at the moment.... need to deal
+  with datatypes.
+
+### 21 Sept 2016
+
+   When in interpreter mode, reading the last character should not 
+   exit, it should return to the command prompt for testing purposes.
+
+### 15 August 2016
+
+   Wrote an "int read" function which reads one character from
+   stdin and simplifies the code greatly. Still need to 
+   fix "escaping". need to make ss give better output, configurable
+   Escaping in 'until' command seems to be working.
+
+### 13 August 2016
+
+   Added a couple more interpreter commands to allow the 
+   manipulation of the program and change the ip pointer. Now
+   it is possible to jump the ip pointer to a particular 
+   instruction. Also, looked at the loadAssembledProgram and
+   saveAssembledProgram functions to try to rewrite them correctly.
+   The loadAssembledProgram needs to be completely cleaned up
+   and the logic revised. 
+   My current idea is to write a program which transforms a pep
+   script into a text assembly format, and then use the 
+   'loadAssembledProgram' to load that script into the machine.
+   Wrote 'runUntilTrue' function which executes
+   program instructions until the machine flag is set to true (by
+   one of the test instructions, such as testis testbegins, testends...
+   This should be useful for debugging complex machine programs.
+
+### 7 Jan 2016
+
+   wrote a cursory freeMachine function with supporting functions
+
+### 4 Jan 2016
+
+   Tidying up the help system. Had the idea of a program browser,
+   ie browse 'prog' subfolder and load selected program into
+   the machine. Need to write the actual script compilation
+   code.
+
+### 3 Jan 2016
+
+   Writing a compile function which compiles one instruction
+   given command and args. changed the cells array in Tape
+   to dynamic. Since we can use array subscripts with pointers
+   the code hardly changes. Added the testclass test
+   Made program.listing and tape.cells pointers with dynamic
+   memory allocation.
+
+### 1 Jan 2016
+
+   Working on compiling function pointers for the character class tests with
+   the while and testis instructions. Creating reflection arrays for class and
+   testing.
+
+### late Dec 2015
+
+   Continued work. Trying to resolve all [malloc] and [realloc] problems. Using
+   a program with instruction listing within the machine. Each command executed
+   interactively gets added to this. 
+
+### 26 Dec 2015
+
+   Saving and loading programs as assembler listings.
+   validate program function. "until" & "pop" more or less working.
+   "testends" working ...
+
+### 19 Dec 2015 
+
+   Lots of small changes. The code has been polished up to an almost
+   useable stage. The machine can be used interactively. Several
+   instructions still need to be implemented. Push and pop need to be
+   written properly.  Need to realloc() strings when required.  The info
+   structure will include "number of parameter fields" so that the code
+   knows how many parameters a given instruction needs. This is useful
+   for error checking when compiling.
+
+### 16 Dec 2015
+
+   Revisiting this after a break. Got rid of function pointers, and
+   individual instruction functions. Just have one executing function
+   "execute()" with a big switch statement. Same with the test
+   (interpreter) loop. A big switch statement to process user commands.
+   Start with the 'read' command.  Small test file. The disadvantage of not
+   having individual instruction functions.
+
+   * individual command functions
+   ----
+    (eg void pop(struct Machine * mm) 
+        void push(struct Machine * mm) etc) 
+   ,,,,
+
+   is that we cannot
+   implement the script compiler as a series of function calls. 
+   However the "read" instruction does have a dedicated function.
+
+### 23 Feb 2015
+
+   The development strategy has been to incrementally add small bits to the
+   machine and concurrently add test commands to the interpreter.
+
+### 22 Feb 2015
+
+   Had the idea to create a separate test loop file (a command interpreter)
+   with a separate help info array. show create showTapeHtml to print the
+   tape in html. These functions will allow the code to document itself,
+   more or less.
+
+   Changes to make:
+   The conditional jumps should be relative, not absolute.  This will make
+   it easier to hand write the compiler in "assembly language". Line
+   numbers are not necessary in the assembly listings. The unconditional
+   jump eg jump 0 can still be an absolute line number.
+   
+   Put a field width in the help output.
+   Change help output colours. Make "pep" help command "ls"
+      >> make p.x -> px or just "."
+
+### 2009 
+
+   Was working on a c version of this called "chomski"
+
+### 2006 - 2014
+
+   Attempted to write various versions of this machine, in java,
+   [perl] , c++ etc, but none was completed successfully
+   see http://bumble.sf.net/pp/cpp for an incomplete implementation
+   in c++. But better to look at the current version, which is 
+   much much better.
+
+### 2005 (approximately)
+
+   I started to think about this parsing machine while living in Almetlla de
+   Mar. My initial ideas were prompted by trying to write parsing scripts in
+   sed and then reading snippets of Compilerbau by N. Wirth, thinking about
+   compilers and grammars
+
+#: comment lines starting with #: are ignored
+

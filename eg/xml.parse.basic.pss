@@ -1,0 +1,429 @@
+
+#*
+
+ABOUT
+
+  Check the syntax of an xml file. This is currently only a recogniser.
+  I have created a new version called xml.parse.pss which has a help 
+  system built in, as well as a self-translation system for translating
+  the script to other languages.
+
+BUGS AND ISSUES
+
+  Does not accept _.- in identifiers but should.
+  
+## Parsing XML with Nom
+
+ The script below was prompted by a *rosettacode* problem which made 
+ me curious to see if [nom] could parse [xml] properly. The 
+ answer is yes, which was surprising to me as well. 
+
+ * some simple xml sample data
+ -------
+ <Students>
+  <Student Name="April" Gender="F" DateOfBirth="1989-01-02" />
+  <Student Name="Bob" Gender="M"  DateOfBirth="1990-03-04" />
+  <Student Name="Chad" Gender="M"  DateOfBirth="1991-05-06" />
+  <Student Name="Dave" Gender="M"  DateOfBirth="1992-07-08">
+    <Pet Type="dog" Name="Rover" />
+  </Student>
+  <Student DateOfBirth="1993-09-10" Gender="F" Name="&#x00C9;mily" />
+ </Students>
+ ,,,,
+
+ The following script will try to parse the xml above and extract the 
+ names of each student. This is a problem from 
+ the "Rosetta Code" https://rosettacode.org/wiki/XML/Input site.
+ I haven't actually done this before so am making it up as I go along.
+
+ Another idea, to avoid putting all text in the >* token, use a flag after
+ reading a >* token, so that next read will read all the way to '<'
+ (implemented below, the pep://accumulator is used as a flag).
+
+GRAMMAR TOKENS
+
+  * tokens
+  ---------
+    literal: < > / =  
+    quoted*  quoted text within xml tags
+    name*    a tag or attribute name
+    attrib*  an attribute like time="now"
+    attribset* a set of attributes like {time="now" sky="blue"}
+    starttag*  a tag like this <book>
+    endtag*    an end tag </book>
+    tag*     a tag like <image/> or <book>...stuff...</book>
+    tagset*  a list of tags like the one above.
+  ,,,,
+
+
+NOTES
+
+  I didn't think that [nom] was really the ideal tool for parsing and 
+  transforming [xml] text data, but the script above seems to work
+  very well. I only spent a few hours writing it and it does some 
+  quite good syntax error checking.
+
+  The script below is close to being a valid [xml] recogniser or syntax
+  checker. It has reasonably good error checking to tell the xml writer where
+  the syntax error has occurred. We still havent solved the rosettacode
+  problem but it is not difficult, just check for a student tag and then a name
+  attribute. In fact could just ignore all other attributes. we can just remove
+  all the error checking for the rosettacode problem.
+
+### END TOKEN ERROR CHECKING
+
+  The script above uses better error handling than what I have written
+  previously (eg in nomsf://compile.pss or nomsf://tr/translate.go.pss )
+  and can be used as a template for error handling in other scripts.
+
+  It is useful to look for *end-tokens* in sub-patterns. For example 
+  in the xml
+  >> <book title="100 trees"> review: worth reading</book>
+
+  The literal token '>' is an *end-token* in a subpattern. So if that 
+  token still exists after it is parsed and reduced then something
+  is *really* wrong... So we can look for it in our 
+  error-checker
+
+  * look for a sub-pattern end-token
+  >>  pop;pop; B">" { #* error! * # } push;push;
+
+  The same is true of the text "100 trees" (eg quotedtext* token) 
+  which should reduce to an attribute* token *before* we get to 
+  the >* token, so  we can just say
+
+  * another sub-pattern end-token
+  >>  B"quotedtext*" { #* error! * # }
+
+  Because quotedtext* should never *begin* a token sequence, in 
+  the xml grammar I am using (and possibly not in any [xml] grammar)
+
+  We don't even have to check that there are 2 tokens, because these
+  tokens are errors at the beginning of the xml as well.
+
+  * don't have to do this 
+  >>  pop;pop; B"quotedtext*".!"quotedtext*" { #* error! * # } push;push;
+
+  This *idiom* above normally makes sure that there are 2 tokens 
+  on the stack (in case we are at the very beginning of the input)
+  but in this case it isn't necessary. So we can also do
+
+  >>  pop; B"quotedtext*".!"quotedtext*" { #* error! * # } push;
+
+
+*#
+
+  count; 
+  # not zero means we are between tags
+  # read all text and set the 'text*' flag to false
+  # only add a text* token if there is actual text.
+  !"0" { 
+    clear; whilenot [<]; 
+    ![:space:].!"" {
+      zero; put; clear; add "text*"; push; .reparse
+    }
+    zero; clear;
+  }
+  "0" { clear; read; }
+
+  [\n] { nochars; }    # line-relative char numbers, sort of 
+  [:space:] { 
+    # cant ignore space but won't save it.
+    while [:space:]; clear; add "space*"; push; .reparse
+  } 
+  # set the 'text*' flag to true (between tags)
+  ">" { a+; add "*"; push; .reparse }
+
+  '"' {
+    until '"'; put; clear;
+    add "quoted*"; push; .reparse
+  }
+
+  # single quotes are allowed in xml
+  "'" {
+    until "'"; put; clear;
+    add "quoted*"; push; .reparse
+  }
+
+  # literal tokens, but only within tags
+  "<","/","=" { add "*"; push; .reparse }
+  # need these for comments like <!-- etc -->
+  "!","-" { add "*"; push; .reparse }
+
+  # tagnames and attribute names, this should include - and _ and .
+  # but Nom is a bit limited like this. For example, I can't do
+  # [:alnum:],[-_.] because the character sets dont get 'unioned' by the 
+  # interpreter or the translation scripts. But this is necessary and 
+  # possible.
+  [:alnum:] {
+    while [:alnum:]; put; 
+    clear; add "name*"; push; .reparse
+  }
+
+  parse>
+    # watch the parse stack reduce
+    add "<!-- "; lines; add ":"; chars; add " "; print; clear;
+    unstack; print; stack; add " -->\n"; print; clear;
+    
+    #-------------
+    # 2 token errors
+
+    # The accumulator is used as a text* flag 
+    # The xml tag parse rules only apply
+    # if we are inside a tag like this <...> otherwise we are just dealing
+    # with text. 
+
+    # An idea, this is very verbose, what about pushing an
+    # error token with a message. ?
+
+    clear;
+    pop; pop;
+    # '<' can only be followed by '/' or a name (space is not allowed) 
+    # or ! in a comment like <!-- etc -->
+    # we need to check that that the token stack is not *just* '<*'
+    # for the beginning of the script.
+    B"<*".!"<*".!E"!*".!E"/*".!E"name*" {
+      clear; 
+      add "* < must be followed by / or ! or a name. No spaces please."; 
+      put; clear; add "xml.error";
+    }
+
+    B"!*".!"!*".!E"-*" {
+      clear; add "* ! is only used in comments like <!-- etc -->";
+      put; clear; add "xml.error";
+    }
+
+    B"/*".!"/*".!E">*".!E"name*" {
+      clear; 
+      add '* "/" must be followed by ">" or a name. Sorry, no spaces.\n';
+      put; clear; add "xml.error";
+    }
+
+    B"</*".!"</*".!E"name*" {
+      clear; 
+      add '* </ must be followed by > or a name. Sorry, no spaces.\n';
+      put; clear; add "xml.error";
+    }
+
+    B"=*".!"=*".!E"space*".!E"quoted*" {
+      clear; 
+      add "* = must be followed by quoted text\n";
+      put; clear; add "xml.error";
+    }
+
+    # anything beginning with quoted text is an error because 
+    # is should have become an attrib* token
+    B"quoted*".!"quoted*" {
+      clear; 
+      add "* misplaced quoted text?";
+      put; clear; add "xml.error";
+    }
+    B"name*".!"name*" {
+      !E"attrib*".!E"attribset*".!E"name*".!E"=*".!E">*".
+      !E"space*".!E"/*".!E"/>*" {
+        clear; 
+        add "* names must be followed by '>','/','='";
+        add "  eg: name='anon' or <name/> or <name>\n";
+        put; clear; add "xml.error";
+      }
+    }
+
+    # If a > or /> starts a sequence then the tag* token etc did
+    # not reduce properly.
+    B">*",B"/>*" {
+      clear; add "* misplaced > or /> ?\n";
+      put; clear; add "xml.error";
+    }
+
+    # the error block, this also allows standard error messages 
+    "xml.error" {
+      clear;
+      add "! xml syntax,";
+      add " near line:"; lines; add " char:"; chars; add "\n";
+      get; print; quit; 
+    }
+
+    # see if tagnames match
+    "starttag*endtag*" {
+      clear; get; ++;   
+      !(==) {
+        clear; 
+        add "! XML syntax: (near line "; lines; add " char "; chars; add ")";
+        add "\n  mismatched tags? bye.\n";
+        print; quit; 
+      }
+      --; clear; add "starttag*endtag*";
+    }
+
+    #----------------
+    # 3 token errors
+
+    # we could push an xml.error* token with the messsage ?
+    pop; 
+    B"!*-*".!"!*-*".!E"-*" {
+      clear; 
+      add "* ! and - are only used in comments like <!-- etc -->\n";
+      put; clear; add "xml.error";
+    }
+
+    # don't bother with =quoted errors because =quoted should alway
+    # reduce to attrib* or attribset*
+
+    B"name*=*".!"name*=*".!E"quoted*".!E"space*" {
+      clear; 
+      add '* Incomplete attribute? good example: age="32"\n';
+      put; clear; add "xml.error";
+    }
+    B"name*name*".!"name*name*".!E"=*".!E"space*" {
+      clear; 
+      add "* incomplete attribute? Or some other problem.\n";
+      put; clear; add "xml.error";
+    }
+    B"</*name*".!"</*name*".!E">*".!E"space*" {
+      clear; 
+      add "* Bad end-tag syntax. Should be </name> or </name > \n";
+      put; clear; add "xml.error";
+    }
+
+    B"<*name*".!"<*name*".!E"name*".!E"/*".!E"/>*".!E">*".!E"space*".
+    !E"attrib*".!E"attribset*" {
+      clear; 
+      add "* Bad xml tag syntax. \n";
+      put; clear; add "xml.error";
+    }
+
+    # the error block, this also allows standard error messages 
+    "xml.error" {
+      clear;
+      add "! xml syntax,";
+      add " near line:"; lines; add " char:"; chars; add "\n";
+      get; print; quit; 
+    }
+
+    # see if tagnames match, if we push an error token here we
+    # can use the same error block as above.
+    "starttag*text*endtag*" {
+      clear; get; ++; ++;
+      !(==) {
+        #state;quit;
+        clear; 
+        add "! XML syntax: (near line "; lines; add " char "; chars; add ")";
+        add "\n  mismatched tags? bye.\n";
+        print; quit; 
+      }
+      --; --; clear; 
+      add "starttag*text*endtag*";
+    }
+
+    # also errors for mismatched tags.
+
+    push;push;push;
+
+    # end of errors
+    #--------------------------------------
+    # 2 token reductions
+
+    pop; pop;
+
+    "/*>*" { clear; add "/>*"; push; .reparse }
+    "<*/*" { clear; add "</*"; push; .reparse }
+
+    # 2 space tokens should never happen but just in case.
+    "space*space*" { clear; add "space*"; push; .reparse }
+
+    B"space*".!"space*" {
+      replace "space*" ""; push; get; --; put; ++; clear;
+    }
+
+    # space is either not significant or an error
+    E"space*".!"space*" { replace "space*" ""; push; clear; }
+
+    # vanish unimportant whitespace, probably a more elegant way to do
+    # see above
+    "name*space*","=*space*","quoted*space*","attrib*space*","attribset*space*"
+    {
+      replace "space*" ""; push; .reparse
+    }
+
+    "attrib*attrib*","attribset*attrib*" {
+      clear; add "attribset*"; push; .reparse
+    }
+    "starttag*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+    "tag*tag*","tagset*tag*" {
+      clear; add "tagset*"; push; .reparse
+    }
+    "text*tag*","tag*text*","text*text*" {
+      clear; add "text*"; push; .reparse
+    }
+
+    #-----------
+    # 3 token parse token reductions
+    pop;
+    "name*=*quoted*" {
+      clear; get; ++; get; ++; get; --; --; put;
+      clear; add "attrib*"; push; .reparse
+    }
+    "<*name*>*" { 
+      clear; ++; get; --; put;
+      clear; add "starttag*"; push; .reparse
+    }
+    "<*name*/>*" {
+      clear; ++; get; --; put;
+      clear; add "tag*"; push; .reparse
+    }
+    "</*name*>*" {
+      clear; ++; get; --; put;
+      clear; add "endtag*"; push; .reparse
+    }
+
+    # I dont actually know where text* can go outside of a 
+    # xml tag, so I will parse this later.
+    "starttag*text*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+    "starttag*tag*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+    "starttag*tagset*endtag*" {
+      clear; add "tag*"; push; .reparse
+    }
+
+    #-----------
+    # 4 token parse token reductions
+    pop;
+
+    # comments like <!-- text --> just ignore
+    "<*!*-*-*" {
+      clear; until "-->"; clear;
+    }
+    "<*name*attrib*/>*","<*name*attribset*/>*" {
+      # here we can check for a "student" tag and the name
+      # attribute. for the rosetta code problem
+      clear; ++; get; --; put;
+      clear; add "tag*"; push; .reparse
+    }
+    "<*name*attrib*>*","<*name*attribset*>*" {
+      clear; ++; get; --; put;
+      clear; add "starttag*"; push; .reparse
+    }
+    
+    push;push;push;push;
+    (eof) {
+      pop;pop;
+      !"tag*".!"tagset*" {
+        push; push;
+        add "! xml syntax, at end of input\n";
+        add "* xml might not to be valid\n";
+        add "  The parse-stack was: "; print; clear;
+        unstack; add "\n\n";
+        add "  Note: currently parser doesnt take [-_.] \n"; 
+        add "        in tag/attribute names. Also, tag text is not\n";
+        add "        properly handled.\n";
+        print; quit; 
+      }
+      clear;
+      add "* xml syntax seems valid.\n"; 
+      print; quit;
+    }

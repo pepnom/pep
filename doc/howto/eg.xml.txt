@@ -1,0 +1,13 @@
+
+<!-- ignore comments -->
+<book>  
+</book > 
+<ok> text </ok  >
+<name x="ok" y="4" hi = "yes"  />
+<!-- 
+<style>good </style > 
+
+<when /> <if/>
+<name hi = "yes"  />
+
+-->

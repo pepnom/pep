@@ -1,0 +1,956 @@
+
+#*
+
+ This is an adaption of /eg/natural.language.pss and will add more 
+ grammar structures, vocabulary and self-translation etc.
+
+ Very simple example of (non-practical) natural language parsing.  It will
+ accept sentences like "the small dog eats fish." as a valid english sentence.
+ 
+ The pep machine was not designed to parse human language but it is 
+ interesting to see to what extent it is able to do it.
+
+STATUS
+
+  works in a limited way
+
+TESTING
+
+  * test the script with a phrase
+  >> pep -f eg/natural.language.pss -i "the small dog eats the fish."
+
+  * translate to ruby and test (uses a bash function in helpers.pars.sh )
+  >> pep.rbf eg/natural.language.pss -i "the big dog sleeps in the house."
+
+  This actually does
+  -----
+    pep -f tr/translate.ruby.pss eg/natural.language.pss \
+       > eg/ruby/natural.language.rb
+    chmod +x eg/ruby/natural.language.rb
+    echo "the big dog sleeps ..." | eg/ruby/natural.language.rb
+  ,,,
+
+NOTES
+
+ I am interested in this script because it might be useful as a 
+ basis for experimentation with creating bash commands from some natural
+ language input. Now, my aim is not linguistic or grammatical completeness,
+ just enough grammar and vocabulary for this system to be useful for 
+ creating commands. So the idea is that it should be easier to remember
+ the rules of this script than remembering the intricacies of bash and 
+ unix tool syntax (switches etc)
+
+HELP AND ERROR TOKENS ....
+
+ I could add the error* and help* tokens here that I have used in 
+ other scripts like /eg/flyer.typewriter.tohtml.pss and 
+ /eg/letter.typewriter.tohtml.pss . This error/help system I find 
+ very useful as a way for the script to document itself. When an 
+ error occurs, then the script pushes and error* and help* parse token
+ onto the parse stack. For the error-token a suitable error message 
+ is placed in the corresponding pep://tapecell in the machine pep://tape
+ Also, for the help* parse token, a help 'topic' is placed in the 
+ current tape cell. Then the nom command nom://reparse is called and 
+ the script traps these parse tokens just after the nomsyn://parse> label.
+
+ The script pulls the error token off the stack, prints the message
+ and (usually) prints out the line and relative character number (using
+ the nom://lines and nom://chars commands), to help the user locate 
+ where the syntax error occurred in the input text. Then the error
+ handling block in the nom script, calls the reparse command again.
+ Again the script traps the help* token and prints some helpful text
+ about the type of error that occured (and hopefully how to fix it). The 
+ help-token trapping block is able to do this by using the 'help topic'
+ that is in the corresponding tape cell.
+ 
+ This whole system seems reminiscent to me of a modern computer language 
+ *throwing* an error. Another advantage is that the help* token can be
+ used by itself to allow the user to type some keyword (instead of the 
+ normal input text) which will then display the help for this topic.
+
+ An example might be as follows, for a drawing language that accepts certain
+ colour-names as valid colours for the geometric shapes that will be drawn
+ by the language:
+
+ If the user writes a valid statement in the drawing language (think of *Logo*
+ if you like) but uses an unrecognised colour-name ("burntSienna" for example)
+ then the pep/nom script which parses and translates ( or compiles) the drawing
+ language (an therefore 'implements' it) will first create an error token with
+ an appropriate error message such as "No idea what that colour is!" and then
+ the script will create a help* token and put in the pep://tape cell a help
+ topic such as "colournames". Then the script calls nom://reparse and the
+ error/help trapping block will print out the line and character number of
+ where the bad colour-name along with the error message, and will then print
+ out a list of colour names.
+
+ This is a great system, but there is more! In the same script we write a
+ "help-word" recogniser but only for the 1st word or line of the input text,
+ and if the input to the nom parsing script is one of these help keywords, then
+ the script immediately creates a help* token with the help topic that
+ corresponds to the requested help, and then calls *.reparse* . In this case no
+ error* token is created, just the help* token and in this way the user of the
+ drawing language can easily remind herself what are the valid colournames
+ without writing a bad one in her drawing program. The enjoyable thing about
+ all this is that the same help topic block in the nom script is used in
+ both cases (an error situation, and a direct help request).
+
+ You can see this error/help system in action in /eg/maths.tolatex.pss
+ script (which converts plain-text formulas to printable LaTeX) and in 
+ several other scripts. This system is so useful that I consider that it
+ should probably included in any non-trivial script and I have included
+ it in the template which is at /eg/nom.template.pss
+
+A SIMPLE PHRASE GRAMMAR EXAMPLE
+
+ The phrase grammar below was generated by Gemini and seems reasonably
+ coherent. I will try to adapt it for pep/nom to see if nom can have 
+ a reasonable try at parsing this grammar and recognising sentences.
+
+ The tokens in brackets are optional eg (VP) and this may be the 
+ biggest challenge for nom.
+
+ This won't cover every nuance of English (e.g., complex auxiliaries, passive
+ voice, advanced movement rules, agreement), but it should recognise a large set
+ of grammatically correct simple sentences.
+
+ Simple Phrase Structure Grammar for English
+
+  Legend:
+    S = Sentence
+    NP = Noun Phrase
+    VP = Verb Phrase
+    PP = Prepositional Phrase
+    Det = Determiner 
+      (Articles like "a", "the", "an"; also "this", "that", "some", "every")
+    N = Noun (common and proper nouns)
+    V = Verb (main verbs)
+    Aux = Auxiliary Verb (e.g., "will", "can", "has", "is")
+    Adj = Adjective
+    Adv = Adverb
+    P = Preposition
+
+  The Rules:
+    S → NP VP
+      A Sentence consists of a Noun Phrase followed by a Verb Phrase.
+      Example: [The cat] [slept]
+
+    NP → (Det) (Adj) N (PP)
+      A Noun Phrase consists of an optional Determiner, an optional
+      Adjective, a Noun, and an optional Prepositional Phrase.
+      Example: [The big dog] (Det Adj N)
+      Example: [cats] (N)
+      Example: [a book on the table] (Det N PP)
+
+    VP → (Aux) V (NP) (PP) (Adv)
+      A Verb Phrase consists of an optional Auxiliary Verb, a main Verb, an
+      optional Noun Phrase (object), an optional Prepositional Phrase, and an
+      optional Adverb.
+
+      Example: [slept] (V)
+      Example: [ate the apple] (V NP)
+      Example: [will run quickly] (Aux V Adv)
+      Example: [put the book on the table] (V NP PP)
+
+    PP → P NP
+
+      A Prepositional Phrase consists of a Preposition followed by a Noun Phrase.
+      Example: [on the table]
+      Example: [in the garden]
+
+   Lexicon (Examples of words belonging to each category):
+
+    Det: the, a, an, this, that, some, every, my
+    N: cat, dog, man, woman, child, book, table, garden, 
+       park, idea, happiness, John, Mary, London
+    V: sleeps, runs, eats, reads, puts, sees, knows, loves, thinks, goes
+    Aux: will, can, must, has (e.g., "has eaten"), is (e.g., "is running")
+    Adj: big, small, happy, sad, old, new, red, green
+    Adv: quickly, slowly, often, never, always, here, there
+    P: on, in, at, with, to, from, under, over, by
+  ,,,,,
+
+
+PROBLEMS FOR HUMAN LANGUAGE PARSING 
+
+ One simple problem with this script is that the entire list of English
+ language adjectives and nouns and adverbs and so on, would have to be 
+ kept *within* the body of the script. This seems impractical if not 
+ impossible. This prompted me to devise a new capability for the system,
+ which would be to lookup a table of words in a text file in order to 
+ create the parse token.
+
+ARTICLES AND DETERMINERS ....
+
+ Please see below for a reaonably complete list of these.
+ 
+PREPOSTIONS ....
+
+  Please see below for a list of these.
+
+  What might be a strategy for parsing words with prepositions? 
+  My first hunch (and perhaps it is silly to even speculate because this 
+  is a problem linguists and computer scientist have dedicated enormous
+  time and effort to...) is that the preposition needs to be parsed with
+  its preceded verb.
+
+  In English (and German, I believe) the preposition can be greatly separated 
+  from its verb, but it would be most convenient to try to reunite it with
+  the verb. Here are some examples
+
+  * A phrasal prepostion 
+  >> I decided to play along with him.
+
+  * A separate verb/preposition ('turn on the light')
+  >> She turned the light which is in the second bedroom on the left on.
+
+  The 'on' is greatly distanced from its verb 'turn' but I believe this 
+  is grammatically correct. I could imagine parsing this as 
+    >> noun*verb*object*which.clause*preposition*" 
+
+  But after this parsing, it would be necessary to rearrange the parse stack as 
+    >> noun*verb*preposition*object*which.clause*  # and then reduce to 
+    >> noun*verb*object* or nounphrase*object
+
+  Now an interesting situation arises here because "turn on" is a valid verb
+  but some other prepositions combined with "turn" may not be valid or 
+  make any sense. But in addition is maybe difficult in some cases to 
+  rearrange the parse pep://stack so that the preposition immediately 
+  follows the verb so that the parse stack can be properly reduced.
+
+ATTRIBUTES LOOKUPS ....
+
+ The following is a rather naive analysis of how the pep:nom machine
+ might be enhanced to have a better ability to parse human language.
+ I am not claiming that this is a complete solution.
+
+ I wonder if it is possible in very simple cases to just have 
+ an verb.plural* token and a noun.plural* token in order to 
+ avoid the need for attributes. No but maybe article.plural 
+ and noun.plural
+
+ Another idea: a textfile look up function for nom. The text file 
+ for English might be in the format
+
+ * an attribute file format
+ ------
+   child    noun.singular
+   children noun.plural
+   walks    verb.3rd-person
+   walk     verb.not3rd-person  (all declensions except 3rd person)
+            noun.singular 
+   green    {adjective, noun.singular}
+ ,,,,
+ 
+ So each word is associated with a set of attributes and the subattributes
+ which are represented in dot format. So nom would need a way to 'look-up'
+ the text file and determine if a given word matches an attribute.
+
+ For spanish the attributes are of course different, for example
+
+ * an attribute file 
+ ------
+   frio    noun.{number=singular,gender=M},
+           adj.{number=singular,gender=M}
+   niño    noun.{number=singular,gender=masculine}
+   adultos noun.{number=plural} 
+   camina  verb.{person=3}
+   rojo    adj.{number=1,gender=masculine} 
+ ,,,,
+ 
+ This is just a sketch and may not work at all. So each word can have 
+ a set of 'roles' (adj,noun,adverb etc), and each role can have a subset 
+ of attributes. This could be made less verbose by always having the 
+ attributes of each role written in the same order. For example
+
+   >>frio noun.{sM}
+   >>adultos noun.{p}
+
+  
+ATTRIBUTES NEEDED ....
+ 
+ In order to attempt to parse/translate natural human language 
+ it is necessary to add either an array of "attributes" to each 
+ tape-cell or else a semantic-attribute object. These attributes
+ would contain information such as "plural/singular", "masculine/feminine",
+ A simple attribute array would allow dealing with situations like 
+
+   "los tres amigos van al mercado" -->
+   "the three friends go to the market".
+ So:
+   "los"
+      is parsed as token="article*", tapecell="los", 
+      and attributes=plural+masculine (2 attributes)
+   "amigos"
+      is parsed as token="noun*", tapecell="amigos", 
+      and attributes=plural+masculine (2 attributes)
+   "van" 
+      is parsed as token="verb*", tapecell="van"
+      attributes=plural
+      In spanish, "van" can apply to a masculine or feminine subject, so that 
+      attribute is not marked.
+
+  Then, when we try to reduce "article*noun*" to "nounphrase*" 
+  we see that we need to "match" each attribute. For example
+    "article(los)*noun(amigos)*" can be reduced to 
+    "nounphrase(los amigos)*" because
+     "los" has attributes "plural+masuline", and 
+     "amigos" has the same attributes. However, we cannot parse
+     "las amigos" because "las" has attributes "plural+feminine".
+     This means the "las amigos" is a grammatical error in this 
+     context.
+
+  Also, consider the "unmarked" situation:
+    "ellas van al mercado" 
+    we have, 
+       "ellas" (attributes=plural+feminine)
+       "van"   (attributes=plural)
+    So, "van" has 1 less attribute, but the attribute it has (plural)
+    matches the subject of the sentence, so the phrase is legal.
+
+  Of course, the set of possible attributes varies from language to 
+  language (as a simple example, some languages have a "dual" number,
+  as well as singular and plural). But a simple solution may be to
+  create a "superset" of all possible attributes in all possible 
+  languages and then match them as required.
+
+  This schema requires extending the parse-machine to add the array
+  of attributes to each tapecell. But this simple array of attributes
+  also has severe limitations because of the semantic complexity of 
+  human language. I also wonder whether the nom://mark command and 
+  nom://go command along with the ability to attach a plain text 
+  *mark* to each pep://tape cell, could be used to attach some of these
+  linguistic 'attributes' to the given parse token.
+
+  Even better would be an attributes "object" (with heirarchical attributes)
+  attached to each tape-cell. This would go some way to dealing with 
+  the interdependance of semantics and grammar in human languages. 
+  
+AMBIGUOUS PARSING ....
+
+  Another complication is that words may be parsed in different ways,
+  such as verb or noun (eg "access", "ache"). This means that there
+  needs to be some way to order these different parsings, so that
+  each different parsing can be tried in turn. Currently, the pep/nom
+  system has no ability to 'back-track' in order to find a different 
+  parsing, but it might be simpler just to run a parser muliple times
+  over the input text. However, we still need a way to keep track of 
+  the parsings that have already been tried (either succesfully or 
+  not) and then select the next valid parsing path from some *ordered*
+  list.
+
+  At some stage I may try to extend the parse-machine in this way, to see how
+  effectively we can parse/translate human language.
+ 
+LOOK AHEAD ....
+
+  There is also a significant problem with "look-ahead" although one 
+  simple solution would be to require a full-stop at the end of 
+  sentences.
+
+HISTORY
+
+  12 Aug 2025
+    Adapting from natural.language.pss and adding a help and error
+    system.
+  21 July 2025
+    Looking again at this script because I suddenly had the idea that 
+    I could use nom with a dart (or other language) repl in order to 
+    receive more or less human language commands, and produce valid
+    bash commands or scripts to carry out the task. This would be a 
+    sort of poor-person's LLM or AI.
+
+*#
+ begin { 
+
+   # check for an empty doc or help-word and trigger help if so
+   while [:space:]; clear;
+   (eof) {
+     # the category is help and the token too.
+     add "usage"; put; clear; 
+     add "help*"; push; .reparse
+   }
+   # a document starting with / or // etc will be considered a help request
+   # a bash history file shouldnt start with a / ? 
+   while [/];
+   !"" {
+     # get 2 help words and save with no space 
+     clear; while [:space:]; clear; whilenot [:space:];
+     put; clear; while [:space:]; clear; whilenot [:space:];
+     swap; get; put; clear;
+     add "help*"; push; .reparse
+   }
+ } # end of beginblock
+
+ # The script lexing phase
+
+ read;
+ [:alpha:] {
+   while [:alpha:]; 
+   put; 
+   #*
+    These words are called 'determiners' and seem to fulfill a 
+    similar function in english to 'articles'. Maybe I can just 
+    use an article* token and an article.plural* token and then do 
+    the same thing with nouns: noun* token and noun.plural* 
+    Obviously this is all a very naive way to parse language, and
+    should become completely unmanageable quickly.
+
+    Articles: a, an, the
+    Demonstratives: this, that, these, those
+    Possessives: my, your, his, her, its, our, their
+    Quantifiers: 
+      some, any, much, many, a few, a lot of, no, every, each, both, etc.
+    Numerals: one, two, three, first, second, etc.
+    Interrogatives: which, what, whose (when used before a noun)
+
+    Posibly I could end all the following parse tokens with the suffix
+    ".det" meaning "determinator" because they can all be used in that 
+    linguistic role. Then the parse token reduction rule can be 
+    simplified to 
+
+    * simplifying parse rules
+    ------
+      E".det*noun*" {
+         clear; add "noun*"; push; etc.
+      }
+    ,,,,,
+
+   *# 
+
+   "a","an","the" {
+     clear; add "article*"; push; .reparse
+   }
+
+   "this","that","these","those" {
+     clear; add "demonstrative*"; push; .reparse
+   }
+
+   "my","your","his","her","its","our","their" {
+     clear; add "possessive*"; push; .reparse
+   }
+
+   "some","any","much","many","a few","a lot of","no","every","each","both" {
+     clear; add "quantifier*"; push; .reparse
+   }
+
+   "one","two","three","1","2","3","first","second","third" {
+     clear; add "numeral*"; push; .reparse
+   }
+
+   #*
+     Prepositions
+
+    Single word prepositions:
+
+    about above across after against along among around as at before behind
+    below beneath beside besides between beyond but (meaning "except") by
+    concerning despite down during except for from in inside into like near
+    of off on onto opposite out outside over past per plus regarding round 
+    save (meaning "except") since than through throughout till to toward(s) 
+    under underneath until up upon versus via with within without 
+
+    Phrasal prepositions:
+
+    according to ahead of along with apart from as for as to aside from
+    because of by means of by way of close to due to except for 
+    in addition to in front of in place of in spite of instead of 
+    nigh unto (archaic/literary) on account of on behalf of on top of
+    out of prior to rather than regardless of subsequent to thanks to 
+    up to with regard to with respect to with a view to 
+
+   *#
+
+   "up","in","at","on","with","under","to" {
+     clear; add "preposition*"; push;
+     .reparse
+   }
+   "simple","big","small","blue","beautiful","small" {
+     clear; add "adjective*"; push;
+     .reparse
+   }
+
+   #*
+   Some basic nouns, I am not sure what for
+
+    Person/Human/Man/Woman Child/Baby
+    Family Mother Father Brother Sister Son Daughter 'parent', 
+    'sibling', 'offspring') Head Eye Ear Nose Mouth Hand Foot Leg 
+    Arm Heart Blood Bone Life Death
+    Food Water Sleep Earth Ground Land
+    Sky Heaven Sun Moon Star Fire Water 
+    Air Wind Rain Tree Wood Stone Rock Mountain Hill River Stream Lake
+    Sea Ocean Animal Creature Bird Fish Snake Insect Name Night Day Time 
+    Year Path Way Road House Home Dwelling Door Bed Tool
+    Knife Bow Arrow Boat Canoe Basket Pot Container String Rope
+    Dust Dirt Soil Sound Color Thing Object Place/Location
+    Side Middle Center End/Beginning Idea Thought Name Word Language
+    Work Labor Game Play
+
+   *#
+
+   "flower","tree","dog","house","horse","girl","fish","meat" {
+     clear; add "noun*"; push; .reparse
+   }
+
+   "runs","eats","sleeps","is","grows","digs","sings" {
+     clear; add "verb*"; push; .reparse
+   }
+   put; clear; add "<"; get; add ">";
+   add " Sorry, don't understand that word! \n";
+   print; clear; quit;
+ }
+
+ # use a full-stop to complete sentence
+ "." { put; clear; add "dot*"; push; }
+ # ignore every thing else such as other punctuation
+ clear;
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.
+  # add "# line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+
+  # ----------------
+  # the error and help system
+
+  # we can group all error analysis here to make the script more 
+  # organised. This section helps to provide good error messages to
+  # the user.
+
+  pop;
+
+  
+  # there shouldn't really be 'errors' in the bash history file
+  # but I will keep the error token anyway.
+  "error*" {
+    clear; 
+    add "--grammar.en.pss-- (naively check english grammar)\n";
+    add "near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; 
+    # indent the error message 
+    replace "\n" "\n  "; add "\n"; print;
+    print;
+    # provide help from the help* token if one was 
+    # put on the stack. 
+    clear; pop; "help*" { push; .reparse } 
+    quit;
+  }
+
+  #*
+   Using a help* token to allow the script to document itself.
+   The swap commands below are used to save the help text in the tape
+   cell so that several or all help topics can be printed at once.
+
+  *#
+
+  "help*" {
+    clear; swap; 
+    
+    # how to use this script
+    "usage","help","format","help" {
+      swap; add "
+    USAGE
+      pep -f grammar.en.pss file.txt 
+      pep -f grammar.en.pss -i 'the tiger slank into the forest' 
+
+      A nom script to attempt a parsing and checking of the English 
+      language (naively).
+      ";
+      swap;
+    }
+
+    # help about the help-system
+    "words","usage","help" {
+      swap; add "
+    HELP KEYWORDS
+
+      All documents/input which begin with '/' are considered to be help 
+      requests. See below for the list of valid help keywords.
+
+      pep -f grammar.en.pss -i /<helpword> 
+        see some help for that topic or category
+
+      pep -f grammar.en.pss -i /words
+        see what help topics and categories are available for this script.
+
+      pep -f grammar.en.pss -i /help
+        see all the help.
+
+      pep -f grammar.en.pss -i /toperl | bash
+        translate this script to perl 
+        
+    ### General Help 
+      - /usage: show a usage message for this script 
+      - /words: show what help commands are available
+      - /faq: show an FAQ about this script.
+      - /nom: show information about the nom script language
+      - /flaws: known limitations with this script 
+    ### Grammar and text format
+      - /vocab: show what words the script knows about
+      - /format: show information about the grammar.en format
+    ### About testing this script
+      - /test: test the script with some example input. 
+      - /eg.lines: prints a set of one line examples
+      - /eg.bad.lines: a set of one-liners that should be rejected (n/a?)
+      - /test.line: tests one line of input from /eg.lines
+      - /test.bad.line: tests one line of (bad) input from /eg.bad.lines 
+
+      The 'test' and 'to' words need to be piped to bash to actually 
+      execute.
+
+    ### About translating this script
+
+      - /translate: show how to translate this script to another language
+      - /to<lang>: translate this script to some other language
+          using the nom translation scripts at www.nomlang.org/tr/ 
+           ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+           (eg: /toperl /tolua etc). Or latex/pdf/html 
+
+      There are also help 'categories' which display several help
+      topics at once such as:
+
+      - /usage: script usage and helpwords
+      - /format: all information about the bash format 
+      - /help: show all available help topics.
+
+      ";
+      swap;
+    }
+
+    # the faq 
+    "FAQ","faq","help" {
+      swap; add "
+    FAQ
+      (not) frequently asked questions about /eg/grammar.en.pss
+
+      Q: What does this script do?
+      A: It parses and maybe checks the grammar of English language 
+         sentences.
+
+      Q: No way. That is not a simple job and you need a Large Language 
+         Model to do that. Who are you kidding?
+      A: Ok, this is an experiment to see how much English grammar the 
+         pep/nom system is able to parse. 
+
+      Q: How many words does the script recognise?
+      A: Probably not many, because at the moment all the english words 
+         have to be hard coded into script itself. But once the 
+         nom://system command has been implemented it should be possible
+         to get words and attributes from an external file.
+
+      Q: So is there any practical point to this script?
+      A: Well, the script should be able to detect bad sentences, but it 
+         will probably think that a lot of good sentences are not good...
+
+      Q: So it's just a limited 'recogniser'?
+      A: No, owing to the amazing help-and-error parse token system 
+         it should be able to provide some helpful tips for bad sentences.
+
+      Q: How will you handle verb conjugations and agreements in this script?
+      A: Probably not at all. But, the point of writing the script is to 
+         see what is possible and what is practical. This is the advantage 
+         of pep/nom: you can play around with the grammars and ideas and 
+         also see the limitations of 'phrase grammars'.
+
+      Q: What are 'phrase grammars'?
+      A: They are, I think, the linguistic term for what compsci people 
+         call BNF or Backus Naur Form Grammars, and which some programmers call
+         PEG grammars. I dont think there is a lot of difference.
+
+      Q: You don't sound very confident?
+      A: Humility is actually a rare virtue in the field of software dev.
+
+      Q: Where did you get your phrase grammar for English from?
+      A: I actually asked google AI and I was pleasantly surprised with the 
+         answer.
+
+      Q: Why an FAQ in grammar script?
+      A: It's all language. Nom is a (formal) language parsing system and 
+         an FAQ is a good way to develop ideas.
+
+       
+      ";
+      swap;
+    }
+       
+    # more information about the nom language 
+    "nom","about","help" {
+      swap; add "
+        This script is written in the 'nom' language which is a 
+        manifestation of the pep:nom parsing system.
+
+        Nom is a scripting language for parsing/translating context-free and 
+        (some) context-sensitive patterns. Please see www.nomlang.org for
+        (much) more information.
+      ";
+      swap;
+    }
+
+    # standard help word. produce some example input.
+    # can be used to test the script with /test
+    "eg" {
+      swap; add '
+      # Sentences need to end with a dot.
+      She ate fish in the kitchen.
+      The small dog ran into the forest.
+      '; 
+      replace "\n  " "\n";
+      swap;
+    }
+
+    # This help word should be standard so that a script like 
+    # /eg/nom.to.pss can call it and test any script
+    "eg.lines" {
+      swap; add '
+        That animal is running in the field.
+        the small dog eats fish.
+        the simple horse runs on the house .
+      '; 
+      replace "\n       " "\n";
+      swap;
+    }
+
+    # Some lines that should produce an error
+    "eg.bad.lines" {
+      swap; add "
+        # No verb
+        The big green tree.
+        She the house.
+      ";
+      swap;
+    }
+
+    # tests one line with this script. This will just make a 
+    # timestamp or command etc.
+    "test.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) INPUT
+        doc=$(pep -f grammar.en.pss -i /eg.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"% test-line: $doc\"
+        pep -f grammar.en.pss -i \"$doc\" 
+        echo \"% test-line: $doc\"
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f grammar.en.pss -i /test.line | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # tests one one-line invalid text
+    "test.bad.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) BAD EXPRESSION
+        doc=$(pep -f grammar.en.pss -i /eg.bad.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"test-line: $doc\"
+        pep -f grammar.en.pss -i \"$doc\" 
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f grammar.en.pss -i /test.line | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # tests the script with the grammar.en file 
+    "test" {
+      swap; add "
+        # TESTING INPUT from ~/.grammar.en
+        pep -f grammar.en.pss $HOME/.grammar.en 
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f grammar.en.pss -i /test | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # just call the /eg/nom.to.pss script which does translation from
+    # a simple command like 'translate script.pss to ruby'
+    # >> pep -f grammar.en.pss -i /to<lang> | bash
+    B"to" {
+      clop; clop; put; clear;
+      add '
+       translator=${PEPNOM}/eg/nom.to.pss
+       if [ -f $translator ]; then
+         echo -e "[ok] Found translator script: $translator"
+       else
+         echo -e "
+          [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+          (maybe) set the $PEPNOM environment var
+          (or)    download the translator from www.nomlang.org/eg/ 
+          ";
+         exit 1;
+       fi
+       pep -f $translator -i "translate grammar.en.pss to '; get; add '" | bash
+       # RUN THIS WITH:  
+       #   pep -f grammar.en.pss -i /to'; get; add ' | bash
+       ';
+       replace "\n    " "\n";
+       print;
+       quit;
+    }
+
+    # how to translate this script to another language, 
+    "translate","tr","about","help" {
+      swap; add "
+
+     HOW TO TRANSLATE THIS SCRIPT
+
+       This script can be translated to other languages using nom 
+       translation scripts which are available at www.nomlang.org/tr/
+
+       The simplest way...
+
+       * translate itself to java with the help word '/to' (needs /eg/nom.to.pss)
+       >> pep -f grammar.en.pss -i /tojava | bash
+
+       current (aug 2025) translation languages:
+         all languages: all
+         code languages: 
+           rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c
+         formats: html|pdf|latex
+
+       * translate to ruby with /eg/nom.to.pss
+       >> pep -f /eg/nom.to.pss -i 'translate grammar.en.pss to ruby' | bash
+
+       * translate 'by-hand' to rust, compile and run (needs 'rustc')
+       ---
+         pep -f tr/nom.torust.pss grammar.en.pss > grammar.en.rs
+         rustc -o texttohtml.exe texttohtml.rs
+         echo ' some *strong* text ' | ./texttohtml.exe 
+       ,,,
+
+       * translate a script to perl, and run with 'doc.txt' as input
+       ---
+         pep -f nom.toperl.pss grammar.en.pss > test.pl 
+         chmod +x test.pl
+         cat doc.txt | ./test.pl
+       ,,,
+
+      ";
+      swap;
+    }
+
+    B"vocab",B"format","help" {
+      swap; add "
+       VOCABULARY 
+         articles: the, this, her, his, a, one, some, 
+         preposition: up, in, at, on, with, under, to
+         adjectives: simple, big, small, blue, beautiful, small,
+         nouns: flower, tree, dog, house, horse, girl, fish, meat,
+         verbs: runs, eats, sleeps, is, grows, digs, sings
+
+       End each sentence with a full stop '.'
+         eg: the small dog eats fish.
+         eg: the simple horse runs on the house .
+
+      ";
+      swap;
+    }
+
+    B"flaw",B"fault",B"format","help" {
+      swap; add "
+     KNOWN GRAMMAR SCRIPT FLAWS (aug 2025): 
+      - this does not aspire to be a proper english grammar checker
+        because phrase grammars have their known limitations for 
+        human language.
+      - The vocabulary is going to be limited.
+
+      ";
+      swap;
+    }
+
+    swap;
+    "" {
+      add "Help topic '/"; get; add "' not known\n";  
+      add "Type: pep -f grammar.en.pss -i /words \n";
+      add "  to see valid help keywords";
+    }
+
+    add "\n\n"; print; quit; 
+  }
+
+ 
+ # end of the help and error system.
+ # -----------
+ # 2 tokens
+
+ pop;
+
+ "article*noun*" {
+   clear; 
+   get; add " "; ++; get; --; put; clear;
+   add "nounphrase*"; push; .reparse
+ }
+
+ "verb*preposition*" {
+   clear; 
+   get; add " "; ++; get; --; put; clear;
+   add "verbphrase*"; push; .reparse
+ }
+
+# 3 tokens
+
+ pop;
+
+ "noun*verb*dot*","nounphrase*verb*dot*",
+ "noun*verbphrase*dot*","nounphrase*verbphrase*dot*" {
+   clear;
+   get; add " "; ++; get; --; put; clear;
+   add "sentence*"; push;
+   .reparse
+ }
+
+ "article*adjective*noun*" {
+   clear;
+   get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+   add "nounphrase*"; push;
+   .reparse
+ }
+
+ # 4 tokens
+ pop; 
+
+ # simplify with 
+ # E"dot*" { B"NP*
+ "nounphrase*verb*noun*dot*","noun*verb*noun*dot*",
+ "nounphrase*verb*nounphrase*dot*","noun*verb*nounphrase*dot*", 
+ "nounphrase*verbphrase*nounphrase*dot*","noun*verbphrase*nounphrase*dot*", 
+ "nounphrase*verbphrase*noun*dot*","noun*verbphrase*noun*dot*" {
+   clear;
+   get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+   add "sentence*"; push;
+   .reparse
+ }
+
+ push; push; push; push;
+
+ (eof) {
+   pop; pop; 
+   "sentence*" {
+      clear; 
+      add "It's an english sentence! \n("; get; add ") \n";
+      add "But it may not make sense! \n";
+      print; clear; quit;
+   }
+   "nounphrase*" {
+      clear; add "its a noun-phrase! ("; get; add ") \n";
+      print; clear; quit;
+   }
+   "verbphrase*" {
+      clear; add "its a verb-phrase! ("; get; add ") \n";
+      print; clear; quit;
+   }
+   push; push;
+   add "nope, not a sentence. \n"; print; clear; 
+   add "The parse stack was: \n  "; print; clear;
+   unstack; add "\n"; print; quit;
+ }
+
+

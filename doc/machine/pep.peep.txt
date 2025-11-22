@@ -1,0 +1,43 @@
+
+  
+## THE PEEP REGISTER IN THE PEP ENGINE
+
+  The peep buffer is a single character buffer which stores the next character
+  in the input stream.  When a nom://read command is performed the current
+  value of the peep buffer is appended to the pep://workspace buffer and the
+  next character from the input stream is placed into the peep buffer.
+
+  The "end-of-stream" tests *<eof> <EOF> (eof) (EOF)* check to see if the peep
+  buffer contains the end of input stream marker. 
+
+  The nom://while command reads from the input stream while the peep buffer is,
+  or is not, some set of characters
+
+   * read the input stream while the peep buffer is a,b or c 
+   >> while [abc];
+
+  The code below is implicitly using the *peep* register in the 
+  *while* and *whilenot* commands
+
+  * word by word parsing with while and whilenot
+  -----+
+    while [:space:]; clear;
+    whilenot [:space:]; put; clear; add "word*"; push; 
+   parse>
+    pop; pop; 
+    # print one word per line
+    # grammar rules 
+    #   text := ( word word ) | ( text word ) ;
+    "word*word*","text*word*" {
+      clear; get; add "\n"; ++; get; --; put;
+      clear; add "text*"; 
+      push; .reparse
+    }
+    push; push;
+    (eof) { pop; clear; get; print; quit; }
+  ,,,,
+
+### SEE ALSO
+
+
+  nom://read , nom://while , nom://whilenot 

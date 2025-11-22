@@ -1,0 +1,34 @@
+
+## THE NOM "UPPER" COMMAND 
+
+  The *upper* command makes the text in the pep://workspace buffer
+  all upper case . 
+  
+  * make all words "capital case" using upper and lower 
+  ----+
+    read; 
+    [:space:] { while [:space:]; print; clear; }  
+    ![:space:].!"" { 
+      upper; print; clear;
+      whilenot [:space:]; lower; print; clear;
+    }
+  ,,,,
+  
+### See also
+
+  The *nom* language only has a limited set of functions to manipulate
+  the text in the workspace buffer (much more limited that the functions
+  available [awk] or [sed] ) . 
+  
+  These functions are 
+  nom://lower nom://upper nom://clip nom://clop nom://clear 
+  nom://replace nom://cap nom://add
+
+  
+### Notes about unicode
+
+  This command should be "unicode aware" but since the 
+  *pep* interpreter is written in plain c, (with normal c *char* byte
+  character type), scripts run through the interpreter will not be 
+  unicode aware. This can be solved by running the script through one 
+  of the *nom* "translation" nomsf://tr scripts.

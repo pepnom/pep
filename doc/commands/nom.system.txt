@@ -1,0 +1,71 @@
+
+## THE NOM "SYSTEM" COMMAND
+  
+  Executes the system command in the workspace and *reads* the result 
+  into the workspace.
+
+  This command can actually be used to implement interactive 
+  'conversation' scripts, where the script prompts the user for 
+  some information and the user replies. 
+
+  * read the current $PATH variable into the workspace. 
+  >>  clear; add "echo $PATH"; system; print; clear;
+
+### EXAMPLES
+
+  The nom fragment below responds to the sentence 
+
+  * get the 'this' state variable from a text file
+  -----+
+
+    # fragment
+
+    # read the input word-by-word
+    while [:space:]; clear;
+    whilenot [:space:]; put; 
+    "this","that","it" {
+      "that","it" { clear; add "this"; }
+      put; clear; add "this*"; push; .reparse
+    }
+
+    "print","type","show","delete","del","remove","rm" {
+      # make the actions canonical
+      "type","show" { clear; add "print"; }
+      "del","remove","rm" { clear; add "delete"; }
+
+      put; clear; add "action*"; push; .reparse
+    }
+    !"" {
+      clear; add "unknown word: "; get; add "\n"; print; quit;
+      # trigger the error/help system here.
+    }
+
+  parse>
+    pop; pop;
+    "action*this*" {
+      clear; get; "print" {
+        clear; add "sed -n '/^ *this:/{s/^ *this://;p}' state.txt";
+        system; put; clear; 
+        add "cat "; get; put; clear;
+      }
+      clear; add "command*"; .reparse
+    }
+    (eof) {
+      "command*" {
+      }
+    }
+    push; push;
+  ,,,
+
+### NOTES
+  
+  This command is very powerful, and I hesitated before adding it to
+  the pep-nom system because I wanted to keep pep and nom as simple as 
+  possible, adhering to its core tenet of being a language parser. But
+  I think this command does not deviate from nom's "core mission" because
+  it only reads text into the machine. It also should allow nom to be
+  used in my "Tiny Language Model" experiments, which is to create scripts
+  that accept simple plain English queries and actions and then 
+  execute them. 
+
+

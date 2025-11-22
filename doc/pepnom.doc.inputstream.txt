@@ -1,0 +1,47 @@
+
+  ## The text input-stream in the pep/nom system
+
+ About the role of the text input-stream when using pep/nom
+
+ Pep&Nom were designed to follow the usual Unix paradigm of *filtering* a text
+ stream. That is, an input stream is provided to a Nom script which filters or
+ transforms that stream and produces a text output-stream.  Large numbers of
+ Unix utility programs work like this (for example: sed, grep, awk, cut, uniq,
+ sort ... ) and the system has the great advantage that the filter programs can
+ be *chained* together with the *pipe* "|" operator to aggregate the results.
+ 
+ * chain filter programs together with pipes to do good things
+ >> tr ' ' '\n' the.entire.web.txt | sort | uniq > all.words.txt
+
+ This means that unix-style programs can do (in theory) *one thing well* and
+ then be joined together with pipes to achieve almost anything.  (Although if
+ you look at the [man] pages for tools like "sort" google:"unix sort program"
+ you will soon see that this philosophy of "doing one thing well* has not been
+ rigorously adhered to).
+
+ But you **can't** do the following:
+
+ * Sadly, not possible.
+ >> cat /usr/share/dict/words | pep -f word.scramble.pss 
+
+ Well, you may say, what's with the whole "text-filter" philosophy.
+ Unfortunately the *pep* interpreter needs to use <stdin> to open and compile
+ the script (a pep-assembler script compiles the input script to assembler) and
+ I never bothered to work out how to fork the input stream. And I haven't lost
+ much sleep over it because once you translate a script to another language
+ (with the scripts in the */tr* "translation" /tr/ folder ) then this
+ problem just urbandict://automagically goes away.
+
+ * translate the html-formatter script to python and run as a file
+ ------
+   pep -f tr/translate.py.pss eg/text.tohtml.pss > text.tohtml.py 
+   chmod o+x text.tohtml.py
+   cat dissertation.on.life.txt | ./text.tohtml.py
+   # the output will be your dissertation on life formatted in 
+   # beautiful html (like this website) printed to <stdout> 
+ ,,,,
+ 
+ So, once nom scripts have been translated, they can be used in the 
+ normal Unix text-filter way.
+   
+

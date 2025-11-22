@@ -1,0 +1,96 @@
+
+#*
+
+# ABOUT
+  
+  This script is just to show how to parse and render an 'index'
+  or table of contents. The trick is to use the nom://go and nom://mark
+  commands to reserve a cell for the index
+
+# TOKENS
+
+  parse tokens used in this script
+
+  heading* a line starting with #
+  word*    one word
+  text*    everything
+  nl*      a newline so that we preserve the line-breaks in the text
+  space*   all whitespace
+
+# NOTES
+
+  This could include self-testing etc but for the time being I 
+  am keeping it simple
+
+# TESTING
+
+  sed -n '/#\*/,/\*#/{s/#\*//;s/\*#//;p}' toc.pss > toc.test.txt
+  pep -f toc.pss toc.test.txt
+  pep -If toc.pss toc.test.txt  # for debugging.
+ 
+# HISTORY
+
+  31 July 2025
+    Started this script in a desultory fashion and it appears to 
+    be working. One trap was trying to nom://mark a cell in the 
+    nomsyn://begin block but the mark gets overwritten by other
+    marks in the script.
+
+*#
+ 
+ begin {
+   # reserve the 1st tape cell to hold the index or table of contents.
+   mark "index"; ++; 
+   # this mark gets overwritten by "here"
+   # mark "top"; 
+ }
+
+ read;
+
+ "\n" { 
+   nochars;
+   while [:space:]; put; clear; add "space*"; push;
+   while [#];
+   # parse heading and add to table of contents
+   B"#" { 
+     until "\n"; put; 
+     mark "here"; go "index"; swap; get; put; go "here";
+     clear; add "heading*"; push; .reparse
+   }
+   # add "\n"; put; clear; add "nl*"; push; .reparse
+ }
+
+ ![:space:] { 
+    whilenot [:space:]; put; 
+    clear; add "word*"; push; .reparse
+ }
+ [:space:] { 
+   while [:space:];
+   put; clear; add "space*"; push; .reparse
+ }
+
+parse>
+
+ # watch the parse stack reduce
+ add "# "; lines; add ":"; chars; add " "; print; clear;
+ unstack; print; stack; add " \n"; print; clear;
+
+ pop; pop;
+
+ # the *token* pattern ensures there are 2 tokens 
+ # resolve all 2 token sequences to text*
+ E"*nl*",E"*space*",E"*text*",E"*word*",E"*heading*" {
+   clear; get; ++; get; --; put; clear;
+   add "text*"; push; .reparse
+ }
+
+ (eof) {
+   "text*","word*","heading*" {
+      clear; 
+      add "\nINDEX \n\n"; mark "here"; go "index"; get; go "here";
+      add "\nDOCUMENT \n\n"; get; print; quit;
+   }
+   add "\n[what?]\n"; print; quit;
+ }
+ push; push;
+

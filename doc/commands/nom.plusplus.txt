@@ -1,0 +1,32 @@
+
+
+## THE NOM "INCREMENT TAPE POINTER" OR "++" COMMAND 
+
+ *Increment* the tape pointer by one .
+
+ The command adds *one* to the "tape" pointer. The command is written
+  >> ++ or >
+
+ Note that the only part of the machine state which has changed is that the
+ 'tape-pointer' (the arrow in the 'tape' structure) has been incremented by one
+ cell.
+  
+ This command allows the tape to be accessed as a pep://tape .  This is
+ oed://tautological but true. Being able to increment and 'decrement' the tape
+ pointer allows the script writer and the virtual machine to access any value
+ on the tape using the 'get' and 'put' commands.
+ 
+ It should be remembered that the 'push' command also automatically
+ increments the tape pointer, in order to keep the tape pointer
+ and the stack in synchronization.
+
+ Since the "get" command is the only way to retrieve values from
+ the tape the "++;" and "--;" commands are necessary. The tape
+ cannot be accessed using some kind of array index because
+ the get and 'put' commands to not have any arguments.
+
+ An example, the following script will print the string associated
+ with the "value" token.
+
+ >> pop;pop; "field*value*" { ++; get; --; print; }
+

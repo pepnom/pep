@@ -1,0 +1,254 @@
+
+## DEBUGGING A NOM SCRIPT
+
+ How to debug [nom] scripts.
+
+ Since pep/nom is a parsing and compiling system there are 2 processes taking
+ place (but not concurrently) during the execution of a [nom] script: the
+ reduction of tokens on the grammar parse stack and the "assembling" of the
+ attributes of those tokens to create the translated/transpiled/compiled output
+ text. 
+
+ It is often necessary to debug scripts since the [pep] virtual machine is not
+ trivial and [nom] is a relatively "low-level" language in the sense that 
+ each nom command corresponds to a pep machine instruction. See the script
+ /eg/toyBNF.pss for the beginning of a "higher-level" language which
+ compiles to *nom*. 
+ 
+ Luckily there are a number of techniques to debug *nom* scripts which are
+ detailed below.
+
+### WATCH THE PARSE STACK REDUCTIONS
+
+  This is possibly the most useful debug technique to ensure that 
+  the grammar you have designed (for whatever language or pattern that 
+  you wish to recognise or transpile) is functioning properly. 
+  
+  As the worlds leading, (and possibly only) expert on the Nom language
+  this is the technique that I use most.
+
+  Because pep/nom is a "text-filter" style system (which writes output to "stdout"
+  ), we can print the stack and line/character number after each reduction and
+  watch the grammar in action. This is a *very* useful technique for debugging
+  grammars and scripts.
+
+  The "print" statements are placed just after the "parse>" label.
+  The 2 lines below should probably be included in every non-trivial
+  script. When the script is working well the lines can be commented-out.
+
+  * visualise the stack token reductions with line/character numbers 
+  ------+
+  parse>
+    add "# "; lines; add ":"; chars; add " "; print; clear; 
+    unstack; print; stack; add "\n"; print; clear; 
+  ,,,
+  
+  The nom://add command above *adds* a '#' hash character to the beginning
+  of the debug line. This can or should be changed to whatever is the 
+  comment character or characters in the output language. This allows the 
+  script output to be tested as well as visualising the parse nom://stack
+  token reductions.
+
+  The "less" program (or "more" on ms windows) makes it possible to search for
+  any particular token by name, to watch it being reduced. We can also search
+  by input line number.
+
+  * watch token reduction and search for a particular reduction with less
+  >> pep -f eg/script.pss file.txt | less
+
+### THE STATE COMMAND
+
+ The nom://state command is an extremely useful nom command which displays the
+ internal state of the *pep* machine at the moment that the command executes.
+ This is possibly the second most useful debugging technique after watching the
+ parse stack reductions.
+
+ (Some of ?) The translation scripts at /tr/ also implement this command.
+
+ For some reason, I was going to remove this command from the Nom language.
+ I have no idea why.
+
+ * example of using the state command for debugging
+ ----+
+   read; 
+   [:punct:] { 
+     while [:punct:]; put; 
+     clear; add "punctuation*"; push; .reparse
+   }
+   [:alnum:] { 
+     while [:alnum:]; put; 
+     clear; add "alnumeric*"; push; .reparse
+   }
+   !"" { add " <--- what is this?"; print; quit; }
+ parse>
+   pop;pop;
+   "alnumeric*punctuation*" {
+     state; clear; add "garble*"; push; .reparse
+   }
+   push;push;
+   (eof) {
+     unstack; print; quit;
+   }
+ ,,,
+
+### THE INTERACTIVE DEBUGGER
+
+  The [pep] interpreter also includes a fully interactive debug mode 
+  which is activated with the *-I* switch. This interactive debugger 
+  has a whole list of different commands to step through the script
+  or run the script until a certain point and then view the state of 
+  the pep virtual pep://machine.
+
+  This facility is the 'big mamma' of debug techniques and hopefully 
+  you will not need to use it too often. It is a bit like having to 
+  use [gdb] to debug a c program.
+
+  * load a script and view/execute/step through it interactively 
+  >> pep -If someScript input.txt
+
+  * interactively view how some script is being compiled by "asm.pp" 
+  >> pep -Ia asm.pp someScript 
+  >> pep -a asm.pp someScript 
+
+  (Now you can step through the compiled program "asm.pp" and watch as 
+  it parses and compiles "someScript". Generally, use "rr" to run the
+  whole script, and "rrw text" to run the script until the workspace
+  is some particular text. This helps to narrow down where the asm.pp
+  compiler is not parsing the input script correctly.
+
+  Once in an interactive "pep" session, there are many commands to 
+  run and debug a script. Type *hh* to get a full list of 
+  available commands. For example:
+
+  * some commands in the interactive debugger
+  ------+
+  -
+  -  n - execute the next instruction in the program (step)
+  -  m - view the state of the machine (stack/workspace/registers/tape/program)
+  -  rrw <text> - run the script until the workspace is exactly some text.
+  -  rre <text> - run script until the workspace ends with something
+  -  rrc <num> - run script with <num> characters of input.
+  -  rr  - run the whole script from the current instruction
+  -  M.r - reset the virtual machine and input stream 
+          (but not the compiled program)
+  ,,,,
+
+  If the script did not compile properly there will only be 1 
+  instruction ( nom://quit ). But this almost never happens these days
+  (2025)
+
+### COMMENTING OUT LINES AND PRINTING
+
+ Probably the most primitive technique is just using the nom://print
+ command to show the contents of the workspace at a given time and 
+ also "commenting out" nomsyn://comment problematic lines and blocks.
+ The nom multi-line comment syntax #* ... *# is very useful for this.
+
+ Usually it is more enlightening to use the nom://state
+ command rather than a simple print command.
+ 
+### COMMON SCRIPT BUGS AND ERRORS
+
+  * not clearing the parse tokens before reducing
+  ------+
+    "article*noun*" {
+      # !!! no clear. 
+      add "nounphrase*"; push; .reparse
+    }
+  ,,,,
+
+  As a matter of habit, I write the nom://clear command on the 
+  beginning of the line where I am going to create a new parse token.
+  This reminds me that I always need to clear the pep://workspace 
+  before using it for something different
+
+  * Using "clear" in a clear fashion
+  ------+
+    pop;pop;
+    "bow*arrow*" {
+      # write clear at the start of the line to 
+      # avoid forgetting it.
+      clear; get; add " shoot "; ++; get; --; put;
+      clear; add "defender*"; push; .reparse
+    }
+  ,,,
+
+  * make sure to balance the "++" and "--" commands
+  >> "sentence*" { get; ++; put; }  # unbalanced tape increment
+
+  Generally if you increment the tape pointer with nom://++ then you will have
+  to decrement it with nom://-- in the same block. This is to ensure that the
+  stack and the pep://tape remain synchronised.  There are exceptions to this
+  rule, since you are free to write your scripts however you want, and to use
+  the virtual machine in any way you wish.
+
+  * make sure that you are pushing as many times as there are tokens.
+  >> add "noun*verb*noun*"; push; push; # << error, 3 tokens, 2 pushes
+
+  * in a block, if you "push" the tokens back, you need to .reparse
+  ------+
+    "article*noun*" {
+      clear; add "nounphrase*"; push; 
+      # error! no '.reparse' command
+    }
+  ,,,,
+
+  The nom://.reparse command is important for ensuring that all 
+  grammar reductions take place. It also acts as an *if/else* logic
+  structure because code in the same block, after the nom://.reparse
+  command will not execute.
+
+  * make sure there is at least one read command in the script 
+  >> "."{ clear; } print; clear; # << error: no read in script
+
+  Two "pop" commands does not guarantee that there are 2 tokens 
+  in the workspace. The stack may be empty, or may contain only 
+  1 token.
+
+  * check that the workspace has 2 tokens, and last is not a verb 
+  ------+
+    # snippet ...
+    pop; pop;
+    B"noun*".!"noun*".!E"verb*" {
+       # process tokens here.
+    }
+  ,,,,
+
+  Often we expect a certain order of tokens, without realising that 
+  an extra token has already been parsed and pushed onto the stack.
+
+
+### VIEW COMPILATION OF A SCRIPT
+
+  In extreme cases, you may wish to see how a script is "compiled"
+  into the [pep] *assembly* language. This would be only if you suspect
+  that there is a bug in the compiler. The debugging techniques mentioned
+  above a more practical.
+
+  * see how a particular script is compiled to "assembler" format
+  >> pep -f compile.pss script
+
+  The compiled script will be printed to stdout and saved in sav.pp
+  or an error message will be displayed if the script has a syntax
+  error.
+
+  Sometimes the line above is useful for finding errors in a script
+  which are not caught during the script loading process.
+
+### CHECK THE SYNTAX OF A NOM SCRIPT
+
+  Use the script eg/nom.reference.syntax.pss to check the syntax of the script.
+  This script has much better error checking currently (april 2025) than the
+  nomsf://compile.pss which is the nom script from which the nom compiler is
+  generated although at some point I will rewrite the compiler to use 
+  a "modern" up-to-date grammar and error checking.
+ 
+  * check the syntax of a nom script "script.pss"
+  >> pep -f eg/nom.reference.syntax.pss script.pss
+
+### MISCELANEOUS TECHNIQUES
+
+ * get a unique list of tokens used during parsing
+ >> pep -f eg/mark.latex.simple.pss pars-book.txt | sed '/%% ---/q;' | sed 's/^[^:]*: *//;s/\* *$//' | tr '*' '\n' | sort | uniq
+
+

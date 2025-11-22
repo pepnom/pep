@@ -1,0 +1,79 @@
+#* 
+
+ An early attempt to parse and format markdown-style underline
+ headings.
+
+Markdown Underlined Headings
+============================
+
+  Attempting to recognise markdown style heading and format 
+  them as html. This seems to be mainly working, although
+  empty lines are lost. As usual it seems very verbose for a
+  script that doesnt do very much.
+
+Notes
+-----
+
+  This script could be used as the basis for a script that 
+  parses and compiles a bash history file.
+
+Testing 
+-------
+
+  try: pep -f markdown.underline.pss markdown.underline.pss
+
+*#
+
+read;
+
+"\n" { clear; }
+until "\n"; E"\n" { clip; } put; 
+# if the underlines have a space at the end this will fail
+[= ].E"==" {
+  clear; add "double.uline*"; push; .reparse 
+} 
+[- ].E"--" {
+  clear; add "single.uline*"; push; .reparse 
+} 
+clear; add "line*"; push; .reparse 
+
+parse>
+
+  # 2 tokens
+  pop; pop;
+  "line*double.uline*" { 
+    clear; 
+    add "<h2>"; get; add "</h2>"; add "\n"; put; clear; 
+    add "line*"; push; .reparse
+  }
+  "line*single.uline*" { 
+    clear; 
+    add "<h3>"; get; add "</h3>"; add "\n"; put; clear; 
+    add "line*"; push; .reparse
+  }
+
+  <eof> {
+    "*line*line", "lines*line*" { 
+      clear; get; add "\n"; ++; get; --; add "\n"; put; clear; 
+      add "lines*"; push; .reparse
+    }
+  }
+
+  # 3 tokens
+  pop;
+  # we use 3 tokens as a kind of look-ahead 
+  "line*line*line*", "lines*line*line*" { 
+    clear; get; add "\n"; ++; get; --; put; clear; 
+    ++; ++; get; --; put; --; clear;
+    add "lines*line*"; push; push; .reparse
+  }
+
+  # did the script parse properly
+  <eof> {
+    "lines*" {
+      clear; get; print; quit;
+    }
+  }
+
+  push; push; push;
+

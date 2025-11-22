@@ -1,0 +1,75 @@
+
+
+## THE NOM "MARK" COMMAND 
+ 
+ *Mark* the current tape cell with the given name.
+
+ The mark command adds a text "tag" to the current tape-cell.
+ This allows the pep://tape cell to be accessed later in the script with
+ the nom://go command. The mark and go commands should allow "offside"
+ or indent parsing (such as for the 
+ "python" https://stackoverflow.com/questions/6430297/how-do-python-parsers-handle-indentation language)
+
+ The mark command has 2 formats, one with a parameter and one without:
+
+ * The different formats of mark 
+ >> mark; mark "here";
+
+ When the *mark* command has no explicit text tag, then the current
+ pep://tape cell is used as the mark to jump to.
+
+ See the nom://go command for an example.
+
+ See the script /eg/tocfoot.tohtml.pss for an example of using
+ the "mark" and "go" commands to create a table of contents for 
+ a document from markdown-style underline headings.
+
+## NOTES
+
+ It has occurred to me that it would be convenient to introduce 
+ a new version of the nom://get command that would take a text tag
+ as an argument, as below:
+
+ * implementation of the 'get "tag";' command
+ >> mark 'here'; go 'tag'; get; go 'here';
+
+ As can be seen above the *get "<mark>";* command could be implemented as
+ a *macro* that just goes to a particular mark, *gets* the text at 
+ that pep://tapecell (appends it to the pep://workspace buffer) and then
+ return to the original tape cell.
+
+## EXAMPLES 
+
+ The technique of using mark and go for creating footers and headers 
+ seems to work well. But I haven't yet used it to do *type-checking*
+ in nom.
+
+ * reserve 2 cells at the top of the tape and name them
+ ----
+   begin {
+     mark "header"; ++; mark "footer"; ++;
+   }
+   # script.
+ ,,,
+
+ * using mark and go to make a header with word by word parsing
+ -----
+   begin { mark "top"; ++; }
+   while [:space:]; clear;
+   whilenot [:space:]; !"" { 
+     put; 
+     "fluffy","fofo","flop" {
+       mark "here"; go "top";
+       # ... create a reference here
+       go "here";
+     }
+     clear; add "word*"; push; .reparse
+   }
+  parse>
+   pop;pop;
+   "word*word*","text*word*" {
+      # reduce here  
+   }
+   (eof) { quit; }
+   push;push;
+ ,,,,

@@ -1,0 +1,68 @@
+
+## THE PEP "LINES" REGISTER
+
+ About the automatic line counter register in the pep machine.
+
+ The pep virtual machine maintains an automatic count of the number of 
+ lines which have been read from the input stream. This line-count is kept
+ in the *lines* register of the virtual machine. You can access this 
+ register with the nom://lines command and the nom://nolines command. 
+
+ The *lines* command adds the current count in the lines register to the 
+ end of the pep://workspace buffer (as text). The *nolines* command 
+ resets the lines counter to zero (the lines counter is automatically 
+ initialised at zero at the start of the nom script).
+
+ * count the number of lines after the word "mark"
+ ------+
+   read; until "\n"; put;
+   # a trick to see if the line contains the text "mark"
+   replace "mark" "";
+   !(==) { a+; nolines; }
+   clear;
+   (eof) { 
+     count;
+     # the accumulator indicates if the text 'mark' occurred or not
+     !"0" {
+       clear; add "lines after 'mark':"; lines; add "\n"; 
+       print; quit;
+     }
+     clear; add "No 'mark'."; print; quit;
+   }
+ ,,,,
+
+### NOTES 
+
+ The reason that the number of lines read from the input-stream has 
+ an automatically updated register in the machine is because pep/nom
+ is designed for recognising, parsing, translating, transpiling, compiling
+ and error checking text patterns and context-free and context-sensitive
+ formal languages. In the context of *error-checking* the syntax or 
+ the validity of the text input, it is very useful to keep track of the 
+ current line number so that helpful "error" messages can be printed 
+ to show the language writer where he or she went wrong.
+
+ The function of the lines register could be fulfilled by the 
+ pep://accumulator register as follows
+
+ * some nom code to count line numbers with the accumulator
+ ------+
+   read; "\n" { a+; } clear;
+   (eof) {
+     add "Found "; count; add " lines. See ya \n"; 
+     print; quit;
+   }
+ ,,,
+
+ But that would clog up the accumulator register and we could 
+ not use it for anything else.
+
+ The *pep* interpreter actually still accepts "ll" as an alias for the 
+ nom://lines command, but I will begin to remove that command alias
+
+ (it has already been removed from some "translation" /tr/ scripts).
+
+### SEE ALSO
+
+ The nom commands nom://lines nom://nolines nom://chars nom://nochars
+ et.

@@ -1,0 +1,13 @@
+
+## THE SEMICOLON IN THE "NOM" LANGUAGE SYNTAX
+
+  The role of the semicolon *;* in syntax of the [nom] language.
+
+  All statements must be terminated with a semicolon in the *Nom*
+  parsing language with the exception of the following:
+  >> .reparse, .restart, and blocks *{...}*
+
+  I chose not to allow a semicolon after .reparse and .restart to emphasise the
+  fact that they are *jumps* back to the nomsyn://parse> label or to the start
+  of the script (but after the nomsyn://begin block).
+

@@ -1,0 +1,707 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/doodle.horse.duck.swirl.600.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   Why is the sun (le soleil) masculine and the moon (la lune) feminine?
+   Because they married each other and they belong together even
+   though they are opposites.
+ 
+<cite>Cadaques Jordi </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/howto/nom.debug.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> debugging a &Nopf;&oopf;&mopf; script</h2>
+
+<p>
+ How to debug 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> scripts.
+<p>
+ Since &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; is a parsing and compiling system there are 2 processes taking
+ place (but not concurrently) during the execution of a 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> script: the
+ reduction of tokens on the grammar parse stack and the &ldquo;assembling&rdquo; of the
+ attributes of those tokens to create the translated/transpiled/compiled output
+ text. 
+<p>
+ It is often necessary to debug scripts since the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> virtual machine is not
+ trivial and 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> is a relatively &ldquo;low-level&rdquo; language in the sense that 
+ each <em>nom</em> command corresponds to a <em>pep</em> machine instruction. See the script
+ <a href='/eg/toyBNF.pss'>/eg/toyBNF.pss</a> for the beginning of a &ldquo;higher-level&rdquo; language which
+ compiles to <em>nom*. </em> <p>
+ Luckily there are a number of techniques to debug <em>nom</em> scripts which are
+ detailed below.
+<p>
+<!-- ------------------------------- -->
+<h3> watch the parse stack reductions</h3>
+
+<p>
+ This is possibly the most useful debug technique to ensure that 
+ the grammar you have designed (for whatever language or pattern that 
+ you wish to recognise or transpile) is functioning properly. 
+ <p>
+ As the worlds leading, (and possibly only) expert on the <em>Nom</em> language
+ this is the technique that I use most.
+<p>
+ Because &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; is a &ldquo;text-filter&rdquo; style system (which writes output to &ldquo;stdout
+&rdquo; ), we can print the stack and line/character number after each reduction and
+ watch the grammar in action. This is a <em>very</em> useful technique for debugging
+ grammars and scripts.
+<p>
+ The &ldquo;print&rdquo; statements are placed just after the &ldquo;parse&gt;&rdquo; label.
+ The 2 lines below should probably be included in every non-trivial
+ script. When the script is working well the lines can be commented-out.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ visualise the stack token reductions with line/character numbers 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"# "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>":"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" "</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+    <span class='nom-command'>unstack</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>stack</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+  </code></pre>
+</figure>
+ <p>
+ The <code class='nom-command'><a title='nom command reference: add' href='http://nomlang.org/doc/commands/nom.add.html'>add</a></code> command above <em>adds</em> a '#' hash character to the beginning
+ of the debug line. This can or should be changed to whatever is the 
+ comment character or characters in the output language. This allows the 
+ script output to be tested as well as visualising the parse <code class='nom-command'><a title='nom command reference: stack' href='http://nomlang.org/doc/commands/nom.stack.html'>stack</a></code>
+ token reductions.
+<p>
+ The &ldquo;less&rdquo; program (or &ldquo;more&rdquo; on ms windows) makes it possible to search for
+ any particular token by name, to watch it being reduced. We can also search
+ by input line number.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ watch token reduction and search for a particular reduction with less
+ </figcaption>
+<pre class='codeline'>
+ pep -f eg/script.pss file.txt | less
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> the state command</h3>
+
+<p>
+ The <code class='nom-command'><a title='nom command reference: state' href='http://nomlang.org/doc/commands/nom.state.html'>state</a></code> command is an extremely useful <em>nom</em> command which displays the
+ internal state of the <em>pep</em> machine at the moment that the command executes.
+ This is possibly the second most useful debugging technique after watching the
+ parse stack reductions.
+<p>
+ (Some of ?) The translation scripts at <a href='/tr/'>/tr/</a> also implement this command.
+<p>
+ For some reason, I was going to remove this command from the <em>Nom</em> language.
+ I have no idea why.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ example of using the state command for debugging
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-command'>read</span><span class='nom-punct'>;</span> 
+   <span class='nom-class'>[:punct:]</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>while</span> <span class='nom-class'>[:punct:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"punctuation*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+   <span class='nom-punct'>}</span>
+   <span class='nom-class'>[:alnum:]</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>while</span> <span class='nom-class'>[:alnum:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"alnumeric*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+   <span class='nom-punct'>}</span>
+   <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>" &lt;--- what is this?"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+ <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+   <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+   <span class='nom-string'>"alnumeric*punctuation*"</span> <span class='nom-punct'>{</span>
+     <span class='nom-command'>state</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"garble*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+   <span class='nom-punct'>}</span>
+   <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+     <span class='nom-command'>unstack</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>}</span>
+ </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> the interactive debugger</h3>
+
+<p>
+ The 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> interpreter also includes a fully interactive debug mode 
+ which is activated with the <em>-I</em> switch. This interactive debugger 
+ has a whole list of different commands to step through the script
+ or run the script until a certain point and then view the state of 
+ the <em>pep</em> virtual <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a>
+<p>
+ This facility is the 'big mamma' of debug techniques and hopefully 
+ you will not need to use it too often. It is a bit like having to 
+ use [gdb] to debug a c program.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ load a script and view/execute/step through it interactively 
+ </figcaption>
+<pre class='codeline'>
+ pep -If someScript input.txt
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ interactively view how some script is being compiled by "asm.pp" 
+ </figcaption>
+<pre class='codeline'>
+ pep -Ia asm.pp someScript 
+</pre>
+</figure>
+ <pre class='codeline'>
+ pep -a asm.pp someScript 
+</pre>
+
+<p>
+ (Now you can step through the compiled program &ldquo;asm.pp&rdquo; and watch as 
+ it parses and compiles &ldquo;someScript". Generally, use&rdquo; rr" to run the
+ whole script, and &ldquo;rrw text&rdquo; to run the script until the workspace
+ is some particular text. This helps to narrow down where the <code>asm.pp</code>
+ compiler is not parsing the input script correctly.
+<p>
+ Once in an interactive &ldquo;pep&rdquo; session, there are many commands to 
+ run and debug a script. Type <em>hh</em> to get a full list of 
+ available commands. For example:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ some commands in the interactive debugger
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+  <span class='nom-unknown'>-</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-command'>count</span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>execute</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>next</span> <span class='nom-unknown'>instruction</span> <span class='nom-unknown'>in</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>program</span> <span class='nom-punct'>(</span><span class='nom-unknown'>step</span><span class='nom-punct'>)</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-command'>mark</span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>view</span> <span class='nom-unknown'>the</span> <span class='nom-command'>state</span> <span class='nom-unknown'>of</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>machine</span> <span class='nom-punct'>(</span><span class='nom-command'>stack</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>workspace</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>registers</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>tape</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>program</span><span class='nom-punct'>)</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-unknown'>rrw</span> <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>text</span><span class='nom-punct'>></span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>run</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>script</span> <span class='nom-command'>until</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>workspace</span> <span class='nom-unknown'>is</span> <span class='nom-unknown'>exactly</span> <span class='nom-unknown'>some</span> <span class='nom-unknown'>text</span><span class='nom-punct'>.</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-unknown'>rre</span> <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>text</span><span class='nom-punct'>></span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>run</span> <span class='nom-unknown'>script</span> <span class='nom-command'>until</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>workspace</span> <span class='nom-unknown'>ends</span> <span class='nom-unknown'>with</span> <span class='nom-unknown'>something</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-unknown'>rrc</span> <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>num</span><span class='nom-punct'>></span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>run</span> <span class='nom-unknown'>script</span> <span class='nom-unknown'>with</span> <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>num</span><span class='nom-punct'>></span> <span class='nom-unknown'>characters</span> <span class='nom-unknown'>of</span> <span class='nom-unknown'>input</span><span class='nom-punct'>.</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-unknown'>rr</span>  <span class='nom-unknown'>-</span> <span class='nom-unknown'>run</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>whole</span> <span class='nom-unknown'>script</span> <span class='nom-unknown'>from</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>current</span> <span class='nom-unknown'>instruction</span>
+  <span class='nom-unknown'>-</span>  <span class='nom-command'>go</span><span class='nom-punct'>.</span><span class='nom-command'>read</span> <span class='nom-unknown'>-</span> <span class='nom-unknown'>reset</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>virtual</span> <span class='nom-unknown'>machine</span> <span class='nom-unknown'>and</span> <span class='nom-unknown'>input</span> <span class='nom-unknown'>stream</span> 
+          <span class='nom-punct'>(</span><span class='nom-unknown'>but</span> <span class='nom-unknown'>not</span> <span class='nom-unknown'>the</span> <span class='nom-unknown'>compiled</span> <span class='nom-unknown'>program</span><span class='nom-punct'>)</span>
+  </code></pre>
+</figure>
+<p>
+ If the script did not compile properly there will only be 1 
+ instruction ( <code class='nom-command'><a title='nom command reference: quit' href='http://nomlang.org/doc/commands/nom.quit.html'>quit</a></code> ). But this almost never happens these days
+ (2025)
+<p>
+<!-- ------------------------------- -->
+<h3> commenting out lines and printing</h3>
+
+<p>
+ Probably the most primitive technique is just using the <code class='nom-command'><a title='nom command reference: print' href='http://nomlang.org/doc/commands/nom.print.html'>print</a></code>
+ command to show the contents of the workspace at a given time and 
+ also <a title='nom syntax reference: comment' href='http://nomlang.org/doc/syntax/nom.syntax.comment.html'>commenting out </a> problematic lines and blocks.
+ The <em>nom</em> multi-line comment syntax <em><code class='nom-token'>#*</code></em> ... <em># is very useful for this.</em><p>
+ Usually it is more enlightening to use the <code class='nom-command'><a title='nom command reference: state' href='http://nomlang.org/doc/commands/nom.state.html'>state</a></code>
+ command rather than a simple print command.
+ <p>
+<!-- ------------------------------- -->
+<h3> common script bugs and errors</h3>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ not clearing the parse tokens before reducing
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-string'>"article*noun*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># !!! no clear. </span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"nounphrase*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ As a matter of habit, I write the <code class='nom-command'><a title='nom command reference: clear' href='http://nomlang.org/doc/commands/nom.clear.html'>clear</a></code> command on the 
+ beginning of the line where I am going to create a new parse token.
+ This reminds me that I always need to clear the <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> 
+ before using it for something different
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ Using "clear" in a clear fashion
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"bow*arrow*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># write clear at the start of the line to </span>
+      <span class='nom-comment'># avoid forgetting it.</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" shoot "</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"defender*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make sure to balance the "++" and "--" commands
+ </figcaption>
+<pre class='codeline'>
+ "sentence*" { get; ++; put; }  # unbalanced tape increment
+</pre>
+</figure>
+<p>
+ Generally if you increment the tape pointer with <code class='nom-command'><a title='nom command reference: ++' href='http://nomlang.org/doc/commands/nom.plusplus.html'>++</a></code> then you will have
+ to decrement it with <code class='nom-command'><a title='nom command reference: --' href='http://nomlang.org/doc/commands/nom.minusminus.html'>--</a></code> in the same block. This is to ensure that the
+ stack and the <a title='nom syntax reference: tape' href='http://nomlang.org/doc/machine/pep.tape.html'>tape</a> remain synchronised. There are exceptions to this
+ rule, since you are free to write your scripts however you want, and to use
+ the virtual machine in any way you wish.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make sure that you are pushing as many times as there are tokens.
+ </figcaption>
+<pre class='codeline'>
+ add "noun*verb*noun*"; push; push; # &lt;&lt; error, 3 tokens, 2 pushes
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ in a block, if you "push" the tokens back, you need to .reparse
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-string'>"article*noun*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"nounphrase*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> 
+      <span class='nom-comment'># error! no '.reparse' command</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ The <code class='nom-command'><a title='nom command reference: .reparse' href='http://nomlang.org/doc/commands/nom..reparse.html'>.reparse</a></code> command is important for ensuring that all 
+ grammar reductions take place. It also acts as an <em>if/else</em> logic
+ structure because code in the same block, after the <code class='nom-command'><a title='nom command reference: .reparse' href='http://nomlang.org/doc/commands/nom..reparse.html'>.reparse</a></code>
+ command will not execute.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ make sure there is at least one read command in the script 
+ </figcaption>
+<pre class='codeline'>
+ "."{ clear; } print; clear; # &lt;&lt; error: no read in script
+</pre>
+</figure>
+<p>
+ Two &ldquo;pop&rdquo; commands does not guarantee that there are 2 tokens 
+ in the workspace. The stack may be empty, or may contain only 
+ 1 token.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check that the workspace has 2 tokens, and last is not a verb 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-comment'># snippet ...</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"noun*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"noun*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"verb*"</span> <span class='nom-punct'>{</span>
+       <span class='nom-comment'># process tokens here.</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ Often we expect a certain order of tokens, without realising that 
+ an extra token has already been parsed and pushed onto the stack.
+<p>
+<p>
+<!-- ------------------------------- -->
+<h3> view compilation of a script</h3>
+
+<p>
+ In extreme cases, you may wish to see how a script is &ldquo;compiled
+&rdquo; into the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> <em>assembly</em> language. This would be only if you suspect
+ that there is a bug in the compiler. The debugging techniques mentioned
+ above a more practical.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ see how a particular script is compiled to "assembler" format
+ </figcaption>
+<pre class='codeline'>
+ pep -f compile.pss script
+</pre>
+</figure>
+<p>
+ The compiled script will be printed to stdout and saved in <code>sav.pp</code>
+ or an error message will be displayed if the script has a syntax
+ error.
+<p>
+ Sometimes the line above is useful for finding errors in a script
+ which are not caught during the script loading process.
+<p>
+<!-- ------------------------------- -->
+<h3> check the syntax of a &Nopf;&oopf;&mopf; script</h3>
+
+<p>
+ Use the script <code>eg/nom.reference.syntax.pss</code> to check the syntax of the script.
+ This script has much better error checking currently (april 2025) than the
+ <a href='https://bumble.sf.net/books/pars/compile.pss'>bumble.sf.net/books/pars/compile.pss</a> which is the <em>nom</em> script from which the <em>nom</em> compiler is
+ generated although at some point I will rewrite the compiler to use 
+ a &ldquo;modern&rdquo; up-to-date grammar and error checking.
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check the syntax of a &Nopf;&oopf;&mopf; script "script.pss"
+ </figcaption>
+<pre class='codeline'>
+ pep -f eg/nom.reference.syntax.pss script.pss
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> miscelaneous techniques</h3>
+
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ get a unique list of tokens used during parsing
+ </figcaption>
+<pre class='codeline'>
+ pep -f eg/mark.latex.simple.pss pars-book.txt | sed '/%% ---/q;' | sed 's/^[^:]*: *//;s/\* *$//' | tr '*' '\n' | sort | uniq
+</pre>
+</figure>
+<p>
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

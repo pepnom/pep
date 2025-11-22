@@ -1,0 +1,192 @@
+
+## Things to be done on the pep / nom system
+
+  A document about what needs to be done on pep/nom. There is 
+  a lot that could be done. Feel free to help! 
+
+### 25 may 2025
+
+  - fix the nom://stack and nom://unstack commands in the c source 
+    file /object/machine.interp.c and /object/machine.methods.c The 
+    idea is just to call the nom://pop command or nom://push command 
+    multiple times so that the tape pointer is updated properly. This 
+    is what is done in all the "translation" /tr/ scripts but maybe
+    not in the pep interpreter.
+
+### done
+
+  - finished the rust translator, which is called /tr/nom.torust.pss 
+  - used the google gemini assistant to translate the rust or dart
+    translator into other languages (perl, zig). This saves a lot
+    of typing even if I need to correct the program. But the 
+    result seems remarkably good.
+  
+### 1 may 2025
+
+  - add modulus operator to /eg/maths.parse.pss
+  - update /eg/nom.syntax.reference.pss to allow trailing parse>
+    labels and beginblocks (see /tr/nom.tolua.pss or /tr/nom.todart.pss )
+  - cgi-script link on nomlang.org pages to allow basic editing/comments
+  - link on icon images to show image information 
+
+### 27 april 2025
+
+  - Format /tr/ translation scripts into html and make links to them.
+  - in /eg/maths.parse.pss and /eg/maths.tolatex.pss change the exponent
+    operator (^) to be right associative (because I forgot this basic
+    rule of school mathematics).
+  - write "/eg/maths.tollvm.pss" to convert a mathematical expression
+    to llvm intermediate representation. This is mainly as an exercise
+    and to learn a bit about llvm.
+    
+### DONE
+
+   - finished lua translator (need to do "stdin.stream" and
+     "stdin.file" input types for very big files? )
+   - added upper case headings to text.tohtml.pss (but not with 
+     trailing .... four dots.)
+   - in /object/machine.methods.c change escape() and unescape()
+     so that they do not reescape chars that are already
+     escaped eg \\\\ should remain as is. Use the code from
+     /eg/nom.todart.pss escapeChar to implement.
+   - add go; and mark; syntax to pep interp but haven't recompiled
+     asm.pp with nomsf://compile.pss
+
+### 27 mar 2025
+
+   - show a solution to "dangling else" problem with nom
+   - show solution to recognising { a^n b^n c^n : n>0 } with pep/nom
+   - write a script that turns grammar descriptions as above with
+     braces into html or latex. See wikipedia for the format.
+   
+### 23 mar 2025
+
+   - make a help system for the /eg/text.tohtml.pss script which 
+     would explain the formats available for writing documents.
+   - empty list item at end of doc may eat the whole document!
+
+### done 
+
+   - finished (more or less) the dart translator.
+
+### 19 mar 2025
+
+   - wrap long lines in /eg/nom.tolatex.pss
+     nicely so that I can make books in A4 with a bigger font.
+   - make a vim macro command or abbreviation that adds translation
+     instructions for a given language. Or put the macro in
+     /eg/text.tohtml.pss . 
+   - make some format "attributes" for lists in html, for example to
+     suppress the bullet points or make the list ordered etc.
+
+### 17 mar 2025
+
+   More things to do 
+    - change sum() function in maths.tolatex.pss to take 3 arguments
+      not two eg sum(0, :infinity, expression).
+    - *Or* just make the sum function an operator, so that I can 
+      combine it with other expressions.
+    - add stackmash as symlink in nom blog.
+
+### things done
+
+    - Added a script* grammar token to the scripts at (eof) which means
+      that a valid script/program has been successfully parsed. eg
+      in nom.syn.ref.pss  The new translator scripts have this grammar.
+    - Consolidate grammar token error checking into one section just after the
+      nom://parse> label in the translation scripts. I have done this 
+      for /tr/nom.todart.pss and will use as template for other translators.
+    - adapted /eg/nom.tohtml.pss to output [latex] this is pretty simple
+      since it is not a parsing script. 
+    - fixed mark/go bug in the translator scripts.
+      Essentially if a new *mark* is created which has the same name as 
+      an existing *mark* then the existing mark should be deleted.
+    - make nom.tolatex.pss to produce latex output for printing.
+    - made a translation macro in 
+      the [html] formatter which will list languages that have good 
+      nom translators and links to the translator scripts.
+    - remove parsing code from nom.tohtml.pss and just make the 
+      script colourise and print. This is better because dont have 
+      to reformat statements.
+    - make files automatically link in documents when they start with 
+      / such as /tr/translate.perl.pss . Directories work too such
+      as the /tr/ folder.
+    - done: autolink /eg/text.tohtml.format.html hope so.
+    - done: added unordered lists. See /eg/text.tohtml.format.html
+      for the details of the format. Basically list items start the 
+      line with *-* and end with a blank line or the end of the 
+      document.
+    - done: check centre aligning images in eg/text.tohtml.pss
+    - done: in blog.sh generate latex maths formula images and save in image/maths
+    - done: put the abbreviation code which is in nom.tohtml.pss into 
+    - done: add help to eg/nom.syntax.reference.pss
+      nom.syn.ref.pss
+    - done: make a template script with errors and help and parse stack watch.
+    - done: add equationset* token to eg/maths.tolatex.pss so 
+      that I can print lists
+      of formulas and maths problems.
+   - done: rewrite maths.tolatex.pss using new grammar in maths.parse.pss
+     (not much to rewrite)
+   - done: Improve unbalanced bracket error checking (in nom.syn.ref.pss
+   - wrote a pretty printer for nom source code. eg look at colours
+     in chromium view source, i.e nom.tohtml.pss and nom.tolatex.pss
+
+   
+### done 
+
+   - rewrote translate.perl.pss (which is now called 
+     /tr/nom.toperl.pss ) using the new syntax at /eg/nom.syntax.reference.pss
+   - translation scripts rust, dart, lua.
+   - Added the "go;" syntax, go to the mark indicated in the tape cell
+
+### 13 mar 2025
+
+  Things to do on the [pep] and [nom] system. 
+   - make script nom.syntax.recognise.pss based on script above 
+     which just says "yes: nom syntax ok" or "no: etc" This script would 
+     become the basis of an non-error checking nom parser.
+   - add help system to eg/drawbasic.pss 
+   - generate headers in eg/ to html with text.tohtml.pss
+   - make a new script text.tolatex.pss for printing a book
+   - revise the docs at nomlang.org/doc to generate printed material
+   
+  the python translation script in the /tr/ translation folder. 
+  the python script seems to have a bug when running /eg/text.tohtml.pss
+
+  - Include the document folder in the download.tar.gz
+  - Also do the translations swift, lisp, forth, zig
+  - I will call these scripts "nom.tojava.pss" or /tr/nom.todart.pss etc. 
+
+  - Update the github pep/nom repository.
+  - Make sure pep/nom can be downloaded with git and compiled with "make"
+  - write a table of contents parser 
+
+  Change write; to writefile "name"; and writefile; (write to file
+  named in tapecell). Also make "readfile" with the same syntax.
+  But "compile.pss" used write to sav.pp as a special process.
+
+  Find the bug with pickwick papers (strange character hanging?)
+
+### COMPILER AND TRANSLATOR ERROR MESSAGES
+
+  token sequences
+
+  * missing command like replace
+  ----
+    quoted quoted ; 
+    quoted ;
+  ,,,
+
+  * trailing comma or dot 
+  ----
+   quoted , quoted , {
+   quoted . {
+   message: 
+     Truly, I would love just ignore that trailing comma at line x char y
+       but I just cant, pedantry doesnt let me
+  ,,,,
+
+
+
+
+

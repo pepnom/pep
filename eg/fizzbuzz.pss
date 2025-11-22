@@ -1,0 +1,32 @@
+
+#*
+
+ An attempt at solving the fizzbuzz programming task. Not complete.
+
+ This is the standard "fizzbuzz" programming task.  If the line number is a
+ multiple of 5 print "fizz" and if the line is a multiple of 3 print "buzz".
+ If multiple of both, print "fizzbuzz". 
+
+ Pep/nom can't really do arithmetic so the script zeros the counter on every
+ 3rd line.
+
+ Also, the line numbering system is not consistent. Lines
+ start at 1 but no lines sets the line counter to 0.
+ Also, the pep interpreter starts lines at zero.
+
+STATUS
+
+ Not working properly.
+
+*# 
+
+ clear; lines;
+ E"5",E"0" { clear; add "fizz"; print; }
+ clear; count;
+ "3" { clear; add "buzz "; print; zero; }
+ clear; until "\n"; print; 
+ a+;
+ (eof) { quit; }
+
+
+

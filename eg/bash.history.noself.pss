@@ -1,0 +1,255 @@
+#*
+
+  Parse a bash history file which has some explanatory 
+  comments above or below the timestamp for commands. This is a format 
+  that I use in my bash history file to remind me of something that I did
+  a while ago, and also to make it easier to search for the command.
+  
+  This script may transform the history file into a perl/python/ruby array in
+  order to eliminate duplicate and simple commands, while conserving comments
+  and timestamps. I find comments above commands in the history file very
+  useful for remembering how I did something a long time ago.
+
+  eg in ruby to remove duplicate objects
+  >> users = User.find(user_list.map(&:user_id).uniq)
+   or just users.uniq
+
+   create a ruby array with
+   -----
+   class Record
+    def initialize(comment, time, command)
+     @comment = comment 
+     @timestamp = time
+     @command = command
+    end
+
+    // define equality (for uniq to use)
+    def ==(other)
+      self.command == other.command && self.comment == other.comment
+    end
+    def display
+      # print out in bash history format
+    end
+   end
+
+   aa = [
+     Record.new("comment", timestamp, command)
+     Record.new("comment", timestamp, command)
+     Record.new("comment", timestamp, command)
+     ...
+   ]
+   aa.uniq
+   ,,,
+
+  Appears to be more or less working, and only takes about 1 second for a 35000
+  line history file eg:
+  >> pep -f pars/eg/history.pss ~/.bash_history
+
+TESTING
+
+  use the helper functions in helpers.pars.sh to translate to other 
+  languages and run.
+
+  * translate to python and run
+  ---
+    pep -f tr/translate.py.pss eg/bash.history.pss > eg/py/bash.history.pss
+    chmod a+x eg/py/bash.history.pss
+    cat ~/.bash_history | eg/py/bash.history.pss > test1.txt
+    # now compare with the output from the interpreted script
+    pep -f eg/bash.history.pss ~/.bash_history > test2.txt
+    vimdiff test1.text test2.txt
+  ,,,
+
+NOTES
+
+  Sudden thought: there is really no reason to parse all the "records" before 
+  printing them. For the sake of speed and memory use, we can just print
+  records as we find them.
+  
+  We can use the "empty startset" technique here, because
+  a recordset is just a set of records. The next step is to fork this 
+  script to create a ruby array and make the array unique where the 
+  comment and command are the same (but not the timestamp). See the 
+  skeleton code below. This should keep my .bash_history file quite 
+  lean and clean and useful for reference purposes.
+
+HISTORY
+
+  29 june 2022
+    Tested with different translators: java, go, python, ruby, c
+    tcl. All seem to work, but with a small variation on the number
+    of commands eliminated (about +/- 10)
+
+  18 june 2021
+
+    Re-examining this to make more useful. Marking trivial commands and 
+    only removing them if they have no attached comment. Also outputting in
+    standardized order: comment/timestamp/command. removing all commands
+    of 4 letters or less. Working on this makes me want to have a 
+    shell command syntax: eg shell; which will execute the workspace as 
+    a shell command!! why not? It would make nom a more generally useful
+    scripting tool. The workspace would be replaced with the output of the 
+    command.
+
+  27 july 2020
+     
+    testing with pars/tr/translate.java.pss seems to be working
+
+  26 march 2020
+
+    Revising the script. Found a bug for duplicated timestamps, and
+    timestamp*comment*timestamp* sequence. Also, ignore trivial commands 
+
+  15 March 2020
+    Began this script.
+
+*#
+  begin { 
+    # the empty recordset trick to simplify the grammar rules
+    add "recordset*"; push; 
+  }
+  read; 
+  [\n] { 
+    # just to debug
+    # lines; print;
+    clear; 
+  }
+  whilenot [\n]; 
+  # ignore blank lines
+  "",[:space:] { clear; .reparse }
+  put;
+  B"#".!"#" { 
+    [#0123456789] {
+      clear; add "timestamp*"; push; .reparse
+    }
+    clear; add "comment*"; push; .reparse
+  }
+
+  # tag the command as trivial if it is 
+  # for later removal. If there is a comment above it we may keep it anyway
+  
+   
+  # tag as trivial all commands less than 5 characters
+  clip; clip; clip; clip;
+  "" { clear; add "trivial*"; push; .reparse }
+
+  clear; get;
+  B"df ","df",B"du ",B"mv ",B"cp ",B"less ",B"vim ",B"rm ",B"mkdir ",
+  B"find ",B"locate ",B"cd ","cd",B"ls ","ls","pwd","hist","books","bk","ho",
+  "updatedb","bashrc","vimrc","os","cos","ccos","make" { 
+    clear; add "trivial*"; push; .reparse
+  }
+
+  clear; add "command*"; push;
+
+parse>
+  # for debugging
+  # add "line "; lines; add " char "; chars; add ": "; print; clear; 
+  #add "line "; lines; add ": "; print; clear; 
+  #unstack; print; stack; add "\n"; print; clear;
+
+  # ----------------
+  # 2 tokens
+  pop; pop; 
+
+  # ignore duplicated timestamps. 
+  "timestamp*timestamp*" {
+    clear; ++; get; --; put; clear;
+    add "timestamp*"; push; .reparse
+  }
+
+  # handle multiline comments
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # dont need because an initial recordset always exists
+  #"record*record*","recordset*record*" {
+  "recordset*record*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    # debug code
+    # a+; count; add " record!\n"; print; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  # this will be compiled differently from r*r*
+  "recordset*command*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  "recordset*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  (eof) {
+    # clean up trailing comments etc
+    "recordset*timestamp*","recordset*comment*" {
+      clear; add "recordset*record*"; push; push; .reparse 
+    }
+  }
+  # 3 tokens
+  pop;
+
+  # remove trivial commands without comments
+  "recordset*timestamp*trivial*" {
+    a+; # count filtered commands
+    clear; add "recordset*"; push; .reparse
+  }
+
+  # ignore duplicated timestamps. 
+  "timestamp*comment*timestamp*" {
+    clear; ++; get; --; put; clear; ++; ++; get; --; put; --; clear;
+    add "comment*timestamp*"; push; push;  .reparse
+  }
+
+  # amalgamate comments before and after the timestamp
+  "comment*timestamp*comment*" {
+    clear; 
+    get; ++; ++; add "\n"; get; --; --; put; clear;
+    add "comment*timestamp*"; push; push; .reparse
+  }
+
+  "comment*timestamp*command*","comment*timestamp*trivial*" {
+    clear; get; add "\n"; ++; get; add "\n"; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  # dont remove trivial commands with comments
+  "timestamp*comment*command*","timestamp*comment*trivial*" {
+    clear; 
+    # switch the order to make comment precede timestamp
+    ++; get; add "\n"; --; get; add "\n"; 
+    ++; ++; get; --; --; put; clear;
+    add "record*"; push; .reparse
+  }
+
+  "recordset*timestamp*command*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  # resolve commands and trivial command with comments
+  "recordset*comment*command*","recordset*comment*trivial*" {
+    clear; ++; get; add "\n"; ++; get; --; put; --; clear;
+    add "recordset*record*"; push; push; .reparse
+  }
+
+  push; push; push;
+
+  (eof) {
+     pop; pop;
+     !"recordset*" {
+       push; push; add "# History file did not parse well!\n"; print; clear;
+       add "# Parse stack was: "; print; clear; unstack; add "\n"; print;
+       quit;
+     }
+     "recordset*" { 
+       clear; get; 
+       add "\n# History file parsed and filtered by pars/eg/bash.history.pss \n"; 
+       add "# "; count; add " trivial commands (without preceding comments) were removed.\n"; 
+       print;
+     }
+  }

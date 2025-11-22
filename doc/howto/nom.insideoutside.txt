@@ -1,0 +1,38 @@
+
+## INSIDE OUTSIDE PARSING WITH NOM
+
+ how to parse inside delimiters and outside at the same time.
+
+ Sometimes it is desirable to parse/compile text which is *within* or
+ *inside* 2 text delimiters in a certain way, and text which is 
+ *outside* the delimiters in another way. An example might be parsing
+ a computer language which allows nested multiline comments. Outside 
+ of the comments whose delimiters might be "/*" and "*/" we would 
+ like to parse the language normally in order to transpile it or compile
+ it to [llvm] or some other assembly language.
+
+ But inside the comment delimiters, we can ignore all text except the 
+ comment delimiters themselves.
+
+ The script /eg/nom.snippet.tohtml.pss is a good example of inside/outside
+ parsing (I just made up that terminology). The technique that I have 
+ developed with nom is to use the accumulator as a state variable indicatiing
+ if we are inside or outside of the delimiters.
+
+ * a pattern for inside/outside parsing 
+ -------+
+   count; 
+   # outside the delimiters, initially state of the machine
+   "0" {
+     clear; read; 
+     # when you find the end delimiter
+     a+; .restart
+   }
+   # inside the delimiters
+   "1" {
+     clear; read; 
+     # when you find the end delimiter
+     zero; .restart
+   }
+ ,,,,,
+

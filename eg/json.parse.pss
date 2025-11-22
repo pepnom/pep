@@ -1,0 +1,255 @@
+
+#*
+
+ABOUT 
+
+ A [nom] script to parse the [json] text-data format. This is 
+ an older version. See file:///eg/json.check.pss for a better 
+ version of this.
+
+ This script parses "json" syntax using the parse-machine. It is
+ "simplistic" in some respects. I will not concern myself with the
+ complexities of unicode parsing for the time being. I include D.
+ Crockfords (the inventor of json) json bnf grammar for reference but
+ the code actually uses a different grammar more suited to the
+ parse-machine.
+
+ The interesting thing about Crockfords grammar is that it does
+ not use any "lexing" phase, nor does it use any ebnf extensions.
+
+STATUS
+
+  This is an older version of json.check.pss See that script instead
+  for a better JSON parser.
+
+HISTORY
+
+  24 july 2020
+
+    Advanced the script compile.java.pss to a sufficient level
+    that it appears to correctly translate this script into java.
+    For example we can translate this to java with
+    ----
+       pep -f compile.java.pss eg/json.parse.pss > Machine.java
+       javac Machine.java
+       # test the java json parser/checker
+       echo '{"time": [0,44,22]}' | java Machine
+    ,,,,
+
+  20 july 2020
+
+    Wrote json.number.pss which parses correctly json scientific
+    format numbers (eg -0.00123E+001). That script can be 
+    included here to provide a relatively complete json 
+    parser/checker.
+
+  15 june 2020
+    Addressing bug in error checking. Need to ensure that 2 tokens
+    are on the stack, not just 1. 
+
+  14 June 2020
+    Made good progress on this script. Arrays and objects parse
+    recursively. Number parsing is very
+    simplistic, and no attempt to parse escape sequences is made.
+
+  early 2020
+    Began this script
+
+TESTING
+
+  The script can be tested with:
+  >> pep -f eg/json.parse.pss -i '{"location":55, "sum":[1,2,[3,4]]}
+
+BNF GRAMMAR
+
+ * Douglas Crockfords recent json grammar (adapted from McKeeman form)
+ ------
+   # I have removed whitespace elements from this grammar.
+
+   json: element .
+   value: object | array | string | number | "true" | "false" | "null" .
+   object: '{' '}' | '{' members '}' .
+   members: member | member ',' members .
+   member: string ':' element .
+   array: '[' ']' | '[' elements ']' .
+   elements: element | element ',' elements
+   element: value 
+   string: '"' characters '"' .
+   characters: "" | character characters .
+   character: '0020' . '10FFFF' - '"' - '\' | '\' escape .
+   escape: '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'u' hex hex hex hex
+   hex: digit | 'A' . 'F' | 'a' . 'f' .
+   number: integer fraction exponent .
+   integer: digit | onenine digits | '-' digit | '-' onenine digits
+   digits: digit | digit digits
+   digit: '0' | onenine .
+   onenine: '1' . '9' .
+   fraction: "" | '.' digits .
+   exponent: "" | 'E' sign digits | 'e' sign digits .
+   sign: "" | '+' | '-' .
+   ws: "" | '0020' ws | '000A' ws | '000D' ws | '0009' ws .
+
+ ,,,,
+
+*#
+
+  read;
+  # Unlike Crockfords grammar, I will just completely ignore whitespace,
+  # but this may not be acceptable in a rigorous application. Also, I
+  # am just using the ctype.h definition of whitespace, whatever that 
+  # may be.
+  [:space:] { clear; .reparse }
+
+  [0-9] { 
+    while [0-9]; 
+    put; clear; add "number*"; push; .reparse 
+  } 
+
+  [a-z] { 
+    while [a-z]; 
+    !"true".!"false".!"null" {
+      # handle error
+      put; clear; 
+      add "Unknown value '"; get; 
+      add "' at line "; lines; add " (character "; chars;
+      add ").\n";
+      print; quit;
+    }
+    put; clear; add "value*"; push; .reparse 
+  } 
+
+  '"' {
+    # save line number for error message
+    clear; lines; put; clear; until '"'; 
+    <eof> {
+      clear; 
+      add 'Unterminated " char, at line '; get; add "\n"; print;
+      quit;
+    }
+    clip; put; clear;
+    add "string*"; push; .reparse
+  }
+  # literal tokens
+  ",",":","-","+","[","]","{","}" { put; add "*"; push; .reparse }
+
+  
+parse>
+# The parse/compile phase
+  
+# --------------
+# 2 tokens
+  pop; pop;
+
+  # comma errors 
+  "{*,*",",*}*","[*,*",",*,*",",*]*" { 
+    clear; 
+    add "Misplaced , at line "; lines; 
+    add " ?(char "; chars; add ")\n";
+    print; quit; 
+  }
+
+  # catch object member errors 
+  # also need to check that not only 1 token in on the stack
+  # hence the !"member*" construct
+  B"member*",B"members*" {
+    !"member*".!"members*".!E",*".!E"}*" {
+      clear; 
+      add "Error after object member near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # catch array errors 
+  B"items*" {
+    !"items*".!E",*".!E"]*" {
+      clear; 
+      add "Error after an array item near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  B"array*",B"object*" {
+    !"array*".!"object*".!E",*".!E"}*".!E"]*" {
+      clear; 
+      add "Error after array or object near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # invalid string sequence
+  B"string*" {
+    !"string*".!E",*".!E"]*".!E"}*".!E":*" {
+      clear; 
+      add "Error after a string near line "; lines; 
+      add " (char "; chars; add ")\n";
+      print; quit; 
+    }
+  }
+
+  # transmogrify into array item, start array
+  "[*number*","[*string*","[*value*","[*array*","[*object*" { 
+    clear; add "[*items*"; push; push; .reparse
+  }
+
+  # signed numbers
+  "-*number*" { 
+    nop;
+  }
+
+  # empty arrays are legal json
+  "[*]*" { clear; add "array*"; push; .reparse }
+  # empty objects are legal json
+  "{*}*" { clear; add "object*"; push; .reparse }
+
+# --------------
+# 3 tokens
+  pop;
+
+  # arrays, 
+  "[*items*]*" {
+    clear; add "array*"; push; .reparse
+  }
+
+  # 
+  "items*,*number*", "items*,*string*", "items*,*value*",
+  "items*,*array*", "items*,*object*" { 
+    clear; add "items*"; push; .reparse
+  }
+
+  # object members
+  "string*:*number*",
+  "string*:*string*",
+  "string*:*value*",
+  "string*:*object*",
+  "string*:*array*" {
+    clear; add "member*"; push; .reparse
+  }
+
+  # multiple elements of an object
+  "member*,*member*","members*,*member*" {
+    clear; add "members*"; push; .reparse
+  }
+
+  #  
+  "{*members*}*","{*member*}*" {
+    clear; add "object*"; push; .reparse
+  }
+
+  push; push; push;
+
+  <eof> {
+    unstack; 
+    "object*","array*","value*","string*","number*" {
+      stack; add "Valid json! Top level item was '"; print; clear;
+      pop; clip; add "'\n"; print; clear; quit;
+    }
+    stack; 
+    add "Maybe not valid json.\n"; 
+    add "The parse stack was \n"; print; clear;  
+    unstack; add "\n"; print;
+  }
+
+ 

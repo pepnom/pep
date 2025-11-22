@@ -1,0 +1,28 @@
+## The flag non command
+
+ **note** This command will not be implemented. It is not necessary.
+
+ The alternative to this command is to use one of the (top) pep://tape
+ cells as a kind of *flag* and then use the nom://mark and nom://go 
+ commands to access the flag. This is an alternative to using the 
+ accumulator as a state variable.
+
+ * using a tape cell as a flag
+ -----+
+   begin { mark "parse.state"; ++; }
+   # .....
+   # to access the flag
+   clear; mark "here"; go "parse.state"; get; go "here";
+   "in.comment" {
+     # parse according to the current state
+     # set the parse state
+     clear; add "outside.comment"; mark "here"; go "parse.state";
+     put; go "here"; clear;
+   }
+ ,,,,
+
+ Set the *flag* register to the current text in the workspace.
+
+ This command (and the register) have not been implemented in the 
+ pep interpreter, nor in the /tr/ translation scripts. 
+

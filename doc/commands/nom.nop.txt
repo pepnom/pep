@@ -1,0 +1,25 @@
+
+## THE NOM NO OPERTION COMMAND
+
+  The *nop* command which does nothing.
+
+  It is strangely satisfying to include a command or operation 
+  which does nothing. Maybe it is even mathematically necessary.
+  In any case it exists in the nom language and does absolutely 
+  nothing. Possibly I wanted to pretend the the pep pep://machine 
+  is like a real logic machine which usually have a *no operation*
+  command for reasons that escape me.
+
+  * do nothing
+  >> nop;
+
+  The nom compiler nomsf//compile.pss does not permit empty 
+  curly braces as a block because what would be the purpose of 
+  that. But you can put a *nop* in the braces to make the 
+  script compile if you insist.
+
+### NOTES
+
+  In the translation scripts this command is removed and replaced
+  with a comment.
+  

@@ -1,0 +1,1949 @@
+#*
+
+ABOUT 
+
+  Translate nom to the rust language. This uses the 
+  new script organisation from /eg/nom.syntax.reference.pss
+  In development, just started, not working.
+
+  Not even compiling. Need to understand all the rust mutable
+  marlarkey.
+
+NOTES
+
+RUST SYNTAX
+
+ * print the last element of a vector.
+ ----
+ fn main() {
+    let v = vec![1.0, 1.9, 1.2];
+    if let Some(val) = v.last() { 
+        println!("Last element is {}", val);
+    } else {
+        println!("The vector is empty");
+    }
+}
+ ,,,,
+
+ * update first element of mutable vector
+ ---
+   vec[0].some_value += 1;
+   vec.first_mut().unwrap().some_value += 1;
+ ,,,
+
+ * iterate over vector with mutable reference (change element
+ ----
+   let mut v = vec![100, 32, 57];
+   for i in &mut v {
+       *i += 50;
+   }
+ ,,,,
+ 
+  * split string and iterate or collect
+  -----
+    let parts = "some string 123 content".split("123");
+    for part in parts {
+        println!("{}", part)
+    }
+    //Or:
+    let collection = parts.collect::<Vec<&str>>();
+    dbg!(collection);
+ ,,,,
+
+  unicode_segmentation crate has .graphemes(true) conversion.
+  * iterate over graphemes, yes
+  -----
+   use unicode_segmentation::UnicodeSegmentation; // 1.5.0
+   fn main() {
+     for g in "नमस्ते".graphemes(true) {
+       println!("- {}", g);
+     }
+   }
+  ,,,,
+  
+     
+  * read a line from stdin or a file
+  -----
+   let stdin = io::stdin();
+   for line in BufReader::new(stdin).lines() {
+   //the same way that one does:
+   let f = File::open(file)?;
+   for line in BufReader::new(f).lines() {
+  ,,,,
+
+  adding a crate for utf8 parsing.
+
+  * Add the following to your Cargo.toml:
+  ----
+   [dependencies]
+   utf8-chars = "1.0.0"
+  ,,,,
+
+  * read by lines then by chars
+  -----
+    pub fn main() {
+      let mut f = BufReader::new(File::open("input.txt").expect("open failed"));
+      for line in f.lines() {
+        for c in line.expect("lines failed").chars() {
+          println!("Character: {}", c);
+        }
+      }
+    }
+  ,,,,
+
+  // read from stdin or from a file or a string.
+  ----- 
+   BufReader::new(io::stdin())
+   BufReader::new(fs::File::open(filename).unwrap())
+   let mut streader = StringReader::new("Line 1\\nLine 2");
+   let mut bufreader = BufReader::new(streader);
+  ,,,
+
+  * read char by char?
+  ----
+   let mut f = io::BufReader::new(try!(fs::File::open("input.txt")));
+   for c in f.chars() {
+     println!("Character: {}", c.unwrap());
+   }
+  ,,,,
+  
+  Rust string docs which are important for pep/nom
+  https://doc.rust-lang.org/std/string/struct.String.html#method.trim_end
+
+  Rust says that its string handling is bi-direction aware.
+  Rust has labelled loops
+
+  * rust for loop
+  ------
+    let mut sum = 0;
+    for n in 1..11 {
+        sum += n;
+    }
+    assert_eq!(sum, 55);
+  ,,,,
+
+  * define a string
+  >> let s = String::from("hello");
+
+  * define a vector of unicode chars (4 bytes each)
+  >> let v = vec!['h', 'e', 'l', 'l', 'o'];
+
+  But rust chars dont include unicode grapheme clusters (which
+  are sequences of chars)
+
+  * chain methods together
+  -----
+    let s = "  English  ";
+    assert!(Some('h') == s.trim_end().chars().rev().next());
+  ,,,,
+
+  * trim whitespace from the end of a string
+  -----
+    let s = "\n Hello\tworld\t\n";
+    assert_eq!("\n Hello\tworld", s.trim_end());
+  ,,,
+
+  * create a mutable string and add (unicode) char and string
+  ----
+    let mut hello = String::from("Hello, ");
+    hello.push('w');
+    hello.push_str("orld!");
+  ,,,,
+  
+  * get the 3rd char, but not grapheme cluster.
+  ---
+   let s = "hello";
+   let third_character = s.chars().nth(2);
+   assert_eq!(third_character, Some('l'));
+  ,,,,
+
+  Rust strings are utf8 encoded but chars are 4 bytes.
+
+  * sparkle heart char
+  ------
+    let s = "💖💖💖💖💖";
+    assert_eq!(s.len(), 20);
+  ,,,,
+
+STATUS
+
+  29 mar 2025
+    just starting to adapt from /tr/nom.todart.pss and the old 
+    rust translator (which actually I never finished).
+    not working yet
+
+DONE
+TODO
+
+ERRORS 
+
+  push (eof) needs error
+
+NOTES
+
+  The hardest part of these translation scripts is handling unicode
+  and grapheme clusters. properly.
+
+  Details to check. Quoting. escaping special sequences. Will "\n"
+  work in strings?
+
+TOKENS 
+
+ This token list is pretty useful for thinking about 
+ sequences of tokens. Especially for error sequences.
+
+  Literal BE!<>{}(),.;
+  quoted*  text between "" or ''.  I will put "" around this and escape
+           all " at the time of tokenising. This is because I want \n \r
+           etc to work within strings. But it means I have to be careful
+           about other escape sequences. like $ etc. 
+  class*   eg [:space:] [abcd] [a-z] 
+  word*    eg: eof,reparse,==
+  begin*   the begin word
+  parselabel* 
+  command* eg: add clear print 
+  test*    eg: "x" [:space:] !B"a" B"a" E"a" !E"a"
+  ortest*  test*,*test*
+  andtest*  test*.*test*
+  statement* eg: clear; add "xx"; or "test" { ... }
+  statementset* a list of statements 
+  script* The end token. A succesful parse produces a script token.
+    
+HISTORY
+
+  21 mar 2025
+    started based on /eg/nom.syntax.reference.pss and translate.java.pss
+    significant work.
+
+*#
+
+  read;
+
+  # sort-of line-relative character numbers 
+  [\n] { nochars; }
+  # ignore space except in quotes. but be careful about silent
+  # exit on read at eof
+  [:space:] { 
+     clear; (eof) { .reparse } !(eof) { .restart } 
+  }
+
+  # literal tokens, for readability maybe 'dot*' and 'comma*'
+  [<>}()!BE,.;] { put; add "*"; push; .reparse }
+  [{] { 
+    # line and char number to help with missing close brace 
+    # errors
+    clear;
+    add "line:"; lines; add " char:"; chars;
+    put; clear; add "{*"; push; .reparse
+  }
+
+  # parse (eof) etc as tokens? yes
+
+  # command names, need to do some tricks to parse ++ -- a+ etc
+  # here. This is because [:alpha:],[+-] etc is not a union set
+  # and while cannot do "while [:alpha:],[+-] etc
+
+  # subtle bug, [+-^0=] parses as a range!!! [a-z]
+  [:alpha:],[-+^0=] {
+
+    # a much more succint abbreviation code
+    "0" { clear; add "zero"; }
+    "^" { clear; add "escape"; }
+    # increment tape pointer ++ command
+    "+" { while [+]; }
+    # decrement tape pointer -- command
+    "-" { while [-]; }
+    # tape test (==)
+    "=" { while [=]; }
+
+    # for better error messages dont read ahead for the 
+    # above commands.
+    !"zero".!"escape".!B"+".!B"-".!B"=" {
+      while [:alpha:]; 
+    }
+
+    # parse a+ or a- for the accumulator
+    "a" { 
+      # while [+-] is bug because compile.pss thinks its a range class
+      # not a list class
+      while [-+]; "a+","a-" { put; }
+      "a" { clear; add "add"; }
+    }
+
+    # one letter command abbreviation expansions.
+    # 'D' doesn't actually work in compile.pss !
+    put; clear; add "#"; get; add "#";
+    replace "#k#" "#clip#"; replace "#K#" "#clop#";
+    replace "#D#" "#replace#"; replace "#d#" "#clear#"; 
+    replace "#t#" "#print#"; replace "#p#" "#pop#"; replace "#P#" "#push#"; 
+    replace "#u#" "#unstack#"; replace "#U#" "#stack#"; replace "#G#" "#put#"; 
+    replace "#g#" "#get#"; replace "#x#" "#swap#"; replace "#m#" "#mark#"; 
+    replace "#M#" "#go#"; replace "#r#" "#read#"; replace "#R#" "#until#"; 
+    replace "#w#" "#while#"; replace "#W#" "#whilenot#"; replace "#n#" "#count#"; 
+    replace "#c#" "#chars#"; replace "#C#" "#nochars#"; replace "#l#" "#lines#"; 
+    replace "#L#" "#nolines#"; replace "#v#" "#unescape#"; 
+    replace "#z#" "#delim#"; 
+    replace "#S#" "#state#"; replace "#q#" "#quit#"; replace "#s#" "#write#"; 
+    replace "#o#" "#nop#"; replace "#rs#" "#restart#"; replace "#rp#" "#reparse#"; 
+
+    # remove leading/trailing #
+    clip; clop; put;
+
+    # dont want to use this syntax anymore because we already have
+    # lines and 'l' or chars and 'c'
+    "ll","cc" { 
+      clear;
+      add '* The syntax "'; get; add '" for lines or chars';
+      add "  is no longer valid.\n";
+      add "  use 'chars' or 'c' for a character count \n";
+      add "  use 'lines' or 'l' for a line count \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    "+","-" { 
+      clear;
+      add '* This syntax "'; get; add '" which were 1 letter abbreviations\n';
+      add "  are no longer valid because.\n";
+      add "  it is silly to have 1 letter abbrevs for 2 letter commands.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    # writefile is also a command?
+    # commands parsed above
+    "a+","a-","zero","escape","++","--",
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","delim","quit", "write","nop" {
+      clear; add "command*"; push; .reparse
+    }
+
+    # words not commands == was parsed above
+    "parse","reparse","restart","eof","EOF","==" {
+      put; clear; add "word*"; push; .reparse
+    }
+
+    "begin" { put; add "*"; push; .reparse }
+
+    # lower case and check for command with error
+    lower; 
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","echar","delim","quit", "write",
+    "zero","++","--","a+","a-","nop",
+    "begin","parse","reparse","restart" {
+      ++; put; --;
+      clear; 
+      add '* incorrect command "'; get; add '"\n'; 
+      add '- all nom commands and words are lower case \n';
+      add '  (except for EOF and abbreviations) \n';
+      add "- did you mean '"; ++; get; --; add "'?";
+
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    clear; add '* unknown word or command "'; get; add '"'; 
+    add "
+
+    - Valid nom commands are: 
+
+    add clip clop replace upper lower cap clear 
+    print state pop push unstack stack put get swap 
+    mark go read until while whilenot 
+    count zero chars lines nochars nolines 
+    escape unescape delim quit write (writefile ?) 
+    zero ++ -- a+ a- nop 
+    
+    - Valid nom words are 
+
+    parse reparse restart begin eof EOF == 
+
+    see www.nomlang.org/doc/commands/ \n";
+    
+    put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # single line comments
+  # no need to rethink
+  '#' {
+    (eof) { clear; .reparse }
+    read; 
+    # just delete empty comments
+    [#\n] { clear; .reparse }
+    # multiline comments this needs to go within '#'
+    "#*" {
+      # save the start line number for error messages
+      clear; 
+      add "line:"; lines; add " char:"; chars; put; clear; 
+      until "*#"; 
+      !E"*#" { 
+        clear; add '* unterminated multiline comment #*... \n  starting at '; 
+        get; put; clear; add "nom.error*"; push; .reparse
+      }
+      clip; clip; put; clear;
+      add "comment*"; push; .reparse 
+    }
+    clear; whilenot [\n]; put; 
+    clear; add "comment*"; push; .reparse
+  }
+
+  # quoted text 
+  '"' {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; 
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until '"'; 
+    !E'"',(eof) { 
+      clear; add '* unterminated quote (") or incomplete command starting at '; 
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later. 
+    clip; unescape '"'; put; clear;
+    add "quoted*"; push; .reparse 
+  }
+
+  # single quotes
+  "'" {
+    clear; 
+    # save start line/char of "'" for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "'"; 
+    !E"'",(eof) { 
+      clear; add '* unterminated quote (\') or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later 
+    clip; unescape "'"; put; clear;
+    add "quoted*"; push; .reparse 
+  }
+
+
+  # classes like [:space:] or [abc] or [a-z] 
+  # these are used in tests and also in while/whilenot
+  # The *until* command will read past 'escaped' end characters eg \]
+  # 
+
+  "[" {
+    clear; 
+    # save start line/char of '[' for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "]"; 
+    !E"]",(eof) { 
+      clear; 
+      add '* unterminated class [...] or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clip; unescape "]"; put; 
+    
+    B":".E":".!"::" { 
+      clip; clop; put;
+      # list of [:class:] classes here. The character classes also
+      # abbreviations in nom (which may be silly but anyway) 
+      "alnum","N","alpha","A","ascii","I","word","W","blank","B",
+      "cntrl","C","digit","D","graph","G","lower","L","print","P",
+      "punct","T","space","S","upper","U","xdigit","X" {
+        clear; add "class*"; push; .reparse 
+      }
+      clear; 
+      add "* Incorrect character class\n"; 
+      add ' 
+      Valid character classes are:
+        alnum,N,alpha,A,ascii,I,word,W,blank,B 
+        cntrl,C,digit,D,graph,G,lower,L,print,P
+        punct,T,space,S,upper,U,xdigit,X 
+
+      The second value is an abbreviation of the 1st
+        e.g: [:alpha:] or [:A:] are the same.  
+      Character classes are used in tests and the nom while 
+      and whilenot commands
+        e.g: [:space:] { while [:space:]; clear; } \n';
+      put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    # now [a-z] classes. I will not permit [\n-\t] silly
+    # todo check this 
+    clear; add "class*"; push; .reparse
+  }
+
+  !"" {
+    put; clear; 
+    add "* strange character found '"; get; add "'\n\n"; 
+    add "  see www.nomlang.org/doc/syntax for nom syntax documentation \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+
+ parse>
+  # watch the parse-stack resolve.  
+  add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+   
+  # ----------------
+  # error trapping and help here
+  pop;
+
+  # parse help token for a topic, category of # topics or everthing. 
+  "nom.help*" {
+    # the topic or category to display help for is in the attribute
+    clear; swap; 
+
+    # a short list of commands and abbreviations 
+    "commands.shortlist","commands","all" {
+      swap; add "
+      # 'D' doesn't actually work in compile.pss !
+      nom abbreviations and commands: 
+
+        zero k clip K clop D replace d clear
+        t print p pop P push u unstack U stack G put g get x swap
+        m mark M go r read R until w while W whilenot n count c chars C nochars 
+        l lines L nolines v escape unescape z delim S state q quit s write
+        o nop .rs .restart .rp .reparse
+        (no abbreviations)
+        a+ a- ++ --
+
+          ";
+    }
+
+    # specific help for the add command 
+    "command.add","commands","all" {
+      swap; add "
+      add command:
+        add text to end of the workspace buffer
+        see: nomlang.org/doc/commands/nom.add.html
+      eg:
+        add ':tag:';     # correct
+        add [:space:];   # incorrect, cannot have class parameter 
+        add;             # incorrect, missing parameter
+          ";
+    }
+
+    #  
+    "semicolon","punctuation","all" {
+      swap; add "
+       semicolon:
+         All statements (commands) must end with a semi-colon 
+         except .reparse and .restart (even the last command in
+         the block)
+       eg:
+         clear; .reparse       # correct
+         clear add '.';        # incorrect, clear needs ; 
+         ";
+    }
+
+
+    # 'brackets' is topic, 'punctuation' is a category, 'all' is everthing 
+    "brackets","punctuation","all" {
+      swap; add "
+      brackets () 
+        are used for tests like (eof) (EOF) (==) 
+        currently (2025) brackets are not used for logical grouping in 
+        tests.
+      examples:
+         (==)                  # correct
+         (==,'abc' { nop; }    # incorrect: unbalanced ";
+    }
+
+    "negation","punctuation","all" {
+      swap; add "
+      negation operator ! 
+        is used for negating class and equals tests and with the 
+        B and E modifiers. It should precede the test and the 
+        B and E modifiers.
+
+      examples:
+         !(eof) { add '.'; }   # correct, not at end-of-file
+         ![:space:] { clear; } # correct 
+         'abc'! { clear; }     # incorrect: ! must precede test.
+         B!'abc' { clear; }    # incorrect: ! must precede 'B'  ";
+    }
+
+
+    # 
+    "modifiers","tests","all" {
+      swap; add "
+      begins-with 'B' and ends-with 'E' modifiers:
+        are used with quoted text tests and cannot be used with 
+        class tests.
+      eg: 
+        B'abc' { clear; }        # correct 
+        E\"abc\" { clear; }      # correct 
+        B[:alpha:] { clear; }  # incorrect  ";
+    }
+
+    # help for the help system 
+    "help","help","all" {
+      swap; add "
+        help system:
+          categories: tests, commands, punctuation etc
+          type '#:help <command>' in a [nom] script to get help
+          for a particular command or word or category
+        eg:
+          #:help add    # shows help for the add command
+          #:help tests  # shows help nom block tests.
+        ";
+    }
+
+    # This help system quits after showing the help message
+    # but you could keep parsing if there is any point. 
+    add "\n\n"; print; quit; 
+  }
+
+  "nom.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "! Nom syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; 
+    add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+    add " syntax checking. \n";
+    print;
+    # provide help from the help* token if one was put on the stack. 
+    clear; pop; "nom.help*" { push; .reparse } 
+    quit;
+  }
+
+  # this error is when the error should have been trapped earlier
+  "nom.untrapped.error*" {
+    clear; 
+    add "! Nom untrapped error! :";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; 
+    add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+    add " syntax checking. \n";
+    print; quit;
+  }
+
+  #----------------
+  # 2 parse token errors
+
+  #*
+  possible tokens: 
+  literal* BE!<>{}(),.;
+  quoted* class* word* command* test*
+  ortest* andtest* statement* statementset* 
+  *#
+
+  # none of these literal tokens can start a sequence because
+  # they should have already reduced to a subpattern (token)
+  pop;
+
+  "B*class*","E*class*" {
+    clear; 
+
+    clear; add "modifiers"; put; 
+    clear; add "nom.help*"; push;
+    add "  B or E modifier before class test."; put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # general token sequence errors
+
+  # literal token error sequences.
+
+  B"}*",B";*",B">*",B")*" {
+    clear; add "* misplaced } or ; or > or ) character?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  B"B*",B"E*" {
+    E"!*" {
+      clear; add "negation"; put; 
+      clear; add "nom.help*"; push;
+      add "* The negation operator (!) must precede the  \n"; 
+      add "  begins-with (B) or ends-with (E) modifiers \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  B"B*".!"B*".!E"quoted*" {
+    clear; 
+    add "* misplaced begin-test modifier 'B' ?"; 
+    add "  eg: B'##' { d; add 'heading*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  B"E*".!"E*".!E"quoted*" {
+    clear; 
+    add "* misplaced end-test modifier 'E' ?"; 
+    add "  eg: E'.' { d; add 'phrase*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # empty quote after B or E
+  B"E*".E"quoted*" {
+    clear; ++; get; --;
+    "" {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'E' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "E*quoted*"; 
+  }
+
+  B"B*".E"quoted*" {
+    clear; ++; get; --;
+    "" {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'B' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "B*quoted*"; 
+  }
+  
+  B"!*".!"!*".!E"(*".!E"<*".!E"B*".!E"E*".!E"quoted*".!E"class*".!E"test*" {
+    clear; 
+    add "* misplaced negation operator (!) ?"; 
+    add "  e.g. \n";
+    add "   !B'$#@' { clear; }   # correct \n"; 
+    add '   !"xyz" { clear; }   # correct \n'; 
+    add '   "abc"! { clear; }   # incorrect \n'; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # comma sequence errors, 2 tokens
+  # error eg: ,,
+  B",*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*" {
+    clear; add "* misplaced comma ?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: . {
+  B".*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*".!E"word*" {
+    clear; add "* misplaced dot?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: {}
+  B"{*".E"}*" {
+    clear; add "* empty block {} "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+  
+  # error eg: { ,
+  B"{*".!"{*" {
+    E">*",E",*",E")*",E"{*",E"}*",E";*" {
+      clear; add "* misplaced character '"; ++; get; --; add "' ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+  
+  # try to diagnose missing close brace errors at end of script
+  # eg ortest*{*statement*
+  # we probably need a line/char number in the tape cell
+  (eof) {
+    "{*statement*","{*statementset*" {
+      clear; 
+      add "* missing close brace (}) ?\n"; 
+      add "  At "; get; add " there is an opening brace ({) which does \n"; 
+      add "  not seem to be matched with a closing brace ";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # missing dot
+  # error eg: clear; reparse 
+  !B".*".E"word*".!"word*" {
+    push; push; --; get; ++; 
+    "reparse","restart" {
+      clear; add "* missing dot before reparse/restart ? "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; pop; pop;
+  }
+
+  # error eg: ( add
+  # currently brackets are only used for tests
+  B"(*".!"(*".!E"word*" {
+    clear; add "* strange syntax after '(' "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "<*;*" {
+    clear; 
+    add "* '<' used to be an abbreviation for '--' \n"; 
+    add "* but no-longer (mar 2025) since it clashes with <eof> etc "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: < add
+  # currently angle brackets are only used for tests ( <eof> <==> ) 
+  B"<*".!"<*".!E"word*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  ">*;*" {
+    clear; 
+    add "* '>' used to be an abbreviation for '++' \n"; 
+    add "  but no-longer (mar 2025) since it clashes with <eof> etc \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: begin add
+  B"begin*".!"begin*".!E"{*" {
+    clear; 
+    add "* begin is always followed by a brace.\n"; 
+    add "   eg: begin { delim '/'; }\n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear; begin { clear; }
+  E"begin*".!"begin*".!B"comment*" {
+    clear; add "* only comments can precede a begin block."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*}*" {
+    clear; add "* missing semicolon? "; 
+    add "
+     In nom all commands except .reparse and .restart 
+     must be terminated with a semicolon, even the last 
+     command in a block {...} 
+
+     see www.nomlang.org/doc/syntax/ for details \n";
+    put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear {
+  B"command*".!"command*".!E";*".!E"quoted*".!E"class*" {
+    clear; add "* bad command syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # specific analysis of the token sequences permitted above
+  "command*class*" {
+    clear; get; 
+    !"while".!"whilenot" {
+      clear; 
+      add "* command '"; get; add "' does not take class argument.\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*class*";
+  }
+
+  "command*quoted*" {
+    clear; get; 
+    !"add".!"replace".!"mark".!"go".!"until".
+    !"delim".!"escape".!"unescape" {
+      clear; 
+      add "* command '"; get; add "' does not take quoted argument.\n\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html ";
+      add "  for details.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # check that not empty argument.
+    clear; ++; get; --;
+    "" {
+      clear; 
+      add "* empty quoted text ('' or \"\") is an error here.\n\n"; 
+      add "  - The 2nd argument to 'replace' can be an empty quote\n";
+      add "    eg: replace 'abc' ''; # replace 'abc' with nothing \n";
+      add "  - Also, empty quotes can be used in tests \n";
+      add "    eg: '' { add 'xyz'; } !'' { clear; } \n";
+      put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*";
+  }
+
+  "command*;*" {
+    clear; get; 
+    "add","replace","mark","go","until","while","whilenot",
+    "delim","escape","unescape" {
+      clear; 
+      add "* command '"; get; add "' requires argument."; 
+      add "- eg: add 'abc'; while [:alnum:]; escape ']'; "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  # end-of-script 2 token command errors.
+  (eof) {
+    E"command*" {
+      clear; 
+      add "* unterminated command '"; get; add "' at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    "command*quoted*","command*class*" {
+        clear; 
+        add "* unterminated command '"; get; add "' at end of script"; 
+        put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: "xx" }
+  B"quoted*".!"quoted*".!E"{*".!E"quoted*".!E";*".!E",*".!E".*" {
+    clear; 
+    add " dubious syntax (eg: missing semicolon ';') after quoted text."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: [:space:] }
+  B"class*".!"class*".!E"{*".!E";*".!E",*".!E".*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after class? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # A word is not a command. reparse and restart have already reduced.
+  # error eg: eof (
+  B"word*".!"word*".!E")*".!E">*" {
+    clear; add "* bad syntax after word."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: E"abc";
+  B"test*".!"test*".!E",*".!E".*".!E"{*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx","yy"."zz"
+  B"ortest*".!"ortest*".E".*" {
+    clear; add "* AND '.' operator in OR test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa" "abc";
+  "ortest*quoted*","ortest*test*" {
+    clear; add "* missing comma in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa",E"abc";
+  B"ortest*".!"ortest*".!E",*".!E"{*" {
+    clear; add "* bad OR test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx"."yy","zz"
+  B"andtest*".!"andtest*".E",*" {
+    clear; add "* OR ',' operator in AND test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  "andtest*quoted*","andtest*test*" {
+    clear; add "* missing dot in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  B"andtest*".!"andtest*".!E".*".!E"{*" {
+    clear; add "* bad AND test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # end-of-script 2 token test errors.
+  (eof) {
+    E"test*",B"test*",E"ortest*",B"ortest*",E"andtest*",B"andtest*" {
+      clear; 
+      add "* test with no block {} at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: add 'x'; { 
+  B"statement*".!"statement*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: clear;add 'x'; { 
+  B"statementset*".!"statementset*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # specific command errors
+
+
+  # until, mark, go etc have no-parameter versions
+  "command*;*" {
+    clear; get;
+    "add","while","whilenot","replace","delim" {
+      clear; add "* command '"; get; add "' requires argument"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  #----------------
+  # 3 parse token errors, 
+  pop;
+
+  # missing semicolon errors?
+  # error eg: [:space:] { whilenot [:space:] }
+  B"command*class*".!"command*class*".!E";*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # missing semicolon errors
+  # error eg: [:space:] { until "</em>" }
+  B"command*quoted*".!"command*quoted*".!E";*".!E"quoted*" {
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "cd" "ef" {
+  B"quoted*quoted*".!E";*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: , "cd" "ef"
+  E"quoted*quoted*".!B"command*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*quoted*quoted*" {
+    clear; get; 
+    !"replace" {
+      clear; 
+      add "* command '"; get; add "' does not take 2 quoted arguments.\n"; 
+      add "- The only nom command with 2 quoted arguments is 'replace'."; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*";
+  }
+
+  # error eg: clear "x"; already checked above.
+  # "command*quoted*;*" {}
+
+  # error eg: add [:space:] already checked above in 2 tokens
+  # "command*class*;*" {}
+
+  #----------------
+  # 4 parse token errors
+  pop;
+  "command*quoted*quoted*;*" {
+    clear; get;
+    !"replace" {
+      clear; add "* command '"; get; add "' does not take 2 arguments."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    # check that not 1st argument is empty
+    clear; ++; get; --;
+    "" {
+      clear; add "* empty quoted text '' is an error here."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*;*";
+  }
+
+  push;push;push;push;
+  # end of errors
+  # ----------------
+
+
+  # ----------------
+  # 2 grammar parse tokens 
+  pop;pop;
+  
+  # permit comments anywhere in script
+  #
+  B"comment*".!"comment*" {
+    # A translator would try to conserve the comment.
+    replace "comment*" ""; push; 
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  E"comment*".!"comment*" {
+    replace "comment*" ""; push; .reparse
+  }
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; add "continue script;"; put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    "reparse" {
+      clear; count; 
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      "0" { clear; add "break lex;"; }
+      "1" { clear; add "continue parse;"; }
+      put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    clear; add "* invalid statement ."; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  "word*>*" {
+    clear; get; 
+    "parse" { 
+      clear; count;
+      !"0" {
+        clear; 
+        add "script error:\n";
+        add "  extra parse> label at line "; lines; add ".\n";
+        print;
+        quit;
+      }
+      clear; add "// parse>"; put;
+      clear; add "parselabel*"; push;
+      # use accumulator to indicate after parse> label
+      a+; .reparse 
+    }
+    clear; add "word*>*";
+  }
+
+  #-----------------------------------------
+  # format: E"text" or E'text'
+  #  This format is used to indicate a "workspace-ends-with" text before
+  #  a brace block.
+  # eg: E"abc" { ... }
+  "E*quoted*" {
+    clear; add "self.workspace.characters.endsWith("; 
+    ++; get; --; add ".characters)"; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #   A 'B' preceding some quoted text is used to indicate a 
+  #   'workspace-begins-with' test, before a brace block.
+  "B*quoted*" {
+    clear; add "self.workspace.characters.startsWith("; 
+    ++; get; --; add ".characters)"; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the dart code
+  "comment*statement*","statement*comment*","statementset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  "!*test*" {
+    clear; add "!("; ++; get; 
+    --; add ")"; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # transform quotes and classses to tests, this greatly reduces the number
+  # of rules required for other reductions
+  ",*quoted*",".*quoted*","!*quoted*" { 
+    # but need to stop string interp
+    push; clear; add "self.workspace == '"; get; add "'"; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  # transform quotes to tests
+  "quoted*,*","quoted*.*","quoted*{*" { 
+    replace "quoted*" "test*"; push; push; 
+    --; --; add "self.workspace == '"; get; add "'"; put;
+    ++; ++; clear; .reparse
+  }
+
+  # transform classes to tests
+  ",*class*",".*class*","!*class*" { 
+    push; clear; add "self.matchClass('"; get; add "')"; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  # transform classes to tests
+  "class*,*","class*.*","class*{*" { 
+    replace "class*" "test*"; push; push; 
+    --; --; add "self.matchClass('"; get; add "')"; put;
+    ++; ++; clear; .reparse
+  }
+
+
+  #--------------------------------------------
+  # ebnf: command := command ';' ;
+  # formats: "pop; push; clear; print; " etc
+  "command*;*" {
+     clear; get;
+
+     # error trap here .
+     !"go".!"mark".!"until".!"clip".!"clop".!"clear".!"upper".!"lower".
+     !"cap".!"print".!"pop".!"push".!"unstack".!"stack".!"state".!"put".!"get".
+     !"swap".!"++".!"--".!"read".!"count".!"a+".!"a-".!"zero".!"chars".
+     !"lines".!"nochars".!"nolines".!"quit".!"write".!"nop" {
+       clear; add "  incorrect command syntax?"; put;
+       clear; add "nom.untrapped.error*"; push; .reparse
+     }
+
+     # go; not implemented in pars/compile.pss yet (feb 2025)
+     "go" { 
+       clear;
+       add "self.goToMark(self.tape[self.cell]);  /* go (tape) */";
+     }
+     "mark" { 
+       clear;
+       add "self.addMark(self.tape[self.cell]);  /* mark (tape) */";
+     }
+
+     # the new until; command with no argument
+     "until" { 
+       clear;
+       add "self.until(self.tape[self.cell]);  /* until (tape) */";
+     }
+
+     "clip" { 
+       clear; add "self.work.pop();    /* clip */"; 
+     }
+     "clop" { 
+       clear; 
+       add "if !self.work.is_empty() { /* clop */\n";
+       add "  self.work.remove(0); \n}   ";
+     }
+     "clear" { 
+       clear; add "self.work.clear();  /* clear */";
+     }
+     "upper" { 
+       clear; 
+       add "let self.work = self.work.to_uppercase(); /* upper */";
+     }
+     "lower" { 
+       clear; 
+       add "let self.work = self.work.to_lowercase(); /* lower */";
+     }
+     "cap" { 
+       clear; 
+       # todo: capitalize every word not just the first.
+       add "/* cap */ \n"; 
+       add "if !self.work.is_empty() { /* cap */\n";
+       add "let self.work = self.work.remove(0).to_uppercase().to_string() + ";
+       add " &self.work; } ";
+     }
+     "print" { 
+       clear; add "print!(\"{}\", self.work); /* print */";
+     }
+
+     "pop" { clear; add "self.pop();"; }
+     "push" { clear; add "self.push();"; }
+     "unstack" { clear; add "while self.pop();   /* unstack */"; }
+     "stack" { clear; add "while self.push();   /* stack */"; }
+     "state" { clear; add "self.printState();    /* state */"; }
+     "put" { 
+       clear; 
+       add "self.tape[self.cell].clear(); /* put */\n";
+       add "self.tape[self.cell).append(self.work); ";
+     }
+     "get" { 
+       clear; 
+       add "self.work.push_str(self.tape[self.cell]); /* get */";
+     }
+     "swap" { clear; add "mem::swap(&mut <tape.cell>, &mut <work>);"; }
+     "++" { clear; add "self.increment();   /* ++ */"; }
+     "--" { 
+       clear; add "if self.cell > 0 { self.cell -= 1; } /* -- */"; 
+     }
+     "read" { clear; add "self.readNext(); /* read */"; }
+     "count" { 
+       clear; add "self.work.push_str(self.accumulator); /* count */"; 
+     }
+     "a+" { clear; add "self.accumulator += 1; /* a+ */"; }
+     "a-" { clear; add "self.accumulator -= 1; /* a- */"; }
+     "zero" { clear; add "self.accumulator = 0; /* zero */"; }
+     "chars" { 
+       clear; add "self.work.push_str(self.charsRead); /* chars */"; 
+     }
+     "lines" { 
+       clear; add "self.work.push_str(self.linesRead); /* lines */"; 
+     }
+     "nochars" { clear; add "self.charsRead = 0; /* nochars */"; }
+     "nolines" { clear; add "self.linesRead = 0; /* nolines */"; }
+     # use a labelled loop to quit script.
+     "quit" { clear; add "break script; /* quit */"; }
+     "write" { 
+       clear; 
+       add "/* write */\n";
+       add 'fs::write("sav.pp", self.work).expect("Unable to write file");';
+     }
+     # just eliminate since it does nothing.
+     "nop" { clear; add "/* nop: does nothing */"; }
+
+     put; clear; add "statement*";
+     push; .reparse
+   }
+
+  "statementset*statement*","statement*statement*" {
+    clear; get; add "\n"; ++; get; --; put;
+    clear; add "statementset*"; push; .reparse
+  }
+
+  # ----------------
+  # 3 grammar parse tokens 
+  pop;
+
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+
+    # dart has labelled loops
+    "statementset*parselabel*statementset*",
+    "statement*parselabel*statementset*",
+    "statementset*parselabel*statement*",
+    "statement*parselabel*statement*" {
+      clear; 
+      # indent both code blocks
+      add "  "; get; replace "\n" "\n  "; put; clear; ++; ++;
+      add "  "; get; replace "\n" "\n  "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      add "lex: { \n";
+      get; add "\n}\n"; ++; ++;
+      # indent code block
+      # add "  "; get; replace "\n" "\n  "; put; clear;
+      add "parse: \n";
+      add "while (true) { \n"; get;
+      add "\n  break parse;\n}"; 
+      --; --; put; 
+      clear; add "script*"; push; .reparse
+    }
+
+    "beginblock*statement*","beginblock*statementset*",
+    "beginblock*statementset*parselabel*",
+    "beginblock*statement*parselabel*" {
+      clear; 
+      # indent begin block code  
+      add "    "; get; 
+      replace "\n" "\n    "; put; clear; 
+      # indent main code for readability.
+      ++; add "      "; get; 
+      replace "\n" "\n      "; put; clear; --;
+      # get dart code
+      ++; get; --;
+
+      get; add "\n"; ++; 
+      # a labelled loop for "quit" (but quit can just exit?)
+      add "    script: \n";
+      add "    while (!self.eof) {\n"; get;
+      add "\n    }";
+      add "\n  }";
+      add "\n}\n";
+      # put a copy of the final compilation into the tapecell
+      # for interactive debugging.
+      put; print; clear; quit;
+       clear; add "script*"; push; .reparse
+    }
+
+    "statement*parselabel*","statementset*parselabel*" {
+       clear; get; ++; get; --; put;
+       clear; add "script*"; push; 
+    }
+    "parselabel*statement*","parselabel*statementset*" {
+       clear; get; ++; get; --; put;
+       clear; add "script*"; push; 
+    }
+
+    "statement*","statementset*" {
+       clear; add "script*"; push; 
+    }
+    "beginblock*" {
+       clear; add "script*"; push; 
+    }
+    "comment*" {
+       clear; add "script*"; push; 
+    }
+    "parselabel*" {
+       clear; add "script*"; push; 
+    }
+  }
+
+  "(*word*)*","<*word*>*" {
+    clear; ++; get; --;
+    "eof","==" { 
+      put; clear; add "test*"; push; .reparse 
+    }
+    clear; add "* invalid test <> or () ."; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  #--------------------------------------------
+  # eg: add "text";
+  "command*quoted*;*" {
+    clear; get;
+    # error trap here 
+    !"mark".!"go".!"delim".!"add".!"until".!"escape".!"unescape" {
+      clear; 
+      add "  superfluous argument or other error?\n"; 
+      add "  (error should have been trapped in error block: check)"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    "mark" {
+      clear; ++; get; escape '"'; put; --;
+      clear; add 'self.addMark("'; ++; get; --; add '"); /* mark */';
+    }
+    "go" {
+      clear; ++; get; escape '"'; put; --;
+      clear; add 'self.goToMark("'; ++; get; --; add '"); /* go */';
+    }
+
+    "delim" {
+      # can the parse token delimiter be a unicode grapheme cluster. no
+      clear; ++; get; escape "'"; put; --;
+      add "/* delim */\n"; 
+      add "self.delimiter.clear().push_str('"; ++; get; --; add "'); ";
+    }
+
+    "add" {
+      # todo: fix quoting.
+      clear; add "self.work.push_str("; ++; get; --; 
+      # handle multiline text
+      replace "\n" '"); \nself.work.push_str("\\n';
+      add "); /* add */";
+    }
+   
+    # no while/whilenot quote
+    "until" {
+       clear; ++; get; escape '"'; put; --;
+       clear; add 'self.until("'; ++; get; --; 
+       # handle multiline argument
+       replace "\n" "\\n"; add '");'; 
+     }
+
+    "escape","unescape" {
+       clear; ++; get; escape '"'; put; --;
+       clear; add "self."; get; add "Char"; 
+       add "("; ++; get; --; add ';'; 
+     }
+     put; clear; add "statement*"; push; .reparse
+   }
+
+  # see above
+  # "command*quoted*;*" { clear; add "statement*"; push; .reparse }
+
+  # eg: while [:alpha:]; or whilenot [a-z];
+  "command*class*;*" {
+    clear; get;
+
+    # convert to dart code
+    "while" {
+      clear;
+      add "/* while */\n";
+      add "while (self.peep.matches("; ++; get; --; add ")) {\n";
+      add "  if (self.eof) { break; } self.read();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+
+    "whilenot" {
+      clear;
+      add "/* whilenot */ \n";
+      add "while (!self.peep.matches("; ++; get; --; add ")) {\n";
+      add "  if (self.eof) { break; } self.read();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+
+    clear; add "*** unchecked error in rule: statement = command class ;"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # brackets around tests will be ignored.
+  "(*test*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # brackets will allow mixing AND and OR logic 
+  "(*ortest*)*","(*andtest*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # -------------
+  # parses and compiles concatenated tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+  "test*,*test*","ortest*,*test*" {
+    # OR logic concatenation 
+    # put brackets around tests even though operator 
+    # precedence should take care of it
+    "test*,*test*" {
+      clear; add "("; get; add ")";
+    }
+    "ortest*,*test*" { clear; get; } 
+    add " || ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "ortest*"; push; .reparse
+  }
+
+  # -------------
+  # AND logic 
+  # parses and compiles concatenated AND tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+  # negated tests can be chained with non negated tests.
+  # eg: B'http'.!E'.txt' { ... }
+  "test*.*test*","andtest*.*test*" {
+    # AND logic concatenation 
+    # add brackets 
+    "test*.*test*" {
+      clear; add "("; get; add ")";
+    }
+    "andtest*.*test*" { clear; get; } 
+    add " && ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "andtest*"; push; .reparse
+  }
+
+  # dont need to reparse 
+  "{*statement*}*" { replace "ment*" "mentset*"; }
+
+  # ----------------
+  # 4 grammar parse tokens 
+  pop;
+
+  # see below
+  # "command*quoted*quoted*;*" { clear; add "statement*"; push; .reparse }
+
+  # eg:  replace "and" "AND" ; 
+  "command*quoted*quoted*;*" {
+    clear; get;
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      # multiline replace? no.
+
+      # escape " in each argument because I will quote with "
+      clear; ++; get; escape '"'; put; --; 
+      clear; ++; ++; get; escape '"'; put; --; --;
+      clear;
+      add "/* replace */ \n";
+      add "if (self.workspace.isNotEmpty) { \n";
+      add '  self.workspace = self.workspace.characters.replaceAll("';
+      ++; get; add '".characters, "'; ++; get; add '".characters);\n}'; 
+      --; --; put;
+      clear; add "statement*"; push; .reparse
+    }
+
+    # error trap
+    clear; add "  incorrect command syntax?"; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  # reducing blocks
+  "test*{*statementset*}*", 
+  "ortest*{*statementset*}*",
+  "andtest*{*statementset*}*" {
+    clear; 
+    # indent the dart code for readability
+    ++; ++; add "\n"; get; replace "\n" "\n  "; put; --; --; 
+    clear; add "if ("; get; add ") {";
+    ++; ++; get; add "\n}"; --; --; put; 
+    clear; add "statement*"; push; .reparse
+  }
+
+  "begin*{*statementset*}*" {
+     clear; 
+     ++; ++; get; --; --; put; clear;
+     add "beginblock*"; push; .reparse
+  }
+
+
+  # end of input stream errors
+  (eof) {
+    "test*","ortest*","andtest*","begin*" {
+       clear; 
+       add "* Incomplete script."; put;
+       clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  push;push;push;push;
+
+  (eof) {
+    pop;pop;
+    "" {
+      add "* empty script\n"; 
+      print; quit;
+    }
+    !"script*" {
+      push;push;
+      unstack; put; clear; 
+      add "* script syntax problem: the error was not caught by the \n"; 
+      add "  syntax checker, and should have been.\n";
+      add "  The parse stack was: ";
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "/* good syntax. */\n"; print; clear;
+    # indent the compiled code
+    add "\n"; get; replace "\n" "\n       "; put; clear;
+    # create the virtual machine object code and save it
+    # on the tape.
+    add '
+
+ /* Rust code generated by "nom.torust.pss" */
+ // use std::mem;     // for swap
+ use std::io;
+ use std::io::Stdin;
+ use std::io::stdin;
+ use std::io::Read;
+ use std::io::{BufReader, BufRead};
+ use std::process;
+ use std::fs;
+ use std::fs::File;
+
+ pub struct Machine {
+   accumulator: i32,          // counter for anything
+   peep: char,                // next char in input stream
+   charsRead: u32,            // No. of chars read so far
+   linesRead: u32,            // No. of lines read so far
+   lineBuffer: String,    // text will be read first line by line, so 
+                          // the nom read command will read from this buffer
+                          // this also helps with grapheme clusters.
+   work: String,          // text accumulator
+   stack: Vec<String>,    // parse token stack
+   LENGTH: u32,           // tape initial length
+   // vectors are growable in rust
+   tape: Vec<String>,     // array of token attributes, growable
+   marks: Vec<String>,    // tape marks
+   cell: u32,             // pointer to current cell
+   input: BufReader<Stdin>,   // text input stream
+   //input: BufReader<File>,   // text input stream
+   //input: BufReader<R>,         // text input stream
+   //input: BufReader<dyn Read>,   // text input stream, stdin, file, string
+   eof: bool,             // end of stream reached?
+   escape: String,      // char used to "escape" others "\\"
+   delimiter: char    // push/pop delimiter (default is "*")
+ }
+
+ impl Machine {
+   /** make a new machine */
+   /*
+   pub fn new() -> Self {
+     return Machine::new(BufReader::new(io::stdin()));
+   }
+   */
+   
+   /** make a new machine with input from a string and
+       output to a string */
+   /*
+   stringreader is a crate. 
+   pub fn new(input: String, output: String) -> Self {
+     let mut reader = StringReader::new(input);
+     return Machine::new(BufReader::new(reader));
+   }
+   */
+   
+   /** make a new machine with a buffered stream reader */
+   pub fn new<R: BufRead>(reader: R) -> Self {
+     Self {
+       LENGTH: 100,
+       input: BufReader::new(stdin()),
+       eof: false,
+       charsRead: 0, 
+       linesRead: 1, 
+       lineBuffer: String::new(),
+       escape: String::from("\\\\"),
+       delimiter: \'*\',
+       accumulator: 0,
+       work: String::new(),
+       stack: vec!["".to_string();100],
+       cell: 0,
+       tape: vec!["".to_string();100],
+       marks: vec!["".to_string();100],
+       peep: \'z\'
+       // peep: Self.input.read()
+     } // self
+   }
+
+   /** read one character from the input stream and 
+       update the machine. This is the most difficult function or 
+       method to write, because it needs to handle unicode and 
+       grapheme clusters. In fact it maybe necessary to read a whol
+       line into a buffer into order to handle grapheme clusters.  */
+
+   pub fn readNext(&mut self) {
+     //todo: need to use a line buffer. So read from string/file/stdin
+     // first into the buffer. check if buffer is empty and refill if
+     // necessary. See nom.todart.pss code for one implementation.
+     // remove one char from start of lineBuffer after each read.
+     //int iChar;
+
+     let mut line = String::new();
+     if self.eof { process::exit(0); }
+     self.charsRead += 1;
+     // increment lines
+     if self.peep == \'\\n\' { self.linesRead += 1; }
+     self.work.push(self.peep);
+
+     // read one line from a BufReader if lineBuffer is empty
+     if !self.lineBuffer.is_empty() {
+       //let len = self.input.read_line(&mut self.lineBuffer)?;
+       let len = self.input.read_line(&mut self.lineBuffer).unwrap();
+       if len == 0 {
+          //println!("EOF");
+          self.eof = true; return;
+       }
+     }
+
+     // unicode_segmentation crate has .graphemes(true) conversion.
+     // this doesnt handle grapheme clusters
+     if !self.eof {
+       self.peep = self.lineBuffer.chars().next().unwrap();
+       self.lineBuffer.remove(0);
+     }
+   }
+
+
+   /** increment tape pointer by one */
+   pub fn increment(&mut self) {
+     self.cell += 1;
+     if self.cell >= self.LENGTH {
+       self.tape.push(String::from(""));
+       self.marks.push(String::from(""));
+       self.LENGTH += 1;
+     }
+   }
+   
+   /** remove escape character  */
+   // todo: fix. this is too naive because we could have
+   // \\\\n for example
+
+   pub fn unescapeChar(&mut self, c: char) {
+     // this could be a grapheme cluster, so it shouldnt be a 
+     // char really
+     let mut ss = String::from("\\\\").push(c);
+     if !self.work.is_empty() {
+       let s: String = 
+         //self.work.replace(&ss, &c.to_string());
+         self.work.replace("fix this", &c.to_string());
+       self.work.clear(); self.work.push_str(&s);
+     }
+   }
+
+   // todo add code for unescape chars: see perl code.
+   /** add escape character  */
+   pub fn escapeChar(&mut self, c: char) {
+     let mut ss = String::from("\\\\").push(c);
+     if !self.work.is_empty() {
+       //let s: String = self.work.replace(&c.to_string(), &ss);
+       let s: String = self.work.replace(&c.to_string(), "fix this");
+       self.work.clear(); self.work.push_str(&s);
+     }
+   }
+
+   /** whether trailing escapes \\\\ are even or odd */
+   // untested code. check! eg try: add "x \\\\"; print; etc
+   pub fn isEscaped(&mut self, ss: String, sSuffix: String) -> bool {
+    /*
+     let count: u32 = 0; 
+     if ss.chars().count() < 2 { return false; }
+     if ss.chars().count() <= sSuffix.chars().count() { return false; }
+     if ss.indexOf(self.escape.charAt(0)) == -1 
+       { return false; }
+     let pos: i32 = ss.chars().count()-sSuffix.length();
+     while (pos > -1) && (ss.charAt(pos) == self.escape.charAt(0)) {
+       count += 1; pos -= 1;
+     }
+     if count % 2 == 0 { return false; }
+     */
+     return true;
+   }
+
+
+   /* a helper to see how many trailing \\\\ escape chars */
+   pub fn countEscaped(&mut self, sSuffix: String) -> u32 {
+     let mut s = String::new();
+     let count: u32 = 0;
+     /*
+     match s.strip_suffix(sSuffix) {
+        Some(s) => s,
+        None => s
+     }
+     // remove suffix if it exists
+     if index > 0 {
+       s = self.work.substring(0, index);
+     }
+     while s.ends_with(self.escape) {
+       count += 1;
+       s = s.substring(0, s.lastIndexOf(self.escape));
+     }
+     */
+     return count;
+   }
+
+   /** reads the input stream until the work end with text */
+   pub fn readUntil(&mut self, suffix: String) {
+     // read at least one character
+     if self.eof { return; }
+     self.readNext();
+     loop {
+       if self.eof { return; }
+       if self.work.ends_with(&suffix) {
+         if self.countEscaped(suffix) % 2 == 0 { return; }
+       }
+       self.readNext();
+     }
+   }
+
+   /** pop the first token from the stack into the workspace */
+   pub fn pop(&mut self) -> bool {
+     if self.stack.len() == 0 { return false; }
+     self.work.insert_str(0, self.stack.pop().unwrap().as_str());     
+     if self.cell > 0 { self.cell -= 1; }
+     return true;
+   }
+
+   // push the first token from the workspace to the stack 
+   pub fn push(&mut self) -> bool {
+     let item = String::new();
+     // dont increment the tape pointer on an empty push
+     if self.work.is_empty() { return false; }
+     // need to get this from self.delim not "*"
+     if !self.work.contains(&self.delimiter.to_string()) {
+       self.stack.push(self.work);
+       self.work.clear(); self.increment();
+       return true;
+     } 
+     //let parts = "some string 123 content".split("123");
+     //for part in parts { println!("{}", part) }
+     let tokens = self.work.split(self.delimiter);
+     //Or:
+     // todo: fix, replace the delimiter
+     let first = tokens.next(); 
+     self.work.clear();
+     for token in tokens {
+       self.work.push_str(token); 
+       self.work.push(self.delimiter);
+     }
+     self.stack.push(first.unwrap().to_string());     
+     self.increment(); 
+     return true;
+   }
+
+   /** swap current tape cell with the workspace */
+   // swap not required, use mem::swap ??
+
+   // save the workspace to file "sav.pp" */
+   // we can put this inline?
+   pub fn writeToFile(&mut self) {
+     fs::write("sav.pp", self.work).expect("Unable to write file");
+   }
+
+   pub fn goToMark(&mut self, mark: String) {
+     for (ii, thismark) in self.marks.iter().enumerate() {
+       if thismark.eq(&mark) { self.cell = ii as u32; return; }
+     }
+     print!("badmark \'{}\'!", mark); 
+     process::exit(1);
+   }
+
+   /* remove existing marks with the same name and add new mark */
+   pub fn addMark(mark: String) {
+     // remove existing marks with the same name.
+     for mm in &mut self.marks {
+       if mm == mark {
+          *mm.clear(); 
+       }
+     }
+     self.marks[self.cell] = mark; 
+   }
+
+   /** check if the workspace matches given class */
+   /*
+   bool matchClass(String charclass) {
+      but regExp cant handle emojis?
+     var regExp = RegExp(r\'^\' + charclass + r\'+$\');
+     return regExp.hasMatch(self.workspace); 
+   }
+   */
+
+   /* print the internal state of the pep/nom parsing machine. This 
+      is handy for debugging, but for some reason I took this command
+      out of some translators ... */
+   pub fn printState(&self) {
+      print!("\\n--------- Machine State ------------- ");
+      //print("(line buffer:{displayBuffer})");
+      print!("Stack{:?} ", self.stack);
+      print!("Work[{}] ", self.work);
+      print!("Peep[{}]\\n", self.peep.escape_default());
+      print!("Acc:{} ", self.accumulator);
+      print!("EOF:{} ", self.eof);
+      print!("Esc:{} ", self.escape);
+      print!("Delim:{} ", self.delimiter);
+      print!("Chars:{} ", self.charsRead);
+      print!("Lines:{}\\n", self.linesRead);
+      print!("-------------- Tape ----------------- ");
+      print!("Tape Size: {}", self.LENGTH);
+      let start: u32 = self.cell - 3; 
+      let end: u32 = self.cell + 3; 
+      if start < 0 { start = 0; }
+      for ii in start..end {
+        print!("   {ii}");
+        if ii == self.cell { print!("> ["); }
+        else { print!("  ["); }
+        print!("{}]\\n", self.tape.get(ii as usize).unwrap());
+      }
+   }
+
+   /** parse from a string */
+   pub fn parseString(input: String) {
+   }
+
+   /** parse from a file */
+   pub fn parseFile(fileName: String) {
+     /* 
+     dart code: adapt
+     File file = new File("sav.pp");
+     self.inputSource = file.openRead();
+     self.parse();
+     */
+   }
+
+   //pub fn parseInput(input: Stream) {
+     //self.inputSource = input;
+     //self.parse();
+   //}
+
+   /** parse with the machines input steam */
+   pub fn parse(&mut self) {
+     // the infinite loop in rust
+     loop {';
+     # get the compiled code from the tape
+     get;
+     # terminate the rust program.
+   add '
+     }
+   }
+  }
+
+ // fn main() -> io::Result<()> { 
+  fn main() { 
+    // BufReader::new(io::stdin())
+    let temp: String = String::new();    
+    let mm: Machine = Machine::new(BufReader::new(io::stdin()));
+    mm.parse();
+  }  \n';
+    print; quit;
+  } # end of block

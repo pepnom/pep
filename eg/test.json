@@ -1,0 +1,5 @@
+   [
+     { "name":"tolstoy", "job":"writer"},
+     { "name":"obama", "favourite numbers": [0, 3.1517, 42]},
+     { "name":"saramago", "age": 21},
+   ]

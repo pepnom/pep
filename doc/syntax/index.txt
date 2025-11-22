@@ -1,0 +1,91 @@
+
+## /doc/syntax folder
+
+ This folder contains information about the syntax of the [nom] language as it
+ is defined in "compile.pss" nomsf://compile.pss 
+ 
+ The file file://doc.dir.index.html contains a list of documents in 
+ this folder, including pages for each element of the syntax of the 
+ [nom] language.
+
+ The document file://nom.syntax.html contains an overview of the *nom* language
+ syntax, and then each aspect of the syntax is documented in a separate file.
+ For example, the block tests are documents in the file
+ file://nom.syntax.tests.html
+
+### NOM SYNTAX EXAMPLE
+
+  The example below doesn't do anything useful.
+
+  * an example to demonstrate the syntax of nom
+  -----+
+    # single line comments start with '#'
+    # the begin-block is likes 'awks' begin blocks
+    begin { add "hello"; print; clear; }
+    # all statements end with ';' except .reparse and .restart
+    read;   
+    # class tests are between [ and ]
+    [\n] { clear; lines; add ":"; print; }
+
+    # blocks between { and } are preceeded by 'tests'
+    "/" {
+      # blocks can be multiline and nested
+      until '/'; 
+      # tests can be negated with the ! operator and blocks can
+      # be nested
+      !"//" {
+        put; clear; 
+        # quoted parameters can be multiline, no special syntax is 
+        # required.
+        add '
+          multiline 
+          quoted
+          text ';
+        # single or double quotes can be used for parameters
+        # there is no difference
+        add "double quotes"; add 'single quotes';
+        # all commands have a single character version
+        # 'a' is the same add 'add', 'd' is 'clear'
+        a 'text'; d;
+        # no white-space between elements is required
+        add'nospace'; replace'a''A'; clear;
+
+        print; clear;
+        # parse tokens like 'match*' end with a delimiter character
+        # (by default '*')
+        add "match*"; push;
+        # jump forward or back to the 'parse>' label
+        # no semicolon ; after .reparse
+        .reparse
+      }
+    }
+    #* 
+     comments can be 
+     multiline like this
+    *#
+  parse>
+    
+    # end-of-file and tape tests can be written 
+    # with () or <> eg <eof> (eof) (==) <==>
+    (eof) { add "end\n"; print; }
+    # the same no difference
+    <eof> { add "end\n"; print; }
+  ,,,,
+
+
+### NOTES
+
+ The syntax of [nom] is based reasonably closely on that of [sed]
+ the [unix] text-stream editor. But there are a list of differences
+ which I will, at some point, document in a separate page.
+
+ Nom used braces *{}* to delineate nomsyn://blocks of statements.  
+ It is normally *character-oriented* not *line-oriented* . It 
+ does **not** use regular expressions (I explain the design reasons
+ for this elsewhere) so it "matches" simple text-strings in the 
+ pep://workspace (text) buffer.  
+
+
+
+ 
+

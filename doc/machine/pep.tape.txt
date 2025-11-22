@@ -1,0 +1,60 @@
+
+
+## THE PEP TAPE 
+
+  The 'Tape': a string array structure in the [pep] machine.
+
+  * machine instructions with an effect on the tape
+  >> get, put, ++, --, pop, push, mark, go
+
+  The tape is an array of string cells (with memory allocated dynamically),
+  each of which can be read or written, using the workspace buffer.  The tape
+  cell array also includes a tape cell pointer, which is usually called the
+  "current cell". 
+
+### CURRENT CELL OF TAPE ARRAY 
+
+  * instructions affecting the current cell of the tape
+  
+  - nom://++
+  - nom://--
+  - nom://push
+  - nom://pop
+  - nom://mark
+  - nom://go
+
+  The current cell of the tape is a very important mechanism for storing
+  attributes of parse (or grammar) tokens, and then manipulating those
+  attributes. The pep/nom virtual machine has the ability to "compile" or
+  translate one text format into another. (I call this compilation because
+  because the target text format may be an assembly language - for either a
+  real or virtual machine)
+
+  In the parsing phase of a script, the attributes of different parse tokens
+  are accessed from the tape and combined and manipulated in the workspace
+  buffer, and then stored again in the current cell of the tape. This means
+  that a script which is transforming some input stream may finish with the
+  entire transformed input in the 1st cell of the tape structure. The script
+  can then print out the cell to <stdout> (with *get; print;*, which allows
+  further processing by other tools in the pipe chain) or else write the
+  contents of the cell to the file 'sav.pp' (with "get; write;").
+
+  The current cell is also affected by the stack machine commands nom://pop
+  and nom://push . The push command increments the tape pointer (current cell)
+  by 1 (if the pep://workspace is not empty) and the pop command decrements
+  the tape pointer by one (if the pep://stack is not empty and the current
+  cell is not the first one in the tape).
+
+  This is a simple but powerful mechanism that allows the tape pointer
+  to stay in sync with the stack. After a "push" or "pop" command
+  the tape pointer will be pointing at the correct tape cell for 
+  that item on the stack. In some cases, it may be easiest to see how
+  these mechanisms work by running the machine engine in interactive mode
+  (eg: *pep -If script inputfile* ) and stepping through a script or executing
+  commands at the interactive debug prompt.
+
+  The tape pointer is also incremented and decremented by the nom://++ and
+  nom://-- commands, and these commands are mainly used during the compilation
+  phase to access and combine attributes to transform the input into the
+  desired output.
+

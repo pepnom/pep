@@ -1,0 +1,500 @@
+#*
+
+  See /eg/plzero.pss which is a more complete version of this 
+  script.
+
+  This script is an attempt to create a pl/0 parser/compiler
+  in the parse script language. I will develope this in stages,
+  first adding conditions, then assigments, then begin-end
+  blocks etc. Eventually I should have a complete "statement"
+  rule with a grammar very similar to Wirth's. 
+  
+  This has been an interesting learning exercise but the grammar
+  rules have become very verbose. Also, I have to use look-ahead
+  everywhere to parse expressions. I think I need to look for
+  a more elegant way to do this.
+
+  However, the optionality of the statement rule [...] will be 
+  encoded in the block rule.
+
+  -----
+
+    # plus more combinations ....
+    block = constdec vardec proclist statement
+    block = constdec vardec proclist 
+    block = constdec vardec 
+    block = constdec 
+
+    block = vardec proclist statement
+    block = vardec proclist 
+    block = vardec 
+
+    block = proclist statement
+    block = proclist 
+
+    block = statement
+
+  ,,,
+
+  * the pl/0 grammar in wsn/ebnf form
+  -------
+   program = block "." .
+   block = [ "const" ident "=" number {"," ident "=" number} ";"]
+        [ "var" ident {"," ident} ";"]
+        { "procedure" ident ";" block ";" } statement .
+
+   statement = [ ident ":=" expression | "call" ident 
+              | "?" ident | "!" expression 
+              | "begin" statement {";" statement } "end" 
+              | "if" condition "then" statement 
+              | "while" condition "do" statement ].
+
+   condition = "odd" expression |
+               expression ("="|"#"|"<"|"<="|">"|">=") expression .
+   expression = [ "+"|"-"] term { ("+"|"-") term}.
+   term = factor {("*"|"/") factor}.
+   factor = ident | number | "(" expression ")".
+
+  ,,,
+
+TESTING
+
+  * check if variable declarations are parsing
+  >> pp -f eg/plzero.statement.pss -i "var a, b, c ;"
+
+  * constant declarations 
+  >> pp -f eg/plzero.statement.pss -i "const a=1, b=2, c=3 ;"
+
+GOALS
+
+  To add "conditions" and "assignments" and then some parts of 
+  the pl/0 statement grammar (if-then blocks, while-do blocks,
+  begin-end blocks). 
+  
+  Once parsing and recognising is working, to convert this script
+  to a "compiler" so that it compiles pl/0 to ruby or python or
+  java.
+
+CHALLENGES
+
+  
+  The "block" rule contains a series of optional elements that 
+  must appear in order eg:
+   block := 
+     [constant.declarations] [var.declarations] [procedure.declarations]
+     [statement] .
+  all of these are optional. I we factor out the optionality we end
+  up with a large number of separate rules which is tedious to code.
+  But we can encode some state in a parse token.
+
+  statements have no end marker, so how do we know when the 
+  expression is finished in "statement = ident ':=' expression ." ?
+  So, the problem is, if we have an input stream:
+    >> a := b+c*d
+  That will parse to "ident ':=' expression" where expression == "b+c"
+  which will reduce to "statement", which ignores the "*d" suffix
+  and produces a parse error!
+
+  One solution is to look at Wirth's grammar and see that statements
+  must be terminated with either ";" or "end" or "." (in the case of 
+  a program block).
+
+  "a = 4" is a legal 'condition' in pl/0 but is also
+  part of a constant declaration. So I need to stop this parsing
+  as a condition if it is preceded by "const"
+
+  When parsing integer arithmetic expressions, we need to construct the
+  grammar so that it contains a "lookahead" token, in order to deal with the
+  operator precedence dilemma.
+  
+LIMITATIONS 
+
+  The grammar was written for a recursive descent parser and the 
+  syntax of the language was also designed to be easily parsable for
+  that type of compiler. It is becoming evident that it is somewhat
+  painful attempting to write a LR shift-reduce parser/compiler using
+  the machine for this syntax...
+
+  The expression grammar does not currently (aug 2019) include
+  +/- expression. This is because I find this syntax confusing eg:
+    >> a++b*-c+-d
+
+HISTORY
+
+  30 august 2019
+
+    adapting from exp.recognise.pss and plzero.dec.pss
+
+    This is actually nearing completion and appears to work quite
+    well despite being a messy way to parse this syntax. This
+    is because we constantly have to use look-ahead tokens to 
+    decide when a particular element has terminated, especially
+    "expressions".
+    
+    The main thing missing now are procedure definitions.
+    Statements are nearly complete
+
+*#
+
+  read;
+
+  [:space:] { clear; }
+
+  "+","-" {
+    put; clear; add "opadd*"; push;  
+  }
+  "*","/" {
+    put; clear; add "opmul*"; push;  
+  }
+  # literal tokens
+  # '!' is the print command in pl/0
+  # '?' is the read command in pl/0
+  # '#' means != 
+  # '.' marks the end of a program. 
+  ".",",","=",";","(",")","?","!" { 
+    put; add "*"; push; 
+  }
+
+  # also need to parse <= >= comparison operators
+  # and how to handle '=' which is comparison and also
+  # constant assignment.
+  "<",">" {
+    while [=]; put; clear; add "compare*"; push; 
+  }
+  "#" { put; clear; add "compare*"; push; }
+
+  ":" { 
+    read; 
+    ":=" { put; add "*"; push; .reparse }
+    add " << characters not allowed here in pl/0 syntax. \n";
+    add " at line number "; ll; add ".\n";
+    print; clear; quit;
+  }
+
+  [0-9] { 
+    while [0-9]; put; clear; add "number*"; 
+    push; .reparse 
+  }
+
+  [:alpha:] { 
+    while [:alpha:]; 
+    # keywords in pl/0
+    "const","var","if","then","while","do","begin","end",
+    "procedure","call","odd" { 
+      # or add ".key*" to remind us that these are keywords,
+      # not parse tokens
+      put; add "*"; push; .reparse
+    }
+    put; clear; add "ident*"; 
+    push; .reparse 
+  }
+
+  !"" { 
+    # error unrecognised character
+    add " << character not allowed here in pl/0 syntax. \n";
+    add " at line number "; ll; add ".\n";
+    print; clear; quit;
+  }
+
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+#-----------------
+# 1 token
+  pop; 
+  
+  
+#-----------------
+# 2 tokens
+
+  pop; 
+  
+  "block*.*" {
+    clear; add "program*"; push; .reparse
+  } 
+
+  #*
+  "constdec*statement*","vardec*statement*" {
+    clear; add "block*"; push; .reparse
+  }
+  *#
+
+  "call*ident*" {
+    clear; add "statement*"; push; .reparse
+  }
+
+  "?*ident*" {
+    clear; add "statement*"; push; .reparse
+  }
+
+  # trigger a changer of identity for number or ident with
+  # a lookahead token.
+  "number*)*","ident*)*" {
+     clear; add "exp*)*"; push; push; .reparse
+  }
+
+  "number*=*" {
+     clear; add "exp*=*"; push; push; .reparse
+  }
+
+  "number*then*" {
+     clear; add "exp*then*"; push; push; .reparse
+  }
+
+  "number*do*" {
+     clear; add "exp*do*"; push; push; .reparse
+  }
+
+  "number*opmul*","ident*opmul*" {
+     clear; add "exp*opmul*"; push; push; .reparse
+  }
+
+  "number*opadd*","ident*opadd*" {
+     clear; add "exp*opadd*"; push; push; .reparse
+  }
+
+  "number*compare*","ident*compare*" {
+     clear; add "exp*compare*"; push; push; .reparse
+  }
+
+  "compare*number*","compare*ident*" {
+     clear; add "compare*exp*"; push; push; .reparse
+  }
+
+  # variable declarations
+  "var*ident*" {
+    clear; add "varset*"; push; .reparse
+  }
+
+  "varset*;*" {
+     clear; add "vardec*"; push; .reparse
+  }
+  
+  "conset*;*" {
+     clear; add "constdec*"; push; .reparse
+  }
+
+#-----------------
+# 3 tokens
+
+  pop;
+
+  "constdec*vardec*statement*" {
+    clear; add "block*"; push; .reparse
+  }
+
+  "vardec*statement*.*" {
+    clear; add "program*"; push; .reparse
+  }
+
+  "constdec*vardec*.*" {
+    clear; add "program*"; push; .reparse
+  }
+
+  "constdec*statement*.*" {
+    clear; add "block*.*"; push; push; .reparse
+  }
+
+  "exp*=*number*","exp*=*ident*","ident*=*ident*" {
+     clear; add "exp*=*exp*"; push; push; push; .reparse
+  }
+
+  "!*exp*;*" {
+    clear; add "statement*;*"; push; push; .reparse
+  }
+
+  "begin*statement*end*","begin*statementset*end*" {
+    clear; add "statement*"; push; .reparse
+  }
+
+  "statement*;*statement*","statementset*;*statement*" {
+    clear; add "statementset*"; push; .reparse
+  }
+
+  "odd*exp*then*" {
+    clear; add "condition*then*"; push; push; .reparse
+  }
+
+  "odd*exp*do*" {
+    clear; add "condition*do*"; push; push; .reparse
+  }
+
+  "varset*,*ident*" {
+    clear; add "varset*"; push; .reparse
+  }
+
+  # trigger an identity change for numbers and variables.
+  "exp*opadd*number*","exp*opadd*ident*",
+  "exp*opmul*number*","exp*opmul*ident*" {
+     push; push; clear; add "exp*"; push; .reparse
+  }
+  
+  # we dont need any look ahead here because * and / have 
+  # precedence.
+  "exp*opmul*exp*" {
+     clear; add "exp*"; push; .reparse
+  }
+  
+  "(*exp*)*" {
+     clear; add "exp*"; push; .reparse
+  }
+
+  (eof) {
+    "exp*opadd*exp*" { 
+       clear; add "exp*"; push; .reparse
+    }
+  } 
+
+#-----------------
+# 4 tokens
+
+  pop;
+
+  "constdec*vardec*statement*.*" {
+    clear; add "program*"; push; .reparse
+  }
+
+  "if*condition*then*statement*" {
+    clear; add "statement*"; push; .reparse
+  }
+
+  "while*condition*do*statement*" {
+    clear; add "statement*"; push; .reparse
+  }
+
+  # problem
+  "statement*;*statement*;*","statementset*;*statement*;*" {
+    clear; add "statementset*;*"; push; push; .reparse
+  }
+
+  "statement*;*statement*.*","statementset*;*statement*.*" {
+    clear; add "statementset*.*"; push; push; .reparse
+  }
+
+  "statement*;*statement*end*","statementset*;*statement*end*" {
+    clear; add "statementset*end*"; push; push; .reparse
+  }
+
+  # lookahead parsing of conditions
+  "exp*compare*exp*then*" {
+    clear; add "condition*then*"; push; push; .reparse
+  }
+
+  "ident*=*exp*then*" {
+    clear; add "condition*then*"; push; push; .reparse
+  }
+
+  "exp*=*exp*then*" {
+    clear; add "condition*then*"; push; push; .reparse
+  }
+
+  "exp*compare*exp*do*" {
+    clear; add "condition*do*"; push; push; .reparse
+  }
+
+  "exp*=*exp*do*" {
+    clear; add "condition*do*"; push; push; .reparse
+  }
+
+  "const*ident*=*number*" {
+    clear; add "conset*"; push; .reparse
+  }
+
+  # use a lookahead to terminate assignments
+  # otherwise we dont know where the expression ends
+  "ident*:=*exp*;*", "ident*:=*ident*;*", "ident*:=*number*;*" {
+    clear; add "statement*;*"; push; push; .reparse 
+  }
+
+  "ident*:=*exp*end*", "ident*:=*ident*end*", "ident*:=*number*end*" {
+    clear; add "statement*end*"; push; push; .reparse 
+  }
+
+  "ident*:=*exp*.*", "ident*:=*ident*.*", "ident*:=*number*.*" {
+    clear; add "statement*.*"; push; push; .reparse 
+  }
+
+  # the following rules use a look-ahead parse token
+  # to implement operator precedence (* and / have precedence over
+  # + and - )
+  "exp*opadd*exp*opadd*" {
+     clear; add "exp*opadd*"; push; push;
+     .reparse
+  }
+
+  "exp*opadd*exp*)*" {
+     clear; add "exp*)*"; push; push;
+     .reparse
+  }
+
+  # this seems quite a painful way to parse, but
+  # how do we know when it is time to reduce a+b, except by
+  # looking ahead at the next token??
+  "exp*opadd*exp*.*" {
+     clear; add "exp*.*"; push; push; .reparse
+  }
+
+  "exp*opadd*exp*;*" {
+     clear; add "exp*;*"; push; push; .reparse
+  }
+
+  "exp*opadd*exp*end*" {
+     clear; add "exp*end*"; push; push; .reparse
+  }
+
+  "exp*opadd*exp*then*" {
+     clear; add "exp*then*"; push; push; .reparse
+  }
+
+  "exp*opadd*exp*do*" {
+     clear; add "exp*do*"; push; push; .reparse
+  }
+
+  # try replace for a more succinct parse/compile.
+  "exp*opadd*exp*compare*",
+  "exp*opadd*exp*=*" {
+     #clear; add "exp*compare*"; 
+     replace "exp*opadd*exp*" "exp*";
+     push; push; .reparse
+  }
+
+  #*
+  "exp*opadd*exp*=*" {
+     clear; add "exp*=*"; push; push; .reparse
+  }
+  *#
+
+# ----------------------
+# 5 tokens
+
+  pop;
+
+  "if*condition*then*statement*;*" {
+    clear; add "statement*;*"; push; push; .reparse
+  }
+
+  "if*condition*then*statement*.*" {
+    clear; add "statement*.*"; push; push; .reparse
+  }
+
+  "while*condition*do*statement*;*" {
+    clear; add "statement*;*"; push; push; .reparse
+  }
+
+  "while*condition*do*statement*.*" {
+    clear; add "statement*.*"; push; push; .reparse
+  }
+
+  "conset*,*ident*=*number*" {
+    clear; add "conset*"; push; .reparse
+  }
+
+
+ (eof) {
+   add " << top 5 stack items.\n"; print; clear;
+   quit;
+ }
+
+ push; push; push; push; push;

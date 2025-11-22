@@ -1,0 +1,58 @@
+
+ * Kev Carmody
+ """
+   The cleverman spoke precisely, humanity he said was done
+   It’s creed of greed could not proceed if our struggle’s to be won.
+ """
+
+## SECOND GENERATION TRANSLATION IN NOM
+
+ It is a strange-ish fact that any nom script that translates
+ nom scripts into another format or language can be run *on itself*.
+
+ What is more, this has a practical purpose: to create a pep/nom engine in the
+ target language. This facility is similar to the idea of a compiler being
+ 'self-hosted' but it works for *every* nom translation script in the /tr/
+ folder (at least the ones that have been properly debugged - feel free to lend
+ a hand). Nom also has a self-hosting compiler called nomsf://compile.pss which
+ is (obviously) a nom script.
+
+ I cannot think of any domain specific language which is capable of 
+ doing this. 
+
+ * translate the ruby translator into ruby
+ >> pep -f tr/translate.ruby.pss tr/translate.ruby.pss > machine.rb
+
+ * use the ruby pep/nom engine to translate nom
+ >> echo 'r;t;t;d;' | ruby machine.rb > test.rb
+
+ The line above produces a ruby script called test.rb which does the 
+ same thing that the nom script 'r;t;t;d;' does (print every character
+ in the input stream twice). 
+
+ There are even more bizarre and amazing implications of the idea of 
+ a "translator translating the translator in order to create a 
+ translator". For example, the generational translation can be repeated
+ as many times as desired and into any language for which a translator
+ exists.
+
+ Even more bizarre is the fact that in languages like perl which are 
+ capable of executing a string as code, then we can use the translated
+ translator as an *interpreter* (after adding a small addition method
+ which executed the compiled script as a string and adding a 
+ command line switch to read the input script file.)
+
+ The perl translator is currently not finished (2025) so I can't completely
+ demonstrate this but I have achieved it successfully with simple scripts.
+
+ The bash function *pep.tt* which is in the helper file nomsf://helpers.pars.sh
+ actually tests each translator with second generation scripts. That is 
+ to say that it translates the translator and then checks that new translator
+ compiles an executes all the one-line scripts correctly.
+
+ This is a big topic and I will come back to this document to expand
+ and explain the ramifications of all this, with specific examples for 
+ different translation scripts.
+
+ To be continued.
+ 

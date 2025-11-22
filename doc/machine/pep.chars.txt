@@ -1,0 +1,137 @@
+
+## THE PEP "CHARS" REGISTER
+
+  The 'chars' register: automatic character counter of the [pep] machine.
+
+  The pep virtual-machine contains a register in which is automatically stored
+  the number of characters (hopefully Unicode/UTF8/etc) that have been read
+  from the text "input-stream" /doc/pepnom.doc.inputstream.html with the *nom*
+  commands nom://read , nom://while , nom://whilenot and nom://until . Each of
+  these commands automatically updates the *chars* register in the pep machine.
+
+  You can access and use the "chars" register with the nom commands
+  nom://chars and nom://nochars which function in a similar way to the 
+  nom://lines and nom://nolines commands for the pep *lines* register.
+
+  *chars* appends the current character count onto the end of the 
+  pep://workspace buffer and the *nochars* command resets the 
+  character counter to zero.
+
+  Both the *chars* and *lines* registers and commands are important 
+  for providing reasonably good error messages when a nom script 
+  finds an error in the syntax of whatever language it is parsing.
+  For example when the nom compiler nomsf://compile.pss (which is 
+  a nom script, cool hey?) encounters an unrecognised commands such
+  *boggle-boggle* it halts the compilation and provide a extremely
+  helpful error message informing the esteemed script writer about 
+  exactly where in their (otherwise amazingly good) script the error 
+  occurred.
+
+  It is a common desire (or would be if *nom* were widely used) to make the
+  character count relative to the current line number (since the message
+  "syntax error at character 14234" may not be very helpful). This can be
+  implemented as follows
+
+  
+  * make the character count relative to the line number
+  -----+
+    read; [\n] { nochars; }
+  ,,,
+
+  * display the line and (relative) char numbers of the words 'tree' & 'leaf'
+  -----+
+    read; [\n] { clear; nochars; }
+    [:space:] { clear; .restart }
+    whilenot [:space:]; "tree","leaf" {
+      put; clear; 
+      add "* word '"; get; 
+      add "' at line "; lines; add " chars "; chars; add "\n";
+      print; clear;
+    }
+    clear;
+  ,,,
+
+### A SELF CONGRATULATORY DIGRESSION
+
+  The "pep" /doc/peptool/index.html tool is remarkably fast considering that it
+  is an interpreter. On my not-particularly-special dell laptop I 
+  got the following timing result with the Gutenberg project copy of 
+  Charles Dickens book the 'Pickwick Papers'
+
+  * timing the word search script above with a 1.8M (size) text file  
+  --------+
+  # the script above is saved as 'wordsearch.pss'
+  time pep -f wordsearch.pss pickwick.papers.txt
+  # pickwick.papers.txt is ~ 37000 lines and 1.8M in size
+  # output
+    real 0m0.234s
+    user 0m0.223s
+    sys  0m0.012s 
+  ,,,,
+
+  Of course "wc -w" is much much faster, but in my hobby-programmer
+  defence, the pep/nom tool is doing a lot more than wc -w
+  (including compiling and loading the script)
+
+  * timing 'wc -w' on the same big text file
+  ------+
+    time wc -w pickwick.papers.txt 
+    # output: 
+    303110 pickwick.papers.txt
+
+    real 0m0.033s
+    user 0m0.031s
+    sys  0m0.002s 
+  ,,,,
+
+  In fact, in some experiments, I have found that pep scripts that are 
+  translated to the go language and compiled *only* run 4X faster than
+  the [pep] interpreter. Can this possibly be true? Lets find out....
+
+  (code below requires that you are in the 'pepnom' base folder of 
+  the extracted "download" nomsf://download file or else change the 
+  directory paths)
+
+  * Translate the 'word search' script above to 'go', compile, run and time
+  ----+
+    # save the script above as 'wordsearch.pss'
+    pep -f tr/translate.go.pss wordsearch.pss > wordsearch.go
+    go build wordsearch.go
+    time cat pickwick.papers.txt | ./wordsearch
+    # output
+      real 0m0.296s
+      user 0m0.296s
+      sys  0m0.034s
+  ,,,,
+  
+  So, the [go] language translation is actually slower than the 
+  [pep] interpreter! But there is a pretty simple and logical explanation
+  for this: **Unicode**  Go (I think) has good Unicode support and is 
+  searching a [utf8] text file. *utf8* is a variable length character
+  encoding, as you would all know, which means that [go] cant simply
+  do "(char)++" or whatever to get to the next character in the 
+  input stream. 
+
+  The [pep] interpreter on the other hand, is written in 'c' with
+  "byte char" characters (I know, I know, let's not talk about it) so
+  it can zoom through the input-stream like oed://quicksilver.
+
+  But before you give up on [nom] and go onto the next obscure, cryptic
+  language, remember that you can overcome the Unicode problem by translating
+  scripts into go, java, python, ruby etc (and hopefully in the future - of
+  2025 - dart and rust). Or if you felt like helping you could just grep
+  through the "pep.c" nomsf://object/pep.c source code along with the 'objects'
+  in nomsf://object/ and change *char* to *wchar* and hope against hope that
+  that works (...)
+
+
+## NOTES
+
+  Actually, it just occurred to me that this trick to make the 
+  character number relative to the line number will return an incorrect
+  number if the nom://while or *whilenot* or nom://until commands are 
+  used to parse multiple lines of text. However, this problem is not 
+  terribly serious because it only means that the error message is not
+  as useful as it should be.
+  
+  

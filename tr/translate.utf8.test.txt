@@ -1,0 +1,437 @@
+
+#
+# Test data for the translation scripts.
+# see http://bumble.sf.net/books/pars/tr/
+# This file will contain utf8 text, such as multibyte characters
+# diacritics and grapheme clusters. Not all translation script currently
+# support utf8 code points nor grapheme clusters 
+#
+# See /doc/pepnom.doc.unicode.html for example of unicode grapheme
+# clusters which may be tricky. 
+#
+# I will put grapheme cluster tests at the end because they will be 
+# the hardest. The main functions to test are 
+
+#  clip; clop; read; while; whilenot; until; chars;
+#  upper; lower; 
+#  also classes need to be tested and this is one of the trickier 
+#  aspects.
+
+# but since while/whilenot/until all use the read() function internally
+# in the translation scripts if I get that one right the rest should work.
+#
+# note: maybe run "sed -i 's/ *$//g' tr.test.txt
+#   because trailing whitespace stops the tests from working.
+
+# some test data from
+# http://xahlee.info/emacs/emacs/emacs_unicode_fonts.html
+# which is a pretty good unicode explanation site.
+
+# «»‹› “” ‘’ 〖〗【】「」『』〈〉《》〔〕 
+# ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρςτυφχψω ¤$¢€₠£¥ ©®™ 
+# §¶†‡※ •◦‣✓ ☞ ●■◆★♠♣♥♦ ○□◇☆♤♧♡♢ ᴁᴂᴈ ♩♪♫♬♭♮♯ ¿¡ ¶§ª 
+# - ‐ ‑ ‒ – — ― … ° ⌈⌉ ⌊⌋ ∏∑∫∂√ ± ×÷⊕⊖⊗ ′″‴ ⁱ¹²³ ₀₁₂ 
+# π∞ ∀¬∧∨∃⊦ ∵∴ ∎ ∅∈∉⊂⊃⊆⊇⊄ ∪∩ ≠≤≥≮≯≈≡≔ ℕℤℚℝℂ ←→↑↓ ↔ ↖↗↙↘ 
+# ⇐⇒ ↞↠↟↡ ⇞⇟ ⌘⌥‸⇧⌤⌫⌦ ⎋⏏◀▶▲▼ ◁▷△▽ ⇄ ⇤⇥ ↹↵↩⏎ ⌨ ␣ ⎗⎘⎙⎚⌧ ⌚⌛⌶ ♿ 
+# ✂✄↶↷↺↻ ✉✍ ①②③ ✝✚✡☥⎈☭☪☯☮☺☹ ☠☢☣☤♲♳⌬☼☾ ♀♂
+
+# This test data can be used with the script pep.tt
+# eg: pep.tt python uni 
+#
+# This just contains a set of one line scripts
+# input and expected output. We can use this text data
+# with a bash script to test that the translation scripts
+# are working properly with each command
+# // is the field separator. The input will be echoed at the
+# script with 'echo -n', that is without a trailing newline
+#
+# Fields are:
+#   <script> // <input> // expected output
+#
+# Possible pep commands
+# add (a) clip (k) clop (K) clear (d)
+# replace (D) upper (u) lower (U) cap (A)
+# print (t) pop (p) push (P) unstack (U)
+# stack (u) put (G) get (g) swap (x)
+# ++ (>) -- (<) mark (m) go (M)
+# read (r) until (R) while (w) whilenot (W)
+# testis "..." {}
+# classtest [a-z]{} [abc]{} [:space:]{} beginswith B"..."{}
+# endswith E"..."{} end-of-input <eof>{}
+# tapetest <==>{}
+# count (n) a+ (+) a- (-)
+# zero (0) chars/cc (c) lines/ll (l) nochars (C)
+# nolines (L) escape (^) unescape (v) delim (z)
+# state (S) quit (q) write (s)
+# nop (o)
+#
+# Also need to test 'escaping' such as add "\""; and
+# add "\\\\"; Class tests eg [:upper:] [:lower:]
+
+# need to test multiline quotes;
+# also test mark; and go; syntax.
+
+# the simplest possible scripts with utf8 code points
+read; print; clear; // αβγδ // αβγδ
+read; t;t; clear; //  αβγabc // ααββγγaabbcc
+read; read; read; add ":"; print; // rug // rug:
+
+# test add
+read; add "x"; print; clear; // αβγ // αxβxγx
+read; add ":"; print; clear; // ÆØÅ // Æ:Ø:Å:
+read; add ".."; print; clear; // ℕℤℚℝℂ // ℕ..ℤ..ℚ..ℝ..ℂ..
+read; add ":"; print; clear; // 侂侃侄 // 侂:侃:侄:
+# 侂侃侄侅來侇侈侉侊例侌
+
+#日sun 一one 大big 年year 中middle 会to meet 人human being, people 本book
+#月moon, month 長long 国country 出to go out 上up, top 十10 生life
+#子child 分minute 東east 三three 行to go 同same 今now 高high, expensive
+#金money, gold 時time 手hand 見to see, to look 市city 力power
+#米rice 自oneself 
+
+r; add "大"; clip; t;d; // abcd // abcd
+# r; add "子大"; clip; t;d; // abcd // a子b子c子d子
+r; add "東"; clip; t;d; // ÆÆ // ÆÆ 
+r; add "z"; clop; t;d; // aℤℤℤb // zzzzz
+r; add "y見z"; clip; clip; t;d; // abcd // aybycydy
+r; add "\"ẘ\""; t;d; // abcd // a"ẘ"b"ẘ"c"ẘ"d"ẘ"
+
+# ề  [U+0065 LATIN SMALL LETTER E + U+0302 COMBINING CIRCUMFLEX ACCENT + U+0300 COMBINING GRAVE ACCENT].
+
+# print('\u00e9' == '\u0065\u0301'); //false
+# vim is not displaying this multicode point diacritic properly.
+# print('é' == 'é' ); //false, if copy/pasted from the two different representations
+# print('\u00e9'.runes == '\u0065\u0301'.runes); //fal
+
+# clip and clop with empty workspace
+r; t; t; d; clip; // ẘabẘ // ẘẘaabbẘẘ
+r; t; d; clip; clip; // ʤbʤc // ʤbʤc
+r; t; t; d; clop; // abcde // aabbccddee
+r; t; clop; clop; clop; add "f"; t; d; // abc // afbfcf
+r; d; clip; clop; clip; add "x"; t; d; // abcde // xxxxx
+
+# test comments
+r; #* ignore this *# add ":"; t;d; // abc // a:b:c:
+r; print;print;d; # ignore this // abc // aabbcc
+
+# replace tests
+r; replace "Ӕ" ""; t;d; // Ӕbcd // bcd 
+r; (eof) { replace "Ӕ" "Ӟ"; t;d; } // ӔbӔcӔd // ӞbӞcӞd 
+r; replace "ab" "XY"; (eof) {t;} // abab // XYXY
+
+# special chars in replace should have no effect , even if regex's
+# are used
+r; replace "$" ""; t;d; // click$clock // clickclock
+r; replace "/" ""; t;d; // click/clock // clickclock
+# r; replace '"' "'"; t;d; //  // clickclock
+
+# replace something with itself, should do nothing
+r; replace "a" "a"; t;d; // abcabc // abcabc
+
+r; upper; t;d; // xyz.abc // XYZ.ABC
+r; lower; t;d; // ABC#abc // abc#abc
+r;r;r; cap; t;d; // abcnop  // AbcNop
+r; print; print; d; // $10 // $$1100
+
+# push and pop
+r;r; add "*"; push; push; pop; t;d; // xxyyzz // xx*yy*zz*
+r; add "*"; push; pop; t;d; // abc // a*b*c*
+r; add "*tok*"; push; add ","; t; d; // abc // tok*,tok*,tok*,
+r; add "*tok*"; push; push; pop; t;d;pop; t;d; // abc // tok*a*tok*b*tok*c*
+r; add "*"; push; (eof){ pop;pop;pop; t;}  // red // r*e*d*
+
+# push/pop badly formed tokens
+r; d; add "*x*"; push; print; d; // abc // x*x*x*
+
+# push should do nothing (i.e. no ++) if WS empty
+r; put; clear; push; get; t;d; // abcdefg // abcdefg
+
+# pop should do nothing (i.e. no --) if stack empty
+r; ++; put; clear; pop; get; --; t;d; // abcdefg // abcdefg
+
+# stack and unstack
+r; add "*X*"; push; push; unstack; t;d; // abc // a*X*b*X*c*X*
+r; add "*X*"; push; push; unstack; t;d; // abc // a*X*b*X*c*X*
+r; add "*X*"; stack; unstack; t;d; // abc // a*X*b*X*c*X*
+
+# put and get
+r; put; get; t;d; // abc // aabbcc
+r; put; put; get; get; t;d; // abc // aaabbbccc
+r; put; get; put; get; t;d; // abc // aaaabbbbcccc
+r; t; put;d; ++; r;t;put;d;get;t;d; --;get;t;d; // ab // abba
+
+# swap
+r; swap; swap; t;d; // green // green
+r; print; swap; // abc // abac
+# r; swap; add "."; print;
+
+# until tests, included skipping escaped chars
+r; until "t"; add ":"; t;d; // butwhatis // but:what:is:
+r; '"' { until '"';t;} d; // a"word"z // "word"
+r; until "."; clip; t;d; // one.word.is // onewordi
+r; until ".."; clip; t;d; // one..word..is // one.word.i
+r; until "."; add "x"; t;d; // a\.b.c // a\.b.xcx
+r; until "bc"; add "x"; t; quit; // xyzabcd // xyzabcx
+r; "\"" { until "\""; add "."; } t; d; // a"bc"d // a"bc".d
+r; until "x"; add ":";t;d; // ab\\xab\\\xa  // ab\\x:ab\\\xa:
+r; B"f" { until "[ss"; add ":"; } t;d; // afg[ssh // afg[ss:h
+
+# while tests
+# greek letters for testing while ranges etc
+# ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρςτυφχψω
+r; while [:alpha:]; add ".";t;d; // nΨψ 12 // nΨψ. .1.2.
+r; while [:alnum:]; add ".";t;d; // n1Ψ2ψ 12 // n1Ψ2ψ. .12.
+r; while [-]; add ".";t;d; // ---a--- // ---.a---.
+r; while [:]; add "/";t;d; // c:::yz // c:::/y/z/
+
+r; while [abc]; add ".";t;d; // abc###abc // abc.#.#.#abc.
+r; while [α-ε]; print;quit; // αβγδεζηθικλμνξ // αβγδε
+r; while [αβγδεζη]; print;quit; // αβγδεζηθικλμνξ // αβγδεζη
+
+# go problem
+#r; while [:alnum:]; add ".";t;d; // #abc123# // #abc123.#.
+r; while [:alpha:]; add ".";t;d; // #abc123# // #abc.1.2.3.#.
+
+r; while [:blank:]; add ".";t;d; // AB ab // A.B .a.b.
+r; while [:cntrl:]; add ".";t;d; // TREEis // T.R.E.E.i.s.
+r; while [:digit:]; add ".";t;d; // 0123ab // 0123.a.b.
+r; while [:lower:]; add ".";t;d; // ABCabc // A.B.Cabc.
+r; while [:upper:]; add ".";t;d; // TREEis // TREE.i.s.
+
+# whilenot tests
+r; whilenot [x]; add ".";t;d; // abcxabc // abc.xabc.
+r; whilenot [lmn]; add ".";t;d; // abcmabc // abc.mabc.
+r; whilenot [a-d]; add ".";t;d; // xyzab // xyz.a.b.
+
+# testing tests, also try unicode (but not for translate.c.pss)
+r; "b" { add ".";} t;d; // abcabc // ab.cab.c
+# r; [#*] { add ".";} t;d; // 12#34 // 12#.34
+
+# range class tests
+r; [α-γ] { print; } d; // αβγδXY // αβγ
+r;r; [a-c] { add ".";} t;d; // abcd // ab.cd
+r; [A-P] { add ".";} t;d; // FOX // F.O.X
+r; [:] { add "y"; t;d;} // h:e:llo // :y:y
+r; [*] { add ":"; t;d;} // ** // *:*:
+
+# difficult characters (eg for tcl)
+r;r; "{}" { add ".";} t;d; // dong{}dong // dong{}.dong
+r; "**4" { add "."; t;d;} // **4ding // **4.
+r; "[hello]" { add ":"; t;d;} // [hello] // [hello]:
+
+# some greek letters for testing.
+# ΓβγΔδΕεζηΘθ
+
+# character class tests. Sometimes these have to be converted
+# to regexs. To get them exactly right, and consistant can be tricky
+#r; [:alnum:] { add ".";} t;d; // 12ab // 1.2.a.b.
+r; [:alpha:] { add ".";} t;d; // 12x4 // 12x.4
+r; t;d; [:alpha:] {add "x";}t;d; // abcd // abcd
+#r; [:ascii:] { add ".";} t;d; // 1:ab // 1.:.a.b.
+r; [:blank:] { add ".";} t;d; // 12 34 // 12 .34
+r; [:cntrl:] { add ".";} t;d; // abc // abc
+r; [:digit:] { add ".";} t;d; // 12ab // 1.2.ab
+r; [:lower:] { add ".";} t;d; // abCD // a.b.CD
+r; [:upper:] { add ".";} t;d; // ABcd // A.B.cd
+
+# single char class tests, should be converted to a quote test really
+r; [^] { add "caret"; } t; d; // gold^. // gold^caret.
+r; [-] { add "hyphen-"; } t; d; // new-old // new-hyphen-old
+r; [\]] { add "bracket"; } t; d; // end] // end]bracket
+r; ["] { add "quote."; } t; d; // said"it // said"quote.it
+
+# single char class tests
+r; [.] { add "x";} t;d; // 12.34 // 12.x34
+
+# if regexes are used for [-] then "-" may need to be escaped
+r;r;r; [-] { add ".";} t;d; // ---x-- // ---.x--
+
+# "^" is not a special character in pep/nom class tests
+r;r; [^] { add ":";} t;d; // ^^x^ // ^^:x^
+
+# other tricky range escaping tests
+r; [abc-] { add "hyphen-"; } t; d; // new-old // new-hyphen-old
+r; [/] { add "."; } t;d; // abc/abc // abc/.abc
+
+# check definition of "printable" char
+# r; [:print:] { add ".";} t;d; // abc // a.b.c.
+r; [:punct:] { add ".";} t;d; // ::ab // :.:.ab
+r; [:space:] { add ":";} t;d; // AB cd // AB :cd
+
+# sometimes nothing is seen as something, which is a bug
+r; t; d; [:space:] {add "x";}t;d; // abcd // abcd
+
+r; [:xdigit:] { add ".";} t;d; // xyab12 // xya.b.1.2.
+
+# workspace "begins with" test, this may use a regex match in the
+# translators so special regex chars (eg -^$(){}) need to be escaped
+r; B"a" { add ".";} t;d; // abcd // a.bcd
+r; B"a" { add ".";} t; // abc // a.a.b.a.b.c.
+r; B"ab" { add ".";} t; // abc // aab.ab.c.
+r; B"---" { add "Z"; t;d; }  // ---N // ---Z
+r; B"^^" { add "X"; t;d; }  // ^^boo // ^^X
+r; B"^$*&" { add "X"; t;d; }  // ^$*&xx // ^$*&X
+r; B"a-z" { add ":"; t;d; }  // a-zabc // a-z:
+r; B"woo{}" { add ":"; t;d; }  // woo{}woo // woo{}:
+r; B"[a-z]" { add ":"; t;d; }  // [a-z]abc // [a-z]:
+r; B"?" { add ":"; t;d; }  // ?abc // ?:
+r; B"*" { add ":"; t;d; }  // **abc // *:*:
+
+r; [-] { add "x"; } t;d; // abc--- // abc-x-x-x
+
+# workspace "ends with" test, the translators may use a regular
+# expression match for this or something else.
+r; E"a" { add ".";} t;d; // abcd // a.bcd
+r; E":*" { add ":"; t;d;} // fizz:*pop // fizz:*:
+r; E"^$" { add ":"; t;d;} // buzz^$pop // buzz^$:
+
+# current cell equals workspace test
+r; put; (==) { add ".";} t;d; // ab // a.b.
+r; put; (==) { add "y"; t;} (==) {t;} d; // abc // aybycy
+
+# negated tests
+r; !"b" { add ":";} t;d; // abcd // a:bc:d:
+r; !B"b" { add ":";} t;d; // abcd // a:bc:d:
+r; !E"b" { add ":";} t;d; // abcd // a:bc:d:
+r; ![:alpha:] { add ":";} t;d; // ab1cd // ab1:cd
+r; ![:space:] { add ":";} t;d; // ab cd // a:b: c:d:
+r; ![:lower:] { add ".";} t;d; // ABcd // A.B.cd
+r; ![:punct:] { add "/";} t;d; // ab.:;cd // a/b/.:;c/d/
+
+# bash was interpolating !(==) here with ls
+r; put; !(==) { add ".";} t; d; // aaAA // aaAA
+
+# empty quotes, useful for testing if workspace is empty
+r; !"" { add ".";} t;d; // abcd // a.b.c.d.
+
+# compound tests, OR logic
+r; B"a",B"b"{add ":";} t;d; // abcd // a:b:cd
+r; B"a",(eof){add "<";}t;d; // abcd // a<bcd<
+r; [a-d],[f-g],[xy]{add "#";}t;d; // afx // a#f#x#
+r; [:space:],[abc]{add ".";}t;d; // a d c // a. .d .c.
+
+# compound tests, AND logic
+r; B"a"."a"{add ":";} t;d; // abcd // a:bcd
+r; B"a".(eof){add ":";print;} // abcd // abcd:
+r;r;r; B"x".[x]{add ":";} t;d; // xxxaxx // xxx:axx
+r;r;r; B"zz".![z]{add ":";} t;d; // zzazzz // zza:zzz
+r;r;r;r; B"bee".![bee]{add ":";} t;d; // beesbuzz // bees:buzz
+
+# compound with negation
+r; !(eof).!"a" { add ","; t;d; } t;d;// abcd // ab,c,d
+
+# nested tests, can simulate AND logic
+r; B"a"{E"c"{ put;d;a"<";get;a">";t;d;}} // abcabc // <abc><abc>
+
+# counting etc
+r; count; print;d; // abcd // a0b0c0d0
+r; a+;count;t;d; // abcd // a1b2c3d4
+r; a+;a+;count;t; d; // abcd // a2b4c6d8
+r; chars;t;d; // abcd // a1b2c3d4
+r; ![:alpha:]{nochars;}chars;t;d; // abc d // a1b2c3 0d1
+r; "c"{nochars;}chars;t;d; // abcd // a1b2c0d1
+r; lines;t;d; // abcd // a1b1c1d1
+
+# eof and begin blocks
+r; <eof> { t;} t; d; // abcd // abcdd
+r; (eof) { add "EE";} t;d; // abcd // abcdEE
+begin { add "X";} r;t;d; // abcd // Xabcd
+begin { delim ":";} r; add ":ab,";push;t;d; // abc // ab,ab,ab,
+begin { add "$";t;t;d;} r;t;t;d; // bee // $$bbeeee
+
+# delim, changing the stack push delimiter. This may become important
+# when calculating if a variable is within scope. So we can add
+# a different delimiter for a scope and push a set of variable/type
+# definitions onto the stack (actually it may have to be a second stack)
+r; add "*x*."; delim "."; push; pop; print; d; // ab // a*x*.b*x*.
+
+# parse and reparse and restart
+r; add ":"; parse> t;d; // abcd // a:b:c:d:
+r; parse> "c" { add "."; .reparse } t;d; // abcd // abc.d
+r; "a" { .reparse } add "."; parse> t;d; // abcd // ab.c.d.
+
+# begin block with .reparse
+begin {a "x";} r; "xb" { .reparse } add "."; parse> t;d; // blue // xbl.u.e.
+begin {a "x";} r; parse> t; "xn" {d; .reparse} d; // new // xnew
+# .reparse with no parse> label is an error, but how to detect?
+
+# .restart cases:
+#   restart with no parse> label, restart before parse> and
+#   restart after parse>.
+r; "b" { .restart } add ":"; t;d; // abcd // a:bc:d:
+r; "b" { .restart } add ":"; parse> t;d; // abcd // a:bc:d:
+r; parse> "c" { clear; .restart } add "."; t;d; // abcd // a.b.d. //
+
+# mark and go
+r; mark "Z"; put; ++; go "Z"; get; t;d; // abc // aabbcc
+r; mark "top"; put; ++; go "top"; get; t;d; // abc // aabbcc
+
+# jump to a mark that does not exist, this should exit with error
+r; go "nowhere"; t; t; d;    // puma // badmark 'nowhere'!
+
+# todo: test mark; and go; which use the current tape cell and the
+# marker.
+
+# unicode testing, this is going to be interesting
+r; add "⾬"; t; d; // abc // a⾬b⾬c⾬ // uni
+
+# write to sav.pp
+r; (eof) { s; } // written //
+
+# the until bug, sometimes still exists in 2nd gen scripts
+r; "b" { add "\\";} t;d; // abc abc // ab\c ab\c
+r; replace "\"" "'"; t;d; // nm"p // nm'p
+r; replace '\'' "\""; t;d; // nm''p // nm""p
+r;r; "12" { add "\\\"";} t;d; // 1234 // 12\"34
+
+# nop is no operation, it should do nothing
+r;nop;nop;t;d; // abc // abc
+
+# the graph class means any visible char but not space
+r; while [:graph:]; add ".";t;d; // TR EE is // TR. EE. is.
+r; [:graph:] { add ".";} t;d; // gum gem // g.u.m. g.e.m.
+
+# tricky escape sequences, c translator doesnt like this. todo!
+r; [\].a] { add ":";} t;d; // a.b]cd // a:.:b]:cd
+# tape test negated,
+r; put; add "."; !(==) { add ".";} t;d; // abc // a..b..c..
+
+# new until; command, reads until work ends with current tape.cell
+r; "." { put; until; } add "x";t;d; // a.bb.c // ax.bb.xcx
+r; ":" { r;r; put; until; d; } t;d; // why:is:iswhy // whywhy
+
+# new go; command, goes to mark named on current tape cell
+# feb 2025 not implemented in compile.pss yet (needed for type checking)
+# begin{mark'H';add'x';put;++;d;} r;put;"H"{go;get;++; } t;d; // abHabH // abxabx
+
+# need to correct c implementation of ascii
+r; while [:ascii:]; add ".";t;d; // TREEis // TREEis.
+
+# test escape command
+# Is there a way to change the escape char from '\' ?
+r; escape "a"; t; d; // XaYaZ // X\aY\aZ
+r; escape "["; escape "]"; escape "{"; t; d; //  ab[]{ab // ab\[\]\{ab
+r; escape "/"; t; d; // buzz/a // buzz\/a
+# tricky in perl
+r; escape '"'; t; d; // X"Y"Z // X\"Y\"Z
+r; escape "'"; t; d; // X''Z // X\'\'Z
+
+# unescape command, not working in tcl or go or anything else
+# probably. See translate.perl.pss for a correct way to write
+# unescape and escape.
+#
+# unescape is actually not the same as "replace 'x' '\\x';"
+# because it should check that the character is escape already
+r; unescape "a"; t; d; // X\aY\aZ // XaYaZ
+r; unescape "."; t; d; // ..\\.\. // ..\\..
+
+# escape command
+r; escape "x"; t; d; // xx\\x\x // \x\x\\\x\x
+
+# script names in unicode, only supported by dart translator 
+# currently
+r; [:Greek:] { add ".";} t;d; // ΓβγΔabc // Γ.β.γ.Δ.abc
+
+
+
+

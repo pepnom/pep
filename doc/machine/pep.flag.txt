@@ -1,0 +1,34 @@
+
+
+## THE PEP FLAG REGISTER 
+
+  The 'flag' register: an internal [pep] machine register.
+
+  Possibly, I should not even bother to document the *flag* register
+  because you never explicitly access it when you are writing a 
+  [nom] script. The flag register is used by the machine when 
+  executing pep "assembly" /doc/pepnom.doc.assembly.html language 
+  instructions.
+
+  The flag register affects the operation of the conditional jump instructions
+  "jumpfalse" and "jumptrue" and it is affected by the test instructions such
+  as "testis", "testtape", "testeof" etc.  But these instructions are only used
+  in [pep] assembler not in a nom script. The flag is analogous to a "flags"
+  register in a CPU , but it only contains one boolean (true/false) value.
+
+  * pep machine assembler instructions relating to the flag register
+  >> testis, testbegins, testends, testtape, testeof 
+  >> jumptrue, jumpfalse
+
+  The nom script writer does not read or write the machine flag register
+  directly. It is set automatically by the testing instructions
+
+### NOTES 
+
+  If you are curious about the *pep assembly* language (which is the format
+  which is directly executed by the pep interpreter) then you can look at the
+  file "sav.pp" /eg/sav.pp in any directory where you have run a nom script. The
+  pep interpreter compiles any script to a *sav.pp* assembly file before it
+  loads the script assembly and executes it, so you can see how any script is
+  converted to assembly by looking at this file. 
+

@@ -1,0 +1,37 @@
+
+ ## NAMING AND NAMING CONVENTIONS IN THE PEP/NOM SYSTEM 
+
+ Originally I was going to call the whole system *pp* or *pep* (which was
+ supposed to be an acronym for *Parsing Engine for Patterns* ) because it is
+ short and *unixy* but then I decided to call the language that runs on top of
+ the virtual machine *Nom* because it sounds nicer, is a vague reference to
+ wp://noam.chomsky (who I think has definitely earned a few accolades) and
+ because it seems a bit *indo-european* for "name".  If you start excavating in
+ the source code and ancient files you will probably find references to the
+ "pep" language. Ignore them please.
+
+ Pep&nom was partly inspired by "sed" with its philosophy of editing a 
+ text-stream. But sed uses single character commands which can add to its
+ crypticness, so I decided to include English word command names for most 
+ nom nom://commands . Each word was chosen to be expressive and to convey
+ the sense of inverse operations, for example the operation pairs 
+  nom://push and nom://pop  >> 
+  nom://put and nom://get  >> 
+  nom://clip and nom://clop  >> 
+
+ are commands that (more or less) do the opposite of each other. So 
+ *clip* removes one character from the end of the pep://workspace buffer
+ and *clop* removes one character from the start of the workspace buffer.
+
+ Most of the Nom commands also have a one character version if you want
+ to write very terse, unreadable scripts.
+ 
+ * view the command words and their one-character equivalents
+ >> pep -C
+
+### NOTES
+
+ When naming each command, I tried to use a word which indicated
+ tersely the effect that it has on the pep text-register virtual machine.
+
+ 

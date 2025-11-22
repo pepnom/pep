@@ -1,0 +1,676 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     span.nom-multiline-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  title='/image/black.white/bw.dog.in.biro.jpg' src='/image/black.white/bw.dog.in.biro.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   The cleverman spoke precisely, humanity he said was done
+   It’s creed of greed could not proceed if our struggle’s to be won.
+ 
+<cite>Kev Carmody </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/pepnom.doc.todo.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> things to be done on the &Popf;&eopf;&popf; / &Nopf;&oopf;&mopf; system</h2>
+
+<p>
+ A document about what needs to be done on pep/nom. There is 
+ a lot that could be done. Feel free to help! 
+<p>
+<!-- ------------------------------- -->
+<h3> 25 may 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> fix the <code class='nom-command'><a title='nom command reference: stack' href='http://nomlang.org/doc/commands/nom.stack.html'>stack</a></code> and <code class='nom-command'><a title='nom command reference: unstack' href='http://nomlang.org/doc/commands/nom.unstack.html'>unstack</a></code> commands in the c source 
+ file <a href='/object/machine.interp.c'>/object/machine.interp.c</a> and <a href='/object/machine.methods.c'>/object/machine.methods.c</a> The 
+ idea is just to call the <code class='nom-command'><a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>pop</a></code> command or <code class='nom-command'><a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>push</a></code> command 
+ multiple times so that the tape pointer is updated properly. This 
+ is what is done in all the <a href='/tr/'>translation </a> scripts but maybe
+ not in the <em>pep</em> interpreter.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> done</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> finished the rust translator, which is called <a href='/tr/nom.torust.pss'>/tr/nom.torust.pss</a> 
+ </li>
+<li> used the google gemini assistant to translate the rust or dart
+ translator into other languages (perl, zig). This saves a lot
+ of typing even if I need to correct the program. But the 
+ result seems remarkably good.
+ </li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 1 may 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> add modulus operator to <a href='/eg/maths.parse.pss'>/eg/maths.parse.pss</a>
+ </li>
+<li> update <a href='/eg/nom.syntax.reference.pss'>/eg/nom.syntax.reference.pss</a> to allow trailing parse&gt;
+ labels and beginblocks (see <a href='/tr/nom.tolua.pss'>/tr/nom.tolua.pss</a> or <a href='/tr/nom.todart.pss'>/tr/nom.todart.pss</a> )
+ </li>
+<li> cgi-script link on nomlang.org pages to allow basic editing/comments
+ </li>
+<li> link on icon images to show image information 
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 27 april 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> Format <a href='/tr/'>/tr/</a> translation scripts into html and make links to them.
+ </li>
+<li> in <a href='/eg/maths.parse.pss'>/eg/maths.parse.pss</a> and <a href='/eg/maths.tolatex.pss'>/eg/maths.tolatex.pss</a> change the exponent
+ operator (^) to be right associative (because I forgot this basic
+ rule of school mathematics).
+ </li>
+<li> write &ldquo;/eg/maths.tollvm.pss&rdquo; to convert a mathematical expression
+ to llvm intermediate representation. This is mainly as an exercise
+ and to learn a bit about llvm.
+ </li>
+</ul>
+<!-- ------------------------------- -->
+<h3> done</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> finished lua translator (need to do &ldquo;stdin.stream&rdquo; and
+ &ldquo;stdin.file&rdquo; input types for very big files? )
+ </li>
+<li> added upper case headings to <code>text.tohtml.pss</code> (but not with 
+ trailing .... four dots.)
+ </li>
+<li> in <a href='/object/machine.methods.c'>/object/machine.methods.c</a> change escape() and unescape()
+ so that they do not reescape chars that are already
+ escaped eg \\\\ should remain as is. Use the code from
+ <a href='/eg/nom.todart.pss'>/eg/nom.todart.pss</a> escapeChar to implement.
+ </li>
+<li> add go; and mark; syntax to <em>pep</em> interp but haven&apos;t recompiled
+ <code>asm.pp</code> with <a href='https://bumble.sf.net/books/pars/compile.pss'>bumble.sf.net/books/pars/compile.pss</a>
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 27 mar 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> show a solution to &ldquo;dangling else&rdquo; problem with <em>nom</em>
+ </li>
+<li> show solution to recognising { a^n b^n c^n : n&gt;0 } with &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf;
+ </li>
+<li> write a script that turns grammar descriptions as above with
+ braces into html or latex. See wikipedia for the format.
+ </li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 23 mar 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> make a help system for the <a href='/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> script which 
+ would explain the formats available for writing documents.
+ </li>
+<li> empty list item at end of doc may eat the whole document!
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> done </h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> finished (more or less) the dart translator.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 19 mar 2025</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> wrap long lines in <a href='/eg/nom.tolatex.pss'>/eg/nom.tolatex.pss</a>
+ nicely so that I can make books in A4 with a bigger font.
+ </li>
+<li> make a vim macro command or abbreviation that adds translation
+ instructions for a given language. Or put the macro in
+ <a href='/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a> . 
+ </li>
+<li> make some format &ldquo;attributes&rdquo; for lists in html, for example to
+ suppress the bullet points or make the list ordered etc.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 17 mar 2025</h3>
+
+<p>
+ More things to do 
+ <!---- list ----->
+<ul>
+
+<li> change sum() function in <code>maths.tolatex.pss</code> to take 3 arguments
+ not two eg sum(0, :infinity, expression).
+ </li>
+<li> <em>Or</em> just make the sum function an operator, so that I can 
+ combine it with other expressions.
+ </li>
+<li> add stackmash as symlink in <em>nom</em> blog.
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> things done</h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> Added a <em><code class='nom-token'>script*</code></em> grammar token to the scripts at (eof) which means
+ that a valid script/program has been successfully parsed. eg
+ in <code>nom.syn.ref.pss</code> The new translator scripts have this grammar.
+ </li>
+<li> Consolidate grammar token error checking into one section just after the
+ <code class='nom-command'><a title='nom command reference: parse&gt;' href='http://nomlang.org/doc/commands/nom.parse&gt;.html'>parse&gt;</a></code> label in the translation scripts. I have done this 
+ for <a href='/tr/nom.todart.pss'>/tr/nom.todart.pss</a> and will use as template for other translators.
+ </li>
+<li> adapted <a href='/eg/nom.tohtml.pss'>/eg/nom.tohtml.pss</a> to output 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> this is pretty simple
+ since it is not a parsing script. 
+ </li>
+<li> fixed mark/go bug in the translator scripts.
+ Essentially if a new <em>mark</em> is created which has the same name as 
+ an existing <em>mark</em> then the existing mark should be deleted.
+ </li>
+<li> make <code>nom.tolatex.pss</code> to produce latex output for printing.
+ </li>
+<li> made a translation macro in 
+ the 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr> formatter which will list languages that have good 
+ <em>nom</em> translators and links to the translator scripts.
+ </li>
+<li> remove parsing code from <code>nom.tohtml.pss</code> and just make the 
+ script colourise and print. This is better because don&rsquo;t have 
+ to reformat statements.
+ </li>
+<li> make files automatically link in documents when they start with 
+ <a href='/'>/</a> such as <a href='/tr/translate.perl.pss'>/tr/translate.perl.pss</a> . Directories work too such
+ as the <a href='/tr/'>/tr/</a> folder.
+ </li>
+<li> done: autolink <a href='/eg/text.tohtml.format.html'>/eg/text.tohtml.format.html</a> hope so.
+ </li>
+<li> done: added unordered lists. See <a href='/eg/text.tohtml.format.html'>/eg/text.tohtml.format.html</a>
+ for the details of the format. Basically list items start the 
+ line with <em>-</em> and end with a blank line or the end of the 
+ document.
+ </li>
+<li> done: check centre aligning images in <code>eg/text.tohtml.pss</code>
+ </li>
+<li> done: in <code>blog.sh</code> generate latex maths formula images and save in image/maths
+ </li>
+<li> done: put the abbreviation code which is in <code>nom.tohtml.pss</code> into 
+ </li>
+<li> done: add help to <code>eg/nom.syntax.reference.pss</code>
+ <code>nom.syn.ref.pss</code>
+ </li>
+<li> done: make a template script with errors and help and parse stack watch.
+ </li>
+<li> done: add <em><code class='nom-token'>equationset*</code></em> token to <code>eg/maths.tolatex.pss</code> so 
+ that I can print lists
+ of formulas and maths problems.
+ </li>
+<li> done: rewrite <code>maths.tolatex.pss</code> using new grammar in <code>maths.parse.pss</code>
+ (not much to rewrite)
+ </li>
+<li> done: Improve unbalanced bracket error checking (in <code>nom.syn.ref.pss</code>
+ </li>
+<li> wrote a pretty printer for <em>nom</em> source code. eg look at colours
+ in chromium view source, i.e <code>nom.tohtml.pss</code> and <code>nom.tolatex.pss</code>
+</li>
+</ul>
+ <p>
+<!-- ------------------------------- -->
+<h3> done </h3>
+
+<p>
+ <!---- list ----->
+<ul>
+
+<li> rewrote <code>translate.perl.pss</code> (which is now called 
+ <a href='/tr/nom.toperl.pss'>/tr/nom.toperl.pss</a> ) using the new syntax at <a href='/eg/nom.syntax.reference.pss'>/eg/nom.syntax.reference.pss</a>
+ </li>
+<li> translation scripts rust, dart, lua.
+ </li>
+<li> Added the &ldquo;go;&rdquo; syntax, go to the mark indicated in the tape cell
+</li>
+</ul>
+<!-- ------------------------------- -->
+<h3> 13 mar 2025</h3>
+
+<p>
+ Things to do on the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> and 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> system. 
+ <!---- list ----->
+<ul>
+
+<li> make script <code>nom.syntax.recognise.pss</code> based on script above 
+ which just says &ldquo;yes: nom syntax ok&rdquo; or &ldquo;no: etc&rdquo; This script would 
+ become the basis of an non-error checking <em>nom</em> parser.
+ </li>
+<li> add help system to <code>eg/drawbasic.pss</code> 
+ </li>
+<li> generate headers in <code>eg/</code> to html with <code>text.tohtml.pss</code>
+ </li>
+<li> make a new script <code>text.tolatex.pss</code> for printing a book
+ </li>
+<li> revise the docs at nomlang.org/doc to generate printed material
+ </li>
+</ul>
+ the python translation script in the <a href='/tr/'>/tr/</a> translation folder. 
+ the python script seems to have a bug when running <a href='/eg/text.tohtml.pss'>/eg/text.tohtml.pss</a>
+<p>
+ <!---- list ----->
+<ul>
+
+<li> Include the document folder in the <code>download.tar.gz</code>
+ </li>
+<li> Also do the translations swift, lisp, forth, zig
+ </li>
+<li> I will call these scripts &ldquo;nom.tojava.pss&rdquo; or <a href='/tr/nom.todart.pss'>/tr/nom.todart.pss</a> etc. 
+</li>
+</ul>
+ <!---- list ----->
+<ul>
+
+<li> Update the github &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; repository.
+ </li>
+<li> Make sure &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; can be downloaded with git and compiled with &ldquo;make
+&rdquo; </li>
+<li> write a table of contents parser 
+</li>
+</ul>
+ Change write; to writefile &ldquo;name"; and writefile; (write to file&rdquo; named in tapecell). Also make &ldquo;readfile&rdquo; with the same syntax.
+ But &ldquo;compile.pss&rdquo; used write to <code>sav.pp</code> as a special process.
+<p>
+ Find the bug with pickwick papers (strange character hanging?)
+<p>
+<!-- ------------------------------- -->
+<h3> compiler and translator error messages</h3>
+
+<p>
+ token sequences
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ missing command like replace
+ </figcaption>
+<pre class='codeblock'>
+
+    quoted quoted ; 
+    quoted ;
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ trailing comma or dot 
+ </figcaption>
+<pre class='codeblock'>
+
+   quoted , quoted , {
+   quoted . {
+   message: 
+     Truly, I would love just ignore that trailing comma at line x char y
+       but I just cant, pedantry doesnt let me
+  </pre>
+</figure>
+<p>
+<p>
+<p>
+<p>
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  title='/image/fig.deniliquin.jpg' src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

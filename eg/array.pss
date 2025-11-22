@@ -1,0 +1,102 @@
+#*
+
+  
+ Parse text format integer arrays, and nested arrays ( [json] style)
+
+ An example of this format is 
+ >> [123, 234, 1, +2, -333, [1,2,3], -55] including nested arrays.
+
+ Adding decimal numbers introduces a token reduction problem, namely
+ "[*items*,*integer*" cannot be reduced until we look at the next token (which
+ could be a ".*"). This is solved in the script eg/json.check.pss
+
+TESTING
+
+  * test this script with
+  >> pep -f eg/array.pss -i "[ 1,2,3,[4,5,6], 7]"
+
+  * or translate to go,java,tcl,ruby,python,c etc and run
+  -----
+    pep -f tr/translate.go.pss eg/array.pss > eg/go/array.go
+    cd eg/go/; go build array.go 
+    echo '[1,2,[0,0]]' | ./array
+  ,,,
+
+  * or use a helper function to translate to java and run
+  >> pep.jaf eg/array.pss '[1,2,[],[]]'
+
+HISTORY
+
+  14 june 2020
+    script written
+
+*#
+
+  read;
+  # make character number relative to line
+  "\n" { nochars; clear; .restart }
+  [:space:] { clear; .restart }
+
+  [0-9] { 
+    while [0-9]; put; clear; add "number*"; push; .reparse 
+  } 
+
+  # literal tokens
+  ",","-","+","[","]" { put; add "*"; push; .reparse }
+  
+parse>
+# The parse/compile phase
+  
+# --------------
+# 1 token
+  pop;
+
+# --------------
+# 2 tokens
+  pop;
+
+  # some errors 
+  "[*,*",",*,*",",*]*",
+  "number*number*","number*[*" { 
+    clear; add "[format error] at line/char "; lines; add "/"; chars; add "\n";
+    print; quit; 
+  }
+
+  # empty arrays 
+  "[*]*" { clear; add "array*"; push; .reparse }
+
+  # signed numbers, but the value is ignored
+  "-*number*","+*number*" { 
+    clop; clop; push; .reparse
+  }
+
+  # next item in array
+  "[*number*","[*array*" { 
+    clear; add "[*items*"; push; push; .reparse
+  }
+
+# --------------
+# 3 tokens
+  pop;
+
+  # arrays
+  "[*items*]*" { clear; add "array*"; push; .reparse }
+
+  "items*,*number*", "items*,*array*" { 
+    clear; add "items*"; push; .reparse
+  }
+
+  push; push; push;
+
+  <eof> {
+    unstack; 
+    "array*" {
+      clear; add "A numeric array!\n"; print; quit;
+    } 
+    stack;
+    add "Not a numeric array\n"; print; clear;
+    add "The input parsed as:"; print; clear;
+    unstack; add "\n"; print;
+  }
+
+ 

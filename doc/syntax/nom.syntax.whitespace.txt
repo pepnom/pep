@@ -1,0 +1,40 @@
+
+ ## WHITESPACE IN THE NOM LANGUAGE
+
+ The role of *whitespace* in the syntax of the [nom] language.
+ 
+ The *Nom* compiler nomsf://compile.pss, which is itself a 
+ nom script (cool, hey?) pretty much ignores all whitespace except
+ within "quoted" nomsyn://quotes text (that is text between " and " 
+ or ' and '). That means that you can put as much, or as little 
+ google://whitespace in your scripts as you want. Go for it.
+
+ * parsimonious use of whitespace  
+ >> read;replace"a""A";print;clear;
+
+ * make it more cryptic with single character commands 
+ >> r;D"a""A";t;d;  # to make "sed" users feel at home
+
+ * go to town with whitespace
+ ----+
+   read;
+
+   #*
+     let's make dart/flutter programmers
+     feel at 
+     home
+   *#
+   replace 
+     "a" 
+     "A"
+     ;
+   print;          clear;
+ ,,,,
+
+ Also, quoted text can span multiple lines like this
+
+ * multiline add command
+ ----+
+   read; add ":
+      one character "; print clear
+ ,,,

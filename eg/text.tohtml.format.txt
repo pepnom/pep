@@ -1,0 +1,527 @@
+
+## The "Nom" language and another minimal markup format 
+
+  An explanation of the text-format which is rendered by the 
+  [nom] script file://eg/text.tohtml.pss
+
+  <o:1:>>:image/doodle.horse.duck.swirl.300.jpg>
+
+  The world definitely doesn't need another *minimal markup* format.
+  That much we know. But [nom] is good at parsings and transpiling 
+  certain grammars, and less good at others (to put it politely).
+  And since I write quite a bit, I like to use my own format which looks
+  good to me.
+
+  As with other "minimal markup". "formats", the whole idea is to allow the author
+  to write and not get distracted for the fancy formatting or the visual
+  clutter of markup languages (like HTML, [latex] , postscript etc). 
+
+  This document, apart from explaining the text format which can be rendered
+  into [html], also serves as a test document for the [nom] script
+  file:///eg/text.tohtml.pss
+
+## LINKS
+
+  Links are pretty important in web docs, so I have included lots 
+  of ways to do this.
+
+  There are lots and lots of link formats which I find convenient.
+  Here is a list:
+
+  - just write the *filename* with a leading */* like this 
+    /eg/text.tohtml.format.html and that should become a link
+  - use *link://something* and *file://something* but this seems a bit
+    obsolete now given the above.
+  - link to a [nom] command with *nom://* or *nom:* for example: 
+    write *nom://add* to link to the documentation for the nom://add 
+    command which is on this site at www.nomlang.org
+  - just write the url with a *www.* at the start like this
+    *www.nomlang.org* which gets rendered at www.nomlang.org
+  - now amazingly, you can precede any of the above formats with 
+    some quoted text like this: *"words and text"* (it does have 
+    to be double quoted) so you can just write 
+    >> "search engine" www.google.com
+    and it should render as "search engine" www.google.com
+  - And all this should work in lists too.
+  - But we arent finished - not nearly. There are lots of "convenience"
+    formats like link to wikipedia with *wp://* or *wp:* . So just 
+    write *wp://carl.friedrich.gauss* and it should render as a link
+    to wp://carl.friedrich.gauss and you may have noticed that I dont like 
+    writing *underscores* so just write dots instead
+  - and you can put some link text in front of it like
+    >> "Gauss" wp://carl.friedrich.gauss 
+    and you should get "Gauss" wp://carl.friedrich.gauss 
+  - But there are lots of others too ... like link to the urban dictionary
+    with *urbandict://* like the word urbandict://palaver or to
+    the Oxford English dictionary with *oed://* etc 
+  - But wait there is more. There is *pep://* for the [pep] machine which
+    makes a link to a document about an element of the machine like this 
+    pep://stack or pep://tape , and 
+    there is *nomsyn://* for [nom] syntax for example nomsyn://block .
+  - Then there is the *rosetta://* convenience schema, which links to
+    the www.rosettacode.org site. just write
+    >> rosetta://balanced.brackets
+    or even
+    >> rosetta:balanced.brackets
+    And you will get a link the the rosetta://balanced.brackets code
+    on that site. And yes you can put some quoted text in front of it like
+    this 
+    >> "the balance brackets problem" rosetta://balanced.brackets
+    and you should get "the balance brackets problem" 
+    rosetta://balanced.brackets
+  - again amazingly, the quoted text doesnt even have to be on the 
+    same line as the url or the fake url. It can be on the line before
+  - all this power and convenience is brought to you by the fact that 
+    [nom] is a proper parsing/compiling system, not some dodgy 
+    regex engine with extensions. So the formatting script, which 
+    is /eg/text.tohtml.pss can handle all this without any problem.
+  - Did you know that you can convert the formatting script 
+    eg/text.tohtml.pss into languages like [nom:translation.links]  
+    and run it without even touching the [pep] interpreter? 
+    I know, bizarre hey? But true.
+  - If you dont want to autolink a file name then you can write 
+    it without a starting */* slash, or put it in quotes or 
+    *emphasise* it with asterisks.
+  - And of course if you start a url with *http://* or *https://* or 
+    *nntp://* (lets not forget good old newsgroups) then even will get
+    nicely linked as it should. so just write:
+    >> "the nom language" http://nomlang.org 
+    and you will get "the nom language" http://nomlang.org as you
+    would expect.
+  - I think I have actually run out of linking formats, but dont 
+    worry, more will probably get added at some point.
+  - See below for hopefully more detailed info about all this, if 
+    you really need it, but I dont see why you would.
+
+  To render a url as a link just write it beginning with http:// etc.
+  Delimited by spaces. To change the link text include a quoted word
+  or phrase before it. 
+  
+  The formatter makes a link to a local file just with some quoted 
+  text and the file name
+
+    *"The text.tohtml.pss format" text.tohtml.format.txt* will render as
+    "The text.tohtml.pss format" text.tohtml.format.txt
+     
+  or a *www* url: *"A www link" www.c3.org* "A www link" www.c3.org
+  
+### FAKE SCHEMA LINKS 
+
+  * All the following are ok
+  -----
+    rosetta:// rosetta: link to rosettacode.org problem
+    urbandict://  urban dictionary
+    oed:// oxford english dict online
+  ,,,,
+
+  Also Wikipedia links should work with *wp://* and *wp:*
+  All the links can be preceded with some double quoted text
+  (with a maximum length of one line) which will become the 
+  visible text of the link. For example
+
+  * visible link text 
+  >> "click here" wp://parser for more info
+
+  * make a wikipedia link
+  >> "BNF" wp:backus-naur_form
+
+  which should render as "BNF" wp:backus-naur_form
+
+  * make a google search link
+  ----
+    google://"distance hobart to colombia"
+    google:"distance hobart to colombia"
+    "distance to hobart" google:"distance hobart to colombia"
+  ,,,,
+
+  google://"distance hobart to colombia" >>
+  google:"distance hobart to colombia" >>
+  "distance to hobart" google:"distance hobart to colombia" >>
+  
+  The double quote must immediately follow the :
+
+  I can link to a the documentation for a Nom script language command
+  with nom://push or "The Nom language 'push' command" nom://push
+  
+  "The pop; command" nom://pop is to nom://pop the stack
+  The "stack" pep://stack is also a part of the *PEP* machine
+  The pep://tape is also part of the machine
+  
+  We can link to the "wikipedia context-free language page" 
+  wp://context.free.languge
+
+  Or look up the definition of "gargle" oed://gargle which is 
+  a oed://throat noise.
+
+  Lookup the urban dictionary eg urbandict://automagically
+  But you dont have to write *://* if you don't want to. Just
+  write: *urbandict:blamestorming*
+  For example: urbandict:blamestorming
+
+  Actually the Urban-dictionary just uses a space for multiple
+  words like this: *url?term=humble brag* or 
+  *url?term=humble%20brag* but this is a slight problem for our
+  plain-text parser file:///eg/text.tohtml.pss because it is a 
+  *word* parser (mainly). I could copy the code for the 
+  *google://* schema to solve this (by "parsing ahead" ) but 
+  I am not sure if I will.
+
+## LISTS
+
+  Unordered lists have been implemented (18 mar 2025) and are indicated
+  by items starting with the '- ' word which starts the line. There 
+  is no list-start token (just *- * ). Lists are terminated by a 
+  blank line or by the end of the file.
+
+  Lists should be able to contain any other element such as links,
+  images, code-lines and blocks and even headings (which is rather silly).
+  There is no 'list heading' format at the moment.
+  
+  - The 1st line: Simple lists only contain text
+  - With one line per item.
+  - The parsing of lists was interesting to say the least.
+
+  - How to make a list in this particular *plain-text* document
+    format. List items can span multiple lines and can contain 
+    any other type of element such as a centered image 
+    <:cc:/image/image.test.jpg>
+  - lists are terminated with blank lines
+  - which are lines containing only spaces or nothing.
+
+## EMPHASIS
+
+  Here I am following the "markdown" www.markdownguide.org/basic-syntax 
+  style of using *asterisks* "*" to delimit emphasis or a word or 
+  also of a phrase. The emphasis cannot extend over several lines. 
+
+  It should not matter if the emphasised word has a trailing comma 
+  or dot, for example "*word*," should still be emphasised like 
+  this *word*. And the same applies for bold emphasis so "**bold**."
+  should become **bold**.
+
+  Also you can use "** double asterisks**" which should boldly emphasize text 
+  text like this ** double asterisks** or just emphasise a single **word**
+ 
+  I have limited these formats to a single line so that the entire 
+  document doesnt become *italic* or **italic-bold** if you forget 
+  to put in the last "*" character. The same applies to double quoted 
+  text.
+ 
+  * emphasise text
+  ----
+   *italic text* or italic *word*
+   **bold italic text** or bold italic **word**
+  ,,,,
+
+  As John McEnroe used to say to the umpires **You cannot be serious!!**
+
+## MISCELLANEOUS
+
+  * #: starting a line is a comment at the moment. It is removed from output
+  >> #: is a comment
+
+  * make a horizontal "rule" (line) in the document
+  >> >---  (starting the line, end with space)
+
+  Which should look like this (in Html just a <hr/> element).
+  >----
+
+  * force a line break, this could be a "poor mans list"
+  >> >> (not starting a line)
+  So we could >> force a break >> and make html put >> a <br/> element
+  there.
+
+## APOSTROPHES
+
+  I try to render apostrophes in words like doesn't can't isn't 
+  in some slightly elegant way. Also, since I often leave them
+  out I try to insert them is words like 
+
+  *isnt doesnt thats its whats * and so on which should look like 
+  isnt doesnt thats its whats 
+
+## QUOTES
+
+  Writers of [latex] and html formatters seem to spend too much time
+  trying to produce nice "quotes". It can be nice to change
+  *dont* into don't with curly quotes, or <cant> into can't etc.
+  A normal apostrophe is like this's.
+
+  I'm you're he's she's it's we're they're aren't  
+  can't couldn't didn't doesn't hadn't hasn't haven't 
+
+  Quoted text can occur before all links which changes the link 
+  text eg: "The nom command" nom://push
+
+## MULTILINE BLOCKQUOTES
+
+  Multiline quotes begin with """ starting the line. and also
+  end with """ any where. These quotes will be rendered as a
+  **quotation** .
+
+  Also, we can precede a multiline quote with a line beginning with "*" and
+  that will be formatted as the *citation* for the blockquote.  I think the
+  *"""* triple quotes has to start a line and be followed by at least 1 space,
+  but the terminating *"""* doesnt have to.
+
+  * a blockquote with a citation, example
+  --------
+    * John McEnroe, Tennis player
+    """ 
+      you cannot be serious 
+    """
+  ,,,,
+
+  Which should look like this. 
+  
+  * John McEnroe, Tennis player
+  """ You cannot be serious!  """
+
+  The actual (quite nice) formatting of these "quotes" is done by the css in
+  file:///site.blog.css which should be available to all blogs which are
+  created with the "blog script" file:///webdev/copy.blog.sh
+
+## IMAGES
+
+  My plain text image format uses < and > to indicate the image and 
+  its attributes. The format is 
+  >> <:corners:size:alignment:filepath.ext>
+
+  The primitive static site generator script /webdev/copy.blog.sh also
+  substitutes the image "random.img" for a random image from the /image/ folder.
+
+  * put a random image on the page, with big rounded corners, floating left
+  >> <:R:>>:random.img>
+
+  I use the format "caption text" <image.file.ext>
+  or <image.file.ext> for no caption. And maybe even 
+  <:9:image.file.ext> for a width specification
+
+  For the css attributes to make the image circular, it 1st needs to
+  be cropped to a square. Otherwise it will look like an egg etc
+  Images can be included in a document.
+
+  * making images.
+  >> enclose the image file name in <> brackets: <imagefile.jpg>
+  >> Include a caption with quoted text "An image caption" <imagefile.jpg>
+
+  <image/doodle.horse.duck.swirl.300.jpg>
+
+  The image above has no attributes. It will probably just go to the 
+  left hand side of the page.
+
+  <:R:>>:image/doodle.horse.duck.swirl.300.jpg>
+
+  Images without captions are working. Because there is a bit of a tricky
+  interaction between the <figure> tag, and the <img> tag. The *figure* tag is
+  required for the caption but the way to float left or right is slightly
+  different. Also, we need to have a width for images in <figure> tags. I
+  wonder if images float to left of the text above them. Or below them. The
+  answer is, they float around the text below them, I think. And if paragraph
+  tags <p/> make any difference.
+
+  <:<<:image/doodle.horse.duck.swirl.300.jpg>
+  Also, it is a good idea to have a sensible default size for an image
+  otherwise it can take over the whole HTML page.
+  Apart from a caption images can have a set of optional attributes
+
+  "circular horse (caption, 20em width, default float)" 
+  <:o:4:image/doodle.horse.duck.swirl.300.jpg> 
+
+  This text is between the circular horse image and the circular duck
+  which is floating right.
+
+  "A duck (50% border radius, floating right)"
+    <:o:>>:image/doodle.duck.star.900.jpg> 
+
+  "duck star (missing 1st ':',small rounded corners,no float,caption) " 
+  <r:image/doodle.duck.star.900.jpg> 
+ 
+  I dont think you can use *em* measurements for images, but I am not sure.
+  The image below is a duck and star with no float.
+
+    "duck star: big rounded corners,float left, caption" 
+    <:R:<<:image/doodle.duck.star.900.jpg> 
+
+ 
+  * make a circular/ellipse image that floats to the left with width 100px
+  >> <:0:>>:image/doodle.network.200w.jpg>
+  >> <:o:>>:image/imagename.jpeg> # does the same
+
+  * a circular image with width not specified and a caption
+  >> <:O:>>:imagename.jpeg> 
+
+  * make a rectangular image that floats right taking up 30% of page width
+  >> <:<<:50%:imagename.jpeg>
+
+  * make an image with its original size
+  >> <imagename.jpeg>
+
+  duck (small rounded corner, float left)
+  <:r:<<:image/doodle.duck.floating.300.jpg>
+
+  The text is supposed to "flow around" floating images.
+  A centre aligned image with big rounded corners with 50% width
+  But actually :cc: will do nothing because I am not parsing it,
+  just discarding it.
+
+  <:R:cc:image/doodle.ink.ripples.600.jpg>
+
+  Text should not flow around centre aligned images.
+
+## Image text attributes
+
+  Attributes need to appear in the correct order but all attributes
+  are optional.
+
+  * image text attribute order 
+  >> <:corners:width:alignment:imagename.ext>
+
+  * valid image text attribute values.
+  -----
+    O|o circular image
+    # width is multiple of 5em?
+    # 5emxN width specification.
+    r R small/large rounded corners
+    >> << cc float right/ float left/ centre align
+  ,,,,,
+
+  * Demonstrating optional attributes.
+  >> <:>>:image/file.jpg>
+
+  <:<<:image/doodle.horse.dog.swirl.900w.jpg>
+
+## Code
+
+  One of the points of this format is to document code. So I need 
+  to be able to include code in the text document. For *blocks* of 
+  code (multiple lines) I start the line with --- (at least 3
+  dashes) and end the block with a line starting with ,,, (at least 3
+  commas).
+
+  For a single line of code I start the line with >> (with at least 1
+  space after)
+
+  The format allows providing a *caption* for the code (above it) 
+  by including a line starting with "*" (followed by a space) 
+  above the code line or block.
+
+  * a nom script that deletes whitespace
+  -------
+    read; [:space:] { clear; } 
+    print;
+  ,,,,,
+  
+  * run a one line nom script
+  >> pep -e "read; print; clear;" -i "abcd"
+
+### NOM CODE
+
+  To display and possibly pretty print [nom] code use
+  >> ---+ and ,,,,
+  to delimit the code instead of ---
+
+  The pretty printing is done by /eg/nom.snippet.tohtml.pss after the 
+  script /eg/text.tohtml.pss is run.
+
+## ACRONYMS
+
+  Markup [html] as an <abbr> with a title (tool tip) There is a big list of
+  this acronyms like [xml] [c++] [java] [pep] [nom] [minix] [stdin] [stdout]
+  etc
+
+  The main purpose of them is to make the text urbandict://kinda more
+  interesting and to provide a quick explanation of an *acronym* or a technical
+  (programming) idea.
+
+## ETYMOLOGIES
+
+  I also had the idea of providing interesting word-derivations as 
+  an [html] *title=* attribute but I haven't really done any yet except
+  for [heuristic] . Again, the idea here is just to have fun, none 
+  of this is particularly necessary.
+  
+## ICONS AND LOGOS
+
+  It would probable be nice to include an icon after a name 
+  such as Wikipedia. Maybe a format like [wikipedia] could do this.
+
+## FILENAMES 
+  
+   Filename like /pars/tr/translate.go.pss should be rendered 
+   differently. Also they will be linked if there is some quoted
+   text before them.
+
+## HEADINGS 
+
+ Normally in my documents, I use all capital lines as a first level 
+ heading. Like this:
+   >> SECTION 3
+ For second level headings I use all capitals followed by 4 dots:
+   >> SUBSECTION 1 ....
+
+ But for the sake of parsing simplicity, I am just using [markdown]
+ headings with 3 levels. So lines starting with # or ## or ###
+ (followed by a space).
+
+ I am also adding the all capital heading format, for compatibility
+ with existing documents (and the script headers).
+
+## IMPLEMENTATION
+
+ The [html] formatting is produced by a nom script called 
+ file://text.tohtml.pss which is a simplification of an older script
+ called "mark.html.pss" mark.html.pss and "A LaTeX formatter" mark.latex.pss
+
+ The "HTML formatter" /eg/text.tohtml.pss can be translated into other languages
+ such as c, go, java, javascript, perl, python, ruby, and tcl. This can
+ be done using the translation scripts in "/tr/" file:///tr/ folder 
+ on the http://nomlang.org site . These scripts are also hosted on 
+ sourceforge at http://bumble.sf.net/books/pars/tr
+
+ * how to build the html formatter script with go 
+ -------
+    pep -f tr/translate.go.pss text.tohtml.pss > text.tohtml.go
+    go build text.tohtml.go
+    echo ' "nom" http://nomlang.org ' | ./text.tohtml
+    # or 
+    cat doc.txt | ./text.tohtml > doc.html
+ ,,,
+
+ * create a python version of the formatter and run it
+ -----
+   pep -f tr/translate.py.pss text.tohtml.pss > text.tohtml.py
+   chmod a+x text.tohtml.py
+   cat doc.txt | ./text.tohtml.py > doc.html
+ ,,,,
+
+ Similar translators exist for [java] javascript, [tcl] c
+ (non-unicode) and others. )
+
+### OTHER TEXT FORMATS
+
+ There are plenty of other good "plain text" formats and they are 
+ all useful for avoiding the torture of writing and rewriting [html]
+ or [latex] or [xml] or some other maddening markup format. And 
+ lets not even talk about *wysiwyg* word processors.
+
+ The big formats are: markdown and the wikimedia wiki format (from wikipedia).
+ I would like to write translators for my format into markdown and wikimedia
+ but I will wait until the formatter script is more or less "mature" and has
+ lists and ALL CAPITAL HEADINGS like this.  
+
+HISTORY
+
+  This format (and script) was begun in Feb 2025 with quite humble intentions
+  but has steadily grown an has been quite simple to debug. This is because I
+  use a mainly *word-by-word* parsing technique (with some exceptions) which
+  keeps the grammar quite simple. This is why the script
+  file:///eg/text.tohtml.pss has been quite successful and will almost
+  certainly be a permanent replacement for file:///eg/mark.html.pss and
+  file:///eg/mark.latex.pss which became, to be brutally honest, *infernally*
+  complex because the grammar was complex.
+
+  The format has been successfully used on the [nom] documentation site
+  www.nomlang.org and also on a general blog that I write called
+  www.shrob.org .
+

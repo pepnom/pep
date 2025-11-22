@@ -1,0 +1,37 @@
+#*
+
+ABOUT 
+
+  Demonstrate how to do indent parsing (eg Python/Yaml syntax) 
+  with nom.
+
+STATUS
+
+  2 may 2025
+    Just begun, experimenting
+
+*#
+
+ read; 
+ [\n] { 
+   clear; while [:space:]; put;
+   clear; add "lspace*"; push;
+ }
+ whilenot [\n]; put;  
+ clear; add "line*"; push;
+
+parse>
+ pop;pop;pop;
+ "lspace*line*lspace*" {
+   clear; get; ++; ++;
+   (==) {
+     # todo: if leading space is equal then remove second 
+     # lspace token. and reparse
+   }
+   --; --;
+   # indentation is not equal, so see if extra space or less 
+   # space.
+ }
+ push;push;push;
+
+

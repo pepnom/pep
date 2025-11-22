@@ -1,0 +1,390 @@
+#* 
+
+ABOUT 
+
+  A script to translate the "brainf**k" language into plain c. 
+  
+  This version compiles sequences of pointer commands such
+  as  *+++---* and *>>><<<* into only one c statement. This is a great
+  improvement over the previous versions.
+  
+  * Valid brainf commands
+  >> ">" p++ "<" p-- "+" data[pp]++ - data[pp]-- "[]" while data[pp] > 0 . putchar , getchar
+  >> "#" print state (optional command).
+
+STATUS
+ 
+ 14 april 2025
+   appears to be working with minimal testing.
+    
+
+TESTING
+  
+  * translate a Brainf*** program to c, compile and execute
+  ----
+    pep -f ../brainfork.c.pss -i ',.+.+.' > test.c; 
+    gcc test.c -o test; ./test
+  ,,,,
+
+TOKENS
+  
+  literal [] +-><.,
+  ilist* a sequence of increment/decrement instructions
+  mlist* a sequence of pointer movement instructions
+  com* a command, sequence of commands or block of commands.
+
+  short list of tokens:
+  [] +-><. ilist* mlist* com* 
+
+
+NOTES
+
+  Could include an error check block and help block here as a 
+  demonstration.
+
+  This implementation of the brain compiler still doesnt pass the test
+  completely in eg/brain/inout.b since it output "bL" instead of "LB". Not sure
+  why.
+
+  Other things to think about, include array bounds checking, and 
+  handling of EOF.
+
+  This script demonstrates pep/nom parsing and translating one of 
+  the simplest possible formal languages.
+
+  Put a line/char number in the open bracket token in case the 
+  brackets are not balance. This allows a much better error message
+  to be given. This is a technique that can be used in many languages
+  for error messages.
+
+  I also use parsing here to reduce strings of ++---- commands to 
+  one compiled statement. And the same for <<<<>> strings
+
+HISTORY
+
+  16 april
+    Added error and help tokens.
+
+  14 april
+    eliminated the comset* token which represented a list of 
+    commands. So I use com* for one command or a block of commands
+    or a list of commands.
+
+  12 april 2025
+    need to fix the grammar. Perhaps it would be better to 
+    just have a com* token instead of comset* and com* this seems 
+    to simplify greatly the grammar.
+
+    having another look at this. It seems like an interesting example
+    of trying to 'optimize' the compiled c code. lists of similar commands
+    are being reduced to one command. 
+
+  30 july 2022
+    Started to adapt from brain.1to1.c.pss
+
+*#
+
+  read;
+  #">","<","+","-" { put; add "*"; push; .reparse }
+
+  ">","<","+","-" { 
+    put;
+    # not bothering with bounds checking 
+    ">" { clear; add "pp += 1;"; }
+    "<" { clear; add "pp += 1;"; }
+    "+" { clear; add "data[pp]++;"; }
+    "-" { clear; add "data[pp]--;"; }
+    # mark the parse token
+    swap; add "*"; push; .reparse 
+  }
+  ",","." {
+    "." { clear; add "putc(data[pp], stdout);"; }
+    "," { 
+      clear; 
+      # also check for getc == EOF
+      # which can also mean an error
+      add "if (feof(stdin)) { exit(0); } \n";
+      add "if (data[pp] == EOF) { exit(1); } \n";
+      add "data[pp] = getc(stdin);";
+    }
+    put; clear;
+    add "com*"; push; .reparse
+  }
+
+  "[","]" { 
+    put; add "*"; push; 
+    # make an error message for later maybe
+    add "unbalanced bracket '"; --; get; add "' ";
+    add "near line:char "; lines; add ":"; chars; put; ++; clear; 
+    .reparse
+  }
+
+  # ignore any other character but parse as a dummy command
+  # so that the ignored char will end up in the output.
+  !"" {  
+    #*
+    replace "\n" "\\n"; replace "\t" "\\t";
+    replace "\f" "\\f"; replace "\r" "\\r";
+    put; clear; add "// ignored character '"; get; add "'";
+    put; clear; add "com*"; push;
+    *#
+    clear;
+  } 
+
+parse>
+
+  # for debugging, add a c-style comment 
+  add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  #---------------
+  # error trapping, analysis and help system.
+ 
+  #---------------
+  # 1 token errors
+  pop;
+  
+  # the error token which traps all errors pushed onto the stack 
+
+  "bf.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "! brainfork syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; print;
+    # provide help from the help* token if one was put on the stack. 
+    clear; pop; "bf.help*" { push; .reparse } 
+    quit;
+  }
+
+  # using a parse help token to display help for a topic, category of 
+  # topics or everthing. This is a very useful system because it allows
+  # the language parser/compiler to document its own syntax, and also
+  # it allows the nom script to implement some "help" commands so
+  # that the language user can refresh his or her memory about how the 
+  # language works.
+  "bf.help*" {
+    clear; swap; 
+    # 'brackets' is topic, 'punctuation' is a category, 'all' is everthing 
+
+    # ">" p++ "<" p-- "+" data[pp]++ - data[pp]-- "[]" while data[pp] > 0 . putchar , getchar
+    # >> "#" print state (optional command).
+
+    "brackets","punctuation","all" {
+      swap; add "
+      brackets [] 
+        They should always be balanced (matched) and cannot be 
+        empty.
+      Examples:
+         [+>[..]]  # correct 
+         [+>[]]    # incorrect: empty brackets
+         [+>]]     # incorrect: unbalance brackets ";
+    }
+
+    "+-","commands","all" {
+      swap; add "
+      + increment the value at the address pointed to be the 
+        pointer by one
+      - decrement the value at the address pointed to be the 
+        pointer by one
+      eg:
+         +++        increment the value by 3";
+    }
+
+    # This help system quits after showing the help message
+    add "\n\n"; print; quit; 
+  }
+
+  # ----------------
+  # 2 token errors. 
+  pop;
+
+  # look for tokens that can't start a sequence. An important error 
+  # checking technique.
+  B"]*".!"]*" {
+    clear; add "brackets"; put; 
+    clear; add "bf.help*"; push;
+    add "  misplaced ']' token?"; put; 
+    clear; add "bf.error*"; push; .reparse
+  }
+
+  # brackets with nothing in them is really an error because 
+  # it can create an infinite loop and does nothing anyway.
+  "[*]*" {
+    clear;
+    clear; add "brackets"; put; 
+    clear; add "bf.help*"; push;
+    add "  Empty brackets '[]'"; put; 
+    clear; add "bf.error*"; push; .reparse
+    print; quit;
+  }
+
+  # cut and paste the short list of grammar parse tokens here, 
+  # because it helps you to think about error token sequences
+  # token list [] +-><. ilist* mlist* com* 
+
+  push;push;
+
+  # ------------
+  # 2 tokens parsing
+  pop; pop;
+
+  # redundant commands or inverse
+  ">*<*","<*>*" { clear; .reparse }
+  "+*-*","-*+*" { clear; .reparse }
+
+  # if this is 1st ><+- of list, then zero the accumulator
+  "ilist*-*","-*-*" {
+    # use the accumulator to keep track of how many +s and -s
+    # and generate 1 c statement instead of multiple
+    B"-*" { zero; a-; } a-;
+    clear; add "data[pp] += "; count; add ";"; put; 
+    clear; add "ilist*"; push; .reparse
+  }
+
+  "ilist*+*","+*+*" {
+    # use the accumulator to keep track of how many +s and -s
+    # and generate 1 c statement instead of multiple
+    B"+*" { zero; a+; } a+;
+    clear; add "data[pp] += "; count; add ";"; put; 
+    clear; add "ilist*"; push; .reparse
+  }
+
+  "mlist*>*",">*>*" {
+    # use the accumulator to keep track of how many +s and -s
+    # and generate 1 c statement instead of multiple
+    B">*" { zero; a+; } a+;
+    clear; add "pp += "; count; add ";"; put;
+    clear; add "mlist*"; push; .reparse
+  }
+
+  "mlist*<*","<*<*" {
+    # use the accumulator to keep track of how many +s and -s
+    # and generate 1 c statement instead of multiple
+    B"<*" { zero; a-; } a-;
+    clear; add "pp += "; count; add ";"; put;
+    clear; add "mlist*"; push; .reparse
+  }
+
+  # making commands into commandsets 
+  #*
+  E"com*".!B"com*".!B"comset*".!"com*" {
+    replace "com*" "comset*"; 
+    push; push; reparse;
+  }
+  *#
+
+  # we have to reduce mlists later
+  "com*com*" {
+    clear; get; add "\n"; ++; get; --; put; 
+    clear; add "com*"; push; .reparse
+  }  
+
+  # change the ilist (+/-) token to ordinary command when it is
+  # not followed by +/-
+  B"ilist*".!"ilist*".!E"+*".!E"-*" {
+    replace "ilist*" "com*";
+    push; push; .reparse
+  }
+
+  # cannot resolve +/-/>/< until we have seen the last one
+  # in the series. So we need some kind of "look-ahead" parsing
+  B"-*".!"-*".!E"-*".!E"+*" {
+    replace "-*" "com*";
+    push; push; .reparse
+  }
+  B"+*".!"+*".!E"-*".!E"+*" {
+    replace "+*" "com*";
+    push; push; .reparse
+  }
+  B">*".!">*".!E">*".!E"<*" {
+    replace ">*" "com*";
+    push; push; .reparse
+  }
+  B"<*".!"<*".!E"<*".!E">*" {
+    replace "<*" "com*";
+    push; push; .reparse
+  }
+
+  # same logic as ilist
+  B"mlist*".!"mlist*".!E">*".!E"<*" {
+    replace "mlist*" "com*";
+    push; push; .reparse
+  }
+
+  # also handle (eof) cases 
+  (eof) {
+    # There may be 1 or 2 tokens, it doesnt matter.
+    E"mlist*",E"ilist*",E">*",E"<*",E"-*",E"+*" { 
+      replace ">" "com"; replace "<" "com";
+      replace "-" "com"; replace "+" "com";
+      replace "mlist" "com"; replace "ilist" "com";
+      push; push; .reparse
+    }
+  }
+
+  # ----------
+  # 3 tokens
+  pop;
+
+  #need to handle the lookahead token here. and resolve 
+  #command sequences, but there are alot of options.
+  B"com*com*".!"com*com*" {
+    replace "com*com*" "com*";
+    push; push;
+    --; --; get; add "\n"; ++; get; --; put; ++; ++;
+    # transfer unknown token attrib
+    clear; get; --; put; ++;
+    clear; .reparse
+  }  
+
+  "[*com*]*" {
+    # indent the braced code
+    clear; add "  "; ++; get; replace "\n" "\n  "; put;
+    clear; add "while (data[pp] > 0) {\n";
+    get; --; add "\n}"; put;
+    clear; add "com*"; push; .reparse
+  }
+
+  (eof) {
+    "com*","ilist*","mlist*",".*",",*" {
+      clear; 
+      # indent the generated code
+      add "  "; get; replace "\n" "\n  "; put; clear;
+      add "/* Code translated from the 'brainf***' esoteric language \n";
+      add "   by the pep/nom parser with the script: \n";
+      add "   bumble.sf.net/books/pars/eg/brainfork.c.pss */\n\n";
+      add "#include <stdio.h>\n";
+      add "#include <stdlib.h>\n";
+      add "#define SIZE 65000 \n";
+      add "int main(int argc, char *argv[]) {\n";
+      add "  int data[SIZE] = {0};\n";
+      add "  int pp = 0;\n";
+      get; 
+      add "\n}\n"; print; quit;
+    }
+    "[*com*",B"[*" {
+      # get the saved error message from the [ token cell
+      clear; get; add "\n"; print; quit;
+    }
+    "com*]*",E"]*" {
+      # get the saved error message from the ] token cell
+      clear; ++; get; add "\n"; print; quit;
+    }
+    put;
+    add "
+   The 'Brainfork' code didnt parse well:
+   Legal Brainfork commands are 
+     > increment pointer 
+     < decrement pointer
+     + increment value at pointer
+     - decrement value at pointer
+     [ ] . , 
+     (optional command) '#' print state
+   Everything else is ignored. 
+   The input parsed as tokens:\n  "; print; clear;
+   get; add "\n"; 
+    print; quit;
+  }
+  push; push; push;
+

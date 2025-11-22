@@ -1,0 +1,49 @@
+
+## THE NOM TO DART TRANSLATION SCRIPT
+
+  The nom -> dart translation script is called /tr/nom.todart.pss
+  and is one of the more recent translation scripts that I have 
+  written (april 2025). It uses a new and better grammar and error
+  checking compared to the older translation scripts which are called
+  *translate.<lang>.pss* It also handles unicode character categories
+  and unicode script names.
+
+  First create a pubspec file so that the dart program will compile.
+  This is required also because the 'characters' package is needed 
+  to handly unicode grapheme clusters (the standard string methods in 
+  dart are cluster-agnostic)
+
+  * an example pubspec file for a translated dart program
+  ----
+    name: nom.todart
+    environment:
+      sdk: '>=2.18.0 <3.0.0'
+    dependencies:
+      characters: ^1.3.0
+  ,,,,
+
+  The run "dart pub get". 
+
+  * translate a nom script file into dart and run with input
+  -----
+    pep -f eg/nom.todart.pss script.pss > script.dart 
+    dart compile exe script.dart
+    echo 'some input' | ./script.exe
+  ,,,,,
+
+### NOTES
+
+  The script file also contains a header with documentation about 
+  the script.
+
+### BUGS AND ISSUES
+
+  april 2025: 
+    I haven't finished the string parsing code for saving the 
+    parse output in a string
+
+    I haven't done *second generation* testing on the script
+    (that is: translating the translator with itself and then
+    using the compiled translator).
+
+

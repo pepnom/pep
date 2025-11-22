@@ -1,0 +1,669 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/index.html'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   I can think of nothing but you and that French fleet.
+ 
+<cite>Admiral Nelson, in a letter to his lover.</cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/pepnom.doc.faq.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> (definitely not) frequently asked questions about &Popf;&eopf;&popf; & nom</h2>
+
+<p>
+ A set of questions and answers about the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> virtual machine 
+ and the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> scripting language.
+<p>
+<!-- ------------------------------- -->
+<h3> how do you know that &Nopf;&oopf;&mopf; can parse context-sensitive languages?</h3>
+
+<p>
+ Because it can recognise and parse the language {a^n b^n c^n}
+<p>
+<!-- ------------------------------- -->
+<h3> can &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; do indent parsing like in python?</h3>
+
+<p>
+ Yes, but I haven&apos;t actually written an <a href='/eg/'>example </a> script which
+ demonstrates this.
+<p>
+<!-- ------------------------------- -->
+<h3> can &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; do type checking and type inference?</h3>
+
+<p>
+ Yes, I think so, but the type checking or inference needs to be in
+ a separate &ldquo;pass&rdquo; of the compiler or translator. I haven&apos;t yet written
+ an example script for this, but it is on my list of priorities. 
+ The technique for type checking is to store the type of the variable
+ or expression in a <a title='nom command reference: mark' href='http://nomlang.org/doc/commands/nom.mark.html'>marked </a> tape cell, where the mark is 
+ the name of the variable (with, perhaps the scope of the variable as 
+ a prefix). One challenge with this approach is to allocate sufficient
+ <a title='nom syntax reference: tape' href='http://nomlang.org/doc/machine/pep.tape.html'>tape</a> cells (at the top of the tape) to accommodate all the 
+ variables that will be encountered. It occurred to me to implement
+ a &ldquo;reserve&rdquo; <em>nom</em> command that will reserve a number of cells at the 
+ top of the tape and set a <em>base</em> variable which will ensure that 
+ a <code class='nom-command'><a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>pop</a></code> command will not decrement the tape pointer when the 
+ tape pointer is at the base.
+<p>
+<!-- ------------------------------- -->
+<h3> why is there no "contains" test in the &Nopf;&oopf;&mopf; language?</h3>
+
+<p>
+ The <em>nom</em> language contains <em>begins-with</em> (eg B"abc") and <em>ends-with</em> (eg
+ E"abc") tests that check if the <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> text buffer ends with or
+ starts with the given text (see <a title='nom syntax reference: tests' href='http://nomlang.org/doc/syntax/nom.syntax.tests.html'>tests</a> ). So why is there no
+ <em>contains</em> test?
+ <p>
+ Well, to answer in a round-about way, there are many functions to 
+ manipulate the workspace buffer that may be useful. And a contains test
+ would be handy in some circumstances, but my aim in designing the 
+ &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; system was to keep the virtual machine and language as simple
+ and essential as possible.
+<p>
+ The &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; system is based on the Unix filter model which means 
+ that a <em>nom</em> script is designed to &ldquo;edit&rdquo; a text stream (or parse 
+ and translate it). This means that it should (almost) always be 
+ possible to catch language patterns with the begins-with and ends-with
+ tests.
+<p>
+<!-- ------------------------------- -->
+<h3> can i use &Nopf;&oopf;&mopf; to write a "pretty printer" for a language ?</h3>
+
+<p>
+ Yes, it&rsquo;s simple because pretty-printers (or source code colourisers)
+ don&rsquo;t (normally) actually parse the source code. They only 
+ tokenise which is to say, they recognise pattern like quoted text,
+ command names, punctuation etc and format them. An example of a
+ pretty printer in <em>Nom</em> is <a href='/eg/nom.tohtml.pss'>/eg/nom.tohtml.pss</a> or <a href='/eg/nom.tolatex.pss'>/eg/nom.tolatex.pss</a> which
+ does the same thing but into 
+<abbr class='tek-acronym' 
+      title='The LaTeX text processing system'>L<sup><small>A</small></sup>T<sub>E</sub>X</abbr> not 
+<abbr class='tek-acronym' 
+      title='Hyper-text Markup Language'>HTML</abbr> . 
+<p>
+ If you want to write something that properly indents and formats the
+ source code then you will need to actually parse the language
+ ( 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> can do that too). Possibly the most difficult task is then 
+ deciding where to <em>split</em> lines that are too long. But you are 
+ not flying an aeroplane, just do something that doesn&apos;t look too bad.
+<p>
+<!-- ------------------------------- -->
+<h3> how do i install &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; ?</h3>
+
+<p>
+ Follow the instructions at <a href='http://www.nomlang.org/download.'>www.nomlang.org/download.</a>
+<p>
+<!-- ------------------------------- -->
+<h3> can &Nopf;&oopf;&mopf; be used to create a modern programming language?</h3>
+
+<p>
+ I believe so. It can certainly be used to <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=parse' title='oxford english dictionary'>parse</a> and compile
+ context-free languages but I have not yet written a successful
+ <a href='https://en.wikipedia.org/wiki/type_system'>type checker </a> using nom. But it is definitely
+ possible, especially using the <em>nom</em> commands <code class='nom-command'><a title='nom command reference: mark' href='http://nomlang.org/doc/commands/nom.mark.html'>mark</a></code> and <code class='nom-command'><a title='nom command reference: go' href='http://nomlang.org/doc/commands/nom.go.html'>go</a></code>
+ in their non-parameter versions (this essentially allows the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr>
+ <a title='nom syntax reference: tape' href='http://nomlang.org/doc/machine/pep.tape.html'>tape</a> structure to be used as an <a href='https://en.wikipedia.org/wiki/associative_array'>en.wikipedia.org/wiki/associative_array</a> )
+<p>
+<!-- ------------------------------- -->
+<h3> is &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; in active development?</h3>
+
+<p>
+ I have been developing, or trying to develop &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; for a long time.
+ I 1<sup class='ordinal'>st</sup> thought of the idea several decades ago, but judging by my
+ notes and work-diaries I didn&apos;t really achieve a decent interpreting
+ implementation until around 2019. Since then I have worked off and on
+ on the system. Sometimes I take long breaks from it to do other things
+ but when I come back to it, it always seems very interesting and powerful.
+ <p>
+ So the answer is &ldquo;yes&rdquo; (as of 2025).
+<p>
+<!-- ------------------------------- -->
+<h3> is the &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; system widely used?</h3>
+
+<p>
+ No, it isn't. I believe that almost nobody knows about it, which is 
+ why I am writing this <a href='http://www.nomlang.org'>website </a> and also this 
+<abbr class='tek-acronym' 
+      title='Frequently Asked Questions'>FAQ</abbr> .
+ I believe the system is extremely interesting and potentially very
+ useful and what is more, <em>its free and open source</em>
+<p>
+<!-- ------------------------------- -->
+<h3> what can i use the &Nopf;&oopf;&mopf; language for?</h3>
+
+<p>
+ You can use it for parsing, translating, compiling or transpiling context-free
+ (and some context-sensitive) languages such as Lisp, JSON data, CSS code,
+ palindromes, regular expressions, CSV data, XML and so on and so forth. You
+ can use it to create your own mini-languages. You can use it to explore and
+ understand the grammar of languages and patterns without having to <em>code</em> in a
+ full computer language. <em>Nom</em> and Pep can also handle certain types of
+ context-sensitive languages or patterns ( [XML] maybe context-sensitive)
+<p>
+<!-- ------------------------------- -->
+<h3> who is noam chomsky?</h3>
+
+<p>
+ A linguist who came up with an interesting classification of formal
+ languages.
+<p>
+<!-- ------------------------------- -->
+<h3> why is the &Nopf;&oopf;&mopf; language so cryptic?</h3>
+
+<p>
+ The <em>Nom</em> language closely reflects the <a href='https://en.wikipedia.org/wiki/virtual_machine'>virtual machine </a> 
+ which it manipulates. This machine has a <a title='nom syntax reference: stack' href='http://nomlang.org/doc/machine/pep.stack.html'>stack</a> a <a title='nom syntax reference: tape' href='http://nomlang.org/doc/machine/pep.tape.html'>tape</a> (an
+ array with a pointer) and a <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> buffer as well as some other 
+ minor registers. So, for example, the <code class='nom-command'><a title='nom command reference: ++' href='http://nomlang.org/doc/commands/nom.plusplus.html'>++</a></code> command increments the 
+ pointer to the <em>tape</em> element and the <code class='nom-command'><a title='nom command reference: push' href='http://nomlang.org/doc/commands/nom.push.html'>push</a></code> command pushes one 
+ parse token from the (beginning of) the <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> onto the 
+ (top of the ) stack. So once you are familiar with the virtual 
+ <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a> you will find the language not so cryptic.
+<p>
+ Having said that, it was actually my intention, when I first thought of 
+ pep&nom that I would write a more expressive and natural language 
+ &ldquo;on top&rdquo; of it. In other words, I would use <em>nom</em> to write a compiler for 
+ a language which would reflect more closely a kind of 
+<abbr class='tek-acronym' 
+      title='Backus-Naur Form'>BNF</abbr> grammar.
+<p>
+ The page <a href='/doc/syntax/nom.syntax.html'>/doc/syntax/nom.syntax.html</a> contains an example of 
+ compiling a simple (toy) BNF format into 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> which can be used as 
+ the basic of a more expressive language that compiles <em>into</em> the 
+ <em>nom</em> script language.
+<p>
+ In my defence, I could say that all languages or mini-languages that 
+ are based on virtual machines tend to be cryptic, for example 
+ 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> 
+<abbr class='tek-acronym' 
+      title='AWK Programming language'>AWK</abbr> 
+<abbr class='tek-acronym' 
+      title='The Incomparable Forth 'Language''>FORTH</abbr> etc.
+<p>
+<!-- ------------------------------- -->
+<h3> what tools did you use to develop pep/nom?</h3>
+
+<p>
+ I work mostly on Linux or MacOS so the tools I use are available on 
+ those machines such as 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> 
+<abbr class='tek-acronym' 
+      title='Vi Improved Text Editor'>VIM</abbr> the c language and the 
+<abbr class='tek-acronym' 
+      title='The Gnu C Compiler'>GCC</abbr> 
+ compiler (for the <em>pep</em> <a href='/doc/peptool/'>interpreter </a> ) although
+ the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> interpreter also compiles with 
+<abbr class='tek-acronym' 
+      title='Bellard's Tiny C Compiler'>TCC</abbr> and should compile
+ with any standard c compiler.
+<p>
+<!-- ------------------------------- -->
+<h3> there are already too many computer languages. why another one?</h3>
+
+<p>
+ <em>Nom</em> is not a general purpose computer language, it is a &ldquo;domain-specific
+&rdquo; computer language designed to recognise and 'translate' text 
+ <em>patterns</em> (more formally called context-free languages).
+<p>
+ <em>Nom</em> is also important because it highlights that a compiler it really
+ just a map function from one 'language' to another. A formal language 
+ is a set of strings in a given alphabet. So a compiler (if we ignore
+ the final stage of converting to binary code) is a map function
+ from one set of strings to another.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a compiler as a map
+ </figcaption>
+<pre class='codeblock'>
+
+  language A: { 'and','with','for','to','from' }
+    --&gt; (maps to)
+  language B: { 'y','con','para','a','de' }
+ </pre>
+</figure>
+ <p>
+ But, of course the language map function does not have to be one-to-one. 
+ When compilers are written as computer code, this map function is 
+ hidden or <a href='https://www.urbandictionary.com/define.php?term=obfuscated' title='urban dictionary'>obfuscated</a> . But when the compiler is written as 
+ a text-based map function, we are able to &ldquo;multiply&rdquo; map functions
+ (that is &ldquo;chain&rdquo; compilers together to create new compilers). 
+ <em>Nom</em> already does this chaining with it&rsquo;s translation <a href='https://bumble.sf.net/books/pars/tr'>scripts </a>
+<p>
+ The <em>nom</em> language is still <em>code-oriented</em> rather than <em>data-oriented</em> but
+ it is an important step towards regarding compilers as language map
+ functions.
+<p>
+<!-- ------------------------------- -->
+<h3> how many people use nom?</h3>
+
+<p>
+ As far as I know, in February 2025, only me. 
+<p>
+<!-- ------------------------------- -->
+<h3> is &Nopf;&oopf;&mopf; a commercial project?</h3>
+
+<p>
+ No, it is an idea, that I feel could be useful and interesting in
+ many software circumstances. I believe, for example, that it could be 
+ used to write very small simple compilers for microcontrollers (or 
+ other 'small' machines) that would be capable of running <em>on</em> the 
+ microcontroller like 
+<abbr class='tek-acronym' 
+      title='The Incomparable Forth 'Language''>FORTH</abbr> or micro-python.
+<p>
+<!-- ------------------------------- -->
+<h3> what is the "workspace* ?</h3>
+
+<p>
+ This is the central text buffer of the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr> virtual <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a> 
+ Each part of the machine is documented in <a href='/doc/machine/'>/doc/machine/</a>
+ and the workspace buffer is documented at <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> and the 
+ parse-token stack is documented at <a title='nom syntax reference: stack' href='http://nomlang.org/doc/machine/pep.stack.html'>stack</a> 
+<p>
+<!-- ------------------------------- -->
+<h3> why is the "workspace" called the "workspace"?</h3>
+
+<p>
+ Because, like a number of things in the &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; system, it was 
+ influenced by the 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> stream editor and I believe that the 
+ 
+<abbr class='tek-acronym' 
+      title='Gnu is not Unix, silly acronym.'>GNU</abbr> sed program uses similar terminology.
+<p>
+<!-- ------------------------------- -->
+<h3> how is &Popf;&eopf;&popf;/&Nopf;&oopf;&mopf; different from sed ?</h3>
+
+<p>
+ Sed reads the text input-stream line by line and uses regular 
+ expression patterns to transform (or <em>edit</em> ) the text stream. 
+ 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> can read the input stream character-by-character or any other
+ way you wish and uses grammar rules to transform (compile/transpile/translate)
+ the input-stream.
+<p>
+<!-- ------------------------------- -->
+<h3> can linguists use nom? </h3>
+
+<p>
+ I think so, but it is not really designed (at the moment) for 
+ translating human languages. But it may be useful for linguists to 
+ understand how formal grammars function (and their limitations).
+<p>
+ There are many complexities to parsing human languages (for example
+ the nexus between semantic considerations and grammatical rules) but 
+ one of the more obvious ones is the &ldquo;ambiguity&rdquo; of certain sentences:
+ that is, one sentence may have several different possible ways to 
+ parse, or initial parsings. Since &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; cannot &ldquo;backtrack&rdquo; in the 
+ input stream it cannot choose between multiple parsings.
+<p>
+<!-- ------------------------------- -->
+<h3> are there any bugs in pep/nom?</h3>
+
+<p>
+ Yes, unfortunately there will be. This is also because I have been working on
+ this by myself off and on. I just found a bug in the <code class='nom-command'><a title='nom command reference: mark' href='http://nomlang.org/doc/commands/nom.mark.html'>mark</a></code> and <code class='nom-command'><a title='nom command reference: go' href='http://nomlang.org/doc/commands/nom.go.html'>go</a></code>
+ code where more than one tape cell is marked with the same 'tag' . But
+ generally the system works remarkably well. For a list of known bugs, see the
+ document <a href='/doc/pepnom.doc.bugs.html'>/doc/pepnom.doc.bugs.html</a>
+<p>
+<!-- ------------------------------- -->
+<h3> why is writing &Nopf;&oopf;&mopf; like playing blindfold chess?</h3>
+
+<p>
+ The reason is that you need to maintain the <em>state</em> of the 
+<abbr class='tek-acronym' 
+      title='Parsing Engine for Patterns'>&Popf;&eopf;&popf;</abbr>
+ machine in your head as you are manipulating it. That is similar to
+ the way that I blindfold chess player maintains the position of 
+ the board in his or her head during the game. But with <em>nom</em> you 
+ have several tools to 'peek' into the state of the <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a> 
+ during the development and execution of a script. These tools are 
+ outlined in the document <a href='/doc/howto/nom.debug.html'>/doc/howto/nom.debug.html</a> . One simple one 
+ is the <code class='nom-command'><a title='nom command reference: state' href='http://nomlang.org/doc/commands/nom.state.html'>state</a></code> command which <a title='nom command reference: print' href='http://nomlang.org/doc/commands/nom.print.html'>prints </a> the state of 
+ the machine at the time that the command is executed.
+<p>
+ <p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

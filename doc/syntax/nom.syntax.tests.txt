@@ -1,0 +1,236 @@
+
+
+## NOM CONDITIONS AND TESTS 
+
+  Information about block 'tests' in the nom language.
+
+  The nom language uses *tests* to match grammar parse tokens that 
+  have been "popped" nom://pop from the pep machine pep://stack .
+  There are several different types of tests that can be combined together
+  with *AND* logic (the "." dot operator) and *OR* logic (the "," comma
+  operator as well as with the nomsyn://negation operator.
+
+### QUOTED TESTS
+
+  Quoted text before a block {...} is an *workspace equals* test. 
+  This means that the test returns true if the pep://workspace buffer 
+  is exactly the same as the quoted text at the time the script code
+  is executed.
+
+  * a quoted test 
+  -----+
+    read; "a" {  
+      clear; add "The letter 'a' \n"; 
+      print; clear;
+    }
+  ,,,,
+
+  Quoted tests can be combined with the nomsyn://negation operator and 
+  the 'begins with' B and 'ends with' E operators. They can also be 
+  concatenated with the AND '.' and OR ',' operators.
+
+  * a quoted test with OR logic and the "!" and "B" operators
+  -----+
+    read; "a",B"A",!B"z" {  
+      clear; add "The letter 'a' or 'A' or anything not 'z' \n"; 
+      print; clear;
+    }
+  ,,,,
+
+### CLASS TESTS
+
+  The class test checks whether the workspace buffer matches any one of the
+  characters or character classes listing between the square braces.  A class
+  test is written.
+
+  * the syntax of class commands
+  >> [character-class] { <commands>  }
+
+  There are 3 forms of the character class test:
+
+    - a list of characters eg: [abcxyz.,;]
+    - a range of characters eg: [A-M]
+    - a named character class eg: [:space:]
+
+  All tests, including *class* tests can be negated with the *bang*
+  nomsyn://negation operator "!". This negation operator always *precedes* the
+  test which it is negating.
+
+  * delete all vowels from the input stream using a negated list class test
+  >> read; ![aeiou] { print; } clear;
+
+  All characters in the workspace must match given class, so 
+  that a class test is equivalent to the regular expression "^[abcd]+$"
+
+  As in the previous example, class tests, like all other type of tests, can
+  be negated with a prefixed "!" character. Double and multiple negation,
+  such as "!!" or "!!!" is a syntax error (since it doesn't have 
+  any purpose).
+
+  * only print certain sequences 
+  >> r; [abc-,] { while [abc-,]; print; } clear;
+
+### EOF END OF STREAM TEST 
+  
+ This test returns true if the 'peep' look-ahead register currently contains
+ the <EOF> end of stream marker for the input stream. This test is equivalent
+ to the "END { ... }" block syntax in the AWK script language. The eof test is
+ written as follows
+
+  * possible formats for the "end-of-stream" test
+  >> <eof> <EOF> (eof) (EOF)
+
+  >> r; print; (eof) { add " << end of stream!"; } clear;
+
+ This test can be combined with other tests either with AND
+ logic or with OR logic
+   
+  * test if the input ends with "horse" when the end-of-stream is reached
+  >> r; (eof).E"horse" { add ' and cart'; print; }
+
+  * test if workspace ends with "horse" OR end-of-file has been reached 
+  >> r; (eof),E"horse" { add " <horse OR end-of-file> "; print; } 
+  
+ The <eof> test is important for checking if the script has
+ successfully parsed the input stream when the end of stream is
+ reached. Usually this means checking for the "start token" or tokens of the 
+ given grammar. 
+
+  * check for a start token
+  ------+
+    read;
+    # ... more code
+    (eof) {
+      pop; 
+      "statement*" {
+         # successful parse
+         quit;
+      }
+      # unsuccessful pase
+    }
+  ,,,,
+
+### THE TAPE TEST
+
+  >> (==) { ...}
+
+  This test determines if the current tape cell is equal to the 
+  contents of the workspace buffer.
+
+  * check if previous char the same as current
+  ------+
+    read;  
+    (==) {
+      put; add ".same."; 
+    }
+    print; clear;
+  ,,,,
+
+### BEGINS WITH TEST
+
+  Determines if the workspace buffer begins with the given 
+  text. It is written by preceding some "quoted" nomsyn://quotes
+  text with the capital letter *B* .
+
+  * only print words beginning with "wh"
+  >> read; E" ",E"\n",(eof) { B"wh" { print; } clear; } 
+
+### ENDS WITH TEST
+
+  Tests if the workspace ends with the given text. The 'E'
+  (ends-with modifier) can only be used with quoted text but
+  not with class tests
+
+  * a syntax error, using E with a class
+  >> r; E[abcd] { print; } clear;
+
+  * correct using the E modifier with quoted text
+  >> r; E"less" { print; } clear;
+
+  * only print words ending with "ess"
+  >> read; E" ",E"\n" { clip; E"ess" { add " "; print; } clear; } 
+
+### CONCATENATING TESTS WITH LOGICAL "AND" AND "OR"
+
+  Conditional tests can be chained together with OR (,) or AND (.)
+
+  * test if workspace starts with "http:" OR "ftp:"
+  >> B"http:",B"ftp:" { print; }
+
+  "AND" and "OR" test cannot be combined in the same test sequence.
+   
+  But the combination of and, and or logic  can be achieved by nesting tests in
+  braces. It may be useful to add logic grouping for tests, eg:
+  (B"a",B"b").E"z" { ... } however this is not currently supported.
+
+  * an incorrect test sequence (dots and commas)
+  >> B"a".E"z",E"x" { print; }   # wrong!
+
+  * using nesting of block to combine "AND" and "OR" tests
+  -----+
+    B"a",B"b" { 
+      E"z" { 
+        # execute this block if the workspace begins with 
+        # 'a' OR 'b' AND ends with 'z'
+      }
+    }
+  ,,,,
+
+  * This line above is equivalent to the logic: 
+  ----+
+   ((workspace BEGINS WITH "a") OR (workspace BEGINS WITH "b"))
+   AND (workspace ENDS WITH "z")
+  ,,,,
+
+  * print only certain URLs using an "or" concatenated test
+  ----+
+   r; B"http://",B"https://",B"www.",B"ftp:" { 
+     E" ",E"\n",(eof) { add "\n"; print; clear; }
+   }
+   E" ",E"\n",(eof) { clear; }
+  ,,,
+
+  * print names of animals using OR logic concatenation
+  ----+
+   read; 
+   [:space:] { while [:space:]; clear;} whilenot [:space:];
+   "dog","cat","lion","puma","bear","emu" { add "\n"; print; }
+   clear;
+  ,,,
+
+### AND LOGIC CONCATENATION
+
+  It possible to concatenate any type of test or negated 
+  test with the logical *AND* operator which is the dot "." operator
+  in the [nom] language.
+
+  * print the workspace if it starts with 'a' AND ends with 'z'
+  >> r; B"a".E"z" { print; clear; }
+
+  * check if workspace is a url but not a ".txt" text file 
+  >> B"http://".!E".txt" { add "<< non-text url"; print; clear; }
+
+  * workspace begins with # and only contains digits and # 
+  >> B"#".[#0123456789] { add " (timestamp?)\n"; print; }
+
+  "AND" logic can also be achieved by nesting brace blocks. 
+
+  * and logic with nested braces
+  ----+
+    B"/" { E".txt" { ... } }
+  ,,,,
+
+### NEGATED TESTS 
+
+  A preceding "!" *not* operator is used for negating tests.
+
+  * examples of negated tests
+  >> !B"abc", !E"xyz", ![a-z], !"abc" ...
+
+  Unlike in the sed unix stream editor, the negation operator 
+  *precedes* the test.
+
+### NOTES
+
+  The tests in nom are similar in concept to the sed and awk 
+  tests or *line-matches* .

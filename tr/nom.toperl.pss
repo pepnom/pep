@@ -1,0 +1,3111 @@
+
+#*
+
+ABOUT 
+
+  Translate nom scripts to the perl language. This uses the 
+  new script organisation from /tr/nom.torust.pss. 
+
+STATUS 
+
+  Aug 2025
+
+    All first gen tests working and most 2nd gen tests working
+    Command line switches working.
+
+BUGS AND ISSUES
+ 
+  If I escape \\ in quoted text then 2nd gen tests dont work because
+  \n becomes \\n There may be no way around this.
+
+HISTORY
+  
+  1 Sept 2025
+    Realised that I can use "system; print; quit;" for testing scripts 
+    in the help system, rather than having to pipe to bash or cmd.exe
+    (actually I haven't really worried about the MS operating system 
+    until now)
+
+    Added inline script interpretation. Made a resetMachine() method.
+    Added the help system to this script which can be accessed with 
+    a help word for example
+    >> pep -f nom.toperl.pss -i /help
+
+  31 Aug 2025
+    Very simple nom script files are being interpreted by the 
+    perl translator. 
+
+    make some good progress on the interpret() method which creates 
+    a runScript() method and evaluates it in order to interpret 
+    scripts. But I think the setStandardInput() method within this 
+    evaluated method is exiting when it tries to read from standard 
+    input.
+  30 Aug 2025
+    Looking to implement properly the interpret() method. I will add
+    a new command line switch to this like -I which will take the 
+    script file to interpret and -E which will be an inline script
+    to interpret so the following should work.
+
+    * creating a perl interpreter of the nom language
+    --------
+      pep -f nom.toperl.pss nom.toperl.pss > nomtoperl.pl
+      chmod +x nomtoperl.pl
+      echo 'hannah' | ./nomtoperl.pl -I eg/palindrome.pss
+      # or 
+      echo 'abc' | ./nomtoperl.pl -E 'read;print;print;clear;' 
+    ,,,,
+
+    I still find it hard to believe that this could work, but in previous tests
+    with the perl translator, it did. This same technique could be applied to
+    any script language that can execute an arbitrary string as code (which I
+    think is most of them, such as ruby, python, tcl etc).
+
+  27 Aug 2025
+
+    Added the accumulator as an exit code for nom://quit (hence making
+    the old nom://bail command obsolete, but maybe not forever...)
+    Added the nom://system command to this translation script.
+
+    * test the nom system command in perl with a bash helper function
+    >> pep.pls 'add "ls | sed s/a/AAA/"; system; print; quit;' ab
+
+  12 June 2025
+
+    Adding the "webstate" command which displays the machine state in
+    html. I only intend to add it here, not to all translators or even
+    the pep interpreter. This is because I only need it for illustrating
+    or explaining nom commands on the www.nomlang.org website.
+    (Ed: Aug 2025 - the nomscript /eg/machine.tohtml.pss is better at 
+    doing this. It takes a debug pep machine description and outputs 
+    a more-or-less well formatted html visualisation of the machine)
+
+  20 may 2025
+    Fixing escapeChar/unescapeChar methods for escaping \\ (meaning
+    the process to escape the escape character itself) and 
+    getting most 2nd gen tests to work. 
+
+  18 may 2025
+    Debugging work, most commands working. Adding marks to printState()
+  17 may 2025
+    more work. basic scripts working.
+  16 may 2025
+    just started. This is a complete and much better rewrite of the script 
+    /eg/translate.perl.pss which did all of its parsing in the 
+    main() part of the script (if perl has a main() method). 
+
+NOTES
+
+  Its a good idea to include defined marks in sub printState()
+
+  In the machine code section all backslashes need to be doubled eg \\\\
+
+  The input buffer, is actually an array of strings and is currently reversed
+  because then I can just use pop() to consume one
+  character/codepoint/grapheme-cluster at a time. 
+
+  https://www.regular-expressions.info/unicode.html#category
+    important unicode regexp info for different languages. The 
+    unicode script names and properties which are included here 
+    were copied from this website. These are used for classes in
+    tests and while/whilenot. Some class tests can be implemented
+    with a matchClass function which may be faster.
+
+  There are various input "types" meaning where the input comes 
+  from and if it is a stream or just all read at once into a buffer.
+
+UNICODE CATEGORIES
+
+  Does perl support these categories?, here is a list.
+
+  Apparently \P{L} (capital P) is the inverse set, ie any non-letter.
+  But \p{L} does not match grapheme clusters, see below for that.
+
+UNICODE SCRIPT NAMES
+
+  Information from regular-expressions.info/unicode.html#script
+  A surprising useful website.
+
+  The JGsoft engine, Perl, PCRE, PHP, Ruby 1.9, Delphi can match Unicode scripts. 
+
+UNICODE BLOCKS
+
+  I would like for nom to support all these categories, scripts and 
+  blocks if the target translation language supports them. But in 
+  some cases it may be better for the translator to create 'ascii' 
+  regular expressions for the sake of speed.
+
+PERL SYNTAX
+  
+  * some code to iterate an array and read sequences of same chars
+  ------
+  my @chars = ('a', 'b', 'c', 'x', 'x', 'x', 'd', 'e', 'x', 'f', 'f', 'x', 'g');
+
+  my $target_char = 'x';
+  my @consecutive_x = ();
+  for (my $i = 0; $i < @chars; $i++) {
+      if ($chars[$i] eq $target_char) {
+          # Found the target character, now collect all consecutive ones
+          while ($i < @chars && $chars[$i] eq $target_char) {
+            #push @consecutive_x, $chars[$i];
+            $i++; # Move to the next character
+          }
+          # Now process the @consecutive_x array
+          print "Found consecutive '$target_char': @consecutive_x\n";
+          @consecutive_x = (); # Reset for the next sequence
+          $i--; # Adjust index because the inner loop went one step too far
+      } else {
+          print "Encountered: $chars[$i]\n";
+      }
+  }
+  ,,,,
+
+  * check if all character in string are in list
+  ----
+    my %allowed = map { $_ => 1 } @allowed_chars; 
+    # Create a hash for faster lookup
+    for my $char (split //, $string) {
+      return 0 unless exists $allowed{$char};
+    }
+    return 1;
+  ,,,,
+  
+  * an example of splitting grapheme clusters (not code points)
+  -----
+    my $original = "re\x{0301}sume\x{0301}";
+    my $wrong    = reverse $original;
+    my $right    = join '', reverse split /(\X)/, $original;
+  ,,,,,
+
+  * another way to split into grapheme clusters?
+  >> my @grapheme_clusters = $string =~ m/\X/g;
+
+  * use a module
+  ------
+    use Unicode::GraphemeClusters;
+
+    my $string = "你好世界\x{1F469}\x{1F3FB}\x{1F468}\x{1F3FC}";
+    print "Original string: $string\n";
+
+    my @graphemes = grapheme_clusters($string);
+
+    print "Grapheme clusters:\n";
+    for my $grapheme (@graphemes) {
+        print "'$grapheme'\n";
+    }
+    print "Number of grapheme clusters: ", scalar @graphemes, "\n";
+  ,,,,
+
+DONE
+
+TODO
+
+  unicode char categories/scripts.
+  grapheme clusters
+  interpret method
+  test file and string input output.
+
+TESTING 
+
+  * compile an inline nom script to perl and display
+  >> pep.pls 'r;t;t;d;'  
+
+  * compile an inline nom script to perl and run with input
+  >> pep.pls 'r;t;t;d;' 'abcd'   
+
+  These bash functions are just to save typing when translating nom
+  scripts to perl. Here is the equivalent
+  without them:
+
+  * translate an inline script to perl and print to stdout 
+  >> pep -f nom.toperl.pss -i "r;[\n]{lines;add ' ';}print;d;"
+
+  * test with the one-line nom scripts in /tr/translate.test.txt 
+  >> pep.tt perl 
+
+  * test but start at swap tests 
+  >> pep.tt perl blah '# swap'
+
+TOKENS 
+
+ This token list is pretty useful for thinking about 
+ sequences of tokens. Especially for error sequences.
+
+  Literal BE!<>{}(),.;
+  quoted*  text between "" or ''.  I will put "" around this and escape
+           all " at the time of tokenising. This is because I want \n \r
+           etc to work within strings. But it means I have to be careful
+           about other escape sequences. like $ etc. 
+  class*   eg [:space:] [abcd] [a-z] 
+  word*    eg: eof,reparse,==
+  begin*   the begin word
+  parselabel* 
+  command* eg: add clear print 
+  test*    eg: "x" [:space:] !B"a" B"a" E"a" !E"a"
+  ortest*  test*,*test*
+  andtest*  test*.*test*
+  statement* eg: clear; add "xx"; or "test" { ... }
+  statementset* a list of statements 
+  script*
+
+*#
+
+  # check for empty input or help-word and trigger help if so
+  # eg: pep -f nom.toperl.pss -i ''  will trigger help.
+  #  
+  begin {
+    # reserve 2 tapes cells
+    # mark "work"; ++; mark "head"; ++;
+    while [:space:]; clear;
+    (eof) {
+      # the usage topic of the help system. 
+      add "usage"; put; clear; 
+      add "nom.help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be a valid nom script
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; whilenot [:space:];
+      swap; get; put; clear;
+      add "nom.help*"; push; .reparse
+    }
+  } # end of beginblock
+
+  read;
+
+  # sort-of line-relative character numbers 
+  [\n] { nochars; }
+  # ignore space except in quotes. but be careful about silent
+  # exit on read at eof
+  [:space:] { 
+     clear; (eof) { .reparse } !(eof) { .restart } 
+  }
+
+  # literal tokens, for readability maybe 'dot*' and 'comma*'
+  [<>}()!BE,.;] { put; add "*"; push; .reparse }
+  [{] { 
+    # line and char number to help with missing close brace 
+    # errors
+    clear;
+    add "line:"; lines; add " char:"; chars;
+    put; clear; add "{*"; push; .reparse
+  }
+
+  # parse (eof) etc as tokens? yes
+
+  # command names, need to do some tricks to parse ++ -- a+ etc
+  # here. This is because [:alpha:],[+-] etc is not a union set
+  # and while cannot do "while [:alpha:],[+-] etc
+
+  # subtle bug, [+-^0=] parses as a range!!! [a-z]
+  [:alpha:],[-+^0=] {
+
+    # a much more succint abbreviation code
+    "0" { clear; add "zero"; }
+    "^" { clear; add "escape"; }
+    # increment tape pointer ++ command
+    "+" { while [+]; }
+    # decrement tape pointer -- command
+    "-" { while [-]; }
+    # tape test (==)
+    "=" { while [=]; }
+
+    # for better error messages dont read ahead for the 
+    # above commands.
+    !"zero".!"escape".!B"+".!B"-".!B"=" {
+      while [:alpha:]; 
+    }
+
+    # parse a+ or a- for the accumulator
+    "a" { 
+      # while [+-] is bug because compile.pss thinks its a range class
+      # not a list class
+      while [-+]; "a+","a-" { put; }
+      "a" { clear; add "add"; }
+    }
+
+    # one letter command abbreviation expansions.
+    # 'D' doesn't actually work in compile.pss !
+    put; clear; add "#"; get; add "#";
+    replace "#k#" "#clip#"; replace "#K#" "#clop#";
+    replace "#D#" "#replace#"; replace "#d#" "#clear#"; 
+    replace "#t#" "#print#"; replace "#p#" "#pop#"; replace "#P#" "#push#"; 
+    replace "#u#" "#unstack#"; replace "#U#" "#stack#"; replace "#G#" "#put#"; 
+    replace "#g#" "#get#"; replace "#x#" "#swap#"; replace "#m#" "#mark#"; 
+    replace "#M#" "#go#"; replace "#r#" "#read#"; replace "#R#" "#until#"; 
+    replace "#w#" "#while#"; replace "#W#" "#whilenot#"; replace "#n#" "#count#"; 
+    replace "#c#" "#chars#"; replace "#C#" "#nochars#"; replace "#l#" "#lines#"; 
+    replace "#L#" "#nolines#"; replace "#v#" "#unescape#"; 
+    replace "#z#" "#delim#"; 
+    replace "#S#" "#state#"; replace "#q#" "#quit#"; replace "#s#" "#write#"; 
+    replace "#o#" "#nop#"; replace "#rs#" "#restart#"; replace "#rp#" "#reparse#"; 
+
+    # remove leading/trailing #
+    clip; clop; put;
+
+    # dont want to use this syntax anymore because we already have
+    # lines and 'l' or chars and 'c'
+    "ll","cc" { 
+      clear;
+      add '* The syntax "'; get; add '" for lines or chars';
+      add "  is no longer valid.\n";
+      add "  use 'chars' or 'c' for a character count \n";
+      add "  use 'lines' or 'l' for a line count \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    "+","-" { 
+      clear;
+      add '* This syntax "'; get; add '" which were 1 letter abbreviations\n';
+      add "  are no longer valid because.\n";
+      add "  it is silly to have 1 letter abbrevs for 2 letter commands.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    # writefile is also a command? yes.
+    # commands parsed above
+    "a+","a-","zero","++","--",
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","webstate","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","echar","delim","quit","write","system","nop" {
+      clear; add "command*"; push; .reparse
+    }
+
+    # words not commands == was parsed above
+    "parse","reparse","restart","eof","EOF","==" {
+      put; clear; add "word*"; push; .reparse
+    }
+
+    "begin" { put; add "*"; push; .reparse }
+
+    # lower case and check for command with error
+    lower; 
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","webstate","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","echar","delim","quit", "write",
+    "zero","++","--","a+","a-","system","nop",
+    "begin","parse","reparse","restart" {
+      ++; put; --;
+      clear; 
+      add '* incorrect command "'; get; add '"\n'; 
+      add '- all nom commands and words are lower case \n';
+      add '  (except for EOF and abbreviations) \n';
+      add "- did you mean '"; ++; get; --; add "'?";
+
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    clear; add '* unknown word or command "'; get; add '"'; 
+    add "
+
+    - Valid nom commands are: 
+
+    add clip clop replace upper lower cap clear 
+    print state pop push unstack stack put get swap 
+    mark go read until while whilenot 
+    count zero chars lines nochars nolines 
+    escape unescape delim quit write (writefile ?) 
+    zero ++ -- a+ a- nop 
+    
+    - Valid nom words are 
+
+    parse reparse restart begin eof EOF == 
+
+    see www.nomlang.org/doc/commands/ \n";
+    
+    put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # single line comments
+  # no need to rethink
+  '#' {
+    (eof) { clear; .reparse }
+    read; 
+    # just delete empty comments
+    [#\n] { clear; .reparse }
+    # multiline comments this needs to go within '#'
+    "#*" {
+      # save the start line number for error messages
+      clear; 
+      add "line:"; lines; add " char:"; chars; put; clear; 
+      until "*#"; 
+      !E"*#" { 
+        clear; add '* unterminated multiline comment #*... \n  starting at '; 
+        get; put; clear; add "nom.error*"; push; .reparse
+      }
+      clip; clip; put; clear;
+      add "comment*"; push; .reparse 
+    }
+    clear; whilenot [\n]; put; 
+    clear; add "comment*"; push; .reparse
+  }
+
+  # quoted text 
+  # I will double quote all text and escape $ and \\ 
+  # double quotes are for strings and single for chars in perl?
+  '"' {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; 
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until '"'; 
+    !E'"',(eof) { 
+      clear; add '* unterminated quote (") or incomplete command starting at '; 
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later.
+    clip; 
+
+    # this trick 
+    unescape '"'; 
+    #escape '\\'; 
+
+    # I need to escape $ for variable names and @ for arrays in
+    # perl double quoted strings. I think that is all. This is a thorny
+    # issue because I want \n \t etc character substitution but not
+    # the rest.
+    escape "$"; escape "@"; 
+    escape '"'; put; 
+    clear; add '"'; get; add '"'; put; 
+    clear; add "quoted*"; push; .reparse 
+  }
+
+  # single quotes
+  "'" {
+    clear; 
+    # save start line/char of "'" for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "'"; 
+    !E"'",(eof) { 
+      clear; add '* unterminated quote (\') or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # empty quotes are checked later . must escape "\\" first 
+    clip; unescape "'"; 
+    # not sure about escaping this. It is causing problems with 2nd gen
+    unescape '"'; 
+    # escape '\\'; 
+
+    escape "$"; escape "@"; 
+    escape '"'; put; 
+
+    clear; add '"'; get; add '"'; put; 
+    clear; add "quoted*"; push; .reparse 
+  }
+
+  # classes like [:space:] or [abc] or [a-z] 
+  # these are used in tests and also in while/whilenot
+  # The *until* command will read past 'escaped' end characters eg \]
+  # 
+
+  "[" {
+    clear; 
+    # just leave brackets eg [:etc:]
+    # save start line/char of '[' for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "]"; 
+    !E"]",(eof) { 
+      clear; 
+      add '* unterminated class [...] or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clip; put; 
+    
+    B":".E":".!":".!"::" { 
+      clip; clop; put;
+      # no nom class abbreviations, Unicode categories already have many
+      # abbreviations, I will use those. I would like to accept any unicode
+      # script/block/category but can't unless I want to code them.
+
+      # these are ctype classes 
+
+      "alnum","alpha","ascii","word","blank",
+      "cntrl","digit","graph","lower","print",
+      "punct","space","upper","xdigit" {
+        # these will all be handled by the Machine.matchClass() method
+        # because it will all be changed by grapheme clusters and 
+        # by using unicode perl modules ?
+        clear; add "[:"; get; add ":]"; put; 
+        clear; add "class*"; push; .reparse 
+      }
+
+     # unicode category names, the first is an abbreviation of the 
+     # second. It would be good to allow all lower case etc.
+
+     # allow writing spaces or dots instead of _  This is ok because 
+     # unicode script names dont have spaces or dots in them.
+     replace " " "_"; replace "." "_"; 
+     "L","Letter","Ll","Lowercase_Letter","Lu","Uppercase_Letter",
+     "Lt","Titlecase_Letter","L&","Cased_Letter","Lm","Modifier_Letter",
+     "Lo","Other_Letter","M","Mark","Mn","Non_Spacing_Mark",
+     "Mc","Spacing_Combining_Mark","Me","Enclosing_Mark",
+     "Z","Separator","Zs","Space_Separator","Zl","Line_Separator",
+     "Zp","Paragraph_Separator","S","Symbol","Sm","Math_Symbol",
+     "Sc","Currency_Symbol","Sk","Modifier_Symbol","So","Other_Symbol",
+     "N","Number","Nd","Decimal_Digit_Number","Nl","Letter_Number",
+     "No","Other_Number","P","Punctuation","Pd","Dash_Punctuation",
+     "Ps","Open_Punctuation","Pe","Close_Punctuation","Pi","Initial_Punctuation",
+     "Pf","Final_Punctuation","Pc","Connector_Punctuation","Po",
+     "Other_Punctuation","C","Other","Cc","Control","Cf","Format",
+     "Co","Private_Use","Cs","Surrogate","Cn","Unassigned" {
+       add ":
+         This nom->perl translator does not currently support unicode character 
+         category names in nom classes. You could try the nom->dart
+         translator if you really need them:
+           www.nomlang.org/tr/nom.todart.pss \n";
+       put; clear; add "nom.error*"; push; .reparse
+     }
+
+      # unicode script names, 
+      "Common","Arabic","Armenian","Bengali","Bopomofo",
+      "Braille","Buhid","Canadian_Aboriginal","Cherokee",
+      "Cyrillic","Devanagari","Ethiopic","Georgian","Greek",
+      "Gujarati","Gurmukhi","Han","Hangul","Hanunoo",
+      "Hebrew","Hiragana","Inherited","Kannada","Katakana",
+      "Khmer","Lao","Latin","Limbu","Malayalam","Mongolian",
+      "Myanmar","Ogham","Oriya","Runic","Sinhala","Syriac",
+      "Tagalog","Tagbanwa","TaiLe","Tamil","Telugu","Thaana",
+      "Thai","Tibetan","Yi" {
+        add ":
+         This nom->perl translator does not currently support unicode script 
+         names in nom classes. You could try the nom->dart
+         translator if you really need them:
+           nomlang.org/tr/nom.todart.pss \n";
+        put; clear; add "nom.error*"; push; .reparse
+      }
+
+      # blocks
+
+      # unicode block names. not supported 
+      "InBasic_Latin","InLatin-1_Supplement","InLatin_Extended-A",
+      "InLatin_Extended-B","InIPA_Extensions","InSpacing_Modifier_Letters",
+      "InCombining_Diacritical_Marks","InGreek_and_Coptic","InCyrillic",
+      "InCyrillic_Supplementary","InArmenian","InHebrew","InArabic",
+      "InSyriac","InThaana","InDevanagari","InBengali","InGurmukhi",
+      "InGujarati","InOriya","InTamil","InTelugu","InKannada",
+      "InMalayalam","InSinhala","InThai","InLao","InTibetan","InMyanmar",
+      "InGeorgian","InHangul_Jamo","InEthiopic","InCherokee",
+      "InUnified_Canadian_Aboriginal_Syllabics","InOgham","InRunic",
+      "InTagalog","InHanunoo","InBuhid","InTagbanwa","InKhmer",
+      "InMongolian","InLimbu","InTai_Le","InKhmer_Symbols",
+      "InPhonetic_Extensions","InLatin_Extended_Additional",
+      "InGreek_Extended","InGeneral_Punctuation",
+      "InSuperscripts_and_Subscripts","InCurrency_Symbols",
+      "InCombining_Diacritical_Marks_for_Symbols","InLetterlike_Symbols",
+      "InNumber_Forms","InArrows","InMathematical_Operators",
+      "InMiscellaneous_Technical","InControl_Pictures",
+      "InOptical_Character_Recognition","InEnclosed_Alphanumerics",
+      "InBox_Drawing","InBlock_Elements","InGeometric_Shapes",
+      "InMiscellaneous_Symbols","InDingbats",
+      "InMiscellaneous_Mathematical_Symbols-A","InSupplemental_Arrows-A",
+      "InBraille_Patterns","InSupplemental_Arrows-B",
+      "InMiscellaneous_Mathematical_Symbols-B",
+      "InSupplemental_Mathematical_Operators",
+      "InMiscellaneous_Symbols_and_Arrows","InCJK_Radicals_Supplement",
+      "InKangxi_Radicals","InIdeographic_Description_Characters",
+      "InCJK_Symbols_and_Punctuation","InHiragana","InKatakana",
+      "InBopomofo","InHangul_Compatibility_Jamo","InKanbun",
+      "InBopomofo_Extended","InKatakana_Phonetic_Extensions",
+      "InEnclosed_CJK_Letters_and_Months","InCJK_Compatibility",
+      "InCJK_Unified_Ideographs_Extension_A","InYijing_Hexagram_Symbols",
+      "InCJK_Unified_Ideographs","InYi_Syllables","InYi_Radicals",
+      "InHangul_Syllables","InHigh_Surrogates",
+      "InHigh_Private_Use_Surrogates","InLow_Surrogates",
+      "InPrivate_Use_Area","InCJK_Compatibility_Ideographs",
+      "InAlphabetic_Presentation_Forms","InArabic_Presentation_Forms-A",
+      "InVariation_Selectors","InCombining_Half_Marks",
+      "InCJK_Compatibility_Forms","InSmall_Form_Variants",
+      "InArabic_Presentation_Forms-B","InHalfwidth_and_Fullwidth_Forms",
+      "InSpecials" {
+         add ":
+           This nom->perl translator does not currently support unicode block 
+           names in nom class patterns. ";
+         put; clear; add "nom.error*"; push; .reparse
+      }
+
+      clear; 
+      add "* Incorrect nom character class\n"; 
+      add ' 
+      Character classes are used in tests and the nom while 
+      and whilenot commands
+        eg: [:space:] { while [:space:]; clear; } 
+        or: [:alnum:] { while [:alnum:]; clear; } \n';
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # not using regexes for matching classes in this translator
+    # ] should already be escaped in the nom class
+    # this is a normal escape so as not to break the '...'
+    escape '"'; unescape ']'; put;
+    clear; add "["; get; add "]"; put;
+    clear; add "class*"; push; .reparse
+  }
+
+  !"" {
+    put; clear; 
+    add "* strange character found '"; get; add "'\n\n"; 
+    add "  see www.nomlang.org/doc/syntax for nom syntax documentation \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+ parse>
+  # watch the parse-stack resolve.  
+  # add "--> line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+   
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allow implementing a help system
+  that can be triggered by an empty document or by help keywords
+ *#
+ "nom.error*" {
+   clear; 
+   add "--nom.toperl.pss-- (translate nom script to perl)\n";
+   add "near line:"; lines; add " char:"; chars; add "\n";
+   get; 
+   add "\n try: /help for more information";
+   add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+   add " syntax checking. See www.nomlang.org/doc for comprehensive \n";
+   add " pep and nom documentation. \n";
+
+   # indent the error message 
+   replace "\n" "\n  "; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   quit;
+ }
+
+ # this error is when the error should have been trapped earlier
+ "nom.untrapped.error*" {
+   clear; 
+   add "! Nom untrapped error! :";
+   add " near line:"; lines; add " char:"; chars; add "\n";
+   get; 
+   add "\n run /eg/nom.syntax.reference.pss for more detailed \n"; 
+   add " syntax checking. \n";
+   print; quit;
+ }
+
+ #*
+  Using a help* token to allow the script to document itself.
+  The swap commands below are used to save the help text in the tape
+  cell so that several or all help topics can be printed at once.
+ *#
+
+ "nom.help*" {
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help" {
+     swap; add "
+   USAGE
+     pep -f nom.toperl.pss machine.txt 
+     pep -f nom.toperl.pss -i ' '
+
+     A nom script to format a pep machine description into an 
+     html diagram.
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All documents/input which begin with '/' are considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f nom.toperl.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f nom.toperl.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f nom.toperl.pss -i /help
+       see the entire help.
+
+     pep -f nom.toperl.pss -i /toperl | bash
+       translate this script to perl 
+       
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+     - /flaws: known limitations with how this script works 
+   ### About the input format 
+     - /format: show summary information about the input pep machine 
+         text format.
+   ### About testing this translation script
+     - /check <script> check the given nom script for syntax errors
+        and give helpful error message. todo
+     - /eg: an example script for testing
+     - /eg.lines: prints a set of example one-line nom scripts for testing 
+     - /eg.bad.lines: a set of nom one liners with syntax errors
+     - /test.line: translates a one-line nom script to perl
+     - /test.line.showparse: translates to perl but only shows the parse 
+        method (which is where the translated script is) .
+     - /test.bad.line: tests one random one-line invalid input.
+     - /test: test the nom to perl translation script 
+        and open result in a browser. 
+     - /to<lang>: translate this script to some other language
+         using the nom translation scripts at www.nomlang.org/tr/ 
+          ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+          (eg: /toperl /tolua etc). Or latex/pdf/html 
+
+     The 'test' and 'to' words need to be piped to bash to actually 
+     execute.
+
+     Also see the /test.line help word for testing translated scripts
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /syntax: all information about valid nom syntax
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (Not) frequently asked questions about /eg/nom.toperl.pss
+   
+     Q: What is the purpose of this script?
+     A: To translate a nom script (see www.nomlang.org ) into a stand-alone
+        perl script.
+
+     Q: What else can it do?
+     A: Quite alot actually. It can, or will, test itself, translate itself,
+        interpret itself (after it has translated itself) and document itself.
+
+     Q: That sounds very confusing. Why would a translation script want to 
+        translate itself?
+     A: It means that the script will translate a nom script into perl, or 
+        translate itself into perl, and once it has done that it can also
+        interpret any nom script using its interpret() method and the eval()
+        perl function. Basically it runs the parse() method to create a new 
+        parse() method, then renames the new parse() method to runScript() and
+        then adds that new method to the existing pep machine class with 
+        the eval() function, and then calls that new method.
+
+     Q: Thats even more confusing. So what is the point?
+     A: It creates a new interpreter for nom language in perl.
+
+     Q: I still dont get it. Does this script have any bugs it in?
+     A: Possibly ... probably ... 
+
+     Q: Isn't perl an obsolete language now?
+     A: Maybe, but this translation script can be used as a model for the 
+        translation of nom into any scripting language that can execute 
+        a string as code.
+
+     Q: Can I use a nom script on a web-server from within my own perl code?
+     A: Yes, because all the parsing and translating code is within a 
+        parse() method in the generated perl code, so you could import the 
+        package into your own script and then call the parse() method.
+
+     Q: But the only language anyone uses in Javascript. Can I translate a 
+        nom script to java script?
+     A: Yes, using the /eg/translate.js.pss script but this translation script
+        I wrote a few years ago and its not as good as the nom.to<lang>.pss 
+        scripts.
+
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in the 'nom' language which is a 
+       manifestation of the pep{nom} parsing system.
+
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   "eg" {
+     swap; add '
+      while [:space:]; clear;
+      whilenot [:space:]; add "\n"; print;
+      clear;
+      (eof) { zero; quit; }
+     '; 
+     replace "\n      " "\n"; swap;
+   }
+
+   # This help word is standard so that a script like 
+   # /eg/nom.to.pss can call it and test any script, or the script can
+   # test itself.
+   "eg.lines" {
+     swap; add '
+       # the simplest  
+       read; print; clear;
+       # every word on a separate line
+       while [:space:]; clear; whilenot [:space:]; add "\\n"; print;
+       # simple test and block
+       read; "x" { print; } print; clear;
+     '; 
+     replace "\n       " "\n";
+     swap;
+   }
+
+   # one line nom scripts with syntax errors. These can be used to test
+   # the usefulness of the error messages. But detailed syntax error 
+   # checking is probably better done in a separate script such as 
+   # /eg/nom.syntax.reference.pss
+   "eg.bad.lines" {
+     swap; add "
+       # missing semi-colon 
+       read print;
+       # missing close brace
+       'x' { print;
+       # bad case of command
+       read; Print; clear;
+       #  
+     ";
+     swap;
+   }
+
+   "test.line" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) NOM SCRIPT
+       doc=$(pep -f nom.toperl.pss -i /eg.lines | \\
+         sed '/^ *#/d;/^ *$/d;/^</d;' | shuf -n 1) 
+       echo \"# input: $doc\"
+       pep -f nom.toperl.pss -i \"$doc\" 
+       echo \"# input: $doc\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f nom.toperl.pss -i /test.line  | bash
+       ";
+     replace "\n     " "\n";
+     system; print; quit;
+   }
+
+   # translates a one-line script to perl but only shows the parse
+   # method.
+   "test.line.showparse" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) NOM SCRIPT
+       pep -f nom.toperl.pss -i /test.line | sed -n '/sub parse {/,/# sub parse/p;' 
+       ";
+     # print; quit;
+     system; print; quit;
+   }
+
+   # tests one one-line invalid input with this script
+   "test.bad.line" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) INPUT
+       doc=$(pep -f nom.toperl.pss -i /eg.bad.lines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"test-line: $doc\"
+       pep -f nom.toperl.pss -i \"$doc\" 
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f nom.toperl.pss -i /test.bad.line | sed 's/^</#</' | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # tests 
+   "test" {
+     swap; add "
+       # TESTING INPUT from /eg 
+       # echo \"<em>input: $doc</em>\"
+       pep -f nom.toperl.pss -i /eg
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f nom.toperl.pss -i /test | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+   # using /eg/nom.to.pss script which does translation but translating
+   # a translation script into another language doesn't seem very 
+   # practically useful.
+   B"to" {
+     clop; clop; put; clear;
+
+     add '
+      translator=${PEPNOM}/eg/nom.to.pss
+      if [ -f $translator ]; then
+        echo -e "[ok] Found translator script: $translator"
+      else
+        echo -e "
+         [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+         (maybe) set the $PEPNOM environment var
+         (or)    download the translator from www.nomlang.org/eg/ 
+         ";
+        exit 1;
+      fi
+      pep -f $translator -i "translate nom.toperl.pss to '; get; add '" | bash
+      # RUN THIS WITH:  
+      #   pep -f nom.toperl.pss -i /to'; get; add ' sed "s/^</#</" | bash
+      ';
+      replace "\n    " "\n";
+      print;
+      quit;
+   }
+
+   B"flaw",B"fault","help" {
+     swap; add "
+    NOM TO PERL TRANSLATION SCRIPT FLAWS (Sept 2025): 
+      
+      - I haven't tested this much.
+      - The /eg/palindrome.pss script doesn't translate properly. Possibly
+        because of variable interpolation in perl print() commands.
+      - The /eg/maths.tolatex.pss script does not translate. Probably 
+        newline and quote translation issues.
+
+     ";
+     swap;
+   }
+
+   #* 
+     What follows is a very incomplete syntax reference. And I think that 
+     it would be much better to put this into /eg/nom.syntax.reference.pss
+     or even into /compile.pss Otherwise I will have to cut and paste this 
+     into every translation script which seems silly.
+   *#
+
+   # a short list of commands and abbreviations 
+   "commands.shortlist","commands","syntax","help" {
+     swap; add "
+     # 'D' doesn't actually work in compile.pss !
+     nom abbreviations and commands: 
+
+       zero k clip K clop D replace d clear t print p pop P push u unstack U
+       stack G put g get x swap m mark M go r read R until w while W whilenot n
+       count c zero chars C nochars l lines L nolines v escape unescape z delim
+       S state q quit s write X system o nop .rs .restart .rp .reparse (no
+       abbreviations) a+ a- ++ --
+         ";
+     swap;
+   }
+
+   # specific help for the add command. But this sort of detailed 
+   # syntax help should probably be elsewhere and called from here
+   # (maybe with the system command).
+   "command.add","commands","syntax","help" {
+     swap; add "
+     add command:
+       add text to end of the workspace buffer
+       see: nomlang.org/doc/commands/nom.add.html
+     eg:
+       add ':tag:';     # correct
+       add [:space:];   # incorrect, cannot have class parameter 
+       add;             # incorrect, missing parameter
+         ";
+   }
+
+   #  
+   "semicolon","punctuation","all" {
+     swap; add "
+      semicolon:
+        All statements (commands) must end with a semi-colon 
+        except .reparse and .restart (even the last command in
+        the block)
+      eg:
+        clear; .reparse       # correct
+        clear add '.';        # incorrect, clear needs ; 
+        ";
+     swap;
+   }
+
+   # 'brackets' is topic, 'punctuation' is a category, 'help' is everthing 
+   "brackets","punctuation","syntax","help" {
+     swap; add "
+     brackets () 
+       are used for tests like (eof) (EOF) (==) 
+       currently (2025) brackets are not used for logical grouping in 
+       tests.
+     examples:
+        (==)                  # correct
+        (==,'abc' { nop; }    # incorrect: unbalanced ";
+   }
+
+   "negation","punctuation","syntax","help" {
+     swap; add "
+     negation operator ! 
+       is used for negating class and equals tests and with the 
+       B and E modifiers. It should precede the test and the 
+       B and E modifiers.
+
+     examples:
+        !(eof) { add '.'; }   # correct, not at end-of-file
+        ![:space:] { clear; } # correct 
+        'abc'! { clear; }     # incorrect: ! must precede test.
+        B!'abc' { clear; }    # incorrect: ! must precede 'B'  ";
+     swap;
+   }
+
+   # 
+   "modifiers","blocks","tests","syntax","all" {
+     swap; add "
+     begins-with 'B' and ends-with 'E' modifiers:
+       are used with quoted text tests and cannot be used with 
+       class tests.
+     eg: 
+       B'abc' { clear; }        # correct 
+       E\"abc\" { clear; }      # correct 
+       B[:alpha:] { clear; }  # incorrect  ";
+     swap;
+   }
+
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f nom.toperl.pss -i /words \n";
+     add "      to see valid help keywords \n";
+     add "  or: pep -f nom.toperl.pss -i /help \n";
+     add "      to see entire help text. \n";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ # end of the error and help system.
+ # -------------------
+
+ #----------------
+ # 2 parse token errors
+
+  #*
+  possible tokens: 
+  literal* BE!<>{}(),.;
+  quoted* class* word* command* test*
+  ortest* andtest* statement* statementset* 
+  *#
+
+  # none of these literal tokens can start a sequence because
+  # they should have already reduced to a subpattern (token)
+  pop;
+
+  "B*class*","E*class*" {
+    clear; 
+
+    clear; add "modifiers"; put; 
+    clear; add "nom.help*"; push;
+    add "  B or E modifier before class test."; put; 
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # general token sequence errors
+
+  # literal token error sequences.
+
+  B"}*",B";*",B">*",B")*" {
+    clear; add "* misplaced } or ; or > or ) character?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  B"B*",B"E*" {
+    E"!*" {
+      clear; add "negation"; put; 
+      clear; add "nom.help*"; push;
+      add "* The negation operator (!) must precede the  \n"; 
+      add "  begins-with (B) or ends-with (E) modifiers \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  B"B*".!"B*".!E"quoted*" {
+    clear; 
+    add "* misplaced begin-test modifier 'B' ?"; 
+    add "  eg: B'##' { d; add 'heading*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  B"E*".!"E*".!E"quoted*" {
+    clear; 
+    add "* misplaced end-test modifier 'E' ?"; 
+    add "  eg: E'.' { d; add 'phrase*'; push; .reparse } "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # empty quote after B or E
+  B"E*".E"quoted*" {
+    clear; ++; get; --;
+    '""' {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'E' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "E*quoted*"; 
+  }
+
+  B"B*".E"quoted*" {
+    clear; ++; get; --;
+    '""' {
+      clear; add "modifiers"; put; 
+      clear; add "nom.help*"; push;
+      add "  Empty quote after 'B' modifier "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "B*quoted*"; 
+  }
+  
+  B"!*".!"!*".!E"(*".!E"<*".!E"B*".!E"E*".!E"quoted*".!E"class*".!E"test*" {
+    clear; 
+    add "* misplaced negation operator (!) ?"; 
+    add "  e.g. \n";
+    add "   !B'$#@' { clear; }   # correct \n"; 
+    add '   !"xyz" { clear; }   # correct \n'; 
+    add '   "abc"! { clear; }   # incorrect \n'; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # comma sequence errors, 2 tokens
+  # error eg: ,,
+  B",*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*" {
+    clear; add "* misplaced comma ?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: . {
+  B".*".!E"(*".!E"<*".!E"!*".!E"B*".!E"E*".
+  !E"quoted*".!E"class*".!E"test*".!E"word*" {
+    clear; add "* misplaced dot?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: {}
+  B"{*".E"}*" {
+    clear; add "* empty block {} "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+  
+  # error eg: { ,
+  B"{*".!"{*" {
+    E">*",E",*",E")*",E"{*",E"}*",E";*" {
+      clear; add "* misplaced character '"; ++; get; --; add "' ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+  
+  # try to diagnose missing close brace errors at end of script
+  # eg ortest*{*statement*
+  # we probably need a line/char number in the tape cell
+  (eof) {
+    "{*statement*","{*statementset*" {
+      clear; 
+      add "* missing close brace (}) ?\n"; 
+      add "  At "; get; add " there is an opening brace ({) which does \n"; 
+      add "  not seem to be matched with a closing brace ";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # missing dot
+  # error eg: clear; reparse 
+  !B".*".E"word*".!"word*" {
+    push; push; --; get; ++; 
+    "reparse","restart" {
+      clear; add "* missing dot before reparse/restart ? "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; pop; pop;
+  }
+
+  # error eg: ( add
+  # currently brackets are only used for tests
+  B"(*".!"(*".!E"word*" {
+    clear; add "* strange syntax after '(' "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "<*;*" {
+    clear; 
+    add "* '<' used to be an abbreviation for '--' \n"; 
+    add "* but no-longer (mar 2025) since it clashes with <eof> etc "; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: < add
+  # currently angle brackets are only used for tests ( <eof> <==> ) 
+  B"<*".!"<*".!E"word*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  ">*;*" {
+    clear; 
+    add "* '>' used to be an abbreviation for '++' \n"; 
+    add "  but no-longer (mar 2025) since it clashes with <eof> etc \n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: begin add
+  B"begin*".!"begin*".!E"{*" {
+    clear; 
+    add "* begin is always followed by a brace.\n"; 
+    add "   eg: begin { delim '/'; }\n"; 
+    put; clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear; begin { clear; }
+  E"begin*".!"begin*".!B"comment*" {
+    clear; add "* only comments can precede a begin block."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*}*" {
+    clear; add "* missing semicolon? "; 
+    add "
+     In nom all commands except .reparse and .restart 
+     must be terminated with a semicolon, even the last 
+     command in a block {...} 
+
+     see www.nomlang.org/doc/syntax/ for details \n";
+    put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: clear {
+  B"command*".!"command*".!E";*".!E"quoted*".!E"class*" {
+    clear; add "* bad command syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # specific analysis of the token sequences permitted above
+  "command*class*" {
+    clear; get; 
+    !"while".!"whilenot" {
+      clear; 
+      add "* command '"; get; add "' does not take class argument.\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html "; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*class*";
+  }
+
+  "command*quoted*" {
+    clear; get; 
+    !"add".!"replace".!"mark".!"go".!"until".
+    !"delim".!"escape".!"unescape".!"echar" {
+      clear; 
+      add "* command '"; get; add "' does not take quoted argument.\n\n"; 
+      add "  see www.nomlang/doc/commands/nom."; get; add ".html ";
+      add "  for details.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    # for the delimiter and the escape char only allow one 'character'
+    # (ie unicode code-point) not a unicode grapheme cluster, which
+    # could be several 'characters'. This is because it is unnecessary and
+    # I doubt that any language is going to use a grapheme cluster as
+    # an escape character.
+    "delim","echar" {
+      clear; ++; get; --; 
+      clip;clop;clip;
+      !"" {
+        clear; add "* multiple char argument to 'delim' or 'echar'. "; put;
+        clear; add "nom.error*"; push; .reparse
+      }
+    }
+    # check that not empty argument.
+    clear; ++; get; --;
+    '""' {
+      clear; 
+      add "* empty quoted text ('' or \"\") is an error here.\n\n"; 
+      add "  - The 2nd argument to 'replace' can be an empty quote\n";
+      add "    eg: replace 'abc' ''; # replace 'abc' with nothing \n";
+      add "  - Also, empty quotes can be used in tests \n";
+      add "    eg: '' { add 'xyz'; } !'' { clear; } \n";
+      put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*";
+  }
+
+  "command*;*" {
+    clear; get; 
+    "add","replace","while","whilenot","delim","escape","unescape","echar" {
+      clear; 
+      add "* command '"; get; add "' requires argument."; 
+      add "- eg: add 'abc'; while [:alnum:]; escape ']'; "; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  # end-of-script 2 token command errors.
+  (eof) {
+    E"command*" {
+      clear; 
+      add "* unterminated command '"; get; add "' at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    "command*quoted*","command*class*" {
+        clear; 
+        add "* unterminated command '"; get; add "' at end of script"; 
+        put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: "xx" }
+  B"quoted*".!"quoted*".!E"{*".!E"quoted*".!E";*".!E",*".!E".*" {
+    clear; 
+    add " dubious syntax (eg: missing semicolon ';') after quoted text."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: [:space:] }
+  B"class*".!"class*".!E"{*".!E";*".!E",*".!E".*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after class? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # A word is not a command. reparse and restart have already reduced.
+  # error eg: eof (
+  B"word*".!"word*".!E")*".!E">*" {
+    clear; add "* bad syntax after word."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: E"abc";
+  B"test*".!"test*".!E",*".!E".*".!E"{*" {
+    clear; add "* bad test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx","yy"."zz"
+  B"ortest*".!"ortest*".E".*" {
+    clear; add "* AND '.' operator in OR test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa" "abc";
+  "ortest*quoted*","ortest*test*" {
+    clear; add "* missing comma in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa",E"abc";
+  B"ortest*".!"ortest*".!E",*".!E"{*" {
+    clear; add "* bad OR test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error "xx"."yy","zz"
+  B"andtest*".!"andtest*".E",*" {
+    clear; add "* OR ',' operator in AND test."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  "andtest*quoted*","andtest*test*" {
+    clear; add "* missing dot in test?"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "aa".E"abc";
+  B"andtest*".!"andtest*".!E".*".!E"{*" {
+    clear; add "* bad AND test syntax."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # end-of-script 2 token test errors.
+  (eof) {
+    E"test*",B"test*",E"ortest*",B"ortest*",E"andtest*",B"andtest*" {
+      clear; 
+      add "* test with no block {} at end of script"; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: add 'x'; { 
+  B"statement*".!"statement*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # error eg: clear;add 'x'; { 
+  B"statementset*".!"statementset*" {
+    E",*",E"{*" {
+      clear; add "* misplaced dot/comma/brace ?"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # specific command errors
+
+  # until, mark, go etc have no-parameter versions
+  "command*;*" {
+    clear; get;
+    "add","replace","while","whilenot","delim","escape","unescape","echar" {
+      clear; add "* command '"; get; add "' requires argument"; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*;*";
+  }
+
+  #----------------
+  # 3 parse token errors, 
+  pop;
+
+  # missing semicolon errors?
+  # error eg: [:space:] { whilenot [:space:] }
+  B"command*class*".!"command*class*".!E";*" {
+    clear; add "semicolon"; put; 
+    clear; add "nom.help*"; push;
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # missing semicolon errors
+  # error eg: [:space:] { until "</em>" }
+  B"command*quoted*".!"command*quoted*".!E";*".!E"quoted*" {
+    clear; add "* missing semi-colon after statement? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: "cd" "ef" {
+  B"quoted*quoted*".!E";*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # error eg: , "cd" "ef"
+  E"quoted*quoted*".!B"command*" {
+    clear; add "* missing comma or dot in test? "; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "command*quoted*quoted*" {
+    clear; get; 
+    !"replace" {
+      clear; 
+      add "* command '"; get; add "' does not take 2 quoted arguments.\n"; 
+      add "- The only nom command with 2 quoted arguments is 'replace'."; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*";
+  }
+
+  # error eg: clear "x"; already checked above.
+  # "command*quoted*;*" {}
+
+  # error eg: add [:space:] already checked above in 2 tokens
+  # "command*class*;*" {}
+
+  #----------------
+  # 4 parse token errors
+  pop;
+  "command*quoted*quoted*;*" {
+    clear; get;
+    !"replace" {
+      clear; add "* command '"; get; add "' does not take 2 arguments."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    # check that not 1st argument is empty
+    clear; ++; get; --;
+    '""' {
+      clear; add "* empty quoted text '' is an error here."; put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "command*quoted*quoted*;*";
+  }
+
+  push;push;push;push;
+  # end of errors
+  # ----------------
+
+  # ----------------
+  # 2 grammar parse tokens 
+  pop;pop;
+  
+  # permit comments anywhere in script
+  #
+  B"comment*".!"comment*" {
+    # A translator would try to conserve the comment.
+    replace "comment*" ""; push; 
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  E"comment*".!"comment*" {
+    replace "comment*" ""; push; .reparse
+  }
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; add "next SCRIPT;"; put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    "reparse" {
+      clear; 
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      count; 
+      # if the count is not 0/1 then something is wrong. Probably
+      # > 1 parse> label which should have already been trapped.
+      !"0".!"1" {
+        clear; add "* multiple parse label error?"; put;
+        clear; add "nom.untrapped.error*"; push; .reparse
+      }
+      "0" { clear; add "last LEX;"; }
+      "1" { clear; add "next PARSE;"; }
+      # for languages that have goto we can use the following
+      # add "goto parse;";
+      put; 
+      clear; add "statement*"; push; .reparse 
+    }
+    clear; add "* invalid statement ."; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  "word*>*" {
+    clear; get; 
+    "parse" { 
+      clear; count;
+      !"0" {
+        clear; 
+        add "script error:\n";
+        add "  extra parse> label at line "; lines; add ".\n";
+        print;
+        quit;
+      }
+      clear; add "# parse>"; put;
+      clear; add "parselabel*"; push;
+      # use accumulator to indicate after parse> label
+      a+; .reparse 
+    }
+    clear; add "word*>*";
+  }
+
+  #-----------------------------------------
+  # format: E"text" {...} or E'text' {...}
+  # the ends-with test. The \Q...\E construct quotes all 'meta'
+  # pattern characters so they will be matched literally. I wonder 
+  # if this is slower than the substr approach
+  "E*quoted*" {
+    # remove quotes around text and unescape escaped chars 
+    clear; 
+    ++;
+    add "(length("; get; add ") <= length($self->{work})) && ";
+    add "(substr($self->{work}, -length("; get; add ")) eq "; get; add ")"; 
+    --; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #*
+    This is perl code to do an 'ends with' test using substr which
+    may be faster than a regex.
+    # If the suffix is longer than the string, it can't be a suffix.
+    return 0 if length($suffix) > $length($string);
+    return substr($string, -$length($suffix)) eq $suffix;
+  *#
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #  The begins-with test. I use a substring equals approach in perl
+  #  for speed and to avoid regular expression meta-quoted issues.
+  #  I dont think it is necessary to bracket this expression?
+  "B*quoted*" {
+    clear; add "substr($self->{work}, 0, length("; ++; get; add ")) eq "; 
+    get; --; put;
+    clear; add "test*"; push; .reparse
+  } 
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the output code
+  # but comments in some places are an error.
+  "comment*statement*","statement*comment*","statementset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  "!*test*" {
+    clear; add "!("; ++; get; --; add ")"; put; 
+    clear; add "test*"; push; .reparse
+  }
+
+  # transform quotes and classses to tests, this greatly reduces the number
+  # of rules required for other reductions
+  ",*quoted*",".*quoted*","!*quoted*" { 
+    push; clear; add "$self->{work} eq "; get; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  # transform quotes to tests
+  "quoted*,*","quoted*.*","quoted*{*" { 
+    replace "quoted*" "test*"; push; push; 
+    --; --; add "$self->{work} eq "; get; put;
+    ++; ++; clear; .reparse
+  }
+
+  # transform classes to tests, all characters in the workspace need
+  # to match the (unicode) class, category or unicode script name for the 
+  # class test to return true. Empty workspace never matches.
+  ",*class*",".*class*","!*class*" { 
+    push; clear; 
+    add '$self->matchClass($self->{work}, "'; get; add '")';
+    put; clear; add "test*"; push; .reparse
+  }
+
+  # transform classes to tests
+  "class*,*","class*.*","class*{*" { 
+    replace "class*" "test*"; push; push; 
+    --; --; 
+    add '$self->matchClass($self->{work}, "'; get; add '")';
+    put; 
+    ++; ++; clear; .reparse
+  }
+
+  #--------------------------------------------
+  # ebnf: command := command ';' ;
+  # formats: "pop; push; clear; print; " etc
+  "command*;*" {
+     clear; get;
+
+     # error trap here .
+     !"go".!"mark".!"until".!"clip".!"clop".!"clear".!"upper".!"lower".
+     !"cap".!"print".!"pop".!"push".!"unstack".!"stack".
+     !"webstate".!"state".!"put".!"get".
+     !"swap".!"++".!"--".!"read".!"count".!"a+".!"a-".!"zero".!"chars".
+     !"lines".!"nochars".!"nolines".!"quit".!"write".!"system".!"nop" {
+       clear; add "  incorrect command syntax?"; put;
+       clear; add "nom.untrapped.error*"; push; .reparse
+     }
+
+     # go to mark in the current tape cell 
+     "go" { 
+       clear;
+       add "$self->goToMark($self->{tape}[$self->{cell}]);  # go (tape) ";
+     }
+     "mark" { 
+       clear;
+       add "$mark = $self->{tape}[$self->{cell}];\n";
+       add "$self->addMark($mark);  # mark (tape) ";
+     }
+
+     # the new until; command with no argument
+     "until" { 
+       clear;
+       add "$text = $self->{tape}[$self->{cell}];\n";
+       add "$self->readUntil($text); # until (tape)"; 
+     }
+
+     "clip" { 
+       # use chop for code points not grapheme clusters
+       clear; add "$self->{work} =~ s/\\X$//; # clip";
+     }
+     "clop" { 
+       # use Unicode:GCString; is one option for perl grapheme clusters
+       # but \\X should work.
+       clear; add "$self->{work} =~ s/^\\X//; # clop";
+     }
+     "clear" { 
+       clear; add "$self->{work} = '';  # clear ";
+     }
+     "upper" { 
+       # grapheme clusters?
+       clear; add "$self->{work} = uc($self->{work});  # upper"; 
+     }
+     "lower" { 
+       clear; add "$self->{work} = lc($self->{work});  # lower";
+     }
+     "cap" { 
+       clear; 
+       # capitalize every word not just the first.
+       # other translators and pep just capitalise the first letter
+       # but thats silly. This command "cap" is not really required.
+       add "$self->capitalise(); # cap "; 
+     }
+     "print" { 
+       clear; 
+       # write to stdout/file/string
+       add "$self->writeText(); # print  ";
+     }
+     "pop" { clear; add "$self->popToken();"; }
+     "push" { clear; add "$self->pushToken();"; }
+     "unstack" { clear; add "while ($self->popToken()) { next; }   # unstack "; }
+     "stack" { clear; add "while ($self->pushToken()) { next; }   # stack "; }
+     "state" { clear; add "$self->printState();    # state "; }
+     "webstate" { clear; add "$self->printHtmlState();    # webstate "; }
+     "put" { 
+       clear; 
+       add "${$self->{tape}}[$self->{cell}] = $self->{work};   # put "; 
+     }
+     "get" { 
+       clear; 
+       add "$self->{work} .= $self->{tape}[$self->{cell}];  # get";
+       # add "$self->{work} .= ${$self->{tape}}[$self->{cell}];  # get";
+     }
+     "swap" { 
+       clear; 
+       add "($self->{tape}[$self->{cell}], $self->{work}) = ";
+       add "($self->{work}, $self->{tape}[$self->{cell}]);  # swap";
+     }
+     # need a method because we may need to increase the tape size.
+     "++" { clear; add "$self->increment();   # ++ "; }
+     "--" { 
+       clear; add "if ($self->{cell} > 0) { $self->{cell} -= 1; } # --"; 
+     }
+     "read" { 
+       clear; 
+       # it is better to break out of the nom script loop than exit() or 
+       # return because we may need to close open files or flush written
+       # file content.
+       add "if ($self->{eof}) { last SCRIPT; } $self->readChar(); # read ";
+     }
+     "count" { 
+       clear; 
+       add "$self->{work} .= $self->{accumulator}; # count "; 
+     }
+     "a+" { clear; add "$self->{accumulator} += 1; # a+ "; }
+     "a-" { clear; add "$self->{accumulator} -= 1; # a- "; }
+     "zero" { clear; add "$self->{accumulator} = 0; # zero "; }
+     "chars" { 
+       clear; add "$self->{work} .= $self->{charsRead}; # chars "; 
+     }
+     "lines" { 
+       clear; add "$self->{work} .= $self->{linesRead}; # lines "; 
+     }
+     "nochars" { clear; add "$self->{charsRead} = 0; # nochars "; }
+     "nolines" { clear; add "$self->{linesRead} = 0; # nolines "; }
+     # use a labelled loop to quit script.
+     # better to break than return because can close open files etc.
+     "quit" { clear; add "last SCRIPT; # quit "; }
+     "write" { 
+       clear; add "open my $fh, '>:utf8', 'sav.pp';\n";
+       add "print $fh $self->{work}; close $fh; # write";
+     }
+     "system" { 
+       clear;
+       add "# system\n";
+       add "$result = `$self->{work}`;\n";
+       add "$self->{work} = $result;";
+     }
+     # just eliminate since it does nothing.
+     "nop" { clear; add "# removed nop: does nothing "; }
+
+     put; clear; add "statement*";
+     push; .reparse
+   }
+
+  "statementset*statement*","statement*statement*" {
+    clear; get; add "\n"; ++; get; --; put;
+    clear; add "statementset*"; push; .reparse
+  }
+
+  # ----------------
+  # 3 grammar parse tokens 
+  pop;
+  "(*word*)*","<*word*>*" {
+    clear; ++; get; --;
+
+    !"eof".!"==" {
+      clear; add "* invalid test <> or () ."; put;
+      clear; add "nom.untrapped.error*"; push; .reparse
+    }
+    "eof" { 
+      clear; add "$self->{eof}";
+    }
+    "==" { 
+      clear; add "$self->{tape}[$self->{cell}] eq $self->{work}";
+    }
+    put; clear; add "test*"; push; .reparse 
+  }
+
+  #--------------------------------------------
+  # quoted text is already double quoted eg "abc" 
+  # eg: add "text";
+  "command*quoted*;*" {
+    clear; get;
+    # error trap here 
+    !"mark".!"go".!"delim".!"add".!"until".
+    !"escape".!"unescape".!"echar" {
+      clear; 
+      add "  superfluous argument or other error?\n"; 
+      add "  (error should have been trapped in error block: check)"; 
+      put; clear; add "nom.untrapped.error*"; push; .reparse
+    }
+
+    "mark" {
+      clear; add '$self->addMark('; ++; get; --; add '); # mark ';
+    }
+    "go" {
+      clear; add '$self->goToMark('; ++; get; --; add '); # go ';
+    }
+
+    "delim" {
+      # perl has a char type?, but it is for 'code points' not 
+      # grapheme clusters (diacritics etc). So technically the 'delim'
+      # char could be a string of several chars but in practice this 
+      # is not necessary.
+      # have already verified one char in error block 
+      clear; add "$self->{delimiter} = "; ++; get; --; add "; # delim ";
+    }
+
+    "add" {
+      clear; add '$self->{work} .= '; ++; get; --; 
+      # handle multiline text
+      # it is possible to just use multiline strings in some languages
+      # but they will be indented by the translator, so they will have 
+      # handle multiline text check this! \\n or \n
+      # more indentation than the script writer intended...
+
+      # this is more readable than just adding 
+      replace "\n" '";\n$self->{work} .= "\\n';
+      add '; # add ';
+    }
+
+   
+    # read until workspace ends with text
+    "until" {
+       clear; add '$self->readUntil('; ++; get; --; 
+       # handle multiline argument
+       replace "\n" "\\n"; add ');'; 
+     }
+
+    "escape","unescape" {
+       # only use the first char or grapheme cluster of escape argument?
+       # cant use single quotes because they are not interpolated
+       # an chars like $ and @ are escaped in perl
+       clear; add "$self->"; get; add "Char"; 
+       add "("; ++; get; --; add ");"; 
+     }
+
+     # can only be a unicode codepoint not grapheme cluster because 
+     # I say so.
+     "echar" {
+       # 
+       clear; add "$self->{escape} = "; ++; get; --; add "; # echar ";
+     }
+
+     put; clear; add "statement*"; push; .reparse
+   }
+
+  # eg: while [:alpha:]; or whilenot [a-z];
+  "command*class*;*" {
+    clear; get;
+
+    # 
+    "while" {
+      clear;
+      add "# while \n";
+      add 'while ($self->matchClass($self->{peep}, "'; ++; get; --; 
+      add '")) {\n';
+      add "  if ($self->{eof}) { last; } $self->readChar();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+
+    "whilenot" {
+      clear;
+      add "# whilenot   \n";
+      add 'while (!$self->matchClass($self->{peep}, "'; ++; get; --; 
+      add '")) {\n';
+      add "  if ($self->{eof}) { last; } $self->readChar();\n}"; 
+      put; clear; add "statement*"; push; .reparse
+    }
+    clear; add "*** unchecked error in rule: statement = command class ;"; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  # brackets around tests will be ignored.
+  "(*test*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # brackets will allow mixing AND and OR logic 
+  "(*ortest*)*","(*andtest*)*" {
+    clear; ++; get; --; put; clear;
+    add "test*"; push; .reparse
+  }
+
+  # -------------
+  # parses and compiles concatenated tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+  "test*,*test*","ortest*,*test*" {
+    # OR logic concatenation 
+    # put brackets around tests even though operator 
+    # precedence should take care of it
+    "test*,*test*" {
+      clear; add "("; get; add ")";
+    }
+    "ortest*,*test*" { clear; get; } 
+    add " || ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "ortest*"; push; .reparse
+  }
+
+  # -------------
+  # AND logic 
+  # parses and compiles concatenated AND tests
+  # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+  # negated tests can be chained with non negated tests.
+  # eg: B'http'.!E'.txt' { ... }
+  "test*.*test*","andtest*.*test*" {
+    # AND logic concatenation 
+    # add brackets 
+    "test*.*test*" {
+      clear; add "("; get; add ")";
+    }
+    "andtest*.*test*" { clear; get; } 
+    add " && ("; ++; ++; get; --; --; add ")"; 
+    put; clear; add "andtest*"; push; .reparse
+  }
+
+  # dont need to reparse 
+  "{*statement*}*" { replace "ment*" "mentset*"; }
+
+  # ----------------
+  # 4 grammar parse tokens 
+  pop;
+
+  # see below
+  # "command*quoted*quoted*;*" { clear; add "statement*"; push; .reparse }
+
+  # eg:  replace "and" "AND" ; 
+  "command*quoted*quoted*;*" {
+    clear; get;
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      # multiline replace? no. 
+      clear;
+      add '$self->replace('; ++; get; add ', '; ++; get; 
+      add ');  # replace '; 
+      --; --; put;
+      clear; add "statement*"; push; .reparse
+    }
+
+    # error trap
+    clear; add "  incorrect command syntax?"; put;
+    clear; add "nom.untrapped.error*"; push; .reparse
+  }
+
+  # reducing blocks
+  "test*{*statementset*}*", 
+  "ortest*{*statementset*}*",
+  "andtest*{*statementset*}*" {
+    clear; 
+    # indent the translated code for readability
+    ++; ++; add "\n"; get; replace "\n" "\n  "; put; --; --; 
+    clear; add "if ("; get; add ") {";
+    ++; ++; get; add "\n}"; --; --; put; 
+    clear; add "statement*"; push; .reparse
+  }
+
+  "begin*{*statementset*}*" {
+     clear; 
+     ++; ++; get; 
+     replace "next SCRIPT;" "goto SCRIPT;";
+     replace "last LEX;" "$jumptoparse = true; goto SCRIPT;";
+     --; --; put; clear;
+     add "beginblock*"; push; .reparse
+  }
+
+  # end of input stream errors
+  (eof) {
+    "test*","ortest*","andtest*","begin*" {
+       clear; 
+       add "* Incomplete script."; put;
+       clear; add "nom.error*"; push; .reparse
+    }
+  }
+
+  # cannot be reduced to one push;
+  push;push;push;push;
+
+  pop;pop;pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+    # perl has labelled loops?
+
+    "statementset*parselabel*statementset*" {
+      clear; 
+      # indent both code blocks
+      add "    "; get; replace "\n" "\n    "; put; clear; ++; ++;
+      add "    "; get; replace "\n" "\n    "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      add "SCRIPT:\n";
+      add "while (true) {\n";
+      add "  LEX: { \n";
+      # This is all so that .reparse will work in the beginblock
+      # adapt from lua.
+      add "    if ($jumptoparse == true) {\n";
+      add "      $jumptoparse = false;\n";
+      add "      last LEX;\n";
+      add "    }\n";
+      get; 
+      add "\n  } # lex block \n"; 
+      add "  # parse> label\n";
+      add "  PARSE: \n";
+      add "    while (true) { \n"; ++; ++; get; --; --;
+      add "\n     last PARSE;  # run-once parse loop ";
+      add "\n   } # parse block "; 
+      add "\n} # nom script loop ";
+      put; 
+      clear; add "script*"; push; .reparse
+    }
+  }
+  push;push;push;
+  # this cannot be reduced to 'push;'
+  pop;pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+
+    "statementset*parselabel*" {
+       clear; add "    "; get; replace "\n" "\n    "; put; clear; 
+       add "SCRIPT:\n";
+       add "while (true) {\n";
+       add "  LEX: { \n"; 
+       add "    if ($jumptoparse == true) {\n";
+       add "      $jumptoparse = false;\n";
+       add "      last LEX;\n";
+       add "    }\n";
+       get;
+       add "  } # lex block \n"; 
+       # parse label with no statement after.
+       add "  # parse> label\n";
+       add "  PARSE: ";
+       add "\n} # nom script loop ";
+       put; 
+       clear; add "script*"; push; .reparse
+    }
+
+    "parselabel*statementset*" {
+       clear; add "    "; ++; get; --; replace "\n" "\n    "; put; clear; 
+       add "SCRIPT:\n";
+       add "while (true) {\n";
+       add "  # parse> label\n";
+       add "  PARSE: \n";
+       add "    while (true) { \n"; get;
+       add "\n     last PARSE;  # run-once parse loop ";
+       add "\n   } # parse block "; 
+       add "\n} # nom script loop ";
+       put; 
+       clear; add "script*"; push; .reparse
+    }
+
+    "beginblock*script*" {
+      clear; get; add "\n"; ++; get; --; put;
+      clear; add "script*"; push; .reparse
+    }
+  }
+  # cannot reduce to push
+  push;push;
+  pop;
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+    # just a trick to make the following rules simpler
+    replace "statement*" "statementset*";
+    "statementset*" {
+       clear; add "  "; get; replace "\n" "\n  "; put; clear; 
+       add "SCRIPT:\n";
+       add "while (true) {\n"; get;
+       add "\n} # nom script loop "; put;
+       clear; add "script*"; push; .reparse 
+    }
+    "beginblock*","comment*","parselabel*" {
+       clear; add "script*"; push; .reparse 
+    }
+  }
+
+  push;push;push;push;
+
+  (eof) {
+    pop;pop;
+    "" {
+      add "# empty nom script\n"; 
+      print; quit;
+    }
+    !"script*" {
+      push;push;
+      unstack; put; clear; 
+      add "* script syntax problem: the error was not caught by the \n"; 
+      add "  syntax checker, and should have been.\n";
+      add "  The parse stack was: ";
+      get; put; clear; add "nom.error*"; push; .reparse
+    }
+    clear; add "#!/usr/bin/perl \n"; print; clear;
+    # indent the compiled code
+    add "\n"; get; replace "\n" "\n      "; put; clear;
+    # create the virtual machine object code and save it
+    # on the tape.
+    add '
+
+ use strict;
+ use warnings;
+ use utf8;
+ # for unicode character properties.
+ # use Unicode::UCD qw(charprop);
+ # use IO::File;
+ #use IO::BufReader;
+ #use IO::BufWriter;
+ use Getopt::Long;
+ use List::Util;  # for all function
+ use Carp; # For croak and confess
+
+ package Machine; 
+   use constant { true => 1, false => 0 };
+
+   sub new {
+     # my ($class) = @_;
+     my $class = shift;  # 
+     binmode STDOUT, ":encoding(UTF-8)";
+
+     my $self = {
+       accumulator   => 0,       # counter for anything
+       peep          => "",      # next char in input stream
+       charsRead     => 0,       # No. of chars read so far init:0
+       linesRead     => 1,       # No. of lines read so far init:1
+       inputBuffer   => [],      # reversed array of input chars/graphemes
+       outputBuffer  => "",      # where string output will go
+       inputType    => "unset",  # reading from stdin/string/file etc
+       sinkType      => "stdout",# 
+       work          => "",      # text accumulator
+       stack         => [],      # parse token stack
+       tapeLength    => 100,     # tape initial length
+       tape          => [ map { "" } 1..100 ], # array of token attributes
+       marks         => [ map { "" } 1..100 ], # tape marks
+       cell          => 0,       # pointer to current cell
+       input         => *STDIN,  # text input stream
+       output        => *STDOUT, #
+       eof           => false,    # end of stream reached? (boolean)
+       escape        => "\\\\",   # char used to "escape" others: default "\\"
+       delimiter     => "*",      # push/pop delimiter (default is "*")
+     };
+     bless $self, $class;
+     return $self;
+   }
+   # reset the machine registers to nothing. This is particularly used
+   # by the interpret() method once the script has been "compiled" and 
+   # loaded into the current machine (with eval()) and then needs to be 
+   # run with a fresh pep machine.
+   sub resetMachine {
+     my $self = shift;   # a reference to the pep machine
+     $self->{accumulator} = 0;
+     $self->{peep} = "";
+     $self->{charsRead} = 0;
+     $self->{linesRead} = 1;
+     $self->{inputBuffer} = [];
+     $self->{outputBuffer} = "";
+     $self->{inputType} = "unset";
+     $self->{sinkType} = "stdout";
+     $self->{work} = "";
+     $self->{stack} = [];
+     $self->{tapeLength} = 100;
+     $self->{tape} = [ map { "" } 1..100 ];
+     $self->{marks} = [ map { "" } 1..100 ];
+     $self->{cell} = 0;
+     $self->{input} = *STDIN;
+     $self->{output} = *STDOUT;
+     $self->{eof} = false;
+     $self->{escape} = "\\\\";
+     $self->{delimiter} = "*";
+   }
+
+   sub fillInputStringBuffer {
+     my ($self, $text) = @_;
+     my $revtext = reverse $text;
+     # push onto the array
+     push @{$self->{inputBuffer}}, split //, $revtext;
+   }
+
+   sub fillInputBuffer {
+     my $self = shift;
+     my $text = shift;
+     # grapheme clusters regex is \\X in perl
+     # the grapheme cluster splitter is making an extra empty char 
+     # in the array
+
+     # not working?
+     # my @charArray = reverse split(/(\\X)/, $text);
+
+     #my @graphemes = $text =~ m/\\X/g;
+     #my @charArray = reverse(@graphemes);
+     my @charArray = reverse split(//, $text);
+     push (@{$self->{inputBuffer}}, @charArray);
+     # display the input buffer array
+     # print "[",join(", ", @{$self->{inputBuffer}}),"]";
+   }
+
+   # read one character from the input stream and
+   #   update the machine. This reads though an inputBuffer/inputChars
+   #   so as to handle unicode grapheme clusters (which can be more
+   #   than one "character").
+   # 
+   sub readChar {
+     my $self = shift;
+
+     #  this exit code should never be called in a translated script
+     #  because the Machine:parse() method will return just before
+     #  a read() on self.eof But I should keep this here in case
+     #  the machine methods are used outside of a parse() method?
+     if ($self->{eof}) {
+       # need to return from parse method (i.e break loop) when reading on eof.
+       exit 0; # print("eof exit")
+     }
+
+     my $result = 0; my $line = "";
+     $self->{charsRead} += 1;
+     # increment lines
+     if ($self->{peep} eq "\\n") { $self->{linesRead} += 1; }
+     $self->{work} .= $self->{peep};
+
+     # fix: it would be better not to have an if else here
+     # stdin.all/string/file all read the whole input stream
+     #    at once into a buffer.
+     my $inputType = $self->{inputType};
+     if ($inputType eq "stdin" || $inputType eq "string" || 
+         $inputType eq "file") {
+       if (!@{$self->{inputBuffer}}) {
+         $self->{eof} = true;
+         $self->{peep} = "";
+       } else {
+         $self->{peep} = "";
+         # the inputBuffer is a reversed array. pop() returns the last element
+         my $char = pop @{$self->{inputBuffer}};
+         $self->{peep} .= $char if defined $char;
+       }
+       return;
+     } elsif ($inputType eq "stdinstream") {
+       # read from stdin one line at a time. 
+       # 
+     } elsif ($inputType eq "filestream") {
+       # if (scalar(@{$self->{inputBuffer}}) == 0) {
+       if (!@{$self->{inputBuffer}}) {
+         my $bytes = $self->{input}->getline(\\$line);
+         if ($bytes > 0) {
+           $self->fillInputBuffer($line);
+         } else {
+           $self->{eof} = true;
+           $self->{peep} = "";
+         }
+       }
+       if (scalar(@{$self->{inputBuffer}}) > 0) {
+         $self->{peep} = "";
+         my $char = pop @{$self->{inputBuffer}};
+         $self->{peep} .= $char if defined $char;
+       }
+       return;
+     } else {
+       print STDERR "Machine.inputType error ", $inputType, " while trying to read input\\n";
+       exit 1;
+     }
+   } # read
+
+   # function Machine:write(output)
+   sub writeText {
+     my $self = shift;
+     my $outputType = $self->{sinkType};
+     if ($outputType eq "stdout") {
+       print $self->{work};
+     } elsif ($outputType eq "file") {
+       print {$self->{output}} $self->{work} or die "Error writing to file: $!";
+     } elsif ($outputType eq "string") {
+       $self->{outputBuffer} .= $self->{work};
+     } else {
+       print STDERR "Machine.sinkType error for type ", $outputType, "\\n";
+     }
+   }
+
+   # increment tape pointer by one
+   sub increment {
+     my ($self) = @_;
+     $self->{cell}++;
+     if ($self->{cell} >= $self->{tapeLength}) {
+       for (my $ii = 1; $ii <= 50; $ii++) {
+         push @{$self->{tape}}, "";
+         push @{$self->{marks}}, "";
+       }
+       $self->{tapeLength} += 50;
+     }
+   }
+
+   # Machine.decrement() is usually compiled inline
+
+   # remove escape char, the char should be a string because it could be
+   # a unicode grapheme cluster (diacritics etc) 
+   sub unescapeChar {
+     my ($self, $c) = @_;
+     # dont unescape chars that are not escaped!
+     my $countEscapes = 0;
+     my $s = "";
+     # let nextChar = ;
+     return if length($self->{work}) == 0;
+
+     for my $nextChar (split //, $self->{work}) {
+       if (($nextChar eq $c) && ($c ne $self->{escape}) && 
+           ($countEscapes % 2 == 1)) {
+         # assuming that the escape char is only one char?
+         # remove last escape char
+         substr($s, -1) = "";
+       }
+       if ($nextChar eq $self->{escape}) {
+         $countEscapes++;
+       } else {
+         if (($c eq $self->{escape}) && ($countEscapes > 0) && 
+             ($countEscapes % 2 == 0)) {
+           substr($s, -1) = "";
+         } 
+         $countEscapes = 0;
+       }
+       $s .= $nextChar;
+     }
+     $self->{work} = $s;
+   }
+
+   #  add escape character, dont escape chars that are already escaped!
+   #  It is important to get this code right especially for 2nd 
+   #  generation tests and also because some languages will crash or 
+   #  refuse to compile if there is an "unrecognised escape sequence"
+   #    modify this for grapheme clusters.
+   #   
+   # This can be tested with something like the following
+   # >> pep.pls "whilenot [:space:];escape\'x\';t;d;(eof){quit;}\' \'ab\\xc\'
+   # >> pep.pls \'until ":";escape"\\";t;d;(eof){quit;}\' \'ab\\c\'
+   # If there are an even number of escape chars (in this case, backslashes)
+   # then the target character should not be escaped, *unless* the 
+   # target character IS the escape character. Confusing no? But important.
+   # Notice that I have to use a while/whilenot/until read to test this
+   # properly...
+   # 
+   # This code should be copied to all the other translators
+
+   # fix: just modify the rust code based on the code in 
+   # object/machine.interp.c 
+   sub escapeChar {
+     my $self = shift;
+     my $c = shift;  # the character to escape
+     my $countEscapes = 0;
+     return if length($self->{work}) == 0;
+
+     my @chars = split(//, $self->{work});
+     $self->{work} = "";
+     for (my $ii = 0; $ii < @chars; $ii++) {
+       # escape the character c but only if it is not the pep
+       # machine escape character (by default a backslash \\)
+       if (($chars[$ii] eq $c) && ($c ne $self->{escape}) && 
+           ($countEscapes % 2 == 0)) {
+         $self->{work} .= $self->{escape};
+       }
+
+       if ($chars[$ii] eq $self->{escape}) {
+         $countEscapes += 1;
+       }
+       else {
+         if (($c eq $self->{escape}) && ($countEscapes > 0) && 
+            ($countEscapes %2 == 1)) { 
+           $self->{work} .= $self->{escape};
+         } 
+         $countEscapes = 0; 
+       } 
+       $self->{work} .= $chars[$ii];
+     } 
+   } 
+
+   # a helper to see how many trailing escape chars, this is used
+   # only by the until command to see if it should keep reading or 
+   # not.
+   sub countEscaped {
+     my ($self, $suffix) = @_;
+     my $s = $self->{work};
+     my $count = 0;
+     if (substr($s, -length($suffix)) eq $suffix) {
+       $s = substr($s, 0, length($s) - length($suffix));
+     }
+     while (substr($s, -length($self->{escape})) eq $self->{escape}) {
+       $count++;
+       $s = substr($s, 0, length($s) - length($self->{escape}));
+     }
+     return $count;
+   }
+
+   #  reads the input stream until the work end with text. It is
+   #    better to call this readUntil instead of until because some
+   #       languages dont like keywords as methods. Same for read()
+   #       should be readChar() 
+   sub readUntil {
+     my ($self, $suffix) = @_;
+     # read at least one character
+     return if $self->{eof};
+     $self->readChar();
+     while (true) {
+       return if $self->{eof};
+       if (substr($self->{work}, -length($suffix)) eq $suffix) {
+         return if $self->countEscaped($suffix) % 2 == 0;
+       }
+       $self->readChar();
+     }
+   }
+
+   # pop the first token from the stack into the workspace
+   sub popToken {
+     my $self = shift;   # a reference to the pep machine
+     if (!@{$self->{stack}}) { return false; }
+     $self->{work} = pop(@{$self->{stack}}) . $self->{work};
+     if ($self->{cell} > 0) { $self->{cell} -= 1; }
+     return true;
+   }
+
+   # push the first token from the workspace to the stack
+   sub pushToken {
+     my $self = shift;   # a reference to the pep machine
+     # dont increment the tape pointer on an empty push
+     if (length($self->{work}) == 0) { return false; }
+
+     # I iterate the workspace buffer chars so that this method
+     # can be easily adapted for grapheme clusters
+     my $token = "";
+     my $remainder = "";
+     my @chars = split(//, $self->{work});
+
+     # maybe for grapheme clusters
+     # my @chars = split(/\\X/, $self->{work});
+     for (my $ii = 0; $ii < scalar(@chars); $ii++) {
+       my $c = $chars[$ii];
+       $token .= $c;
+       if ($c eq $self->{delimiter}) {
+         push @{$self->{stack}}, $token;
+         $remainder = join "", @chars[$ii+1 .. $#chars];
+         $self->{work} = "";
+         $self->{work} .= $remainder;
+         $self->increment();
+         return true;
+       }
+     }
+     # push the whole workspace if there is no token delimiter
+     push @{$self->{stack}}, $token;
+     $self->{work} = "";
+     $self->increment();
+     return true;
+   }
+
+   # save the workspace to file "sav.pp"
+   # we can put this inline?
+   sub writeToFile {
+     my ($self) = @_;
+     my $filename = "sav.pp";
+     open my $fh, ">:utf8", $filename or 
+       die "Could not open file [$filename] for writing: $!";
+     print $fh $self->{work};
+     close $fh;
+   }
+
+   sub goToMark {
+     my ($self, $mark) = @_;
+     for (my $ii = 0; $ii < @{$self->{marks}}; $ii++) {
+       # print("ii:", $ii, " mark:", $thismark,"\\n");
+       if ($self->{marks}[$ii] eq $mark) {
+         $self->{cell} = $ii;
+         return;
+       }
+     }
+     print "badmark \'$mark\'!\\n";
+     exit 1;
+   }
+
+   # # remove existing marks with the same name and add new mark 
+   sub addMark {
+     my ($self, $newMark) = @_;
+     # remove existing marks with the same name.
+     for my $mark (@{$self->{marks}}) {
+       if ($mark eq $newMark) {
+         $mark = "";
+       }
+     }
+     $self->{marks}[$self->{cell}] = $newMark;
+   }
+
+   # # check if the workspace matches given list class eg [hjk]
+   #    or a range class eg [a-p]. The class string will be "[a-p]" ie
+   #    with brackets [:alpha:] may have already been made into something else by the
+   #    compiler.
+   #    fix: for grapheme clusters and more complete classes
+   #   
+   sub matchClass {
+     my ($self, $text, $class) = @_;
+     # empty text should never match a class.
+     return false if length($text) == 0;
+
+     # a character type class like [:alpha:]
+     # print("class: $class");
+         
+     if ($class =~ /^\\[:(.+):\\]$/ && $class ne "[:]" && $class ne "[::]") {
+       my $charType = $1;
+       my @chars = split //, $text;
+       if ($charType eq "alnum") { return $text =~ /^\\w+$/; }
+       if ($charType eq "alpha") { return $text =~ /^[[:alpha:]]+$/; }
+       if ($charType eq "ascii") { return $text =~ /^[[:ascii:]]+$/; }
+       if ($charType eq "word") { return $text =~ /^[\\w_]+$/; }
+       if ($charType eq "blank") { return $text =~ /^[\\s\\t]+$/; }
+       if ($charType eq "control") { return $text =~ /^[[:cntrl:]]+$/; }
+       if ($charType eq "cntrl") { return $text =~ /^[[:cntrl:]]+$/; }
+       if ($charType eq "digit") { return $text =~ /^\\d+$/;}
+       if ($charType eq "graph") { return $text =~ /^[[:graph:]]+$/; }
+       if ($charType eq "lower") { return $text =~ /^[[:lower:]]+$/; }
+       if ($charType eq "upper") { return $text =~ /^[[:upper:]]+$/; }
+       if ($charType eq "print") { return $text =~ /^[[:print:]]+$/; 
+         # and not eq " "
+       }
+       if ($charType eq "punct") { return $text =~ /^[[:punct:]]+$/; }
+       if ($charType eq "space") { return $text =~ /^\\s+$/; }
+       if ($charType eq "xdigit") { return $text =~ /^[0-9a-fA-F]+$/; }
+       print STDERR "unrecognised char class in translated nom script\\n";
+       print STDERR "$charType\\n";
+       exit 1;
+       return false;
+     }
+
+     # get a vector of chars except the first and last which are [ and ]
+     my @charList = split //, substr($class, 1, length($class)-2);
+     # is a range class like [a-z]
+     if (scalar(@charList) == 3 && $charList[1] eq "-") {
+       my ($start, undef, $end) = @charList;
+       my @chars = split(//, $text);
+       #print("chars: @chars");
+       #return all { $_ ge $start && $_ le $end } @chars;
+       # modify split for grapheme clusters?
+       for my $char (split //, $text) {
+         if ($char lt $start || $char gt $end) { return false; }
+       }
+       return true;
+     }
+
+     # list class like: [xyzabc]
+     # check if all characters in text are in the class list
+     # my @textChars = split //, $text;
+
+     # Create a hash for faster lookup?
+     my %charHash = map { $_ => 1 } @charList; 
+     for my $char (split //, $text) {
+       return false unless exists $charHash{$char};
+     }
+     return true;
+
+     #return all { grep { $_ eq $textChars[$_] } @charList } 0 .. $#textChars;
+     #return false;
+     # also must handle eg [:alpha:] This can be done with char methods
+   }
+
+   # # a plain text string replace function on the workspace 
+   sub replace {
+     my ($self, $old, $new) = @_;
+     return if length($old) == 0;
+     return if $old eq $new;
+     $old = quotemeta($old);
+     $self->{work} =~ s/$old/$new/g;
+   }
+
+   #  make the workspace capital case 
+   sub capitalise {
+     my ($self) = @_;
+     my $result = "";
+     my $capitalize_next = 1;
+     for my $c (split //, $self->{work}) {
+       if ($c =~ /[[:alpha:]]/) {
+         if ($capitalize_next) {
+           $result .= uc $c;
+           $capitalize_next = false;
+         } else {
+           $result .= lc $c;
+         }
+       } else {
+         $result .= $c;
+         if ($c eq "\\n" || $c eq " " || $c eq "." || $c eq "?" || $c eq "!") {
+           $capitalize_next = true;
+         }
+       }
+     }
+     $self->{work} = $result;
+   }
+
+   #  print the internal state of the pep/nom parsing machine. This
+   #    is handy for debugging 
+   sub printState {
+     my $self = shift;
+     print 
+       "\\n--------- Machine State ------------- \\n",
+       "(input buffer:", join(",", @{$self->{inputBuffer}}), ")\\n",
+       "Stack[", join(",", @{$self->{stack}}), "]", 
+       " Work[", $self->{work}, "]",
+       " Peep[", $self->{peep}, "]\\n",
+       "Acc:", $self->{accumulator},
+       " EOF:", $self->{eof} eq true? "true":"false", 
+       " Esc:", $self->{escape},
+       " Delim:", $self->{delimiter}, 
+       " Chars:", $self->{charsRead}, " ";
+     print "Lines:", $self->{linesRead}, "\\n";
+     print "-------------- Tape ----------------- \\n";
+     print "Tape Size: ", $self->{tapeLength}, "\\n";
+     my $start = 0;
+     if ($self->{cell} > 3) {
+       $start = $self->{cell} - 4;
+     }
+     my $end = $self->{cell} + 4;
+     for (my $ii = $start; $ii <= $end; $ii++) {
+       print "    $ii ";
+       if ($ii == $self->{cell}) { print "> ["; }
+       else { print "  ["; }
+       if (defined $self->{tape}[$ii]) {
+         print $self->{tape}[$ii], "] ";
+         if (defined $self->{marks}[$ii] && ($self->{marks}[$ii] ne "")) {
+           print "(m:", $self->{marks}[$ii], ")";
+         }
+         print "\\n";
+       } else {
+         print "]\\n";
+       }
+     }
+   }
+
+   # print the internal state of the pep/nom parsing machine as an
+   # html table. But use the script /eg/machine.tohtml.pss instead which
+   # is better.
+   sub printHtmlState {
+     my $self = shift;
+     print 
+       "\\n<table><thead> Machine State </thead> \\n",
+       "<tr><td>Stack</td><td>Workspace</td><td>Peep</td></tr>\\n",
+       "<tr><td>", join(",", @{$self->{stack}}), "</td>\\n", 
+       "    <td>", $self->{work}, "</td>\\n",
+       "    <td>", $self->{peep}, "</td></tr>\\n",
+       "<tr><td>Acc</td><td>EOF</td><td>Esc</td>\\n",
+       "    <td>Delim</td><td>Chars</td><td>Lines</td></tr>\\n",
+       "<tr><td>", $self->{accumulator}, "</td>\\n",
+       "    <td>", $self->{eof} eq true? "true":"false", "</td>\\n",
+       "    <td>", $self->{escape}, "</td>\\n",
+       "    <td>", $self->{delimiter}, "</td>\\n",
+       "    <td>", $self->{charsRead}, "</td>\\n";
+     print "<td>", $self->{linesRead}, "</td></tr>\\n";
+     print "<tr><td> Tape \\n";
+     print "Tape Size: ", $self->{tapeLength}, "\\n";
+     my $start = 0;
+     if ($self->{cell} > 3) {
+       $start = $self->{cell} - 4;
+     }
+     my $end = $self->{cell} + 4;
+     for (my $ii = $start; $ii <= $end; $ii++) {
+       print "    $ii ";
+       if ($ii == $self->{cell}) { print "> ["; }
+       else { print "  ["; }
+       if (defined $self->{tape}[$ii]) {
+         print $self->{tape}[$ii], "] ";
+         if (defined $self->{marks}[$ii] && ($self->{marks}[$ii] ne "")) {
+           print "(m:", $self->{marks}[$ii], ")";
+         }
+         print "\\n";
+       } else {
+         print "]\\n";
+       }
+     }
+     print "</table>\\n";
+   }
+
+   # # makes the machine read from a string also needs to prime
+   #    the "peep" value. 
+   sub setStringInput {
+     my ($self, $text) = @_;
+     $self->{inputType} = "string";
+     $self->{inputBuffer} = [];
+     $self->fillInputBuffer($text);
+     # prime the "peep" with the 1st char
+     $self->{peep} = ""; $self->readChar(); $self->{charsRead} = 0;
+   }
+
+   # # makes the machine write to a string 
+   sub setStringOutput {
+     my ($self) = @_;
+     $self->{sinkType} = "string";
+   }
+
+   # # parse/translate from a string and return the translated
+   #    string 
+   sub parseString {
+     my ($self, $input) = @_;
+     $self->setStringInput($input);
+     $self->{sinkType} = "string";
+     $self->parse();
+     return $self->{outputBuffer};
+   }
+
+   # # makes the machine read from a file stream line by line,
+   #    not from stdin 
+   sub setFileStreamInput {
+     my ($self, $filename) = @_;
+     unless (checkTextFile($filename)) { exit 1; }
+     open my $fh, "<:utf8", $filename or 
+       die "Cannot open file [$filename] for reading: $!";
+     $self->{input} = IO::BufReader->new($fh);
+     $self->{inputType} = "filestream";
+     # prime the peep, the read() method should refill the
+     # inputChars or inputBuffer if it is empty.
+     $self->{peep} = ""; $self->readChar(); $self->{charsRead} = 0;
+   }
+
+   # # makes the machine read from a file line buffer array
+   #    but this also needs to prime the "peep" value 
+   sub setFileInput {
+     my ($self, $filename) = @_;
+     open my $fh, "<:utf8", $filename or 
+       die "Could not open file [$filename] for reading: $!";
+     my $text = do { local $/ = undef; <$fh> };
+     close $fh;
+     # there is an extra newline being added, I dont know where.
+     if ($text =~ s/\\n$//) {}
+     $self->{inputType} = "file";
+     $self->{inputBuffer} = [];
+     $self->fillInputBuffer($text);
+     # prime the "peep" with the 1st char
+     $self->{peep} = ""; $self->readChar(); $self->{charsRead} = 0;
+   }
+
+   # # makes the machine write to a file not to stdout (the default) 
+   sub setFileOutput {
+     my ($self, $filename) = @_;
+     unless (checkTextFile($filename)) { exit 1; }
+     open my $fh, ">:utf8", $filename or 
+       die "Cannot create file [$filename] for writing: $!";
+     $self->{output} = $fh;
+     $self->{sinkType} = "file";
+   }
+
+   # parse from a file and put result in file
+   sub parseFile {
+     my ($self, $inputFile, $outputFile) = @_;
+     $self->setFileInput($inputFile);
+     $self->setFileOutput($outputFile);
+     $self->parse();
+   }
+
+   # # parse from any stream, fix handle 
+   # #
+   # sub parseStream {
+   #   my ($self, $reader) = @_;
+   #   # $self->{input} = $reader; # Needs proper handling of reader type
+   #   $self->parse();
+   # }
+   # 
+
+   # this is the default parsing mode. If no other is selected
+   #   it will be activated when parse() is first called. I activate it when
+   #   parse is 1st called because otherwise it will block if no stdin
+   #   is availabel. It also sets stdout as output 
+   sub setStandardInput {
+     my $self = shift;
+     $self->{inputType} = "stdin";
+     $self->{sinkType} = "stdout";
+     # for printing wide characters
+     binmode STDOUT, ":encoding(UTF-8)";
+     # binmode STDERR, ":encoding(UTF-8)";
+
+     # $self->{input} = \*STDIN;
+     # $self->{output} = \*STDOUT;
+
+     # read the whole of stdin into the inputBuffer
+     $self->{inputBuffer} = [];
+     my $buffer = "";
+     while (<STDIN>) { 
+       $buffer .= $_;
+     }
+     
+     # print("buffer: [$buffer]\\n");
+     $self->fillInputBuffer($buffer);
+     # $self->printState();
+     # prime the "peep" with the 1st char, but this doesnt count as
+     # a character read.
+     $self->{peep} = ""; $self->readChar(); $self->{charsRead} = 0;
+   }
+
+   # This function performs all sorts of magic and shenanigans. 
+   # Creates a new method runScript() - a clone of the parse() method
+   # and evaluates it, thus acting as an interpreter of a scriptfile given to an
+   # -e switch. This method only works when the nom to perl translator has 
+   # been run on itself (the translator translating the translator). 
+   #   >> pep -f nom.toperl.pss nom.toperl.pss > interp.perl.pl
+   #   >> echo "read; print; print; clear; " > test.pss
+   #   >> chmod a+x interp.perl.pl
+   #   >> echo buzz | ./interp.perl.pl -f test.pss
+   #   >> (output should be "bbuuzz")
+   #
+   # Only those who have achieved true enlightenment will 
+   # understand this method.
+   sub interpret {
+     my $self = shift;          # the pep parse machine 
+     my $filename = shift;
+     # print "# $filename";
+     if ((!defined $filename) || ($filename eq "")) { return; }
+     # set string output and file input
+     $self->setFileInput($filename);
+     $self->setStringOutput($filename);
+     $self->parse($filename);
+     my $method = $self->{outputBuffer}; 
+     # remove everything except the parse method and rename
+     # the method so that it doesnt clash with the existing parse
+     # method. Although it would probably override the existing parse()
+     # method ...?
+     $method =~ s/^.*sub parse \\{/sub runScript \\{/s;
+     $method =~ s/sub printHelp \\{.*$//s;
+     # to debug
+     # print $method; 
+     # add this new runScript() method to the current class via evaluation
+     eval($method);
+     $self->resetMachine();
+     # execute the new method, thus interpreting the script-file 
+     # that was provide. This method did not exist when the script was 
+     # first loaded, but apparently that doesnt matter. 
+     $self->runScript();
+   }
+
+   # parse and translate the input stdin/file/string 
+   sub parse {
+     my $self = shift;
+     # some temporary variables
+     my $text = ""; my $mark = "";
+     my $jumptoparse = false;
+     # capture the output of the system command.
+     my $result = "";
+     if ($self->{inputType} eq "unset") {
+       $self->setStandardInput();
+     }
+    
+     # -----------
+     # translated nom code inserted below
+     # -----------
+     ';
+     # get the compiled code from the tape
+     get;
+   add '
+
+     # close open files here? yes. use break, not return
+     my $outputType = $self->{sinkType};
+     if ($outputType eq "file") {
+       $self->{output}->flush() or die "Error flushing output file: $!";
+     } elsif ($outputType eq "stdout") {
+       # STDOUT is typically flushed automatically
+     } elsif ($outputType eq "string") {
+       # Output is in the buffer
+     } else {
+       print STDERR "unsupported output type: ", $outputType, "\\n";
+     }
+   } # sub parse
+
+
+ sub printHelp {
+   print <<EOF;
+
+   Nom script translated to perl by www.nomlang.org/tr/ script 
+   usage:
+         echo "..sometext.." | ./script
+         cat somefile.txt | ./script
+         ./script -f <file>
+         ./script -i <text>
+   options:
+     --file -f <file>
+       run the script with <file> as input (not stdin)
+     --input -i <text>
+       run the script with <text> as input
+     --filetest -F <filename>
+       test the translated script with file input and output
+     --filestream -S <filename>
+       test the translated script with file-stream input
+     --inputtest -I <text>
+       test the translated script with string input and output
+     --ifile -e <filename> 
+       make the translated-translator act as an interpreter (interprets
+       the nom script in the given file. Only works with the translated
+       translator - eg: 
+         pep -f nom.toperl.pss nom.toperl.pss > nomtoperl.pl
+         chmod +x nomtoperl.pl
+         eg: echo "hannah" | ./nomtoperl.pl -E ../eg/palindrome.pss
+     --iscript -d "<inline script>"
+         Interpret the given nom script with input from <stdin>
+         when the nom.toperl.pss script has translated itself - see 
+         above.
+         eg: echo -n hello | ./pepnom.pl -d "read; add \'.\'; print; clear;"
+     --help -h
+       show this help
+
+EOF
+
+ }
+
+ # display a message about a missing argument to the translated
+ #    script 
+ sub missingArgument {
+   print "Missing argument.\\n";
+   printHelp();
+   exit 1;
+ }
+
+ # display a message if an command line option is repeated
+ sub duplicateSwitch {
+   print "Duplicate switch found.\\n";
+   printHelp();
+   exit 1;
+ }
+
+ sub checkTextFile {
+   my ($filepath) = @_;
+   eval {
+     open my $fh, "<:utf8", $filepath;
+     close $fh;
+     return true;
+   };
+   if ($@) {
+     if ($@ =~ /No such file or directory/) {
+       print "File [$filepath] not found.\\n";
+     } elsif ($@ =~ /Permission denied/) {
+       print "Permission denied to read file [$filepath]\\n";
+     } else {
+       print "Error opening file $filepath: $@";
+     }
+     return false;
+   }
+   return true;
+ }
+
+# shows where the package ends.
+1;
+
+package main;
+
+  my $mm = Machine->new();
+  my $input = "";
+  my $filename = "";
+
+  GetOptions (
+    "file|f=s"      => \$filename,
+    "input|i=s"     => \$input,
+    "filetest|F=s"  => sub {
+      my ($opt_name, $value) = @_;
+      if ($value) {
+        if ($filename ne "") { $mm->duplicateSwitch(); }
+        if (!$mm->checkTextFile($value)) { $mm->printHelp(); exit 1; }
+        $mm->parseFile($value, "out.txt");
+        my $output = do {
+          local $/ = undef;
+          open my $fh, "<:utf8", "out.txt" or die "Could not open out.txt: $!";
+          <$fh>;
+        };
+        print $output;
+        exit($mm->{accumulator});
+      } else {
+        $mm->missingArgument();
+      }
+    },
+    "filestream|S=s" => sub {
+      my ($opt_name, $value) = @_;
+      if ($value) {
+        if ($filename ne "") { $mm->duplicateSwitch(); }
+        if (!$mm->checkTextFile($value)) { $mm->printHelp(); exit 1; }
+        $mm->setFileStreamInput($value);
+      } else {
+        $mm->missingArgument();
+      }
+    },
+    "inputtest|I=s" => sub {
+      my ($opt_name, $value) = @_;
+      if ($value) {
+        if ($input ne "") { $mm->duplicateSwitch(); }
+        my $text = $mm->parseString($value);
+        print $text;
+        exit($mm->{accumulator});
+      } else {
+        $mm->missingArgument();
+      }
+    },
+    "ifile|e=s"  => sub {
+      my ($opt_name, $ifile) = @_;
+      if ($ifile) {
+        if ($filename ne "") { $mm->duplicateSwitch(); }
+        if (!$mm->checkTextFile($ifile)) { $mm->printHelp(); exit 1; }
+        $mm->interpret($ifile);
+        exit($mm->{accumulator});
+      } else {
+        $mm->missingArgument();
+      }
+    },
+    "iscript|d=s"  => sub {
+      my ($opt_name, $script) = @_;
+      if ($script) {
+        if ($filename ne "") { $mm->duplicateSwitch(); }
+        if (!$mm->checkTextFile($script)) { $mm->printHelp(); exit 1; }
+        open my $fh, ">:utf8", "temp.txt" or die "Could not open temp.txt: $!";
+        print $fh $script; close $fh; 
+        $mm->interpret("temp.txt");
+        exit($mm->{accumulator});
+      } else {
+        $mm->missingArgument();
+      }
+    },
+    "help|h"        => sub { $mm->printHelp(); exit 0; },
+  ) or die "Error in command line arguments\\n";
+
+  if ($input ne "" && $filename ne "") {
+    print <<EOF;
+
+    Either use the --file/--filetest options or the --input/--inputtest
+    options, not both
+
+EOF
+    printHelp();
+    exit 0;
+  }
+
+  $mm->parse();
+  # accumulator as exit code 
+  exit($mm->{accumulator});
+  # shows where the package ends.
+  #1;
+
+  \n';
+    # accumulator zero for success.
+    zero; print; quit;
+
+  } # end of block

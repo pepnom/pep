@@ -1,0 +1,146 @@
+
+#*
+ 
+ This script finds all full word palindromes in a document and 
+ highlights them. It is an adaptation of palindrome.pss 
+
+ Palindromes may be one of the simplest context-free languages which are not
+ regular. I am not sure. In this script a series of letters (such as "aa",
+ "aaa", "bb", "bbbb" etc) is considered a trivial palindrome and will not be
+ reported.
+
+SEE ALSO
+  
+  http://bumble.sf.net/books/pars/eg/pal.words.pss 
+    This script prints all words in the input stream which are palindromes.
+    It uses a much simpler technique, but doesnt demonstrate much 
+    true parsing.
+
+NOTES
+
+  need to do "space*pal*space*" { # markup the palidrome # }
+  also "pal*char*char* { # convert to text }
+
+GRAMMAR TOKENS 
+
+  space* any whitespace
+  text* accumulated text that may contain palindromes
+  pal* a palindrome (not a list list "xxxxx" )
+  char* a single character
+
+STATUS
+
+  Started to adapt but not finished.
+  
+HISTORY
+
+  4 feb 2025
+    Adapting this from palindrome.pss
+
+*#
+
+  # ignore leading whitespace
+  begin { 
+    while [:space:]; clear;
+    add " 
+      Palindrome: words or text that is the same backwards.  
+      eg: a radar rotor is a rotator 
+      παλίν 'back' δρομος 'running' 
+    ";
+    print; clear;
+  }
+
+  read; 
+  # make the character count relative to the line number.
+  [\n] { nochars; }
+  [\n\t ] { put; clear; add "space*"; push; .reparse }
+  [:alpha:] { 
+    put; clear; add "char*"; push; .reparse 
+  }
+
+  # everything else is considered punctuation
+  put; clear; add "punct*"; push; 
+
+#-----------
+# here lexing ends and parsing begins
+parse>
+
+ # To view parse-stack token reduction uncomment the lines below
+ # lines; add ":"; chars; add " "; print; clear; 
+ # unstack; add "\n"; print; clip; stack; 
+
+#------------
+# 2 tokens
+
+  pop; pop;
+  "pal*pal*" {
+    clear; get; ++;  
+    (==) { 
+      get; --; put; clear;
+      add "pal*"; push; .reparse
+    }
+    clear; --;
+    add "pal*pal*"; 
+  }
+  
+  "char*char*" {
+    # create the list* token
+    clear; get; ++;
+    (==) {
+      # save a copy of the single char on the tape
+      # where it wont get overwritten
+      ++; put; --;
+      get; --; put; clear;
+      add "list*"; push; .reparse
+    }
+    clear; --; add "char*char*";
+  }
+
+  "list*char*" {
+    # the next tape cell has a copy of the single char
+    # of the list
+    clear; ++; get; ++;
+    (==) { 
+      --; --; get; put; clear;
+      add "list*"; push; .reparse
+    }
+    --; --; clear; add "list*char*";
+  }
+#------------
+# 3 tokens
+
+  pop;
+  "list*list*list*",
+  "char*list*char*","list*char*list*","list*pal*list*","pal*list*pal*",
+  "char*char*char*","char*pal*char*","pal*pal*pal*","pal*char*pal*" {
+    push; push; push; --; get; --; --; 
+    (==) { 
+      clear; get; ++; get; ++; get; --; --; put; clear;
+      ++; ++; ++;
+      pop; pop; pop; clear; 
+      add "pal*"; push; .reparse
+    }
+    clear; ++; ++; ++; 
+    pop; pop; pop;
+  }
+
+  # mark up the palindrome in the text.
+  # "space*pal*space*" { }
+
+  push; push; push;
+
+  (eof) {
+    pop; pop;
+    "pal*" {
+      clear;
+      add "[input was palindrome]\n"; print; quit;
+    }
+    "list*" {
+      clear;
+      add "[input was list]\n"; print; quit;
+    }
+    push; push;
+    # add "The parse-stack tokens are:\n  "; print; clear;
+    # replace "pal*" "palindrome|";
+    # replace "*" "|"; clip; add "\n"; print; clear;
+  }

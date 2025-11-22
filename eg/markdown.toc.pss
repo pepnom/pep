@@ -1,0 +1,97 @@
+#* 
+
+ An attempt to recognise markdown style underline headings and 
+ table of contents.
+
+Markdown Underlined Headings and table of contents
+============================
+
+  This is a slightly modified version of markdown.underline.pss
+  that also creates a table of contents at the top of the document
+  using the "mark" and "go" commands.
+
+  Attempting to recognise markdown style heading and format them as html.  
+  empty lines are lost. As usual it seems very verbose for a
+  script that doesnt do very much.
+
+Notes
+-----
+
+Testing 
+-------
+
+  try: pp -f markdown.underline.pss markdown.underline.pss
+
+History
+=======
+
+  13 March 2020
+    Began to code this script in a desultory fashion.
+    
+*#
+
+begin {
+  # label the top tape cell and make room for it.
+  mark "top"; add "toc*"; push;  
+}
+
+read;
+
+"\n" { clear; }
+until "\n"; E"\n" { clip; } put; 
+# if the underlines have a space at the end this will fail
+[= ].E"==" {
+  clear; add "double.uline*"; push; .reparse 
+} 
+[- ].E"--" {
+  clear; add "single.uline*"; push; .reparse 
+} 
+clear; add "line*"; push; .reparse 
+
+parse>
+
+  # 2 tokens
+  pop; pop;
+  "line*double.uline*" { 
+    clear; 
+    add "<li class='level2'>"; get; add "</li>\n"; 
+    mark "here"; go "top"; 
+    swap; get; put; go "here"; clear; 
+    add "<h2>"; get; add "</h2>"; add "\n"; put; clear;
+    add "line*"; push; .reparse
+  }
+  "line*single.uline*" { 
+    clear; 
+    add "<li class='level3'>"; get; add "</li>\n"; 
+    mark "here"; go "top"; 
+    swap; get; put; go "here"; clear; 
+    add "<h3>"; get; add "</h3>"; add "\n"; put; clear;
+    add "line*"; push; .reparse
+  }
+
+  <eof> {
+    "*line*line", "lines*line*" { 
+      clear; get; add "\n"; ++; get; --; add "\n"; put; clear; 
+      add "lines*"; push; .reparse
+    }
+  }
+
+  # 3 tokens
+  pop;
+  # we use 3 tokens as a kind of look-ahead 
+  "line*line*line*", "lines*line*line*" { 
+    clear; get; add "\n"; ++; get; --; put; clear; 
+    ++; ++; get; --; put; --; clear;
+    add "lines*line*"; push; push; .reparse
+  }
+
+  # did the script parse properly
+  <eof> {
+    "toc*lines*" {
+      clear; add "<ul>\n"; get; add "</ul>\n"; 
+      ++; get; print; clear; quit;
+    }
+  }
+
+  push; push; push;
+

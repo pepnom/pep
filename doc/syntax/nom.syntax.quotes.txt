@@ -1,0 +1,81 @@
+
+
+## QUOTES IN THE NOM LANGUAGE
+
+  Both single and double quotes may be used in scripts and they have exactly
+  the same role in the syntax of the nom language.  But quoted text which
+  starts with a double quote (") must end with a double quote, and the same
+  rules applies to single quotes.
+
+  Quoted text can also span multiple lines.
+
+  * use single or double quotes in pep/nom scripts
+  >> r; '"' { add "<< single quote!\n"; print; } d;
+
+  If using the negation operator "!" in an "in-line" script, then
+  enclose the whole thing in single quotes, so that the shell does
+  not substitute the "!" character (or other special characters).
+
+  * use single quotes in one-line pep scripts to avoid bash substitution 
+  >> pep -e '![u-z],"/",";"{print;} clear;' -i "axbycz/;"
+
+  Prints: abc/;
+
+  The pep/nom language syntax allows quoted text to span more than one
+  line. No special syntax is required and all special characters have the
+  same meaning. This is mainly only useful as the argument to the 
+  "add" command, in order to improve the readability of scrips
+
+  * A multi-line quoted text example 
+  ------+
+  begin { add '
+    A multi-line 
+    argument for "add".
+    '; 
+  } print; clear; quit;
+  ,,,
+  
+  It is not necessary to have any space between a command and any
+  quoted argument. This is because the pep/nom language knows how to 
+  parse itself (see nomsf://compile.pss for the amazing details). In fact,
+  "white-space" (\n\t\s\r\f) is not really significant anywhere in
+  a nom script - except within quotes.
+
+  * no space is required before quotes
+  -----+
+    read; add"."; # this is ok!
+    replace"."".."; # this is be ok too.
+    print;clear;
+    # if the input is 'abc' this should print 'a..b..c..'
+  ,,,
+
+"ESCAPING" WITHIN QUOTES
+
+  The until command automatically recognises "escaped" quote characters, so it
+  will not stop reading the input stream when it encounters \\" or \\'
+
+  * using single quotes, and some abbreviated commands
+  >> r; 'a' { add 'A'; print; } d;
+
+  Within quoted text, certain "escaped" characters have a special meaning.
+  These characters have the same meaning in double and single quotes. 
+
+  d/- \\n - represents a 'newline' character
+    - \\r - a return character
+    - \\f - a form feed (rarely used).
+    - \\t - a tab
+
+  * convert all tabs to 2 spaces in the input stream
+  >> read; "\t" { clear; add "  "; } print; clear;
+  
+  * An abbreviated version of the above in-line pep/nom script
+  >> r; "\t" { d; a "  "; } t;d;
+
+  * create a "go" program, equivalent of the above script, compile and run
+  -----+
+    pep -f tr/translate.go.pss -i 'r;"\t"{d;a"  ";}t;d;' > notabs.go
+    go build -o notabs notabs.go
+    echo -e "no\ttabs\tplease!" | notabs
+    # should print 'no  tabs  please!'
+  ,,,,
+

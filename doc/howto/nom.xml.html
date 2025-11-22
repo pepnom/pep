@@ -1,0 +1,865 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/plywood.pattern2.jpg'/>
+
+<p>
+
+
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/howto/nom.xml.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> parsing xml with nom</h2>
+
+<p>
+ Parsing 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> with 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> . See also <a href='/eg/xml.parse.pss'>/eg/xml.parse.pss</a>
+<p>
+ The script below was prompted by a <em>rosettacode</em> problem which made 
+ me curious to see if 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> could parse 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> properly. The 
+ answer is yes, which was surprising to me as well. 
+<p>
+ The script exists as an example at <a href='/eg/xml.parse.pss'>/eg/xml.parse.pss</a>
+ and that version will probably be more complete.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ some simple xml sample data
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+ <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Students</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Student</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"April"</span> <span class='nom-unknown'>Gender</span><span class='nom-unknown'>=</span><span class='nom-string'>"F"</span> <span class='nom-unknown'>DateOfBirth</span><span class='nom-unknown'>=</span><span class='nom-string'>"1989-01-02"</span> <span class='nom-error'>/ ??</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Student</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"Bob"</span> <span class='nom-unknown'>Gender</span><span class='nom-unknown'>=</span><span class='nom-string'>"M"</span>  <span class='nom-unknown'>DateOfBirth</span><span class='nom-unknown'>=</span><span class='nom-string'>"1990-03-04"</span> <span class='nom-error'>/ ??</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Student</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"Chad"</span> <span class='nom-unknown'>Gender</span><span class='nom-unknown'>=</span><span class='nom-string'>"M"</span>  <span class='nom-unknown'>DateOfBirth</span><span class='nom-unknown'>=</span><span class='nom-string'>"1991-05-06"</span> <span class='nom-error'>/ ??</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Student</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"Dave"</span> <span class='nom-unknown'>Gender</span><span class='nom-unknown'>=</span><span class='nom-string'>"M"</span>  <span class='nom-unknown'>DateOfBirth</span><span class='nom-unknown'>=</span><span class='nom-string'>"1992-07-08"</span><span class='nom-punct'>></span>
+    <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Pet</span> <span class='nom-unknown'>Type</span><span class='nom-unknown'>=</span><span class='nom-string'>"dog"</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"Rover"</span> <span class='nom-error'>/ ??</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>Student</span><span class='nom-punct'>></span>
+  <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-unknown'>Student</span> <span class='nom-unknown'>DateOfBirth</span><span class='nom-unknown'>=</span><span class='nom-string'>"1993-09-10"</span> <span class='nom-unknown'>Gender</span><span class='nom-unknown'>=</span><span class='nom-string'>"F"</span> <span class='nom-unknown'>Name</span><span class='nom-unknown'>=</span><span class='nom-string'>"&#x00C9;mily"</span> <span class='nom-error'>/ ??</span><span class='nom-punct'>></span>
+ <span class='nom-error'>& ??</span><span class='nom-unknown'>lt</span><span class='nom-punct'>;</span><span class='nom-error'>/ ??</span><span class='nom-unknown'>Students</span><span class='nom-punct'>></span>
+ </code></pre>
+</figure>
+<p>
+ The following script will try to parse the xml above and extract the 
+ names of each student. This is a problem from 
+ the <a href='https://rosettacode.org/wiki/XML/Input'>Rosetta Code </a> site.
+ I haven&apos;t actually done this before so am making it up as I go along.
+<p>
+ Another idea, to avoid putting all text in the &gt;* token, use a flag after
+ reading a &gt;* token, so that next read will read all the way to '&lt;'
+ (implemented below, the <a href='http://nomlang.org/doc/machine/pep.accumulator.html'>accumulator</a> is used as a flag).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ An almost complete XML parser and error checker script
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+<span class='nom-comment'>#* 
+  GRAMMAR TOKENS
+    literal: &lt; > / =  
+    quoted*  quoted text within xml tags
+    name*    a tag or attribute name
+    attrib*  an attribute like time="now"
+    attribset* a set of attributes like {time="now" sky="blue"}
+    starttag*  a tag like this &lt;book>
+    endtag*    an end tag &lt;/book>
+    tag*     a tag like &lt;image/> or &lt;book>...stuff...&lt;/book>
+    tagset*  a list of tags like the one above.
+
+*#</span>
+  <span class='nom-command'>count</span><span class='nom-punct'>;</span> 
+  <span class='nom-comment'># not zero means we are between tags</span>
+  <span class='nom-comment'># read all text and set the 'text*' flag to false</span>
+  <span class='nom-comment'># only add a text* token if there is actual text.</span>
+  <span class='nom-punct'>!</span><span class='nom-string'>"0"</span> <span class='nom-punct'>{</span> 
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>whilenot</span> <span class='nom-class'>[&lt;]</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>!</span><span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>zero</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"text*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>zero</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+  <span class='nom-punct'>}</span>
+  <span class='nom-string'>"0"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+  <span class='nom-class'>[\n]</span> <span class='nom-punct'>{</span> <span class='nom-command'>nochars</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>    <span class='nom-comment'># line-relative char numbers, sort of </span>
+  <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> 
+    <span class='nom-comment'># cant ignore space but won't save it.</span>
+    <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"space*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+  <span class='nom-punct'>}</span> 
+  <span class='nom-comment'># set the 'text*' flag to true (between tags)</span>
+  <span class='nom-string'>">"</span> <span class='nom-punct'>{</span> <span class='nom-command'>a+</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+
+  <span class='nom-comment'># are single quotes allowed in xml?</span>
+  <span class='nom-string'>'"'</span> <span class='nom-punct'>{</span>
+    <span class='nom-command'>until</span> <span class='nom-string'>'"'</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"quoted*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+  <span class='nom-punct'>}</span>
+
+  <span class='nom-comment'># literal tokens, but only within tags</span>
+  <span class='nom-string'>"&lt;"</span><span class='nom-punct'>,</span><span class='nom-string'>"/"</span><span class='nom-punct'>,</span><span class='nom-string'>"="</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+  <span class='nom-comment'># need these for comments like &lt;!-- etc --></span>
+  <span class='nom-string'>"!"</span><span class='nom-punct'>,</span><span class='nom-string'>"-"</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+
+  <span class='nom-comment'># tagnames and attribute names, this should include - and _ and .</span>
+  <span class='nom-comment'># but Nom is a bit limited like this. For example, I can't do</span>
+  <span class='nom-comment'># [:alnum:],[-_.] because the character sets dont get 'unioned' by the </span>
+  <span class='nom-comment'># interpreter or the translation scripts. But this is necessary and </span>
+  <span class='nom-comment'># possible.</span>
+  <span class='nom-class'>[:alnum:]</span> <span class='nom-punct'>{</span>
+    <span class='nom-command'>while</span> <span class='nom-class'>[:alnum:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"name*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+  <span class='nom-punct'>}</span>
+
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-comment'># watch the parse stack reduce</span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"&lt;!-- "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>":"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" "</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>unstack</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>stack</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" -->\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    
+    <span class='nom-comment'>#-------------</span>
+    <span class='nom-comment'># 2 token errors</span>
+
+    <span class='nom-comment'># The accumulator is used as a text* flag </span>
+    <span class='nom-comment'># The xml tag parse rules only apply</span>
+    <span class='nom-comment'># if we are inside a tag like this &lt;...> otherwise we are just dealing</span>
+    <span class='nom-comment'># with text. </span>
+
+    <span class='nom-comment'># An idea, this is very verbose, what about pushing an</span>
+    <span class='nom-comment'># error token with a message. ?</span>
+
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-comment'># '&lt;' can only be followed by '/' or a name (space is not allowed) </span>
+    <span class='nom-comment'># or ! in a comment like &lt;!-- etc --></span>
+    <span class='nom-comment'># we need to check that that the token stack is not *just* '&lt;*'</span>
+    <span class='nom-comment'># for the beginning of the script.</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"&lt;*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"!*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"name*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* &lt; must be followed by / or ! or a name. No spaces please."</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"!*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"!*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"-*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"* ! is only used in comments like &lt;!-- etc -->"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>">*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"name*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>'* "/" must be followed by ">" or a name. Sorry, no spaces.\n'</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"&lt;/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"name*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>'* &lt;/ must be followed by > or a name. Sorry, no spaces.\n'</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"quoted*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* = must be followed by quoted text\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># anything beginning with quoted text is an error because </span>
+    <span class='nom-comment'># is should have become an attrib* token</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"quoted*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"quoted*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* misplaced quoted text?"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"name*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"attrib*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"attribset*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>">*"</span><span class='nom-punct'>.</span>
+      <span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"/>*"</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+        <span class='nom-command'>add</span> <span class='nom-string'>"* names must be followed by '>','/','='"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"  eg: name='anon' or &lt;name/> or &lt;name>\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>}</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># If a > or /> starts a sequence then the tag* token etc did</span>
+    <span class='nom-comment'># not reduce properly.</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>">*"</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"/>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"* misplaced > or /> ?\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># the error block, this also allows standard error messages </span>
+    <span class='nom-string'>"xml.error"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"! xml syntax,"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>" near line:"</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char:"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># see if tagnames match</span>
+    <span class='nom-string'>"starttag*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span>   
+      <span class='nom-punct'>!</span><span class='nom-punct'>(</span><span class='nom-word'>==</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+        <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"\n  mismatched tags? bye.\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+      <span class='nom-punct'>}</span>
+      <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"starttag*endtag*"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'>#----------------</span>
+    <span class='nom-comment'># 3 token errors</span>
+
+    <span class='nom-comment'># we could push an xml.error* token with the messsage ?</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>B</span><span class='nom-string'>"!*-*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"!*-*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"-*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* ! and - are only used in comments like &lt;!-- etc -->\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># don't bother with =quoted errors because =quoted should alway</span>
+    <span class='nom-comment'># reduce to attrib* or attribset*</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"name*=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"name*=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"quoted*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>'* Incomplete attribute? good example: age="32"\n'</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"name*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"name*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"=*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* incomplete attribute? Or some other problem.\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;/*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"&lt;/*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>">*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* Bad end-tag syntax. Should be &lt;/name> or &lt;/name > \n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"&lt;*name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"name*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"/*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"/>*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>">*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"space*"</span><span class='nom-punct'>.</span>
+    <span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"attrib*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-punct'>E</span><span class='nom-string'>"attribset*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"* Bad xml tag syntax. \n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"xml.error"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># the error block, this also allows standard error messages </span>
+    <span class='nom-string'>"xml.error"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"! xml syntax,"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>" near line:"</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char:"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># see if tagnames match, if we push an error token here we</span>
+    <span class='nom-comment'># can use the same error block as above.</span>
+    <span class='nom-string'>"starttag*text*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>!</span><span class='nom-punct'>(</span><span class='nom-word'>==</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+        <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"\n  mismatched tags? bye.\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+      <span class='nom-punct'>}</span>
+      <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"starttag*text*endtag*"</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># also errors for mismatched tags.</span>
+
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+
+    <span class='nom-comment'># end of errors</span>
+    <span class='nom-comment'>#--------------------------------------</span>
+    <span class='nom-comment'># 2 token reductions</span>
+
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+
+    <span class='nom-string'>"/*>*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"/>*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;*/*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"&lt;/*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># 2 space tokens should never happen but just in case.</span>
+    <span class='nom-string'>"space*space*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"space*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"space*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"space*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"space*"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># space is either not significant or an error</span>
+    <span class='nom-punct'>E</span><span class='nom-string'>"space*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"space*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>replace</span> <span class='nom-string'>"space*"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># vanish unimportant whitespace, probably a more elegant way to do</span>
+    <span class='nom-comment'># see above</span>
+    <span class='nom-string'>"name*space*"</span><span class='nom-punct'>,</span><span class='nom-string'>"=*space*"</span><span class='nom-punct'>,</span><span class='nom-string'>"quoted*space*"</span><span class='nom-punct'>,</span><span class='nom-string'>"attrib*space*"</span><span class='nom-punct'>,</span><span class='nom-string'>"attribset*space*"</span>
+    <span class='nom-punct'>{</span>
+      <span class='nom-command'>replace</span> <span class='nom-string'>"space*"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-string'>"attrib*attrib*"</span><span class='nom-punct'>,</span><span class='nom-string'>"attribset*attrib*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"attribset*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"starttag*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"tag*tag*"</span><span class='nom-punct'>,</span><span class='nom-string'>"tagset*tag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tagset*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'>#-----------</span>
+    <span class='nom-comment'># 3 token parse token reductions</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"name*=*quoted*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"attrib*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;*name*>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"starttag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;*name*/>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;/*name*>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"endtag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'># I dont actually know where text* can go outside of a </span>
+    <span class='nom-comment'># xml tag, so I will parse this later.</span>
+    <span class='nom-string'>"starttag*text*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"starttag*tag*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"starttag*tagset*endtag*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-comment'>#-----------</span>
+    <span class='nom-comment'># 4 token parse token reductions</span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+
+    <span class='nom-comment'># comments like &lt;!-- text --> just ignore</span>
+    <span class='nom-string'>"&lt;*!*-*-*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>until</span> <span class='nom-string'>"-->"</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;*name*attrib*/>*"</span><span class='nom-punct'>,</span><span class='nom-string'>"&lt;*name*attribset*/>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># here we can check for a "student" tag and the name</span>
+      <span class='nom-comment'># attribute. for the rosetta code problem</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-string'>"&lt;*name*attrib*>*"</span><span class='nom-punct'>,</span><span class='nom-string'>"&lt;*name*attribset*>*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"starttag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>!</span><span class='nom-string'>"tag*"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"tagset*"</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"! xml syntax, at end of input\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"* xml might not to be valid\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"  The parse-stack was: "</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>unstack</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"  Note: currently parser doesnt take [-_.] \n"</span><span class='nom-punct'>;</span> 
+        <span class='nom-command'>add</span> <span class='nom-string'>"        in tag/attribute names. Also, tag text is not\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>add</span> <span class='nom-string'>"        properly handled.\n"</span><span class='nom-punct'>;</span>
+        <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+      <span class='nom-punct'>}</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"* xml syntax seems valid.\n"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+ </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> notes</h3>
+
+<p>
+ I didn&apos;t think that 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> was really the ideal tool for parsing and 
+ transforming 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> text data, but the script above seems to work
+ very well. I only spent a few hours writing it and it does some 
+ quite good syntax error checking.
+<p>
+ The script above is close to being a valid 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> recogniser or syntax
+ checker. It has reasonably good error checking to tell the xml writer where
+ the syntax error has occurred. We still haven&apos;t solved the rosettacode
+ problem but it is not difficult, just check for a student tag and then a name
+ attribute. In fact could just ignore all other attributes. we can just remove
+ all the error checking for the rosettacode problem.
+<p>
+<!-- ------------------------------- -->
+<h3> end token error checking</h3>
+
+<p>
+ The script above uses better error handling than what I have written
+ previously (eg in <a href='https://bumble.sf.net/books/pars/compile.pss'>bumble.sf.net/books/pars/compile.pss</a> or <a href='https://bumble.sf.net/books/pars/tr/translate.go.pss'>bumble.sf.net/books/pars/tr/translate.go.pss</a> )
+ and can be used as a template for error handling in other scripts.
+<p>
+ It is useful to look for <em>end-tokens</em> in sub-patterns. For example 
+ in the xml
+ <pre class='codeline'>
+ &lt;book title="100 trees"&gt; review: worth reading&lt;/book&gt;
+</pre>
+
+<p>
+ The literal token '&gt;' is an <em>end-token</em> in a subpattern. So if that 
+ token still exists after it is parsed and reduced then something
+ is <em>really</em> wrong... So we can look for it in our 
+ error-checker
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ look for a sub-pattern end-token
+ </figcaption>
+<pre class='codeline'>
+  pop;pop; B"&gt;" { #* error! *# } push;push;
+</pre>
+</figure>
+<p>
+ The same is true of the text &ldquo;100 trees&rdquo; (eg quotedtext* token) 
+ which should reduce to an attribute* token <em>before</em> we get to 
+ the &gt;* token, so we can just say
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ another sub-pattern end-token
+ </figcaption>
+<pre class='codeline'>
+  B"quotedtext*" { #* error! *# }
+</pre>
+</figure>
+<p>
+ Because quotedtext* should never <em>begin</em> a token sequence, in 
+ the xml grammar I am using (and possibly not in any 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr> grammar)
+<p>
+ We don't even have to check that there are 2 tokens, because these
+ tokens are errors at the beginning of the xml as well.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ don't have to do this 
+ </figcaption>
+<pre class='codeline'>
+  pop;pop; B"quotedtext*".!"quotedtext*" { #* error! *# } push;push;
+</pre>
+</figure>
+<p>
+ This <em>idiom</em> above normally makes sure that there are 2 tokens 
+ on the stack (in case we are at the very beginning of the input)
+ but in this case it isn&apos;t necessary. So we can also do
+<p>
+ <pre class='codeline'>
+  pop; B"quotedtext*".!"quotedtext*" { #* error! *# } push;
+</pre>
+
+<p>
+<!-- ------------------------------- -->
+<h3> unsuccessful parsing of xml </h3>
+
+<p>
+ The script below is a demonstration of how <strong><em>not</em></strong>
+ to parse 
+<abbr class='tek-acronym' 
+      title='Extensible Markup Language'>XML</abbr>
+ It tries to parse <em>inside</em> the tag but it doesn&apos;t work. We need to 
+ parse as tokens. See the script after this for a better approach.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ parse xml tags with no attributes 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+  <span class='nom-command'>read</span><span class='nom-punct'>;</span>
+  <span class='nom-class'>[\n]</span> <span class='nom-punct'>{</span> <span class='nom-command'>nochars</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>    <span class='nom-comment'># line-relative char numbers</span>
+  <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> <span class='nom-comment'># I think we can ignore space in XML (no, but will)</span>
+  <span class='nom-string'>"&lt;"</span> <span class='nom-punct'>{</span> 
+    <span class='nom-comment'># tagname can have letters/digits and '-' '_' '.' so I should change this</span>
+    <span class='nom-comment'># to 'whilenot [ />.]' but lets not worry </span>
+
+    <span class='nom-command'>while</span> <span class='nom-class'>[/]</span><span class='nom-punct'>;</span>    <span class='nom-comment'># for end.tags</span>
+    <span class='nom-command'>while</span> <span class='nom-class'>[:alnum:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+    <span class='nom-comment'># tape has '&lt;name' or '&lt;/name'</span>
+    <span class='nom-string'>"&lt;"</span><span class='nom-punct'>,</span><span class='nom-string'>"&lt;/"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># error, no tagname</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  No tagname found after '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'  "</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  By the way you can't have spaces after the '&lt;' or '&lt;/'."</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  For example: &lt; name/> (not good XML). "</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  Sorry to be pedantic. Its for your own good. Bye."</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span>
+    <span class='nom-comment'># next char should be either '/' or '>' or an attribute like 'name="bob"' </span>
+
+    <span class='nom-comment'># error, no tag close '>'</span>
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (at end of input)"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  Incomplete tag? '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  bye.\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>while</span> <span class='nom-class'>[/]</span><span class='nom-punct'>;</span> <span class='nom-command'>while</span> <span class='nom-class'>[>]</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>!</span><span class='nom-string'>""</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>"/>"</span><span class='nom-punct'>.</span><span class='nom-punct'>!</span><span class='nom-string'>">"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># xml error, bad tag termination</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  xml tags should be terminated with '/>' or '>' "</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  but the wizzbang xml parser found '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  bye.\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>swap</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-comment'># workspace: &lt;/name>,&lt;name/>,&lt;/name/> </span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;/"</span><span class='nom-punct'>.</span><span class='nom-punct'>E</span><span class='nom-string'>"/>"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># xml error: &lt;/name/></span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  xml tags cannot begin with '&lt;/' and end with />"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  but somebody wrote '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  bye.\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;//"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># xml error: &lt;//name></span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  xml tags cannot begin with '&lt;//'"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  but somebody wrote '"</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"'"</span><span class='nom-punct'>;</span>
+      <span class='nom-command'>add</span> <span class='nom-string'>"\n  bye.\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>E</span><span class='nom-string'>"/>"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># good &lt;name/> tag found, no attributes</span>
+      <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>  <span class='nom-comment'># remove the &lt;.../></span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span> 
+    <span class='nom-punct'>B</span><span class='nom-string'>"&lt;/"</span><span class='nom-punct'>.</span><span class='nom-punct'>E</span><span class='nom-string'>">"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># good end.tag found</span>
+      <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>  <span class='nom-comment'># remove the &lt;/...></span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"end.tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>E</span><span class='nom-string'>">"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># good start.tag found, no attributes</span>
+      <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>  <span class='nom-comment'># remove the &lt;...> </span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"start.tag*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+    <span class='nom-command'>add</span> <span class='nom-string'>"! XML syntax: (near line "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" char "</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>")"</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"\n  Sorry, no attributes allowed here"</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"\n  bye.\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> 
+  <span class='nom-punct'>}</span>
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-comment'># watch the parse stack reduce</span>
+    <span class='nom-command'>add</span> <span class='nom-string'>"&lt;!-- "</span><span class='nom-punct'>;</span> <span class='nom-command'>lines</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>":"</span><span class='nom-punct'>;</span> <span class='nom-command'>chars</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" "</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>unstack</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>stack</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>" -->\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+
+ </code></pre>
+</figure> 
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb &lt;at&gt; nomlang.org</em> 
+<p>
+  </em></small></div></body></html>

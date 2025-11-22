@@ -1,0 +1,24 @@
+
+## THE NOM "BAIL" COMMAND
+
+  The *bail* command may be obsolete. Please dont use it (and it probably wouldn't
+  work anyway). Use the nom://quit command instead. Let me explain: in a moment
+  of obfuscation I thought that the pep,nom system should have 2 'quit' 
+  commands, one for successful execution and one for 'error' conditions.
+  So the nom://quit command would always return 0 and *bail* might return
+  a non zero error code.
+
+  But recently, I decided that the quit command could just return the 
+  value in the accumulator as an exit-code. And that seemed like a good 
+  solution - in fact I have implemented this in the pep interpreter and 
+  in the translation scripts. 
+
+  But writing this document, it occurs to me that 'bail' might still be 
+  a good idea, using the pep://accumulator as the exit-code, because 
+  the word *bail* makes it evident that an error condition has occurred
+  and the quit command would always return 0.
+
+### SEE ALSO
+
+  - nom://quit the command that you should use.
+

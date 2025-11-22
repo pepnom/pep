@@ -1,0 +1,28 @@
+
+
+## THE NOM DECREMENT ACCUMULATOR OR "A-" COMMAND
+ 
+ *Decrement* the pep counter register by one.
+
+ The [pep] virtual pep://machine has a very simple integer counter or
+ *accumulator* register which can either count up, count down, be set to
+ nom://zero or be appended to the pep://workspace buffer with the nom://count
+ command.
+
+ This command takes no arguments.
+
+  * see if equal number of { and } braces 
+  ----+
+   read; "{" { a+; } "}" { a-; }
+   clear;
+   (eof) { 
+     count; !"0" { add " un-"; }
+     add "equal '{' and '}'\n"; print; quit;
+   }
+  ,,,
+
+### NOTES
+
+  The *(eof)* checks to see if the peep buffer contains the 
+  end of input stream marker. 
+

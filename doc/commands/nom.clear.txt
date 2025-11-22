@@ -1,0 +1,40 @@
+
+ ## THE NOM "CLEAR" COMMAND
+
+ *clear* or delete the text in the workspace buffer.
+ 
+ A very common procedure in a *nom* script when parsing and translating a
+ "formal language" wp://formal.language (examples of languages are the "json"
+ https://www.json.org text data format, the "java" programming language, or the
+ set of "palindromes" oed://palindrome) is to 1st match a set of parse tokens,
+ then build the text attribute for the parse "token"
+ https://www.cs.cornell.edu/courses/cs211/2006sp/Sections/S3/grammars.html
+ which will replace the matched tokens, and then nom://put the new attribute
+ into the current pep://tape cell. Then *clear* the *workspace* buffer and
+ create the new parse token. The example below (from a fictitious grammar for
+ parsing arithmetic expressions) illustrates these steps:
+
+ * "reduce" parse tokens and build the new attribute
+ -------+
+   pop; pop; pop;
+   # match the token sequence 'leftbrace expression rightbrace'
+   "leftbrace*expression*rightbrace*" {
+     clear; 
+     # build the new 'attribute' from each parse token attribute
+     get; ++; get; ++; get;
+     # realign the tape pointer and save the new attribute
+     --; --; put; 
+     # clear the workspace, build the new parse token, and push on stack
+     clear; add "expression*"; push;
+     # jump back to the 'parse>' label: this allows any other 
+     # grammar reductions/productions to take place
+     .reparse
+   }
+ ,,,,
+
+ The script above represent a single grammar *rule* or *production* namely
+ >> expression = leftbrace expression rightbrace ;
+
+ the current parse "token" 
+ https://www.cs.cornell.edu/courses/cs211/2006sp/Sections/S3/grammars.html
+

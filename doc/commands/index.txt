@@ -1,0 +1,64 @@
+
+## DOC/COMMANDS FOLDER
+
+  This folder contains documentation about the commands that 
+  are available in the "Nom" language.
+  
+  An index of each command and a link to its documentation is 
+  "here" file:///doc/commands/doc.dir.index.html
+
+  The pep interpreter will provide a list of commands with the 
+  *-c* switch and a short summary with the *-C* switch. Some of 
+  the commands below are not in the format that they would
+  actually be used in a script. For example *untiltape* is actually
+  written as:
+
+    >> until;  # read input stream until workspace ends with current cell
+
+  * display all valid Nom commands with "pep -c"
+  >> pep -c
+  
+
+   nom://add adds a given text to the workspace buffer >>
+   nom://clip removes one character from the end of the workspace >>
+   nom://clop removes one character from the beginning of the workspace >>
+   nom://clear clears the workspace >>
+   nom://replace replace one string with another in the workspace >>
+   nom://upper converts all characters to uppercase in the workspace >>
+   nom://lower converts all characters to lowercase in the workspace >>
+   nom:cap First char in workspace uppercase, the rest lowercase >>
+   nom:print prints the workspace to stdout >>
+   nom:pop pops from the stack to the start of the workspace >>
+   nom:push push (*) delimited token from start of the workspace to the stack >>
+   nom:unstack pops entire stack onto the beginning of the workspace >>
+   nom:stack pushes entire workspace onto the stack >>
+   nom:put puts the workspace into the current tape cell >>
+   nom:get Appends current tape cell to the workspace >>
+   nom:swap swaps the current tape cell and the workspace >>
+   nom:++ increments the current tape cell by one >>
+   nom:-- decrements the current tape cell by one >>
+   nom:mark marks the current tape cell with the given text >>
+   nom:go sets the tape cell pointer to the marked cell >>
+   nom:read read a character from the input stream >>
+   nom:until reads the input stream until the workspace ends with given text >>
+   nom:untiltape reads the input stream until the workspace ends with tape-cell text >>
+   nom:while reads io while peek is something >>
+   nom:whilenot reads io while peek is not something >>
+   nom:count appends the value of the accumulator to the workspace >>
+   nom:a+ increments the machine accumulator by one >>
+   nom:a- decrements the accumulator by one >>
+   nom:zero sets the numerical accumulator to zero >>
+   nom:chars Appends number of characters read to end of workspace buffer >>
+   nom:lines Appends number of lines read to end of workspace buffer >>
+   nom:nochars Sets the character counter to zero >>
+   nom:nolines Sets the line counter to zero >>
+   nom:escape prefixes the given character with the escape character >>
+   nom:unescape converts chars to unescaped equivalent >>
+   nom:echar changes the default escape character >>
+   nom:delim changes the stack token delimited to the given character >>
+   nom:state prints the current state of the machine. >>
+   nom:quit immediately exits the script >>
+   nom:write writes the workspace to default file 'sav.pp' >>
+   nom:writefile writes the workspace to a file >>
+   nom:appendfile appends the workspace to a given file >>
+

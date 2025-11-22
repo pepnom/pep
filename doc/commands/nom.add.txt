@@ -1,0 +1,89 @@
+
+## THE NOM "ADD" COMMAND
+  
+  *add* or appends the given text to the end of the nom://workspace
+  buffer. 
+  
+  This command is a real workhorse of the [pep] and [nom] system. It
+  is used for creating the text attributes that go onto the 
+  pep://tape and also for making the parse-tokens that are "pushed"
+  nom://push onto the pep://stack .
+
+  The command takes one "quoted" nomsyn://quotes parameter which is 
+  the text to be appended to the *workspace*. The parameter can be 
+  single-quoted or double, there is no difference. And the quoted parameter
+  can extend over multiple lines.
+
+  No other register or buffer within the "pep" pep://machine virtual machine is
+  affected by the *add* command.  
+
+  * using add in a typical way during parsing
+  ----+
+    pop;pop;
+    "command*end*" {
+      clear; add "statement*"; push; .reparse
+    }
+    push;push;
+  ,,,,
+
+  * The quoted argument may span more than one line. For example:
+  -----+
+    begin { 
+      add '
+        A multi-line 
+        argument for the "add" command.
+      ';
+     } read; print; clear;
+
+  ,,,,
+  
+  It is possible to use escaped characters such as \n \r \t \f or \" in 
+  the quoted argument.
+
+  * add a newline to the workspace after a full stop
+  >> r; E"." { add "\n"; } print; clear;
+
+  * Add a space after every character of the input 
+  ----+
+    read; add ' '; print; clear;
+    # or the same using abbreviated commands
+    # r; a ' ';p;d;  
+  ,,,
+  
+  "Add" is used to create new tokens and to modify the token attributes.
+
+  * create and push (shift) a token using the "add" command
+  --------+
+   "style*type*" {
+     clear;
+     add "command*";
+     push;
+   }
+  ,,,,
+
+  The script above does a shift-reduce operation while parsing some
+  hypothetical language. The "add" command is used to add a new token name to
+  the 'workspace' buffer which is then pushed onto the stack (using the 'push'
+  operation, naturally). In the above script the text added can be seen to be
+  a token name (as opposed to some other arbitrary piece of text) because it
+  ends in the "*" character. Actually any character can be used to delimit
+  the token names, put "*" is the default. This can be changed with
+  the nom://delim command.
+
+  The add command takes *one* and only one parameter, or argument.
+  
+### NOTES
+
+  *add* is the typical way to create new parse-tokens during 
+  shift-reduce parsing (after "clearing" nom://clear the pep://workspace
+  buffer). But when we use *lookahead* for contextual parse-token
+  sequence reductions, then we often need to use nom://replace instead
+  of *add*. This is because we may not know what the lookahead token
+  is - we only know what it is *not* .
+
+  * add a quote after the ':' character
+  >> r; [\:] { add "\""; } print; clear;  # non java fix!!
+  >> r; [:] { add "\""; } print; clear; # java version
+
+  But it shouldn't be necessary to escape ':'
+

@@ -1,0 +1,41 @@
+
+I made a script that recognises prices in the format 
+$12,345,678.00. The script is at
+
+  http://bumble.sourceforge.net/books/pars/eg/prices.pss
+
+It can be tested with
+  pp -f eg/prices.pss -i '$1,234,567,897.00'
+
+It can also be translated into java using the object in object.java/
+ and tested with:
+      pp -f compile.java.pss eg/prices.pss > object.java/Script.java
+      javac Script.java;
+      # now test if it works
+      echo ' $12,345,678.00' | java Script
+
+The script implements the regular expression
+     [ ]*\$[ ]*[1-9][0-9]{0,2}(,[0-9]{3})*\.[0-9][0-9][ ]*
+
+So spaces are allowed before and after the $ dollar sign and also trailing
+spaces, but not in the number itself. However the pp script is much much more
+verbose than the regex. The pp machine may be more useful and interesting if
+you have multiline and nested patterns that you need to transform. It is
+possible that the pp script (especially when compiled into another language)
+may be faster than the regular expression.
+
+If you look at the script, then each brace block {} corresponds to a BNF
+rule. For example the block: 
+
+"number*cents*" {
+    clear; get; ++; add "."; get; --; put;
+    clear; add "price*"; push; .reparse
+  }
+
+corresponds to a BNF rule:
+  price = number cents ;
+
+The line "clear; get; ++; add "."; get; --; put;" is not related to the BNF
+rule but is manipulating the attributes of each token (which is how the input
+gets translated or compiled into the output)
+

@@ -1,0 +1,12 @@
+
+Test results for translating nom scripts
+Translation Script: /home/wworth/sf/htdocs/books/pars/tr/translate.dart.pss
+Language: dart
+Date: Thu 08 May 2025 07:01:57 PM CDT
+Tests 1st gen: 11
+Errors 1st gen: 0
+Time Taken 1gen: 0
+Tests 2nd gen: 0
+Errors 2nd gen: 0
+Time Taken 2gen: 0
+Error results: 

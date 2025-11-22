@@ -1,0 +1,18 @@
+
+## The nom parse> label
+
+  The *parse>* label marks the start of the parsing/translation phase
+  of a nom script.
+
+  All nom://reparse commands jump back to the parse> label and this is 
+  an important technique for making sure that all possible grammar 
+  reductions take place.
+
+  This label is used to mark the start of the parsing and
+  translating/transpiling/compiling phase of the nom script. The section before
+  the parse> label is the wp://lexical.analysis phase of the script where text
+  patterns are turned into grammar tokens.
+
+  In the compiling or translating part of the script tokens are
+  "popped" nom://pop off the "stack" pep://stack
+

@@ -1,0 +1,116 @@
+
+ ## ADDING STYLES TO TEXT WITH NOM
+
+ How to add styles to text with a nom parsing technique
+
+ Nom is really designed to recognise, parse, error-check, compile, transpile,
+ translate or transform text patterns and languages. But the same techniques
+ that are used when shift-reducing parse tokens can be used to apply 'styles'
+ (formatting) to text. A good example of this is in the script
+ /eg/nom.tolatex.pss which formats a nom script as printable latex (which can
+ be converted to pdf with xelatex) This is a technique that I discovered while
+ writing that script and will document it better here.
+
+ [latex] contains some tricky special characters that need to be 
+ 'escaped' in different ways. Some are escaped with the standard backslash
+ character. In the script /eg/nom.tolatex.pss I use a special token 
+ called replace* to do this escaping. Then this token looks *behind* it 
+ for other styling tokens such as comment* string* etc.
+
+ This technique works but is not logical. It is better to use standard
+ token reduction techniques to apply the styles as follows. The script
+ below is simplified for clarity. It only tokenises comments starting
+ with # and 'classes' between [ and ]. 
+ the attributes for the parse tokens replace* italic* and bold* are 
+ empty when we nom://push them on the pep://stack but they indicate
+ operation to carry out on the text that is in the text* parse token.
+ 
+ The pattern below is useful because I can apply any style (in any order)
+ to the given text, just by pushing the corresponding parse token on 
+ the stack. However, because the syntax of [latex] the replace* token
+ should always be immediately before the text* parse token.
+
+ In the code below, the tokens need to be placed in the reverse order
+ to how they will be applied to the text.
+
+### AN EXAMPLE SCRIPT
+
+ * escaping special chars and applying styles with shift-reduction
+ -----+
+    read;
+
+    # alphabetic words
+    [:alpha:] {
+
+      # the text needs to be placed in the text* token attribute
+      # hence the ++;--; command soup.
+      
+      while [:alpha:]; ++; ++; ++; put; --; --; --;
+      clear; add "italic*bold*replace*text*"; 
+      push; push; push; push; .reparse
+    }
+
+    # single line comments
+    '#' {
+      whilenot [\n]; ++; ++; put; --; --;
+      clear; add "italic*replace*text*"; 
+      push; push; push; .reparse
+    }
+
+    # 'classes' between [ and ] 
+    '[' {
+      until ']'; ++; ++; put; --; --;
+      clear; add "bold*replace*text*"; 
+      push; push; push; .reparse
+    }
+    
+    # ignore everything else
+    !"" { clear; }
+  parse>
+
+    pop;pop;
+    "text*text*" {
+      clear; get; add " "; ++; get; --; put;
+      clear; add "text*"; push; .reparse
+    }
+
+    "replace*text*" {
+      clear; ++; get; --;
+      replace "\\" "\\textbackslash{}";
+      replace "{" "\\{"; replace "}" "\\}";
+      # undo the circular escape
+      replace "textbackslash\\" "textbackslash";
+      replace "textbackslash{\\" "textbackslash{";
+      replace "#" "\\#"; replace "$" "\\$"; replace "%" "\\%";
+      replace "&" "\\&";
+      replace "_" "\\_";
+      replace "^" "\\textasciicircum{}";
+      replace "~" "\\textasciitilde{}";
+      put; clear;
+      add "text*"; push; .reparse
+    }
+
+    "italic*text*" {
+      clear; add "\\textit{"; ++; get; --; add "}"; put;
+      clear; add "text*"; push; .reparse
+    }
+
+    "bold*text*" {
+      clear; add "\\textbf{"; ++; get; --; add "}"; put;
+      clear; add "text*"; push; .reparse
+    }
+    # ... more styles here.
+    push;push;
+
+    # print the styled text at the end-of-file
+    (eof) {
+      pop; "text*" { clear; get; print; quit; }
+    }
+ ,,,,
+ 
+### NOTES
+
+  This same technique could be applied to the error* and help* token
+  system that is used in several recent nom scripts, and which should 
+  be part of any non-trivial nom language compiler.
+

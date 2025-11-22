@@ -1,0 +1,47 @@
+
+## THE NOM CHARS COMMAND
+
+  append the number of characters read to the end of the pep://workspace buffer
+ 
+ * print the total number of characters in the input 
+ --------+
+   read; 
+   (eof) { 
+     clear; add "read "; chars; add " characters.";
+     print; 
+   }
+ ,,,,,
+
+ The code above is almost equivalent to the unix *wc -c* command
+ except that it will be a bit slower.   
+
+ The chars command just does what it says on the box: it takes the value
+ from the character counter in the pep virtual pep://machine and appends 
+ it (as a string or text) to the *end* of the workspace buffer with 
+ not intervening spaces. The point of this command is to point out to 
+ the hapless user of your wonderful programming language or pattern 
+ recogniser where he or she went so hopelessly wrong. Every compiler 
+ or interpreter or simple syntax checker does this, and so should yours.
+
+ But we need to *unpack* this a little. What is a "character"? 
+ Can you alter the character counter? The first question is not trivial
+ and possibly has no answer owing to a thing called unicode combining
+ marks or "grapheme clusters". In a nutshell, a unicode "grapheme" (what
+ we see on the page or screen as a single character) can consist of 
+ a base character followed by *any number* of combining marks.
+
+ But its ok, some of the nom "translators" /tr/ can handle grapheme 
+ clusters. Well, actually at the moment on the "dart" /tr/nom.todart.pss
+ translator. But the rust translator should be able to when it is 
+ finished (getting there may 2025). 
+
+ You can set the pep character counter to *zero* with the nom://nochars
+ command but you cant do anything else to it, except print it. This 
+ is one of these funny little artificial restrictions that I like to 
+ place on the nom and pep virtual machine, with the idea of keeping 
+ everything as simple as possible. One day you will see the wisdom
+ of this. 
+
+
+
+

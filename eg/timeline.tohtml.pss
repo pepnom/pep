@@ -1,0 +1,1011 @@
+
+#*
+ABOUT 
+
+  Markup a simple timeline formatting script.
+  Probably need to ensure that '/' is first character in order to
+  invoke the help system. Working with minimal testing
+
+NOTES 
+
+  Also, allow multiline comments. Also include paragraphs? and 
+  parse quotes?
+
+  The token evaporation technique below is remarkably good, but 
+  also needs an (eof) 1 token test to reduce all these as well.
+  This will become a standard parsing technique.
+
+  * an idea for token reduction, implemented below.
+  -----
+    # try reverse reduction of 2 tokens: this should work
+    E"*word*","text*" {
+      B"comma*",B"month*",B"era*",B"number*",B"]*",B"[*" {
+        clear; get; ++; add " "; get; --; put;
+        clear; add "text*"; push; .reparse
+      }
+    }
+  ,,,,
+
+TOKENS
+
+  item*    one date:text timeline item
+  list*    a list of items
+  word*    one whitespace delimited word 
+  text*    multiple words
+  space*   whitespace (not used I think)
+  month*   a month name (or digits?)
+  number*  day or year, not checked 
+  date*    [ day month year ] or [ month year ] or [year]
+  [* ]*    literal tokens to delimit dates.
+  era*     AD or CE or BC or BCE etc
+  comma*   one , comma used only in dates
+
+HISTORY
+
+  13 aug 2025
+
+    Implemented 2 token reverse reductions for out of context 
+    date/component tokens and it works extremely well. 
+
+    Looking again at this: need to add the /to translation 
+    help word and also maybe separate the header into a separate 
+    word. Also, look for a better way to evaporate tokens. See the 
+    notes section. Also, just parse number* not day/year because 
+    22 can be a year.
+    
+  1 August 2025
+    Basic parsing and rendering appears to work. styled the 
+    output and provided an html header etc. It would probably be better
+    to use a "nl*" newline token for proper line parsing. 
+  31 July 2025
+    Started this.
+
+*#
+
+  # check for an empty doc and trigger help if true
+  begin {
+    while [:blank:]; clear;
+    (eof) {
+      # the category is help and the token too.
+      add "usage"; put; clear; 
+      add "help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be valid xml
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; whilenot [:space:];
+      swap; get; put; clear;
+      add "help*"; push; .reparse
+    }
+  } # end of beginblock
+
+ read;
+
+ # literal tokens
+ "[","]" { put; add "*"; push; .reparse }
+
+ "\n" { 
+   nochars;
+   while [:space:]; clear; 
+   while [#*];
+   # parse headings, I could add this to a table of contents, or 
+   # only every 10th heading etc, with just the date.
+
+   B"**" { 
+     clear; whilenot [\n]; 
+     replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; 
+     put; 
+     clear; add "<h3>"; get; add "</h3>"; put;
+     clear; add "text*"; push; .reparse
+   }
+
+   # multi-line comments, these are removed from the output
+   B"#*" { until "*#"; clear; !(eof) { .restart } }
+   # single line comments within the timeline document, 
+   B"#" {  
+     whilenot [\n]; clear; !(eof) { .restart }
+   }
+   !"" { put; clear; add "text*"; push; .reparse }
+ }
+
+ # maybe I should parse by digits, alnum, etc here?
+ # words are delimited by space or [] for dates
+ ![:space:] { 
+   whilenot [\n\r\t\f \]\[,-];  
+   replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; put;
+   lower;
+   "approx.","approx","approximately" {
+     clear; add "approx*"; push; .reparse 
+   }
+   "," { clear; add "comma*"; push; .reparse }
+   # for year/date ranges
+   "-" { clear; add "dash*"; push; .reparse }
+   "bc","bce","ad","ce" { clear; add "era*"; push; .reparse }
+
+   B"jan",B"feb",B"mar",B"apr",B"may",B"jun",B"jul",
+   B"aug",B"sep",B"oct",B"nov",B"dec" {
+     clear; add "month*"; push; .reparse
+   }
+   [:digit:] {
+     clear; add "number*"; push; .reparse
+   }
+   # very basic emphasis of single words
+   B"*".E"*".!"**".!"*" {
+     clip; clop; put;
+     clear; add "<em><strong>"; get; add "</strong></em>"; put;
+   }
+   clear; add "word*"; push; .reparse
+ }
+
+ [:blank:] { 
+   while [:blank:]; clear;
+ }
+
+ parse>
+   # watch the parse stack reduce
+   # add "#<!-- "; lines; add ":"; chars; add " "; print; clear;
+   # unstack; print; stack; add " -->\n"; print; clear;
+
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allows implementing a help system
+  that can be triggered by an empty document or by help keywords
+
+  A time-line text document should not really have 'errors'
+ *#
+ "error*" {
+   # maybe get the parse stack here as well
+   clear; 
+   add "[whoops] time-line ";
+   add " near line:"; lines; add " char:"; chars; add "\n";
+   get; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   zero; a+; quit;
+ }
+
+ #*
+  Using a help* token to allow the script to document itself.
+  The swap commands below are used to save the help text in the tape
+  cell so that several or all help topics can be printed at once.
+ *#
+
+ "help*" {
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help","all" {
+     swap; add "
+   USAGE
+     pep -f timeline.tohtml.pss file.txt
+     pep -f timeline.tohtml.pss -i 'test text' 
+
+     A nom script to transform a timeline text document into an HTML fragment
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All documents/input which begin with '/' are considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f timeline.tohtml.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f timeline.tohtml.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f timeline.tohtml.pss -i /help
+       see all the help.
+
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+     - /flaws: known limitations 
+     - /eg: display an example timeline doc
+     - /test: test by creating an html file and opening with a browser 
+     - /make: make the world-history file in the /doc folder 
+     - /format: show information about the timeline text format
+
+   ### About translating and testing this script
+     - /eg.lines: produce a few example lines for testing
+     - /eg: produce an example document
+     - /header: produce an html header with css for the timeline (todo)
+     - /test.line: test one one-line input
+     - /test.eg: test the example doc. (todo)
+     - /test.eg.open: test the example doc, make the page and open (todo)
+     - /langs: available translation languages.
+     - /translate: show how to translate this script to another language
+     - /to<lang>: translate this script to another language (need to 
+        implement - see /eg/timeline.tohtml.pss)
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /format: all information about the xml format 
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (not) frequently asked questions about /eg/timeline.tohtml.pss
+
+     Q: What does this script do?
+     A: It turns a plain text document which is in a sort of 'time line'
+        format, into an html page.
+
+     Q: What else can it do?
+     A: It can provide some help for itself. I also would like to make 
+        a LaTeX version for printing.
+
+     Q: Aren't you spending a lot of time on a supposedly simple script
+        that just pretty prints a time-line?
+     A: Maybe, but I like time-lines, I like pretty-printing and I like 
+        playing around with grammars and developing new techniques for 
+        things like *evaporating* tokens that are not needed. In this 
+        case I think a reverse reduction should get rid of all the months
+        and brackets and commas and numbers when they are clearly serving 
+        no purpose.
+
+     Q: Could this script become as important as the steam-engine?
+     A: No, but its amazing the interesting corollaries when you get 
+        the grammar right and find that you can start to manipulate 
+        the text patterns in ways that you have not thought of before.
+        This has happened with the nom-system itself which has regurgitated
+        new ideas out of a basic kernel... all sorts of self-translation 
+        and self-documentation corollaries.
+
+     Q: But what can I do with a timeline?
+     A: Its sort of a potted history of the world. Just select the historical
+        events that you consider important from your own point of view.
+        In the timeline document at www.nomlang.org/doc/history.world.txt I 
+        try to have a cultural, technological and linguistic focus but that's
+        just my bias.
+
+     Q: The script looks complicated?
+     A: It is more complicated than a regular expression script written 
+        in Python or Perl or Ruby or Sed or something else, but it is doing 
+        real context-free parsing with real-life parse tokens and so on 
+        and so forth. Also, it is doing self-help, self-translation and 
+        self-testing. Wow! All that in such a tiny package. To produce the 
+        self-help manual just type *pep -f timeline.tohtml.pss /help*
+        and you will get more info than you thought possible for a little
+        text-to-html script. (including this FAQ)
+
+     Q: That sounds very grandiose, but I don't think it matters to me
+     A: Well, the parsing introduces power but also difficulties. For 
+        example, if you want the dates to be in different formats like
+        [month,day,year] or [year,month,day] etc then you have to introduce
+        new grammar rules. And reducing out-of-context tokens
+        (such as the name of a month which is not part of a date) can become
+        *interesting* .
+
+     Q: What does 'interesting' mean in this context?
+     A: It means 'infernally challenging'. Because basically you need to 
+        know what are the valid parse token sequences, and what are not 
+        valid for a date* token for example, and then *evaporate* the 
+        month* token when it is not wanted. For example, if a month-name is 
+        not followed by a year* token then vanish the month* token: turn it
+        into a vanilla word* or text* token, and allow it to be washed away 
+        on the tides of stack-reduction.
+
+     Q: Whats the solution?
+     A: This is something I discovered in the last 5 minutes ...
+        that a sort of reverse-reduction technique will slice through the 
+        Gordian knot. So look for a word* token that **ends** the sequence
+        and then you can say, 'well, nothing preceding this is important
+        in the context of dates, so we can reduce and evaporate the 
+        number and month tokens, among others.'
+    
+     Q: Can I use this 'reverse' reduction technique in any situation?
+     A: No, it only works when there is a well-defined *end token* for 
+        a particular sequence. For example in the date syntax defined by
+        the current script, dates must be enclosed in square brackets.
+        This means that if a ]* or month* or year* etc token is followed
+        by an ordinary word* token, then these things are not part of 
+        a date. But maybe it would work anyway, I haven't really thought
+        it through. If it does work then it could probably be applied 
+        in the script /eg/text.tohtml.pss
+
+     Q: That's pretty confusing, what does it mean?
+     A: It just means that the date-component tokens are only significant
+        with [ and ]
+
+     Q: What about for normal dates not within brackets?
+     A: Then things get a lot harder because the big question is:
+        'Where does the date end?'. Does it end after a year* token?
+        But what about era qualifiers like 'AD' or 'CE' or 'BC' 
+        Basically the grammar has to 'wait' until it is sure no more 
+        date type tokens are coming along and then reduce. This means 
+        the dreaded 'look-ahead' (Its a bit dreaded in the pep/nom system
+        because the look-ahead token or tokens need to be encoded
+        into the grammar rules).
+
+     Q: Can I turn this FAQ into a tiny language model?
+     A: Perhaps we can call 'Eliza' - the psychologist script by 
+        Weizenbaum a 'Tiny Language Model'. I think it is unlikely but 
+        in this case but its an interesting idea, and I think Nom could do it.
+     
+     Q: Could you implement 'Eliza' in nom?
+     A: Yes but you probably need the nom://system command which I haven't
+        implemented yet (August 2025) because I was trying to avoid putting
+        omnipotent commands into the pep/nom system.
+
+     Q: What is wrong with 'omnipotent' commands?
+     A: I prefer impotent commands that only do just enough. Because they
+        make you think more, and that is probably the only useful purpose
+        of a computer ... to spark our own thoughts.
+
+     Q: How would you write Eliza in nom?
+     A: I would parse the user phrase in a very limited way and 
+        provide a set of responses from a text file (hence the 
+        nom://system command) with a little bit of randomisation.
+
+     Q: What is the system command good for?
+     A: Well, what I just said above, but more importantly I think it 
+        would allow for the implementation of the word 'this' or 'that'
+        in tiny-language parsers. Or to put it another way, it would allow
+        maintaining *state* for long enough to know what the user-person
+        meant when she says 'this' or 'that'
+
+     Q: What is a 'tiny language model' or a 'tiny language parser' or a 
+        TLM?
+     A: Its a very vague but interesting idea I have about parsing language
+        based on a very small or non-existent training model. I think that 
+        the script /eg/nom.to.pss is an incipient implementation of the 
+        idea. Its parsing a request or query within a very limited context.
+      
+     Q: How can you have a non-existent training model for a language 
+        parser?
+     A: Well, the idea is that the TLM is a factorisation of a large
+        language model. But I am not going to go into it right now.
+       
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in pep:nom.
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   # just for testing the parsing of dates
+   "eg.dates" {
+     swap; add "
+     # valid dates
+     [400 AD approx.]
+     [2 aug 2022]
+     [jan 2, 2022]
+     [1022 - 2000]
+     [789-1000]
+     [February 28 , 978]
+     [sep 2022] something happened
+     [December 2022] important *date*
+     [2022 AD]
+     [943]
+     [approx 55 ad]
+     [2000 bc approx.]
+     [22 BCE]
+     "; 
+     replace "\n    " "\n";
+     swap;
+   }
+   # test non date parsing (i.e. the proper reduction of the date
+   # components when they are not part of a full date
+   "eg.nodates" {
+     swap; add "
+     # should not parse as a date 
+     this approx. august ] we
+     on 12 august [ , we
+     # no year
+     [august]
+     # misplaced comma
+     [jan, 2 2022]
+     [sep 2022 something happened
+     [ ] [ , approx 33 33 , ] jan feb
+     this jan 2, we 200] , [] , approx
+     2000 bc AD , [ jan ad ] and text
+     2 jan 2022 
+     2 August 2000
+     [august] followed by text
+     August 2000
+     "; 
+     replace "\n    " "\n";
+     swap;
+   }
+
+
+   # one line documents
+   "eg.lines" {
+     swap; add "
+     # one line docs 
+     [2 aug 2022] some thing happened
+     [2 AD] more things. 
+     [2 bc] 
+     "; 
+     replace "\n    " "\n";
+     swap;
+   }
+
+   #
+   "badinputlines" {
+     swap; add "
+       ??
+     ";
+     swap;
+   }
+
+   # an example of the format
+   "eg","format","help" {
+     swap; add "
+
+ # an example of a timeline document. Comments will not display
+ # in the final document, and can be included with a leading hash '#'
+
+ ** an example time line
+
+ [November 1989 CE]
+   The <fall> of the Berlin Wall.
+
+ [Oct 30, 1974]
+
+   The 'Rumble in the Jungle' [boxing match] between **Muhammad Ali** 
+   and George Foreman took place on October 30, 1974.   
+
+ [20 july 1969]
+   First Human Moon Landing (Apollo 11 mission marks a pivotal moment in space
+   exploration and technological achievement).  
+
+ [29 October 1929]
+   'Black Tuesday' The sell off of the usa stock-market.  
+
+ [ approx. 1975 BC] extinction of woolly mammoths on Wrangel Island.
+
+
+     ";
+     swap;
+   }
+
+   # the timeline format 
+   "format","help" {
+     swap; add "
+ THE TIMELINE DOCUMENT FORMAT
+
+   Dates are enclosed in square brackets and start the line
+   Dates can be a year, an approximate year or month plus year
+   
+   Everything after the date is the description of the event.
+   It would be nice to be able to include an image related to 
+   the event.
+   
+   - Headings: ** beginning a line and encompass the whole line
+   - single word emphasis with asterisks like *this*
+   - single line comments: A single hash # at the start of a line 
+     is a comment and will not be reproduced.
+   - multiline comments begin with #* (starting a line) and end with 
+     *#
+   - dates can be [2 jan 2000] or [jan 2000] or [jan 2, 2000]
+     or [1000 AD] or [1000 ce] or [jan 2000 AD] or [1000-2000]
+     or [400 AD approx]
+     ";
+     swap;
+   }
+
+   # tests one date line with this script. 
+   "test.date" {
+     swap; add "
+       # TESTING ONE ONE-LINE DATE INPUT STRING 
+       doc=$(pep -f $PEPNOM/eg/timeline.tohtml.pss -i /eg.dates | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- input: $doc -->\"
+       pep -f $PEPNOM/eg/timeline.tohtml.pss -i \"$doc\" 
+       echo \"<!-- input: $doc -->\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test.date | bash
+       ";
+     replace "\n     " "\n";
+     print; zero; quit;
+     # its not necessary to swap here because we
+     # are not going to add any more text.
+   }
+
+   # tests one non-date line 
+   "test.nodate" {
+     swap; add "
+       # TESTING ONE ONE-LINE DATE INPUT STRING 
+       doc=$(pep -f $PEPNOM/eg/timeline.tohtml.pss -i /eg.nodates | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- input: $doc -->\"
+       pep -f $PEPNOM/eg/timeline.tohtml.pss -i \"$doc\" 
+       echo \"<!-- input: $doc -->\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test.nodate | bash
+       ";
+     replace "\n     " "\n";
+     print; zero; quit;
+     # its not necessary to swap here because we
+     # are not going to add any more text.
+   }
+
+   # tests one line with this script. 
+   "test.line" {
+     swap; add "
+       # TESTING ONE ONE-LINE INPUT STRING 
+       doc=$(pep -f $PEPNOM/eg/timeline.tohtml.pss -i /eg.lines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- input: $doc -->\"
+       pep -f $PEPNOM/eg/timeline.tohtml.pss -i \"$doc\" 
+       echo \"<!-- input: $doc -->\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test.line | bash
+       ";
+     replace "\n     " "\n";
+     print; zero; quit;
+   }
+
+   # make and open the html file, not really useful
+   "test.line.html" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+       pep -f timeline.tohtml.pss -i /test.line > test.html 
+       firefox test.html
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test.line.pdf | bash
+       ";
+     replace "\n     " "\n";
+     print; quit;
+   }
+
+   # tests the script with some file ?
+   "test" {
+     swap; add "
+       # TESTING INPUT from world history 
+       pep -f timeline.tohtml.pss $PEPNOM/doc/world.history.pss
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test | bash
+       ";
+     replace "\n     " "\n";
+     swap;
+   }
+
+
+   # just call the /eg/nom.to.pss script which does translation from
+   # a simple command like 'translate script.pss to ruby'
+   B"to" {
+     clop; clop; put; clear;
+     add '
+      translator=${PEPNOM}/eg/nom.to.pss
+      if [ -f $translator ]; then
+        echo -e "[ok] Found translator script: $translator"
+      else
+        echo -e "
+         [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+         (maybe) set the $PEPNOM environment var
+         (or)    download the translator from www.nomlang.org/eg/ 
+         ";
+        exit 1;
+      fi
+      pep -f $translator -i "timeline.tohtml.pss to '; get; add '" | bash
+      # RUN THIS WITH:  
+      #   pep -f timeline.tohtml.pss -i /to'; get; add ' | bash
+      ';
+      replace "\n    " "\n";
+      print;
+      quit;
+   }
+
+   # give info about translation languages
+   "langs","translation","help" {
+     swap; add "
+     NOM TRANSLATION LANGUAGES
+
+      Pep:nom translators exist for   
+        rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+
+      However the 1st four are more recently written and superior
+      to the others. The advantages are:
+        - all the code is in a parse() method so that the translated
+          code can be used from other code in that language.
+        - a number of bugs have been elimited.
+        - the grammar has been reorganised 
+        - etc
+
+     "; 
+     swap;
+   }
+
+   # tests the example doc with this script
+   # make this test any input file and open with firefox
+   "test" {
+     swap; add "
+       # TESTING TIMELINE SCRIPT 
+       pep -f timeline.tohtml.pss -i /eg > test.txt
+       pep -f timeline.tohtml.pss test.txt > test.html; firefox test.html
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /test | bash
+       ";
+     replace "\n    " "\n";
+     swap;
+   }
+   # makes the history of the world timeline 
+
+   "make","allhistory" {
+     swap; add '
+       # TESTING TIMELINE SCRIPT 
+       name="$PEPNOM/www/nomblog.site/doc/history.world"
+       pep -f $PEPNOM/eg/timeline.tohtml.pss $name.txt > $name.html
+       firefox $name.html
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f timeline.tohtml.pss -i /make | bash
+       ';
+     replace "\n    " "\n";
+     swap;
+   }
+
+   # how to translate this script to another language, 
+   "translate","tr","about","help" {
+     swap; add "
+
+    HOW TO TRANSLATE THIS SCRIPT
+
+      This script can be translated to other languages using nom 
+      translation scripts which are available at www.nomlang.org/tr/
+    
+      Currently nom scripts can be translated into the following languages.
+        rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c      
+      Some translators are better than others. The translators are 
+      all nom scripts, and they can translate themselves (!?)
+      
+      * translate this script to rust, compile and run (needs 'rustc')
+      ---
+        pep -f tr/nom.torust.pss timeline.tohtml.pss > text.tohtml.rs
+        rustc -o texttohtml.exe texttohtml.rs
+        echo ' some *strong* text ' | ./texttohtml.exe 
+      ,,,
+
+      * translate a script to perl, and run with 'doc.txt' as input
+      ---
+        pep -f nom.toperl.pss timeline.tohtml.pss > test.pl 
+        chmod +x test.pl
+        cat doc.txt | ./test.pl
+      ,,,
+
+     ";
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   B"flaw",B"fault","help" {
+     swap; add '
+     FLAWS OR PROBLEMS WITH THIS SCRIPT
+       - only accepts year date ranges [1999-2001] 
+       - pep throws a few seg faults with big scripts, but not with 
+         this one so far.
+       - parses dates in square brackets, but does nothing with the 
+         date (doesnt order them etc)
+
+     ';
+     swap;
+   }
+
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f timeline.tohtml.pss -i /words \n";
+     add "  to see valid help keywords";
+   }
+   add "\n\n"; print; zero; a-; quit; 
+ }
+
+ push;
+ # end of the error and help system.
+ # -------------------
+    
+ # 1 token
+ pop;
+ # categorise words into day, month, year etc. It doesnt matter 
+ # if the month names are a bit wrong because in the context of 
+ # the date parsing it should work
+ "word*" { nop; }
+ 
+ # This is an interesting idea... reduce date component tokens
+ # by making this a word this should trigger all preceding to do the same.
+ (eof) {
+   "dash*","approx*","era*","comma*","[*","]*","number*","month*" { 
+     clear; add "word*"; push; .reparse
+   }
+ }
+
+ # --------------
+ # 2 tokens
+ pop;
+
+ # try reverse reduction of 2 tokens: seems to work well
+ #
+ E"*word*",E"*text*" {
+   B"dash*",B"approx*",B"comma*",B"month*",B"era*",B"number*",B"]*",B"[*" {
+     clear; get; add " "; ++; get; --; put;
+     clear; add "text*"; push; .reparse
+   }
+ }
+
+ # the *token* trick is to ensure 2 tokens
+ B"word*",B"text*",B"space*" {
+   E"*word*",E"*text*",E"*space*" {
+     clear; get; add " "; ++; get; --; put; 
+     clear; add "text*"; push; .reparse
+   }
+ }
+
+ "item*item*","list*item*" {
+   clear; get; ++; get; --; put; 
+   clear; add "list*"; push; .reparse
+ }
+ 
+ 
+ (eof)."date*text*" {
+   clear; 
+   add "<dt>"; get; add "</dt>\n"; 
+   add "<dd>"; ++; get; --; add "</dd>"; put; 
+   clear; add "item*"; push; .reparse
+ }
+ 
+ # 3 tokens
+ pop;
+ "[*number*]*" { 
+   clear; ++; get; --; put;
+   clear; add "date*"; push; .reparse
+ }
+
+ "date*text*date*" {
+   replace "date*text*" "item*"; push; push;
+   --; --; add "<dt>"; get; add "</dt>\n"; 
+   add "<dd>"; ++; get; --; add "</dd>"; put; ++; ++;
+   # transfer other attrib
+   clear; get; --; put; ++; 
+   clear; .reparse
+ }
+
+ # item lists have trailing tokens. This may fail if only 2 tokens
+ B"item*item*",B"list*item*" {
+   replace "item*item*" "list*"; 
+   replace "list*item*" "list*"; 
+   push; push;
+   --; --; get; ++; get; --; put; ++; ++;
+   # transfer attrib
+   clear; get; --; put; ++;
+   clear; .reparse
+ }
+ 
+ # 4 tokens
+ pop;
+
+ "[*month*number*]*","[*number*era*]*","[*number*approx*]*" {
+   clear; ++; get; add " "; ++; get; --; --; put;
+   clear; add "date*"; push; .reparse
+ }
+
+ # 5 tokens
+ pop;
+
+ "[*number*month*number*]*","[*number*dash*number*]*",
+ "[*number*era*approx*]*","[*approx*number*era*]*",
+ "[*month*number*era*]*" { 
+   clear; ++; get; add " "; ++; get; add " "; ++; get; --; --; --; put;
+   clear; add "date*"; push; .reparse
+ }
+
+ # 6 tokens
+ pop;
+
+ "[*month*number*comma*number*]*","[*number*month*number*era*]*",
+ "[*month*number*era*approx*]*","[*approx*month*number*era*]*" { 
+   clear; ++; get; add " "; ++; get; add " "; ++; get; add " "; ++; get; 
+   --; --; --; --; put;
+   clear; add "date*"; push; .reparse
+ }
+
+ # eg [approx. 2000 BCE]
+ (eof) {
+   "word*list*","text*list*" {
+     clear; 
+     add '
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline with Definition List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .timeline-container {
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            padding: 0; margin: 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 20px; width: 2px;
+            height: 100%;
+            background-color: #ddd;
+        }
+
+        .timeline dt {
+            position: relative;
+            margin: 0 0 10px 40px;
+            padding-left: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .timeline dt::before {
+            content: "";
+            position: absolute;
+            left: -20px; top: 50%;
+            transform: translateY(-50%);
+            width: 14px; height: 14px;
+            background-color: #007bff;
+            border-radius: 50%; border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #007bff; /* Added for a nice glow effect */
+        }
+
+        .timeline dd {
+            margin: 0 0 30px 40px;
+            padding: 10px 15px;
+            border-left: 2px solid #007bff;
+            font-style: italic;
+            color: #666;
+            background-color: #fff;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+     ';
+
+     get; 
+     # make def list and indent
+     add "<dl class='timeline'>\n"; ++; get; --; replace "\n" "\n  ";
+     add "</dl>\n"; 
+     add "</body></html>";
+     print; zero; quit;
+   }
+
+  
+   "list*" {
+     clear; 
+     add '
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          padding: 40px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .timeline-container {
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .timeline {
+          display: flex;
+          flex-direction: column;
+          padding: 0; margin: 0;
+          position: relative;
+        }
+
+        .timeline::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 20px;
+          width: 2px;
+          height: 100%;
+          background-color: #ddd;
+        }
+
+        .timeline dt {
+          position: relative;
+          margin: 0 0 10px 40px;
+          font-weight: bold;
+          font-size: 1.2em;
+          color: #333;
+        }
+
+        .timeline dt::before {
+          content: "";
+          position: absolute;
+          left: -20px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 14px;
+          height: 14px;
+          background-color: #007bff;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          box-shadow: 0 0 0 2px #007bff; /* Added for a nice glow effect */
+        }
+
+        .timeline dd {
+          margin: 0 0 30px 40px;
+          padding: 10px 15px;
+          border-left: 2px solid #007bff;
+          font-style: italic;
+          color: #666;
+          background-color: #fff;
+          border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+     ';
+     add "<dl class='timeline'>\n"; get; replace "\n" "\n  ";
+     add "</dl>\n"; 
+     add "</body></html>";
+     print; quit;
+   }
+   # partial documents, just print
+   "date*","item*","text*" {
+     clear; get; add "\n"; print; zero; quit;
+   }
+   add "\n";
+   add "strange time-line parse...\n"; print; a+; quit;
+ }
+ push; push; push; push; push; push;
+

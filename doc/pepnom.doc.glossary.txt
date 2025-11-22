@@ -1,0 +1,47 @@
+
+
+## GLOSSARY FOR PARSING TERMS 
+
+  - pattern
+      A very general term which is at the heart of how human beings
+      understand the world. Formal languages specify patterns in
+      one-dimensional alphabets of symbols; they determine if a 
+      particular sequence of symbols is included in a given language
+      or not.
+  - formal language
+      A set of sequences of symbols (letters) arranged in a single
+      line. For example (aa, ab, ba) is a language with symbols
+      "a" and "b". 
+  - markdown
+      a minimalistic way to specify the structure/appearance of 
+      a plain-text document.
+  - virtual machine
+      a logic machine which is implemented in software but not in 
+      hardware (silicon logic circuits).
+  - lex/parse
+      2 phases often used during compilation/transformation/translation
+  - recogniser
+      A piece of software that determines whether a given input has 
+      a correct format for a given language or data format. The 
+      recogniser does not transform the input in any way, it simply
+      returns true or false.
+  - bnf, backus-naur form 
+      A way to specify the structure of a context-free language. This
+      is called the "grammar" of the language. 
+  - context-free language
+      A simple type of (formal/mathematical) language which has often
+      formed the basis for computer languages. A context-free language
+      is more complex than a "regular" language but (much) simpler 
+      than human language
+  - regular language
+      A very simple type of (formal) language which is familiar to 
+      programmers from "regular expression" patterns. In general, a 
+      regular language cannot express "nested" structures (that is:
+      text which is contained by other text delimiters). These are the 
+      patterns that sed and grep and see.
+   - natural language, human language
+      These languages involve grammars in which there is an interdependence
+      between semantics and grammatical structure. For this reason 
+      no good algorithms have yet been developed for the translation
+      of human language (despite corporate hype and publicity).
+

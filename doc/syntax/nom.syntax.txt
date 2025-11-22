@@ -1,0 +1,405 @@
+
+
+## SYNTAX OF THE "NOM" LANGUAGE
+
+  An overview of the syntax of the [nom] parsing language.
+
+  The file /doc/syntax/doc.dir.index.html contains a list of 
+  the documents available in this folder and links to documents that 
+  explain each element of the [nom] syntax.
+
+  The *nom* language (which is interpreted via the *pep* tool or compiled via
+  one of the language "translation" nomsf://tr/ scripts - which are themselves
+  *nom* scripts) is implemented in the file "compile.pss" nomsf://compile.pss
+  and has a syntax somewhat similar to the "sed" text stream editor 
+  (but hopefully less cryptic).
+  
+  Nom commands can be placed in "blocks" nomsyn://block which can be nested
+  as deeply as required. The statements in the *block* are only executed
+  if the *tests* return true.
+   
+  Unlike sed, it also allows (and prefers) long names for commands (eg
+  nom://clear instead of "d", "add" instead of "a"). Each command has a long
+  and a short form.
+
+  All commands must be terminated with a semicolon except for the following:
+
+  * commands not terminated by a semicolon
+  >> .reparse .restart parse>
+
+  White-space is not significant in the syntax of the parse-script 
+  language, except within ' and " quote characters and square brackets []
+
+  * random white-space
+  -----+
+    read; !
+    [a-e]{t;}
+
+    d;
+  ,,,,
+
+  Braces "{" and "}" are used to define blocks of commands (as in
+  sed, awk and c).
+
+## NOM LANGUAGE FEATURES
+
+  The script language (and its syntax) is implemented in the file
+  nomsf://compile.pss .  Some commands, such as ".reparse" and ".restart"
+  affect the flow of the program, but not the virtual machine. 
+
+  * tests on the workspace buffer, followed by a block of commands
+  >> [a-z] { print; clear; }
+   
+  Most scripts start with nom://read or *r* (which is the abbreviated form).
+  There is no *implicit* read statement in a nom script (unlike in [sed] ) so a
+  script that does not read anything with nom://read or nom://while
+  nom://whilenot or nom://until will do nothing and will have to be terminated
+  with [control-c] because it will never nom://quit .
+  
+  The read command reads one character from the input stream. Whereas sed
+  and awk are line oriented (they process the input stream one line at a time),
+  nom is character-orientated (the input stream is processed one character at a
+  time).
+
+  As with sed and awk, nom scripts have an implicit loop. When the interpreter
+  reaches the end of the script, it jumps back to the first command (usually
+  *read* ) and continues looping until the input stream is finished. This 
+  behaviour is the same as the nom://restart command but is implicit
+  in every script.
+
+  In the code below *.restart* is not required because [nom] automatically
+  jumps back to the 1st statement after the nomsyn://begin block (if 
+  there is one). The script is **not** an infinite loop because the 
+  *read* command exits when it tries to read the <eof> end of file 
+  marker.
+
+  * the nom script loop, with a superfluous .restart command
+  ----+
+    read; print; .restart
+  ,,,,
+
+### CRYPTIC-NESS
+
+  It is possible (or probable) that some people will find the syntax of the
+  [nom] language [cryptic] because it reflects the [pep] virtual pep://machine
+  which underlies it. In order to program in nom you need to have the
+  virtual-machine "in-mind" (this sounds like some Martin Heidegger phrase) 
+
+  But we can create a more natural language *on top* of [nom]
+  Lets do it....
+
+  The code below recognises ebnf rules is the form
+  ----+
+    <token>+ = <token>+ ;
+  ,,,,
+   
+  Obviously it is a "toy" ebnf parser because this version doesn't compile the
+  ebnf to [nom] script but it is a good start. The script below took about 10
+  minutes to write. The debugging lines below the parse> label are very handy
+  for seeing how the parse pep://stack is shift-reducing as it reads the input
+  stream.
+
+  See the following script below for a compiling version.
+
+  * a toy ebnf parser (recogniser)
+  -----+
+    read;
+
+    # ignore white-space
+    [:space:] { while [:space:]; clear; }
+    # literal tokens ; and =
+    ";","=" { add "*"; push; }
+
+    [:alpha:] { 
+      while [:alpha:]; put; clear; 
+      add "token*"; push; 
+    }
+    !"" { add " ?? bad char \n"; print; quit; }
+
+  parse>
+    # An important grammar debugging technique for showing
+    # the parse-stack reductions.
+    # lines; add " char "; chars; add ": "; print; clear; 
+    # unstack; print; stack; add "\n"; print; clear;
+
+    pop; pop;
+    "token*token*","sequence*token*" {
+      clear; add "sequence*"; push; .reparse
+    }
+    "token*=*","sequence*=*" {
+      clear; add "LHS*"; push; .reparse
+    }
+    "token*=*","sequence*;*" {
+      clear; add "RHS*"; push; .reparse
+    }
+    "LHS*RHS*" {
+      clear; add "rule!!\n"; print;
+      clear; add "rule*"; push; .reparse
+    }
+    push; push;
+
+  ,,,,
+  
+### TOYBNF 
+
+  See the file /eg/toybnf.pss for a development of the script below.
+  I call this implementation "toybnf" because it is not complete 
+  enough to be used practically (for example it doesn't have any
+  way to lex or scan and create parse tokens)
+
+  Creating a better language with [nom] as the compile target.
+
+  It would be nice to have a more natural language that *targets* [nom]
+  Lets expand the script above to compile to [nom]. 
+
+  This is compiling very simple [ebnf] to [nom] . This is the first example of
+  using nom as the target of a nom script. Another strange oed://corollary
+  arises: that we can use this new language to implement a recogniser for
+  itself (but not a compiler because so far our new language has no compiling
+  syntax, just *ebnf* rule reductions. The script below parses the same syntax
+  as above but instead of just recognising the syntax, it actually creates
+  executable [nom] code.
+
+  * a basic (toy) ebnf parser, compiling to nom.
+  -----+
+    #*
+      tokens: 
+       LHS  left-hand-side of the bnf rule
+       RHS  right-hand-side
+       sequence  a sequence/list of tokens
+       token     one grammar token
+       '=' ';'   literal tokens
+    *#
+
+    read;
+    # line-relative char numbers 
+    [\n] { nochars; }
+
+    # ignore white-space
+    [:space:] { while [:space:]; clear; }
+    # literal tokens ; and =
+    ";","=" { add "*"; push; }
+
+    [:alpha:] { 
+      # add the default nom parse token delimiter '*'
+      while [:alpha:]; add "*"; put; clear; 
+      add "token*"; push; 
+    }
+    !"" { 
+      put; clear;
+      add "! [toyBNF]\n";
+      add " bad character '"; get; add "'"; 
+      add " at line:"; lines; add " char:"; chars; add "\n";
+      add " I just can't go on... sorry, goodbye";
+      print; quit;
+    }
+
+  parse>
+    # An important grammar debugging technique for showing
+    # the parse-stack reductions.
+    # lines; add " char "; chars; add ": "; print; clear; 
+    # unstack; print; stack; add "\n"; print; clear;
+
+    pop; pop;
+    "token*token*","sequence*token*" {
+      # count tokens to calculate "push;" later
+      a+;
+      clear; get; ++; get; --; put; 
+      clear; add "sequence*"; push; .reparse
+    }
+    "token*=*","sequence*=*" {
+      # later have to transform this count number into
+      # push; or push;push; etc
+      clear; get; a+; count; put; clear; 
+      # reset the token counter for the RHS 
+      zero; 
+      add "LHS*"; push; .reparse
+    }
+    "token*;*","sequence*;*" {
+      clear; get; a+; count; put;
+      clear; add "RHS*"; push; .reparse
+    }
+    "LHS*RHS*" {
+      clear; 
+      # first build the new token string
+      #  eg 'add "tok*tok*2"; push; push; '
+      # that is we need as many pushes as there are tokens and need to
+      # get rid of the trailing number
+
+      get; 
+      # not very elegant but....if you've got more than 6 tokens in a 
+      # row maybe you should reconsider your grammar
+      # could avoid all this with a 'stack' command that updates the 
+      # tape pointer properly
+      E"1" { clip; add '"; push;'; }
+      E"2" { clip; add '"; push; push;'; }
+      E"3" { clip; add '"; push; push; push;'; }
+      E"4" { clip; add '"; push; push; push; push;'; }
+      E"5" { clip; add '"; push; push; push; push; push;'; }
+      E"6" { clip; add '"; push; push; push; push; push; push;'; }
+      put; clear; add 'add "'; get; put;
+      clear;
+      
+      #* 
+        now need to build the rhs which becomes the nom test in format
+        this is bit more tricky than the LHS. If we had "stack" it
+        would be much easier
+        pop;pop; "c*d*" {
+        }
+        push;push;
+      *#
+      ++; 
+      get;
+      # build the "pushes" separately and store in tapecell+1
+      E"1" { clear; add "push;"; } 
+      E"2" { clear; add "push;push;"; } 
+      E"3" { clear; add "push;push;push;"; } 
+      E"4" { clear; add "push;push;push;push;"; } 
+      E"5" { clear; add "push;push;push;push;push;"; } 
+      E"6" { clear; add "push;push;push;push;push;push;"; } 
+      !E"push;" {
+        clear; add "! sorry 6 token sequence limit\n";
+        print; quit;
+      }
+      ++; put; --; 
+      # easier just replace push; with pop; and start building
+      # the start of the nom block
+      replace "push;" "pop;";
+      add '\n"'; get; clip; add '"'; put;
+      clear;
+      --;
+      # now assemble the nom block, but the lhs and rhs
+      # have already been built.
+      ++; get; --; add ' {\n';
+      add '  clear; '; get; add ' .reparse \n';
+      add '}\n';
+      # now get the prebuilt "pushes" which were saved up on tape.
+      ++; ++; get; --; --;
+      #print; 
+      put;
+      clear; add "rule*"; push; .reparse
+    }
+    "rule*rule*","grammar*rule*" {
+      clear; get; add "\n"; ++; get; --; put;
+      clear; add "grammar*"; push; .reparse
+    }
+    push; push;
+    
+    (eof) {
+      pop; "rule*","grammar*" {
+        clear; get; add "\n\n"; print; quit;
+      }
+    }
+  ,,,,
+  
+  You can save the script above as toyBNF.pss
+  and test it:
+
+  * testing the toyBNF language
+  >> pep -f toyBNF.pss -i 'com = word param; block = word newword;'
+
+  * sample output of toyBNF when compiling with nom script above
+  ------+
+    # sample input BNF rules (white-space doesnt matter):
+    #   com = word param ; 
+    #   block = word newword ;
+    # output:
+    pop;pop;
+    "word*param*" {
+      clear; add "com*"; push; .reparse
+    }
+    push;push;
+    pop;pop;
+    "word*newword*" {
+      clear; add "block*"; push; push; push; .reparse
+    }
+    push;push
+
+  ,,,,
+
+  This is pretty cool, because we now have a toybnf-to-nom compiler
+  that produces executable and translatable (to go/java/tcl/python/ruby etc)
+  [nom] code. But we still need a *lexxing* syntax for our toyBNF 
+  language
+
+  The "redundant push/pop" problem may have a simple solution, but
+  we need to make sure there is no whitespace between.
+
+  * getting rid of redundant push/pops
+  -----+
+   replace "push;push;push;pop;pop;pop;" "";
+   replace "push;push;pop;pop;" "";
+   replace "push;pop;" "";
+  ,,,
+
+  But be careful!! It may not be valid to remove push;pop; combinations
+  for reasons discussed elsewhere.
+
+  This toyBNF language may not be as efficient as hand coded [nom] because
+  it does redundant "pushes" nom://push and "pops" nom://pop between
+  code blocks, but it is easier to write and probably less prone to 
+  errors. But to make it more than a "recogniser" we have to add 
+  compiling syntax like this....
+
+  * proposed compiling syntax for toyBNF
+  ----+
+    a = b c {
+     #0 = "<a href=".$1.">".$2."</a>" ;
+    }
+  ,,,,
+
+  In the syntax above '.' is the string concatenator and $1 refers to 
+  the attribute of the first token on the RHS right-hand-side of the 
+  bnf grammar rule. The compiling block takes the place of the ';' in
+  the syntax above.
+
+  We dont have any sensible way to actually create the 'tokens' yet.
+  (ie the lexing phase of the recogniser) but we can soon invent a 
+  syntax like this
+   
+  * proposed syntax for creating tokens from literal values
+  -----+
+    literals: '-','+',':' ;
+    digit: [:digit:] ;
+    number: [:digit:]+ ;
+    word: [:alpha:]+ ;
+    newline: '\n' ;
+  ,,,,
+
+  Here is how this will be compiled by toyBNF.pss in [nom]
+
+  * lexxing or scanning in toyBNF
+  -----+
+   # toyBNF syntax: word: [:alnum:]+ ;
+    # the final reparse may not be necessary
+    read; 
+    [:alnum:] { 
+      while [:alnum:]; put; clear; 
+      add "word*"; push; .reparse
+    }
+    # toyBNF syntax: newline: '\n' ;
+    '\n' { put; clear; add "newline*"; push; .reparse }
+  ,,,,
+
+  * and a more advanced syntax for keywords and identifiers 
+  ------
+    [:alpha:]+ {
+      literals: "if","while","then","end";
+      # everthing else is an identifier in this block.
+      identifier: *; 
+    }
+  ,,,,
+
+  The literals will just become 'literal' tokens in nom (that is 
+  the token is the same as the character with an appended '*' character -
+  or whatever is the token delimiter).
+
+  I use a different assignment character for lexing ":" instead 
+  of "=" because the process is different.
+
+### NOTES
+
+  nom://while nom://whilenot and nom://until do not exit when they
+  encounter the <end-of-stream> marker unlike read.
+
+

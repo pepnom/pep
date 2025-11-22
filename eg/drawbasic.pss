@@ -1,0 +1,1092 @@
+
+#* 
+
+  A [nom] parser/compiler for simple logo-like drawing language.
+
+ABOUT 
+
+  This script is a parser and (hopefully) a transpiler (to python turtle
+  graphics and maybe even postscript) for a simple drawing language. The idea
+  is to demonstrate creating a simple language with [nom] and pep. Also the
+  language should be easy and fun to use.
+
+  The idea for the language came about after using ucblogo which is an oldish
+  implementation of [logo] that runs on Linux. However ucblogo throws
+  segmentation faults and also seems to have bugs in the way it renders to
+  postscript. So it is not that useful for creating printable graphics. The
+  [python] turtle graphics package, on the other hand produces nice printable
+  output in postscript but I find the syntax a bit clunky. Also, I don't see
+  the need for the object-oriented urbandict://malarkey with several turtles
+  running in concurrent threads and sending messages to each other.
+
+NOTES
+
+  It is possible that I could cut-and-paste the expression parser that 
+  is in /eg/maths.parse.pss or /eg/maths.tolatex.pss and put it into 
+  this script. Another option is just to pass-through expressions 
+  straight to python urbandict://holusbolus. Since this is a sort of 
+  toy language, I think that might be the best option.
+
+  This script is following the help/error token system, that has the 
+  advantage of making the compiler or transpiler "self-documenting"
+  
+  I will make commands end in a semi-colon so that I can include
+  expressions in this language like 'forward x/2;' or 'right (y+1)/2;'
+  
+STATUS
+
+  Starting to transpile to python. Basic commands transpiling
+  with minimal testing. "if" etc. simple for with range is working
+
+TOKENS
+
+  In my *nom-writing* experience it is a good idea to make a list 
+  of parse tokens that you are using in your grammar because it helps you
+  to think about grammar token sequences. Some of these parse-tokens
+  contain dots which is a nice thing about the *nom* language. You
+  can put any char in there that is not the delimiter.
+
+  char literals: 
+    ;* end of statement
+    =* assignment
+    ==* >=* <=* comparison
+
+  word literals: if for while then do done end endif in step
+  "..*" for ranges eg: 1..5
+
+  op.compare* a compare operator like "==" or ">="
+  op.add*     plus/minus operator + or -
+  op.mul*     times/div operator * or /
+  exp*        an expression like "x==4" or "x+1" or "(x+1)*2"
+  comment*    text starting with # until \n 
+  number*   positive integer
+  range*    a range of numbers from x to y step 1
+  colour*   a colour name like 'blue' 'red' not quoted
+  mod*      colour modifiers like "light" or "dark" etc
+  direction* north, south, east, NNW, etc
+  position*  eg: topleft, home, centre, center
+  turn*      eg: "around" (i.e 180 degrees)
+  name*      var and function names like "size" "time" etc
+  quoted*    quoted text 
+
+  command*     a sort of logo command like 'forward' 'right' 'turn'
+  statement*   eg forward 20; right 90;
+  statementset* a list of statements eg: rt 45; bk 20;
+  if.start*     eg:  if x>y then forward 10 endif
+  for.start* 
+  while.start*
+
+ERROR CHECKING ETC
+
+  I would like to make the language sort-of "tolerant" so that
+  little mistakes don't matter if they are not ambiguous. eg no
+  semicolon if not needed. But for assignments and expressions
+  a ; is required.
+
+SYNTAX OF THE DRAW LANGUAGE
+
+  I would like to make this a bit simpler than [logo] and python turtle
+  graphics. That means less brackets than [python] and no weird syntax like
+  logo (eg param: ). So I would like the language to be more English-like
+
+  So semicolon terminates statements (or can terminate them?). And "end" endif
+  endwhile/endfor/... terminate blocks (but they are all synonyms)
+
+  For commands like "forward 90" we could probably dispense with the
+  terminating semi-colon, or make it optional. But if we want a 
+  syntax like "turn 90;" and "turn 90 degrees;" and "turn 2 radians;"
+  then we need the semi-colon.
+
+  * examples of the drawing language
+  --------
+    head north;   # set heading to north
+    turn 90;      # turn turtle 90 deg clockwise
+    head ssw;     # set heading to south south west
+    turn 2 radians; 
+    turnback 90;  # same as turn -90
+    turn around;  # turn 180 degrees
+    turn 90 degrees;  # default is degrees
+    print red "hello"; 
+    print "hello";
+
+    colour red;        # set pen colour to red
+    color blue;        # the same but with gringo spelling
+    colour light red;  # use a colour with a modifier
+    clr green      # no semicolon required
+    colour 22,33,44; # rgb format
+    colour 22 33 44; # rgb format no commas?
+    colour 22,44,255/x   # rgb with expressions.
+
+    text "hello";  
+    for x in 1..5 do right 90 fd 100 done
+    for x in 1..5 { right 90 fd 100 }   # curly brace as well ?
+    for x in 1..5 do right 90 fd 100 end
+    for x in 1..5 do right 90 fd 100 endfor
+    for x in 1 to 20 step 3 do done
+    for x in 1..20 step 3 do done
+
+    if x==2 then 
+      head north
+      draw 30
+    endif 
+    while x>3 do
+      x++; x=x+1; forward x;
+    done
+    if y >= 4 then head south end
+    def spiral x y z :
+      # code 
+    enddef
+  ,,,,
+
+EXAMPLE PYTHON DRAWING CODE
+
+   This is an example of what the drawlang should produce
+   when it is transpiling to python
+
+   import turtle
+   import random
+   import subprocess
+   #x = float(input("Angle: "))
+   #y = float(input("Step: "))
+   #scale = int(input("Scale: "))
+   # size 700x650 canvas
+   window = turtle.Screen()
+   window.bgcolor("white")
+   t = turtle.Turtle()
+   t.color("tan3"); t.width(3); t.speed(500);
+   t.penup(); t.goto(500,-300); t.pendown()
+   t.lt(90)
+
+   def scallopRow(ii, size):
+     for i in range(ii):
+       t.circle(size, 180)
+       t.rt(180) 
+     t.rt(90); t.penup(); 
+     t.forward(size*2*ii-size); 
+     t.left(90); t.forward(size); t.pendown();
+   for i in range(12):
+     scallopRow(20, 25)
+     scallopRow(20, 25)
+     t.right(90); t.penup(); t.fd(50); t.pendown(); t.left(90)
+   #size = 0
+   #for i in range(scale):
+   #    size += y
+   #    t.left(x)
+   #    t.forward(size)
+
+   t.begin_fill()
+   t.fillcolor("yellow")  # draw head
+   #t.circle(100)
+   t.end_fill()
+   canvas = window.getcanvas()
+   filename = 'out.ps'
+   canvas.postscript(file=filename)
+   #subprocess.call(['lpr', filename])
+   turtle.mainloop()
+
+HISTORY
+
+  26 mar 2025
+    improving the help and error checking. not comprehensive.
+  12 mar 2025
+    started to transpile to python. many commands working. 'for' with
+    ranges (1..100 step 2 , or 1..100..2)
+  11 mar 2025
+    Just started this. Sketching out the script.  The tricky bits might be
+    trying to type check and resolving expressions with precedence.
+    Some commands are recognised. The parser was partially written in 
+    a few hours.
+
+*#
+
+  # a trick. an empty statement to get things started
+  begin { add "statement*"; push; }
+
+  read; 
+  [\n] { nochars; }
+
+  # ignore whitespace
+  [:space:] { 
+    while [:space:]; clear; 
+    !(eof) { .restart }
+  }
+
+  # literal char tokens eg <= >= == := etc 
+  # ; is end of statement 
+  [;] { put; add "*"; push; .reparse }
+  [<>:!=] { 
+    while [<>:!=]; put; 
+    "=",":=","<","<=",">",">=","==","!=","<>" {
+      # synonyms
+      "<>" { clear; add "!="; }
+      ":=" { clear; add "="; }
+      put; add "*"; 
+      push; .reparse
+    }
+    clear; 
+    add "  unknown operator '"; get; add "'\n"; 
+    put; clear; add "draw.error*"; push; .reparse
+  }
+
+
+  [.] { 
+    # .* for decimals? 
+    while [.]; "." { add "*"; push; .reparse }
+    clear; add "..*"; push; .reparse
+  }  
+
+  # comments
+  [#] {
+    whilenot [\n]; put; 
+    clear; add "comment*"; push; .reparse
+  }
+
+  # numbers (positive integers?)
+  [:digit:] {
+    while [:digit:]; put; 
+    clear; add "number*"; push; .reparse
+  }
+
+  [:alpha:] {
+    while [:alpha:]; put; 
+
+    # literal word tokens, def defines functions
+    "if","for","while","def","in","step" {
+      put; add "*"; push; .reparse
+    }
+
+    # synonyms for then. Might be good to put line/char num
+    # in then for nesting errors.
+    "then","do","begin" {
+      put; clear; add "then*"; push; .reparse
+    }
+
+    # all synonyms for end
+    "end","endif","fi","endfor","endwhile","done" {
+      put; clear; add "end*"; push; .reparse
+    }
+
+    # classic logo commands and not so classic. Lots of synonyms
+
+    # todo: no keep my commands until transpile time. eg
+    #   turn, head etc. better.
+
+    # move: forward without drawing, same direction
+    # goto: go to absolute position and draw, eg: goto 10 10
+    # jumpto: go to absolute pos, dont draw.
+    # head: is an absolute direction not relative like right/left/turn
+    # aim: set heading to an absolute position?.
+    "help","home",
+    "forward","fd","go","move","mv","jump","back","bk","moveback","mb",
+    "goto","jumpto","right","rt","left","lt","turn","turnback","head",
+    "penup","pu","pendown","pd",
+    "background","bg","bgcolor","cls","clear","clean","clearscreen",
+    "color","colour","clr","pensize","width",
+    "arc","circle","ellipse" {
+      # resolve synonyms 
+      # methods.fk
+      clear; add "#"; get; add "#";
+      replace "#fd#" "#forward#"; replace "#go#" "#forward#"; 
+      replace "#mv#" "#move#"; replace "#jump#" "#move#"; 
+      replace "#bk#" "#back#"; replace "#mb#" "#moveback#";
+      replace "#head#" "#setheading#";
+      replace "#rt#" "#turn#"; replace "#right#" "#turn#";
+      replace "#left#" "#turnback#"; replace "#lt#" "#left#";
+
+      replace "#pu#" "#penup#"; replace "#pd#" "#pendown#";
+      replace "#bg#" "#background#"; replace "#bgcolor#" "#background#";
+      replace "#cls#" "#clear#"; replace "#clean#" "#clear#";
+      replace "#clearscreen#" "#clear#"; 
+
+      replace "#color#" "#colour#"; replace "#clr#" "#colour#"; 
+      replace "#pensize#" "#width#"; 
+      clip; clop; put;
+      clear; add "command*"; push; .reparse
+    }
+
+    # colours
+    "blue","green","black","red","grey","gray" {
+      # synonyms
+      clear; add "#"; get; add "#";
+      replace "#grey#" "#grey#"; 
+      clip; clop; put; 
+      clear; add "colour*"; push; .reparse
+    }
+
+    # colour modifiers
+    "light","dark","pastel" {
+      clear; add "mod*"; push; .reparse
+    }
+
+    # directions 
+    "north","east","south","west",
+    "northeast","northwest","southeast","southwest",
+    "NE","NW","SE","SW" {
+      clear; add "direction*"; push; .reparse
+    }
+
+    # positions 
+    "home","centre","center","topleft","topmiddle","topright" {
+      clear; add "position*"; push; .reparse
+    }
+
+    # turn
+    "around" {
+      clear; add "turn*"; push; .reparse
+    }
+
+    # variable and function names
+    clear; add "name*"; push; .reparse
+  }
+
+  # quoted text
+  "'" {
+    clear; until "'"; clip; unescape "'"; put; 
+    clear; add "quoted*"; push; .reparse
+  }
+
+  !"" {
+    put; clear;
+    add "  Strange character '"; get; add "'\n"; 
+    put; clear; add "draw.error*"; push; .reparse
+  }
+
+parse>
+
+  # watch stack code here
+  add "# line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+   
+  #--------------------
+  # error parsing and checking.
+
+  #----------------
+  # 1 token errors and help
+  pop;
+
+  "draw.error*" {
+    # get the parse stack here as well
+    clear;
+    add "! Draw-lang syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; print;
+    # provide help from the help* token if one was put on the stack. 
+    clear; pop; "draw.help*" { push; .reparse } 
+    quit;
+  }
+
+  # using a parse token to display help
+  "draw.help*" {
+    # the command or category to display help for is in the
+    # attribute
+    clear; swap; 
+    #"help","home",
+    #"forward","fd","go","move","mv","jump","back","bk","moveback","mb",
+    #"goto","jumpto","right","rt","left","lt","turn","turnback","head",
+    #"penup","pu","pendown","pd",
+    #"background","bg","bgcolor","cls","clear","clean","clearscreen",
+    #"color","colour","clr","pensize","width",
+    #"arc","circle","ellipse" {
+    
+    # flow control: for,(while),if,begin,then
+    # functions: def
+    #*
+
+    document all of these structures in the draw language.
+
+    char literals: 
+    ;* end of statement
+    =* assignment
+    ==* >=* <=* comparison
+
+      word literals: if for while then do done end endif in step
+      "..*" for ranges eg: 1..5
+
+    op.compare* a compare operator like "==" or ">="
+    op.add*     plus/minus operator + or -
+    op.mul*     times/div operator * or /
+    exp*        an expression like "x==4" or "x+1" or "(x+1)*2"
+    comment*    text starting with # until \n 
+
+    number*   positive integer
+    range*    a range of numbers from x to y step 1
+    colour*   a colour name like 'blue' 'red' not quoted
+    mod*      colour modifiers like "light" or "dark" etc
+    direction* north, south, east, NNW, etc
+    position*  eg: topleft, home, centre, center
+    turn*      eg: "around" (i.e 180 degrees)
+    name*      var and function names like "size" "time" etc
+    quoted*    quoted text 
+
+    command*     a sort of logo command like 'forward' 'right' 'turn'
+    statement*   eg forward 20; right 90;
+    statementset* a list of statements eg: rt 45; bk 20;
+    if.start*     eg:  if x>y then forward 10 endif
+    for.start* 
+    while.start*
+
+   *# 
+
+    "commands.general","commands","all" {
+      swap;
+      add "
+       commands:  
+         There are several built-in commands in the draw-language
+         such as: forward, back, penup, pendown, right.
+         Many of these command names are based on the command names 
+         for the orginal 'turtle drawing' language LOGO or on the 
+         name of the python turtle drawing package.
+
+         Some commands require one or more arguments, either a number or some
+         text (in quotes) or an expression like 360/6 Commands should be
+         terminated with a semicolon.
+
+         eg: turn 360/10; home;
+      ";
+    }
+
+    "arguments","syntax","commands","all" {
+      swap;
+      add "
+       arguments:  
+         Some commands like *forward* , *right* etc require one or more
+         arguments, either a number or some text (in quotes) or an expression
+         like 360/6 Commands should be terminated with a semicolon.  eg: turn
+         360/10; home;
+      ";
+    }
+
+    "numbers","syntax","commands","all" {
+      swap;
+      add "
+        numbers:  
+         Some commands like *forward* , *right* etc require one or more
+         numerical arguments. The number comes after the command and can
+         also be part of a numerical expression like (100/10 + 20).
+         eg: forward 100+20; 
+      ";
+    }
+
+    # movement and all are categories, forward is the command
+    "home","movement","all" {
+      swap;
+      add "
+       home <x>;
+         move the turtle to the centre of the screen 
+         drawing if the 'pen' is down.  The orientation or direction of 
+         the turtle is unchanged. Synonyms none
+         eg: home or home; 
+      ";
+    }
+
+    # or just use "commands.summary" category
+    "commandlist","list","commands","all" {
+     swap;
+     add "
+      # (help) 
+      # head x - set absolute heading 
+      # goto x y - move to position (x,y) and draw
+      # moveto x y - move to position (x,y) dont draw
+      # more ... 
+     ";
+    }
+
+    # a short summary of the command. usable in a summary list.
+    "forward.short","commands.summary","all" {
+      add " forward <x>; # move and maybe draw forwards x pixels ";
+    }
+    # movement and all are categories, forward is the command
+    "forward","go","movement","all" {
+      swap;
+      add "
+       forward <x>;
+       go <x>;
+         move the turtle forward <x> pixels (or some other unit),
+         drawing if the 'pen' is down.  The orientation or direction of 
+         the turtle is unchanged. Synonyms 'fd' 'go'
+         eg: forward 20; 
+      ";
+    }
+
+    "back.short","commands.summary","all" {
+      add " back <x>; # move and maybe draw backards x pixels ";
+    }
+    # bk is an alias for back
+    "back","bk","movement","all" {
+      swap;
+      add "
+       back <x>;
+       bk <x>;
+         move the turtle back <x> pixels (or some other unit),
+         drawing if the 'pen' is down.  The orientation or direction of 
+         the turtle is unchanged. 
+         eg: forward 20; 
+      ";
+    }
+
+    "move.short","commands.summary","all" {
+      add " move <x>; # move x pixels but dont draw";
+    }
+    "move","jump","movement","all" {
+      swap;
+      add "
+       move <x>;
+       jump <x>;
+
+         move the turtle forward <x> pixels (or some other unit), in the
+         current direction, without drawing even if the 'pen' is currently
+         'down'.  The orientation or direction of the turtle is unchanged.
+         Synonyms 'jump' 'mv' eg: move 20; 
+
+      ";
+    }
+
+    "moveback.short","commands.summary","all" {
+      add " moveback <x>; # moveback x pixels but dont draw";
+    }
+    "moveback","mb","movement","all" {
+      swap;
+      add "
+       moveback <x>;
+       jumpback <x>;
+
+         move the turtle backwards <x> pixels (in the opposite direction to the
+         way the turtle is currently facing) without drawing even if the 'pen'
+         is currently 'down'. The orientation or direction of the turtle is
+         unchanged. 
+      ";
+    }
+    "goto.short","commands.summary","all" {
+      add " goto <x> <y>; # goto position x y and draw if pendown.";
+    }
+    "goto","jumpto","movement","all" {
+      swap;
+      add "
+       goto <x> <y>; jumpto <x> <y>;
+         move the turtle backwards <x> pixels (in the opposite direction to the
+         way the turtle is currently facing) without drawing even if the 'pen'
+         is currently 'down'. The orientation or direction of the turtle is
+         unchanged. 
+      ";
+    }
+
+    "end","endif","fi","endfor","endwhile","done",
+    "flow","blocks","all" {
+      swap; add "
+       end,endif,fi,endfor,endwhile,done:
+         are all ways to end a block of code in the drawing language.
+         Actually all these words are synonyms and interchangable.
+         eg:
+         # draw a hexagon
+         for 1..6 begin
+           fd 100; turn 60;
+         endfor 
+       ";
+    }
+
+    "then","do","begin", "flow","blocks","all" {
+      swap; add "
+        then,do,begin:
+         are all ways to start a block of code in the drawing language.
+         Actually all these words are synonyms and interchangable.
+         eg:
+         # draw a hexagon
+         for 1..6 begin
+           fd 100; turn 60;
+         endfor 
+       ";
+    }
+
+    "for","flow","all" {
+      swap; add "
+       for 
+         for is a loop flowcontrol word in drawbasic.
+         eg: for 1..6 do fd 50; rt 60; done  
+         eg: for y in 1..100 step 5 do fd y; rt y; done  
+      ";
+    }
+
+    "if","flow","all" {
+      swap; add "
+       for 
+         if is a conditional flow control word in drawbasic.
+         eg: if x==5 then fd 20; endif
+      ";
+    }
+
+    "semicolon",";","flow","all" {
+      swap; add "
+       semicolon ; 
+         is the way that most commands in the draw-language are 
+         terminated. It is possible that some simple commands such
+         as 'head north' (ie where the parameter is a named direction)
+         will not have to be terminated with ; 
+         eg: fd 20; 
+      ";
+    }
+
+    print; 
+    # if this help is called by an error token we dont have to 
+    # quit immediately.
+    quit;
+  }
+
+  #----------------
+  # 2 token errors 
+  pop;
+
+  # a semicolon cant start a token sequence 
+  B";*".!";*" {
+    clear; add "semicolon"; put; 
+    clear; add "draw.help*"; push;
+    clear; add "# misplaced semicolon ? \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  # an endblock cant start a token sequence 
+  B"end*".!"end*" {
+    clear; add "end"; put; 
+    clear; add "draw.help*"; push;
+    clear; add "# misplaced end or poorly formed block ? \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  "command*number*" { 
+    clear; get; 
+    "home","penup","pendown","clear" {
+      clear; add "# command '"; get; add "' does not take argument"; put;
+      clear; add "draw.error*"; push; .reparse
+    }
+    clear; add "command*number*";
+  }
+
+  "command*direction*" { 
+    clear; get; 
+    "turn" { clear; add "setheading"; }
+    !"setheading" { 
+      clear; add "# command '"; get; 
+      add "' does not take direction argument. "; put;
+      clear; add "draw.error*"; push; .reparse
+    }
+    clear; add "command*direction*";
+  }
+
+  "statementset*number*","statement*number*","number*" { 
+    clear; add "numbers"; put; 
+    clear; add "draw.help*"; push;
+    clear; add "# number argument '"; get; add "' with no command? "; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  #"statement*number*","statementset*number*" {
+  #  clear; add "# misplaced number? \n"; put;
+  #  clear; add "draw.error*"; push; .reparse
+  #}
+
+  #----------------
+  # 3 token errors 
+  pop;
+
+  # end of error parsing
+  #----------------
+  push;push;push;
+
+  #----------------
+  # grammar token parsing
+   
+  #----------------
+  # expression parsing. I will parse expressions separately for 
+  # the sake of readability
+
+  #----------------
+  # 1 token arithmetic expressions
+  pop;
+
+  #----------------
+  # 2 token arithmetic expressions
+  pop;
+
+  #----------------
+  # 3 token arithmetic expressions
+  pop;
+
+  # this is just for testing if. Actually for expressions we need 
+  # some 'lookahead'
+  "name*==*number*" {
+    clear; get; ++; get; ++; get; --; --; put;
+    clear; add "exp*"; push; .reparse
+  }
+
+  #----------------
+  # 4 token arithmetic expressions
+  pop;
+
+  #----------------
+  # 5 token arithmetic expressions
+  pop;
+
+  push;push;push;push;push;
+  # end of arithmetic expression parsing
+  #----------------
+
+  # general parsing
+  #----------------
+  # 1 token reductions or compilations
+  pop;
+
+  "command*" {
+    clear; get; 
+    "penup","pendown","home","clear" {
+      clear; add "t."; get; 
+      replace "clear" "clearscreen";
+      add "();"; put; 
+      clear; add "statement*"; push; .reparse
+    }
+    clear; add "command*"; 
+  }
+
+  #----------------
+  # 2 token reductions
+  pop;
+
+  "command*;*" {
+    clear; get; 
+    # print what every command does. Help must have a semicolon
+    "help" {
+      clear;
+      add "# (help) \n";
+      add "# head x - set absolute heading \n";
+      add "# goto x y - move to position (x,y) and draw\n";
+      add "# moveto x y - move to position (x,y) dont draw \n";
+      add "# more ... \n";
+      put;
+      clear; add "statement*"; push; .reparse
+    }
+    "home","penup","pendown","clear" {
+      clear; add "statement*"; push; .reparse
+    }
+    # all other commands require one or more arguments. 
+    # move this to the error block?
+    clear; add "arguments"; put; 
+    clear; add "draw.help*"; push;
+    clear; add "# missing argument for command '"; get; add "'? "; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  # just pass comments through
+  E"comment*".!"comment*" { 
+    # this trick in case we have: comment*comment*
+    replace "*comment*" "*"; push;
+    --; get; add "\n"; ++; get; --; put; ++;
+    clear; .reparse 
+  }
+
+  # lets allow superfluous semicolons, just ignore them
+  "statement*;*","statementset*;*" { clip; clip; push; .reparse }
+
+  "statement*statement*","statementset*statement*" { 
+    clear; get; add "\n"; ++; get; --; put; 
+    clear; add "statementset*"; push; .reparse
+  }
+  # eg: colour green or color green or colour green;
+  "command*colour*" { 
+    clear; get; 
+
+    # the drawing pen colour
+    "colour" { 
+      clear; 
+      # python takes colour strings or rgb i.e: t.pencolor(22,33,44);
+      add 't.pencolor("'; ++; get; --; add '");'; put;
+      clear; add "statement*"; push; .reparse
+    }
+    # background colour
+    "background" { 
+      clear; 
+      # python takes colour strings or rgb i.e: t.pencolor(22,33,44);
+      add 'turtle.Screen().bgcolor("'; ++; get; --; add '");'; put;
+      clear; add "statement*"; push; .reparse
+    }
+
+    clear; add "# incorrect colour command: \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  # eg: turn north, not requiring semicolon here
+  "command*direction*" { 
+    clear; get; 
+    # allow eg: turn north;
+    "turn" { clear; add "setheading"; }
+    "setheading" { 
+       clear; 
+       ++; get; 
+       # convert directions like north to angles
+       "north" { clear; add "0"; }
+       "east" { clear; add "90"; }
+       "south" { clear; add "180"; }
+       "west" { clear; add "270"; }
+       "northeast","NE" { clear; add "45"; }
+       "northwest","NW" { clear; add "315"; }
+       "southeast","SE" { clear; add "135"; }
+       "southwest","SW" { clear; add "225"; }
+       ![0-9] {
+         clear; 
+         add "# incorrect compass direction '"; get; add "'"; put;
+         clear; add "draw.error*"; push; .reparse
+       }
+       put; --; 
+       clear;
+       add "t.setheading("; ++; get; --; add ");"; put;
+       clear; add "statement*"; push; .reparse
+    }
+    clear; add "# incorrect direction command: \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  # eg: goto centre / goto topleft todo:
+  "command*position*" { 
+    clear; get; 
+    "goto","jumpto" { 
+       add " "; ++; get; add ";"; --; put;
+       clear; add "statement*"; push; .reparse
+    }
+    clear; add "# incorrect command: \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  #----------------
+  # 3 token reductions
+  pop;
+
+  # just make later reductions less wordy.
+  "then*statement*end*" {
+    clear; add "then*statementset*end*"; 
+  }
+
+  # ranges eg: 1..7 
+  # compile immediately to python
+  "number*..*number*" { 
+    clear; 
+    add "range("; get; add ","; ++; ++; get; add ")"; --; --; put;
+    clear; add "range*"; push; .reparse
+  }
+
+  # ranges eg: 1..100 step 5 or 1..100..5
+  # add a step to code 'range(1,50) -> range(1,50,2)
+  "range*..*number*","range*step*number*" { 
+    clear; 
+    get; clip; add ","; ++; ++; get; add ")"; --; --; put;
+    clear; add "range*"; push; .reparse
+  }
+
+  # eg: colour light green  
+  "command*mod*colour*" { 
+    clear; get; 
+    "colour" { 
+       add " "; ++; get; add " "; ++; get; --; --; add ";"; put;
+       clear; add "statement*"; push; .reparse
+    }
+    clear; 
+    add "# incorrect colour command: \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+
+  #  "forward","fd","move","mv","jump","back","bk","moveback","mb",
+  #  "goto","jumpto","right","rt","left","lt","turn","head",
+  #  "penup","pu","pendown","pd",
+  #  "color","colour","clr","pensize","width",
+  # if not ambiguous resolve simple commands with no colon
+  "command*number*;*" { 
+    clear; get; 
+    "forward","back","turn","turnback","head","width" { 
+       clear; add "t."; get; 
+       replace "t.turnback" "t.left";
+       replace "t.turn" "t.right";
+       replace "t.head" "t.setheading";
+       add "("; ++; get; add ");";  
+       --; put;
+       clear; add "statement*"; push; .reparse
+    }
+
+    "move" { 
+       add "t.penup(); t.forward("; ++; get; 
+       add "); t.pendown();"; --; put;
+       clear; add "statement*"; push; .reparse
+    }
+    "moveback" { 
+       add "t.penup(); t.back("; ++; get; 
+       add "); t.pendown();"; --; put;
+       clear; add "statement*"; push; .reparse
+    }
+    # allowing traditional colour numbers 
+    "colour" { 
+       clear; 
+       ++; get; 
+       replace "0" "black"; replace "1" "blue"; replace "2" "green"; 
+       replace "3" "cyan"; replace "4" "rereplace"; replace "5" "magenta";
+       replace "6" "yellow"; replace "7" "white"; replace "8" "brown"; 
+       replace "9" "tan"; replace "10" "forest"; replace "11" "aqua"; 
+       replace "12" "salmon"; replace "13" "purple"; replace "14" "orange";
+       replace "15" "grey"; 
+       put; clear;
+       add 't.pencolor("'; get; --; add '");'; put;
+       clear; add "statement*"; push; .reparse
+    }
+
+    clear; add "command*number*"; 
+  }
+
+  #----------------
+  # 4 token reductions
+  pop;
+
+  # simple assignments
+  "name*=*number*;*" {
+    clear; get; add " "; ++; get; add " "; ++; get; add ";"; 
+    --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  # we need look ahead here because of precedence 
+  # eg x in 1..10 
+  "name*in*range*then*" {
+    clear; get; add " in "; ++; ++; get; --; --; put;
+    # dont need to transfer 'then' attribute
+    clear; add "name.range*then*"; 
+  }
+
+  # eg: goto 20 20;
+  # but this should have a semi-colon because the number could 
+  # be an expression
+  "command*number*number*;*" { 
+    clear; get; 
+    "goto","jumpto" { 
+       add " "; ++; get; add " "; ++; get; add ";"; 
+       --; --; put;
+       clear; add "statement*"; push; .reparse
+    }
+    clear; add "# incorrect command: \n"; put;
+    clear; add "draw.error*"; push; .reparse
+  }
+
+  #----------------
+  # 5 token reductions
+  pop;
+
+  # allow anonymous range
+  # eg: for x in 1..10 do fd 20; rt 90; done
+  "for*name.range*then*statementset*end*" {
+    # indent python code.
+    clear; ++; ++; ++;
+    add "\n"; get; replace "\n" "\n  "; put;
+    --; --; --;
+    clear; add "for "; ++; get; add ":"; ++; ++; 
+    get; --; --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  # allow anonymous range
+  # eg: for 1..10 do fd 20; rt 90; done
+  "for*range*then*statementset*end*" {
+    # indent statementset code.
+    clear; ++; ++; ++;
+    add "\n"; get; replace "\n" "\n  "; put;
+    --; --; --;
+    clear; add "for _ in "; ++; get; add ":"; ++; ++; 
+    get; --; --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  # reducing if blocks
+  "if*exp*then*statementset*end*" {
+    # indent python code.
+    clear; ++; ++; ++;
+    add "\n"; get; replace "\n" "\n  "; put;
+    --; --; --;
+    clear; add "if "; ++; get; add ":"; ++; ++; 
+    get; --; --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  #----------------
+  # 6 token reductions
+  pop;
+
+  # function definitions, todo
+  "def*name*parameters*then*statementset*end*" {
+    # indent python code.
+    clear; ++; ++; ++;
+    add "\n"; get; replace "\n" "\n  "; put;
+    --; --; --;
+    clear; add "if "; ++; get; add ":"; ++; ++; 
+    get; --; --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  #----------------
+  # 7 token reductions
+  pop;
+
+  push;push;push;push;push;push;push;
+
+  (eof) {
+    pop; pop; 
+    # python code cannot have an initial indent apparently.
+    "statement*","statementset*" {
+      clear; 
+      add '
+
+# Python turtle drawing code transpiled by "nomlang.org/eg/drawlang.pss"
+# eg: pep -f eg/drawlang.pss -i "colour green forward 100" > test.py
+# eg: pep -f eg/drawlang.pss drawing.txt > test.py
+# (drawlang syntax seems ok)
+#
+# install python-tk first then run this code with 
+#   python thisfile.py
+# An image of the drawing is saved in out.ps 
+
+# the python turtle canvas size maybe = 700x650 
+# the python turtle starts pointing east, but the logo turtle
+#   points north
+import turtle
+import random
+import subprocess
+window = turtle.Screen()
+window.bgcolor("white")
+t = turtle.Turtle()
+# make 0 north
+turtle.mode("logo"); t.color("tan3"); t.width(3); t.speed(500);
+#t.penup(); t.goto(500,-300); 
+t.pendown(); 
+#t.lt(90) 
+
+#----------------------
+# start of transpiled code
+';
+
+      get; 
+
+   add ' 
+# end of transpiled code
+#----------------------
+
+# a python fill example (like "closepath" in postscript?)
+# t.begin_fill(); t.fillcolor("yellow"); t.circle(100); t.end_fill()
+
+# same drawing in file "out.ps"
+canvas = window.getcanvas(); filename = "out.ps"
+canvas.postscript(file=filename)
+
+# dont close the python tk drawing window.
+turtle.mainloop() 
+
+# python turtle drawing code transpiled by
+# nomlang.org/eg/drawlang.pss
+# (drawlang syntax seems ok) \n';
+
+      add "\n";
+      print; quit;
+    }
+    push; push; add "  drawlang: script didnt parse well.\n"; 
+    put; clear; add "draw.error*"; push; .reparse
+  }

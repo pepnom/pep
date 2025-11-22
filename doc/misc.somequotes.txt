@@ -1,0 +1,380 @@
+
+ ## Some quotations 
+
+ A few quotations that could be used on this site.
+
+ * Joshua of Nazareth 
+ """
+   If a Roman soldier demands that you carry his pack for
+   one mile (ἀγγαρεύσει) then carry it for two.
+ """
+
+ * saying 
+ """ 
+   The man proposes, the woman disposes.  
+ """
+
+ * mjb at nomlang.org
+ """
+   Write code that even dumb people can understand, because, even if 
+   you don't realise it, you are one.
+ """
+
+ * mjb at nomlang.org
+ """
+   Dumb people write code that only geniuses can understand.
+   Smart people write code that dumb people can understand.
+ """
+
+ * Strange fact 
+ """
+   The so-called inventor of Artificial Intelligence and the Lisp
+   language (John McCarthy) voted for George W. Bush
+ """
+
+ * Charles Moore (Forth inventor)
+ """
+   There is no reason for an operating system. It is a non-thing.
+ """
+
+ * Charles Moore (Forth inventor)
+ """
+   I'm never bored by simplicity.
+ """
+
+ * Ivan Illich
+ """
+   School has become the world religion of a modernized proletariat, 
+   and makes futile promises of salvation to the poor of the technological age.
+ """
+
+ * Saying
+ """
+   It is better to learn from a book than from a computer. 
+   It is better to learn from a person than from a book.
+   It is better to learn from experience than from a person.
+ """
+
+ * Ivan Illich
+ """
+   The machine-like behavior of people chained to electronics constitutes
+   a degradation of their well-being and of their dignity.
+ """
+
+ * Saying
+ """
+   Life is not a competition, and dying is not losing.
+ """
+
+ * Saying 
+ """
+   If you want to heal your eyes, look at the clouds.
+ """
+
+ * A Question 
+ """
+   Did you forget to walk barefoot on the grass?
+ """
+
+ * Australian wisdom 
+ """
+   If you can use a boomerang, then don't use a bow and arrow.
+   If you can use a stick, then don't use a boomerang.
+ """
+
+ * "Why" or The Hobix site author 
+ """
+   If you've heard of XML, then let it go.
+ """
+ 
+ * The Pogues
+ """
+   They've got cars big as bars
+   They've got rivers of gold
+   But the wind goes right through you
+   It's no place for the old
+ """
+
+ * Van Morrison, "Sweet Thing"
+ """
+   And I will never grow so old again.
+ """
+
+ * Leonard Cohen
+ """
+   Now I've heard there was a secret chord
+   That David played, and it pleased the Lord
+   But you don't really care for music, do you?
+ """
+
+ * Scouts Lore
+ """
+   Its better to know a knot and not need a knot than
+   to need a knot and not know a knot.
+ """
+
+ * Irish saying 
+ """
+   As poor as a king without a poet.
+ """
+
+ * A Question  
+ """
+   What is a name? A reference. What is more real:
+   the world or the story-world?
+ """
+
+ * Warlpiri Saying 
+ """
+   The men give kuyu (meat) to the women and the women
+   give miyi (vegetables) to the men. This is reciprocity.
+ """
+
+ * Cadaques Jordi 
+ """
+   Why is the sun (le soleil) masculine and the moon (la lune) feminine?
+   Because they married each other and they belong together even
+   though they are opposites.
+ """
+
+ * Kogi Saying 
+ """
+   By weaving, we maintain the order of the universe.
+ """
+
+ * Kogi Saying 
+ """
+   If you want to learn how to do something, then 
+   watch the animals and insects, and learn from them.
+ """
+
+ * An Anecdote
+ """
+   Alexander the Great: What wish can I grant you?
+   Diogenes: Stand out of my light.
+ """
+
+ * Buddist saying
+ """
+   Eat when you are hungry, drink when you are thirsty
+ """
+
+ * Sign in a park in a Michael Leunig cartoon 
+ """
+   No walking baby nephews in the park
+ """
+
+ * Michael Leunig
+ """
+   Life is but a wobble board,
+   shaking with a spooky noise,
+   all of us so deeply flawed,
+   made of miseries and joys.
+ """
+
+ * Leunig cartoon 
+ """
+   If you see something strange and unusual, 
+   enjoy it while you can.
+ """
+
+ * Groucho Marx, when the audience rushed outside to look at a donkey. 
+ """
+   That is the last of a long series of straws.
+ """
+
+ * "Dumb and dumber"
+ """
+   When you tell a story, try to have point!
+ """
+
+ * Indian saying 
+ """
+   In America people drive on the right side of the road,
+   in England they drive on the left. In India, it is optional.
+ """
+
+ * Chief Seattle 
+ """ 
+   My words are like the stars that never change.
+ """ 
+
+ * Saying
+ """
+   Without plumbers, civilization might only last a few months.
+   Without computer programmers, it would be fine.
+ """
+
+ * Daoist saying.
+ """
+  The purpose of a bowl is exactly where it is not.
+ """
+
+ * The Dragon Book (Compilers etc) - approximate quote
+ """
+   A compiler is a program that translates an input language 
+   into an output language.
+ """
+
+ * mjb at nomlang dot org
+ """
+   Any nom translation script can translate itself to create 
+   the same translator in a different language. This translated 
+   translator can then translate the nom translator, and so on.
+ """
+
+ * The Rolling Stones
+ """
+   You can't always get what you want, but if you try sometimes
+   you can get what you need.
+ """
+
+ * Kev Carmody 
+ """
+   The cleverman spoke precisely, humanity he said was done
+   It’s creed of greed could not proceed if our struggle’s to be won.
+ """
+
+ * Saying
+ """
+   The cat can look at the king.
+ """ 
+
+ * Saying
+ """
+   If you are going to fall anyway, jump!
+ """
+
+ * Spanish Untranslatable Saying of great profundity.
+ """
+   Que nos quiten lo bailao
+ """
+
+ * Seinfeld 
+ """
+   Smart is the dumb person's word for intelligent
+ """
+
+ * Colombian saying 
+ """
+   Nobody knows who they are working for.
+ """
+
+ * Spanish saying
+ """
+   En casa del herrero, cuchillo de palo.
+   (In the blacksmith's house, the spoon is wooden)
+ """
+
+ * mjb at nomlang.org, world-leading expert in nom, and hobby programmer
+ """
+   This is how you learn a language: 
+     listen carefully, repeat faithfully, express freely.
+ """
+
+ * Colombian saying 
+ """
+   The monkey knows which tree it is climbing up.
+ """
+
+ * Saying 
+ """
+   Everything comes to its end at exactly the right moment,
+   including us.
+ """
+
+ * Spanish saying 
+ """
+   Knowledge does not occupy space.
+ """
+
+ * Spanish saying 
+ """
+   A lier is found out before a lame person.
+ """
+
+ * African saying 
+ """
+   You can't wake up someone who is pretending to be asleep. 
+ """
+
+ * Napoleon 
+ """
+   Fortune is like a woman: if you reject her today, do not 
+   expect to meet with her tomorrow.
+ """
+  
+ * Admiral Nelson, in a letter to his lover.
+ """
+   I can think of nothing but you and that French fleet.
+ """
+
+ * Woody Allen 
+ """
+   Do you like my watch? Its a family heirloom. My grandfather
+   sold it to me on his death bed.
+ """
+  
+ * Mjb at nomlang.org 
+ """
+   Computers have no practical purpose. But they can be interesting
+   toys that show us what is not important.
+ """
+  
+ * Truism 
+ """
+   The only thing that you will remember, are your walks.
+ """
+  
+ * Truism 
+ """
+   If a computer can do it, then it doesn't matter.
+ """
+  
+ * Silly Joke 
+ """
+   Question: How can you tell a pilot at a party? 
+   Answer: He'll soon tell you.
+ """
+  
+ * Trueism 
+ """
+   Grammar is the syntax of the universe.
+ """
+  
+ * Jeff Atwood, somewhere on his blog
+ """
+   No programmer, at the end of his life, wishes he had 
+   spent more time in front of a computer.
+ """
+
+ * Jeff Atwood, somewhere on his blog
+ """
+   Writing a blog changed my life.
+ """
+
+ * Chuck Moore, inventor of the incomparable Forth system
+ """
+   Our civilization is going to collapse under the weight
+   of its own complexity.
+ """
+
+ * Robert Nystrom, author of "Crafting Interpreters", somewhere on his blog
+ """
+   Most compilers for commonly used languages are, as far as I 
+   know, recursive descent.
+ """
+
+ * Antonio Machado
+ """
+   Traveller, there is no path. 
+   You make the path as you walk.
+   Traveller, there is no path. 
+   Your tracks are the path,
+   and when you look behind, 
+   you will see the road
+   that never again you will traverse.
+   Traveller, there is no path, 
+   just the wake that is left in the sea.
+ """
+

@@ -1,0 +1,536 @@
+
+#
+# Test data for the translation scripts.
+# see http://bumble.sf.net/books/pars/tr/
+#
+# note: maybe run "sed -i 's/ *$//g' tr.test.txt
+#   because trailing whitespace stops the tests from working.
+#
+# There seems to be a bug in pep.rc with "" empty quotes.
+#
+# This test data can be used with the script pep.tt
+# eg: pep.tt python batch
+# or: pep.tt dart anything " # swp"  
+#   start at the 'swap' tests
+#
+# This just contains a set of one line scripts
+# input and expected output. We can use this text data
+# with a bash script to test that the translation scripts
+# are working properly with each command
+# // is the field separator. The input will be echoed at the
+# script with 'echo -n', that is without a trailing newline
+#
+# Fields are:
+#   <script> // <input> // expected output
+#
+# Possible pep commands
+# add (a) clip (k) clop (K) clear (d)
+# replace (D) upper (u) lower (U) cap (A)
+# print (t) pop (p) push (P) unstack (U)
+# stack (u) put (G) get (g) swap (x)
+# ++ (>) -- (<) mark (m) go (M)
+# read (r) until (R) while (w) whilenot (W)
+# testis "..." {}
+# classtest [a-z]{} [abc]{} [:space:]{} beginswith B"..."{}
+# endswith E"..."{} end-of-input <eof>{}
+# tapetest <==>{}
+# count (n) a+ (+) a- (-)
+# zero (0) chars/cc (c) lines/ll (l) nochars (C)
+# nolines (L) escape (^) unescape (v) delim (z)
+# state (S) quit (q) write (s)
+# nop (o)
+#
+# Also need to test 'escaping' such as add "\""; and
+# add "\\\\"; Class tests eg [:upper:] [:lower:]
+
+# need to test multiline quotes;
+# also test mark; and go; syntax.
+
+# the simplest possible scripts
+read; print; clear; // ABCD // ABCD
+read; t;t; clear; // abc // aabbcc
+read; read; read; add ":"; print; // rug // rug:
+
+# test add, special chars
+r; add "x"; print;d; // abc // axbxcx
+r; add "x"; clip; t;d; // abcd // abcd
+r; add "#$"; clip; t;d; // abcd // a#b#c#d#
+r; add "z"; clop; t;d; // abcd // zzzz
+r; add "xyz"; clip; clip; t;d; // abcd // axbxcxdx
+r; add "\"\""; t;d; // abcd // a""b""c""d""
+
+# clip and clop with empty workspace
+r; t; t; d; clip; // abcde // aabbccddee
+r; t; d; clip; clip; // abc // abc
+r; t; t; d; clop; // abcde // aabbccddee
+r; t; clop; clop; clop; add "f"; t; d; // abc // afbfcf
+r; d; clip; clop; clip; add "x"; t; d; // abcde // xxxxx
+
+# test comments
+r; #* ignore this *# add ":"; t;d; // abc // a:b:c:
+r; print;print;d; # ignore this // abc // aabbcc
+
+# replace tests. Empty strings here are actually a script grammar 
+# error so I wont try to test them.
+r; replace "b" "B"; t;d; // abcd // aBcd
+r; replace ":" "."; t;d; // be:be // be.be 
+r; replace "ab" "XY"; (eof) {t;} // abab // XYXY
+r; replace ".." "bb"; (eof) {t;} // a..a // abba
+r; replace "water" ""; (eof) {t;} // iswater // is 
+r; replace "a" ""; (eof) {t;} // askyasky // skysky 
+
+# special chars in replace should have no effect , even if regex's
+# are used
+r; replace "$" ""; t;d; // click$clock // clickclock
+r; replace "/" ""; t;d; // click/clock // clickclock
+# r; replace '"' "'"; t;d; //  // clickclock
+
+# replace something with itself, should do nothing
+r; replace "a" "a"; t;d; // abcabc // abcabc
+
+# upper and lower case command tests
+
+r; upper; t;d; // xyz.abc // XYZ.ABC
+r;r;r;r; upper; print;d; // ABcd // ABCD 
+r; lower; t;d; // ABC#abc // abc#abc
+r;r;r;r; lower; print;d; // ABcd // abcd 
+
+# cap means convert to capital case. This is not a very important 
+# command but it should convert "thE big tREe" to "The Big Tree"
+r;r;r;r;r; cap; t;d; // a biG  // A Big 
+r;r;r;r;r;r;r;r; cap; t;d; // a biG it   // A Big It
+
+# push and pop
+r;r; add "*"; push; push; pop; t;d; // xxyyzz // xx*yy*zz*
+r; add "*"; push; pop; t;d; // abc // a*b*c*
+r; add "*tok*"; push; add ","; t; d; // abc // tok*,tok*,tok*,
+r; add "*tok*"; push; push; pop; t;d;pop; t;d; // abc // tok*a*tok*b*tok*c*
+r; add "*"; push; (eof){ pop;pop;pop; t;}  // red // r*e*d*
+
+# push/pop badly formed tokens
+r; d; add "*x*"; push; print; d; // abc // x*x*x*
+
+# push should do nothing (i.e. no ++) if WS empty
+r; put; clear; push; get; t;d; // abcdefg // abcdefg
+
+# pop should do nothing (i.e. no --) if stack empty
+r; ++; put; clear; pop; get; --; t;d; // abcdefg // abcdefg
+
+# put and get tests
+r; put; get; t;d; // abc // aabbcc
+
+# get nothing since the tape should be empty
+r; get; get; t;d; // boom // boom
+
+r;r; put; get; get; add "#"; t;d; // is // isisis#
+
+# put nothing
+r; clear; put; get;get; add "."; t;d; // boom // ....
+
+r; put; put; get; get; t;d; // abc // aaabbbccc
+r; put; get; put; get; t;d; // abc // aaaabbbbcccc
+r; t; put;d; ++; r;t;put;d;get;t;d; --;get;t;d; // ab // abba
+
+# swap tests
+r; swap; swap; t;d; // green // green
+r; r; r; swap; get; get; print; clear; // 123 // 123123
+r; print; swap; // abc // abac
+# r; swap; add "."; print;
+
+# increment and decrement the tape
+r; ++; get; --; print; clear; // 678 // 678
+r; put; --; get; print; clear; // abc // aabbcc
+r; ++; swap; get; put; add "."; --; print; clear; // abc // a.ab.abc. 
+
+# stack and unstack
+r; add "*X*"; push; push; unstack; t;d; // abc // a*X*b*X*c*X*
+r; add "*X*"; push; push; unstack; t;d; // abc // a*X*b*X*c*X*
+r; add "*X*"; stack; unstack; t;d; // abc // a*X*b*X*c*X*
+
+# until tests, included skipping escaped chars
+r; until "t"; add ":"; t;d; // butwhatis // but:what:is:
+r; '"' { until '"';t;} d; // a"word"z // "word"
+r; until "."; clip; t;d; // one.word.is // onewordi
+r; until ".."; clip; t;d; // one..word..is // one.word.i
+r; until "."; add "x"; t;d; // a\.b.c // a\.b.xcx
+r; until "bc"; add "x"; t; quit; // xyzabcd // xyzabcx
+r; "\"" { until "\""; add "."; } t; d; // a"bc"d // a"bc".d
+r; until "x"; add ":";t;d; // ab\\xab\\\xa  // ab\\x:ab\\\xa:
+r; B"f" { until "[ss"; add ":"; } t;d; // fog[ssh // fog[ss:h
+
+# new until, until tape
+r; put; until; add ":";print;d; // abcadef // abca:def:
+r; put; until; add "/";print;d; // AAXxx // AA/Xxx/ 
+
+# while tests. While does not exit at eof
+r; while [n]; add ".";t;d; // nnab // nn.a.b.
+r; while [-]; add ".";t;d; // ---a--- // ---.a---.
+r; while [:]; add "/";t;d; // c:::yz // c:::/y/z/
+
+r; while [abc]; add ".";t;d; // abc###abc // abc.#.#.#abc.
+r; while [a-d]; add ".";t;d; // abcdnab // abcd.nab.
+
+# go problem
+#r; while [:alnum:]; add ".";t;d; // #abc123# // #abc123.#.
+r; while [:alpha:]; add ".";t;d; // #abc123# // #abc.1.2.3.#.
+
+r; while [:blank:]; add ".";t;d; // AB ab // A.B .a.b.
+r; while [:blank:]; add "@";t;d; // $   A // $   @A@
+r; while [:cntrl:]; add ".";t;d; // TREEis // T.R.E.E.i.s.
+r; while [:digit:]; add ".";t;d; // 0123ab // 0123.a.b.
+r; while [:lower:]; add ".";t;d; // ABCabc // A.B.Cabc.
+r; while [:upper:]; add ".";t;d; // TREEis // TREE.i.s.
+
+# no read, check that while exits
+while [:alpha:]; add "."; t; d; (eof) { quit; } // ABC // ABC.
+
+# whilenot tests
+r; whilenot [x]; add ".";t;d; // abcxabcx // abc.xabc.x.
+r; whilenot [lmn]; add ".";t;d; // abcmabc // abc.mabc.
+r; whilenot [a-d]; add ".";t;d; // xyzab // xyz.a.b.
+r; whilenot [\f(]; add ".";t;d; // xyz(ab // xyz.(ab.
+r; whilenot [-]; add "X";t;d; // $$$-aaa // $$$X-aaaX 
+r; whilenot [\[]; add ".";t;d; // xyz[ab // xyz.[ab.
+# fix: this is causing big problems for rust/lua translations.
+# rust doesn't like \f (form feed?)
+# r; whilenot [ \r\t\f:>(\[\]-]; ....
+
+whilenot [:space:]; add "."; t; d; (eof) { quit; } // abc // abc.
+
+# dot just means "." dot in the nom language
+r; whilenot [.]; add "12";t;d; // $$.@@. // $$12.@@12.12
+r; [ax] { whilenot [:space:]; add ";"; } t; d; (eof) { quit; } // abc xxx // abc; xxx;
+whilenot [:space:]; add ":"; t; d; (eof) { quit; } // ABC..;;abc // ABC..;;abc:
+r; whilenot [:alnum:]; add "$"; t; d; (eof) { quit; } // #%^ 1a // #%^ $1$a$
+
+# TESTS
+
+# testing tests, also try unicode (but not for translate.c.pss)
+r; "b" { add ".";} t;d; // abcabc // ab.cab.c
+r; " " { add "--";} t;d; // >> >> // >> -->> 
+
+read; " " { add ",";} t;d; // A  Z // A , ,Z
+
+while [xyz]; "zzz" { add ":"; } (eof) { print; quit; } // zzz // zzz:
+# r; [#*] { add ".";} t;d; // 12#34 // 12#.34
+
+# range tests eg [a-z]
+r; [b-f] { add ".";} t;d; // abcd // ab.c.d.
+r;r; [a-c] { add ".";} t;d; // abcd // ab.cd
+read; [A-P] { add ".";} t;d; // FOX // F.O.X
+while [a-g]; [b-e] { add "::"; } (eof) { print; quit; } // edcdb // edcdb::
+
+# list class tests
+read; [UVWXYZ] { add "::";} t;d; // ZXY // Z::X::Y::
+while [a-z]; [bcde] { add "-"; } (eof) { print; quit; } // bed // bed- 
+read; [abcde] { add ","; } print; clear; // bake // b,a,ke, 
+read; [ ] { add ","; } print; clear; // rus h // rus ,h 
+read; [ ] { add ","; } print; clear; // is  it // is , ,it 
+
+r; [:] { add "y"; t;d;} d; // :::ello // :y:y:y
+r; [:.] { add " X"; t;d;} d; // :.ello // : X. X
+
+# difficult characters (eg for tcl)
+r;r; "{}" { add ".";} t;d; // dong{}dong // dong{}.dong
+r; "**4" { add "."; t;d;} // **4ding // **4.
+r; "[hello]" { add ":"; t;d;} // [hello] // [hello]:
+
+# character class tests. Sometimes these have to be converted
+# to regexs. To get them exactly right, and consistant can be tricky
+r; [:alnum:] { add ".";} t;d; // 12ab // 1.2.a.b.
+r; [:alpha:] { add ".";} t;d; // 12x4 // 12x.4
+r; t;d; [:alpha:] {add "x";}t;d; // abcd // abcd
+r; [:ascii:] { add ".";} t;d; // 1:ab // 1.:.a.b.
+# blank just means space or tab (2 characters)
+r; [:blank:] { add ".";} t;d; // 12 34 // 12 .34
+r; [:blank:] { add ".";} t;d; // 1 2 3 4 // 1 .2 .3 .4 
+r; [:blank:] { add ";";} t;d; // 12  34 // 12 ; ;34
+r; [:cntrl:] { add ".";} t;d; // abc // abc
+r; [:digit:] { add ".";} t;d; // 12ab // 1.2.ab
+r; [:graph:] { add ".";} t;d; // 12ab // 1.2.a.b.
+r; [:punct:] { add "AA";} t;d; // ;:,. // ;AA:AA,AA.AA 
+r; [:lower:] { add ".";} t;d; // abCD // a.b.CD
+r; [:upper:] { add ".";} t;d; // ABcd // A.B.cd
+# print means [:control:] or space ' '
+# r; [:print:] { add ".";} t;d; // ABcd // A.B.cd
+# word means alphanumeric or underscore 
+# r; [:word:] { add ".";} t;d; // A1_ ## //A.1._. ##
+
+# single char class tests. This can match eg "^^" or "^^^" etc
+# so is not equivalent to "^" {...} The translator usually implement this by 
+# using regular expressions, but there may be faster ways
+
+r; [^] { add "caret"; } t; d; // gold^. // gold^caret.
+r; [-] { add "hyphen-"; } t; d; // new-old // new-hyphen-old
+r; [*] { add ":"; t;d;} // ** // *:*:
+r; [.] { add "x";} t;d; // 12.34 // 12.x34
+r; [&] { add "x";} t;d; // 12&34 // 12&x34
+r; [>] { add "x";} t;d; // 12>34 // 12>x34
+r; [<] { add "x";} t;d; // 12<34 // 12<x34
+r; [|] { add "x";} t;d; // 12|34 // 12|x34
+r; [{] { add "x";} t;d; // 12{34 // 12{x34
+r; [}] { add "x";} t;d; // 12}34 // 12}x34
+r; [{}[\]-] { add " :";} t;d; // {}]-#ab // { :} :] :- :#ab
+
+# the square bracket below is already escaped, so should not be 
+# 're-escaped' by escapeChar in the translators. 
+
+# but lua, for example uses "%" as the escape char in patterns (which 
+# are not exactly regexes), which means that I should do
+#  >> echar '\\'; unescape ']'; echar '%'; escape ']'; echar '\\';
+# in the nom translation script.
+
+# single character class tests with tricky characters.
+r; [\]] { add "bracket"; } t; d; // end] // end]bracket
+r; [[] { add "bracket"; } t; d; // open[ // open[bracket
+r; [\\\]] { add "bracket"; } t; d; // end] // end]bracket
+r; ["] { add "quote."; } t; d; // said"it // said"quote.it
+r; ['] { add "quote."; } t; d; // said'it // said'quote.it
+# r; [\\] { add "B"; } t; d; //  // end]bracket
+
+
+# if regexes are used for [-] then "-" may need to be escaped
+r;r;r; [-] { add ".";} t;d; // ---x-- // ---.x--
+
+# fake ranges: below should not be interpreted at a range, rather a list
+r; [a-de] { clear; } print; clear; // acd-cec // ccc
+r; [ab-e] { clear; } print; clear; // acb-cec // ccc
+
+# "^" is not a special character in pep/nom class tests
+r;r; [^] { add ":";} t;d; // ^^x^ // ^^:x^
+
+# other tricky range escaping tests
+r; [abc-] { add "hyphen-"; } t; d; // new-old // new-hyphen-old
+r; [/] { add "."; } t;d; // abc/abc // abc/.abc
+
+r; [:punct:] { add ".";} t;d; // ::ab // :.:.ab
+r; [:space:] { add ":";} t;d; // AB cd // AB :cd
+
+# sometimes nothing is seen as something, which is a bug
+r; t; d; [:space:] {add "x";}print;d; // abcd // abcd
+r; print; clear; [:alnum:] {add "x";}print;d; // 1234 // 1234
+
+r; [:xdigit:] { add ".";} t;d; // xyab12 // xya.b.1.2.
+r; [:xdigit:] { add ";";} t;d; // @*12AF@* // @*1;2;A;F;@*
+
+# workspace "begins with" test, this may use a regex match in the
+# translators so special regex chars (eg -^$(){}) need to be escaped
+r; B"a" { add ".";} t;d; // abcd // a.bcd
+r; B"a" { add ".";} t; // abc // a.a.b.a.b.c.
+r; B"ab" { add ".";} t; // abc // aab.ab.c.
+r; B"---" { add "Z"; t;d; }  // ---N // ---Z
+r; B"^^" { add "X"; t;d; }  // ^^boo // ^^X
+r; B"^$*&" { add "X"; t;d; }  // ^$*&xx // ^$*&X
+r; B"a-z" { add ":"; t;d; }  // a-zabc // a-z:
+r; B"woo{}" { add ":"; t;d; }  // woo{}woo // woo{}:
+r; B"[a-z]" { add ":"; t;d; }  // [a-z]abc // [a-z]:
+r; B"?" { add ":"; t;d; }  // ?abc // ?:
+r; B"*" { add ":"; t;d; }  // **abc // *:*:
+
+# tricky chars. For the translators, some languages have their own
+# RegExp escape() methods that can help here. E.g. dart RegExp.escape(text)
+r; [<>:!=|&] { add "."; } t;d; // <>=&abc // <.>.=.&.abc
+
+r; [-] { add "x"; } t;d; // abc--- // abc-x-x-x
+
+# workspace "ends with" test, the translators may use a regular
+# expression match for this or something else.
+r; E"a" { add ".";} t;d; // abcd // a.bcd
+r; E":*" { add ":"; t;d;} // fizz:*pop // fizz:*:
+r; E"^$" { add ":"; t;d;} // buzz^$pop // buzz^$:
+
+# current cell equals workspace test
+r; put; (==) { add ".";} t;d; // ab // a.b.
+r; put; (==) { add "y"; t;} (==) {t;} d; // abc // aybycy
+
+# negated tests
+r; !"b" { add ":";} t;d; // abcd // a:bc:d:
+r; !B"b" { add ":";} t;d; // abcd // a:bc:d:
+r; !E"b" { add ":";} t;d; // abcd // a:bc:d:
+r; ![:alpha:] { add ":";} t;d; // ab1cd // ab1:cd
+r; ![:space:] { add ":";} t;d; // ab cd // a:b: c:d:
+r; ![:lower:] { add ".";} t;d; // ABcd // A.B.cd
+r; ![:punct:] { add "/";} t;d; // ab.:;cd // a/b/.:;c/d/
+
+# bash was interpolating !(==) here with ls
+r; put; !(==) { add ".";} t; d; // aaAA // aaAA
+
+# empty quotes, useful for testing if workspace is empty
+r; !"" { add ".";} t;d; // abcd // a.b.c.d.
+
+# compound tests, OR logic
+r; B"a",B"b"{add ":";} t;d; // abcd // a:b:cd
+r; B"a",(eof){add "<";}t;d; // abcd // a<bcd<
+r; [a-d],[f-g],[xy]{add "#";}t;d; // afx // a#f#x#
+r; [:space:],[abc]{add ".";}t;d; // a d c // a. .d .c.
+
+# compound tests, AND logic
+r; B"a"."a"{add ":";} t;d; // abcd // a:bcd
+r; B"a".(eof){add ":";print;} // abcd // abcd:
+r;r;r; B"x".[x]{add ":";} t;d; // xxxaxx // xxx:axx
+r;r;r; B"zz".![z]{add ":";} t;d; // zzazzz // zza:zzz
+r;r;r;r; B"bee".![bee]{add ":";} t;d; // beesbuzz // bees:buzz
+
+# compound with negation
+r; !(eof).!"a" { add ","; t;d; } t;d;// abcd // ab,c,d
+
+# nested tests, can simulate AND logic
+r; B"a"{E"c"{ put;d;a"<";get;a">";t;d;}} // abcabc // <abc><abc>
+
+# counting etc
+r; count; print;d; // abcd // a0b0c0d0
+r; a+;count;t;d; // abcd // a1b2c3d4
+r; a+;a+;count;t; d; // abcd // a2b4c6d8
+r; chars;t;d; // abcd // a1b2c3d4
+r; ![:alpha:]{nochars;}chars;t;d; // abc d // a1b2c3 0d1
+r; "c"{nochars;}chars;t;d; // abcd // a1b2c0d1
+r; lines;t;d; // abcd // a1b1c1d1
+
+# eof and begin blocks
+r; <eof> { t;} t; d; // abcd // abcdd
+r; (eof) { add "EE";} t;d; // abcd // abcdEE
+begin { add "X";} r;t;d; // abcd // Xabcd
+begin { delim ":";} r; add ":ab,";push;t;d; // abc // ab,ab,ab,
+begin { add "$";t;t;d;} r;t;t;d; // bee // $$bbeeee
+
+# delim, changing the stack push delimiter. This may become important
+# when calculating if a variable is within scope. So we can add
+# a different delimiter for a scope and push a set of variable/type
+# definitions onto the stack (actually it may have to be a second stack)
+
+r; add "*x*."; delim "."; push; pop; print; d; // ab // a*x*.b*x*.
+
+# second char of delimiter should be ignored?
+# r; add "*x*."; delim "ab"; push; pop; print; d; // ab // a*x*.b*x*.
+
+# parse and reparse and restart
+r; add ":"; parse> t;d; // abcd // a:b:c:d:
+r; parse> "c" { add "."; .reparse } t;d; // abcd // abc.d
+r; "a" { .reparse } add "."; parse> t;d; // abcd // ab.c.d.
+
+# leading parse label (not statements before it). This is possibly not 
+# a very useful pattern but is syntactically ok
+parse> read; print; clear; // whoosh // whoosh
+parse> r; "#" { add "/"; } print; clear; // a#b // a#/b
+
+# A trailing parse label.
+read; print; clear; parse> // whoosh // whoosh
+r; "#" { add "/"; } print; clear; parse> // a#b // a#/b
+
+# begin block with .reparse and restart
+# restart should jump back just *after* the begin block
+begin {a "x";} r; "xb" { .reparse } add "."; parse> t;d; // blue // xbl.u.e.
+begin {a "x";} r; parse> t; "xn" {d; .reparse} d; // new // xnew
+
+# .reparse with no parse> label is an error, but how to detect?
+# .reparse within the begin block
+# This is causing bugs in many translators
+# begin {a "x";.reparse} r; parse> t; "xn" {d; .reparse} d; // new // xnew
+# begin {a "x";.restart} r; parse> t; "xn" {d; .reparse} d; // new // xnew
+
+# .restart cases:
+#   restart with no parse> label, restart before parse> and
+#   restart after parse>.
+r; "b" { .restart } add ":"; t;d; // abcd // a:bc:d:
+r; "b" { .restart } add ":"; parse> t;d; // abcd // a:bc:d:
+r; parse> "c" { clear; .restart } add "."; t;d; // abcd // a.b.d. //
+
+# mark and go
+r; mark "Z"; put; ++; go "Z"; get; t;d; // abc // aabbcc
+r; mark "top"; put; ++; go "top"; get; t;d; // abc // aabbcc
+
+# go to same cell as current 
+r; mark "top"; put; go "top"; get; t;d; // abc // aabbcc
+
+# test duplicate marks, the latest mark should only be valid
+r; put; ++; mark "H"; --; mark "H";t;d;go "H";get;t;d; // @abc // @@aabbcc
+r; mark"H"; ++; put; mark "H"; --; t;d;go "H";get;--;t;d; // @abc // @@aabbcc
+
+# jump to a mark that does not exist, this should exit with error
+r; go "nowhere"; t; t; d;    // puma // badmark 'nowhere'!
+
+# todo: test mark; and go; which use the current tape cell and the
+# marker.
+
+# unicode testing, this is going to be interesting
+r; add "⾬"; t; d; // abc // a⾬b⾬c⾬ // uni
+
+# write to sav.pp
+r; (eof) { s; } // written //
+
+# the until bug, sometimes still exists in 2nd gen scripts
+r; "b" { add "\\";} t;d; // abc abc // ab\c ab\c
+r; replace "\"" "'"; t;d; // nm"p // nm'p
+r; replace '\'' "\""; t;d; // nm''p // nm""p
+r;r; "12" { add "\\\"";} t;d; // 1234 // 12\"34
+
+# nop is no operation, it should do nothing
+r;nop;nop;t;d; // abc // abc
+r;[:alpha:] { nop; } put;get;print;clear; // #xyz // ##xxyyzz
+
+# the graph class means any visible char but not space
+r; while [:graph:]; add ".";t;d; // TR EE is // TR. EE. is.
+r; [:graph:] { add ".";} t;d; // gum gem // g.u.m. g.e.m.
+
+# tricky escape sequences, c translator doesnt like this. todo!
+r; [\].a] { add ":";} t;d; // a.b]cd // a:.:b]:cd
+# tape test negated,
+r; put; add "."; !(==) { add ".";} t;d; // abc // a..b..c..
+
+# new until; command, reads until work ends with current tape.cell
+r; "." { put; until; } add "x";t;d; // a.bb.c // ax.bb.xcx
+r; ":" { r;r; put; until; d; } t;d; // why:is:iswhy // whywhy
+
+# new go; command, goes to mark named on current tape cell
+# feb 2025 not compiled to 'asm.pp' yet (needed for type checking)
+# just copy "until;" implementation in compile.pss
+
+# begin{mark'H';add'x';put;++;d;} r;put;"H"{go;get;++; } t;d; // abHabH // abxabx
+
+# check for duplicate marks with 'mark'
+
+# need to correct c implementation of ascii
+# r; while [:ascii:]; add ".";t;d; // TREEis // TREEis.
+
+# test escape command
+#  
+until ":"; escape "a"; t; d;(eof){quit;} // X\aYaZ // X\aY\aZ
+until ":"; escape "#"; t; d;(eof){quit;} // 1\\#67#\#8 // 1\\\#67\#\#8 
+r; escape "["; escape "]"; escape "{"; t; d; //  ab[]{ab // ab\[\]\{ab
+r; escape "/"; t; d; // buzz/a // buzz\/a
+# tricky in perl
+r; escape '"'; t; d; // X"Y"Z // X\"Y\"Z
+r; escape "'"; t; d; // X''Z // X\'\'Z
+
+# This is tricky because the escape char is \\ The perl translator has 
+# a new escapeChar method which seems to work properly.
+until "x"; escape "\\"; t; d;(eof){quit;} // b\\u\zz // b\\u\\zz
+
+# echar changes the escape character eg; echar "%";
+# but not compiled into asm.pp yet.
+# begin {echar '%';} escape 'A';
+
+# escaped quote
+# "'" is already escaped, so this should do nothing
+whilenot [:space:]; escape "'";t;d;(eof){quit;} // aa\'\'zz // aa\'\'zz
+whilenot [:space:]; escape "'";t;d;(eof){quit;} // aa\\\''zz // aa\\\'\'zz
+
+# unescape command, not working in tcl or go or anything else probably. See
+# /tr/nom.tolua.pss or /tr/nom.todart.pss for a correct way to write unescape
+# and escape (by "walking" the workspace buffer)
+#
+# unescape is actually not the same as "replace 'x' '\\x';" because it should
+# check that the character is escaped already unescape only works if \\ and a
+# are in the workspace. so need to use while not read here
+whilenot [:space:]; unescape "a"; t; d; (eof) {quit;} // X\aY\aZ // XaYaZ
+
+# dont unescape chars that are not escaped
+whilenot [:space:]; unescape "a"; t; d; (eof) {quit;} // X\\aY\aZ // X\\aYaZ
+whilenot [:space:]; unescape "."; t; d; (eof) {quit;} // \.\\.\\\. // .\\.\\. 
+
+# escape command
+whilenot [:space:]; escape "x"; t; d; (eof) {quit;} // abxx\\x\x\\\x // ab\x\x\\\x\x\\\x
+
+# last test script
+# end of tests
+

@@ -1,0 +1,101 @@
+
+## STATEMENT BLOCKS IN THE NOM LANGUAGE
+
+  Nom *blocks* : grouping statements together to create grammar
+  rule reductions.
+
+  Blocks in the nom language are indicated by the "curly braces"
+  **{...}** which are referred to as "crab pincers" by the author 
+  of the "Poignant Guide to Ruby" https://poignant.guide/book 
+  Blocks are always preceded by nomsyn://tests , either a single 
+  test or by a OR or AND sequence of tests. White-space is of no
+  significance in blocks (except within quotes and classes).
+
+  Statements can be grouped together in the Nom language with 
+  braces as follows:
+
+  * delete and count all newline characters
+  -----+
+    # a begin block, is only executed once at the beginning
+    # of a script (just like AWK's begin blocks).
+    begin { add "Counting lines...\n"; print; clear; }
+    read;
+    # a one-line block after a character class test 
+    [\n] { clear; a+; } 
+    clear; 
+    # the end-of-file test and block
+    (eof) { 
+      add "# lines: "; 
+      count; print; 
+      quit;
+    }
+  ,,,,
+
+### BLOCKS AND GRAMMAR RULES
+
+  Block are very often used in the *parsing* section of the 
+  script to create grammar rule reductions when parsing a language 
+  or pattern.
+
+### NESTING BLOCKS
+
+  Blocks can be nested as deeply as required, and this nesting provides
+  away to make complex logic tests on the workspace
+
+  * The code below is equivalent to the following [ebnf] grammar rule:
+  ----+
+   statement := (command quotedtext) | (expression quotedtext ) | 
+                (operator quotedtext) ;
+  ,,,,
+
+  * complex grammar rule recognition using nesting of blocks
+  -----+
+    pop;pop;
+    E"quoted.text*" {
+      B"command*",B"expression*",B"operator*" {
+        clear; add "statement*"; push; .reparse
+      }
+    }
+  ,,,,
+
+### NOTES
+
+  Blocks in the nom language cannot be empty, because what is the 
+  point of that? 
+
+  * error, this will not run
+  ------+
+    read;
+    [:space:] { }
+  ,,,,
+
+  But if you really want a do-nothing block, you could put the 
+  do-nothing command nom://nop inside it like this:
+
+  >> read; [:space:] { nop; } # does nothing, as requested
+
+  Unlike [sed] or many other languages (eg: the *c* language) a single
+  statement is not allowed after a *test* unless it is within a *block* 
+
+  * error, missing curly braces
+  >> "tree" clear;
+
+  * correct nom syntax
+  ----+
+    "tree" { clear; }
+  ,,,,
+
+  Also, unlike [sed] and other (modern) languages, even the last
+  statement in a block must be terminated with a semi-colon (unless
+  it is a nom://reparse or nom://restart command. 
+
+  * incorrect syntax
+  -----+
+    [:space:] { while [:space:]; put; clear } 
+    # missing semi-colon
+  ,,,
+
+  Actually, you can put a nomsyn://parse> label in a block, but 
+  please don't unless you really, really know what you are doing.
+  The parse label should be just after the lexical analysis phase
+  of the script and should not be within **{..}**.

@@ -1,0 +1,347 @@
+
+#*
+
+ABOUT 
+
+  A nom script to turn a simple text flyer format into an html file
+  which can be converted to pdf and printed. The text flyer is in the 
+  following format
+
+  -----
+   # heading that spans 2 columns
+   * label: text
+   * next: text etc
+  ,,,,,
+
+  The text for each label or item can span multiple lines. This is turned into
+  an html table with 2 columns for formatting. A plain font is used in
+  the output. I am using a label-field start token * and end token ":" 
+  for simplicity of parsing
+  
+NOTES
+
+  It would be good if nom://until could accept a class or list so that 
+  I could write >> until [:\n] because at the moment I have to use 
+  nom://whilenot in this situation which is often inconvenient.
+
+  This replaces <email> with 🖂  and maybe some other replacements will
+  happen too.
+
+  As usual these so called "simple" scripts are trickier to write than
+  I expect, but it seems to work and has some advantages.
+
+  some colours for text.
+  #912690 purple
+  #f16721 ochre
+  #f6931e yellow brown
+
+HISTORY
+
+  15 july 2025
+    written and appears to more or less work 
+  20 July 2025
+    revising and maybe adding some error checks and help
+
+*#
+
+ begin { 
+   while [:space:]; clear;
+   (eof) {
+     add "Empty flyer document!\n";
+     put; clear; add "error*"; push; .reparse
+   }
+
+   # respond to the help words on the first line. The help* token 
+   # will display the help-text for the given topic and then quit.
+   while [:alpha:];
+   "help","about","example","eg","insert","ins","helpwords",
+   "faq","trouble","debug" {
+     put; clear; add "help*"; push; .reparse
+   }
+
+   ![:space:].!"" {
+     clear;
+     add "flyer document should start with * or # or a help topic\n";
+     put; clear; add "error*"; push; .reparse
+   }
+ }
+    
+ read;
+ [:space:] { clear; }
+ # dots starting a line or section indicate a comment and all text on
+ # that line should be ignored.
+ "." { until "\n"; clear; .reparse }
+ "*" {
+   until ":";
+   !E":" {
+     clear;
+     add "Label lines (starting with '*') should end with :\n";
+     put; clear; add "error*"; push; .reparse
+   }
+   clop; 
+   replace "<email>" "🖂 "; 
+   replace "<speech>" "🗨️";
+   replace "<phone>" "🕻";
+   replace "<sig" "[sig"; replace "sig>" "sig]";
+   replace "<im" "[im"; replace "im> " "im]";
+   # basic html entities.
+   replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; 
+   # insert a signature or any image 
+   B"[sig " { 
+     replace "[sig " "<img style='width:30%;height:auto;' src='";
+     replace " sig]" ".png'/>";
+   }
+   B"[im " { 
+     replace "[im " "<img style='width:30%;height:auto;' src='";
+     replace " im]" ".png'/>";
+   }
+
+   put; clear;
+   whilenot [#*]; ++; 
+   replace "<email>" "🖂 "; 
+   replace "<speech>" "🗨️";
+   replace "<phone>" "🕻";
+   replace "<sig" "[sig"; replace "sig>" "sig]";
+   replace "<im" "[im"; replace "im> " "im]";
+   # basic html entities.
+   replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; 
+   # insert a signature or any image 
+   B"[sig " { 
+     replace "[sig " "<img style='width:30%;height:auto;' src='";
+     replace " sig]" ".png'/>";
+   }
+   B"[im " { 
+     replace "[im " "<img style='width:30%;height:auto;' src='";
+     replace " im]" ".png'/>";
+   }
+   put; --; clear;
+
+   add "<tr><td><em style='color:saddlebrown'>"; get; add "</em></td>"; 
+   add "<td>"; ++; get; --; add "</td></tr>\n"; put; 
+   clear; add "item*"; push; .reparse
+ }
+
+ # This is a 'heading' in the flyer that spans two columns
+ "#" {
+   until "\n"; clop; E"\n" { clip; }
+   # special symbols
+   replace "<email>" "🖂 "; replace "<speech>" "🗨️"; replace "<phone>" "🕻";
+   # basic html entities.  # colour: 912690 purple
+   replace "&" "&amp;"; replace ">" "&gt;"; replace "<" "&lt;"; 
+   put; clear; 
+   add "<tr><td colspan='2'><center style='color:darkblue'><h3>"; get;
+   add "</h3></center></td></tr>\n"; put; 
+   clear; add "heading*"; push; .reparse
+ }
+ # This shouldn't happen
+ !"" {
+   add " <-- Misplaced character\n";
+   print; quit;
+ }
+
+parse>
+ 
+ # watch the stack as it parses: very helpful for debugging the script grammar
+ # Comment-out the next 2 lines when the grammar is working well.
+ #add "<!-- * line "; lines; add " char "; chars; add ": "; print; clear; 
+ #unstack; print; stack; add " -->\n"; print; clear;
+
+ # --------------
+ # error and help tokens.
+ pop;
+
+ # This just prints the given error message and exits.
+ "error*" {
+   clear; get; 
+   add "
+
+   nomlang.org/eg/flyer.plain.tohtml.pss 
+      A pep:nom script to format a plain text flyer into printable 
+      html in a plain style with about 8 little flyers 
+      per printable page.
+   ";
+   print; 
+   clear; add "helpwords"; put; clear; add "help*"; push; .reparse
+   quit;
+ }
+
+ "help*" {
+   # the topic or category to display help for is in the attribute
+   clear; swap; 
+   # a list of help words. 
+   "helpwords" {
+     swap; add "
+     +--------------------------------------------------------------+
+
+     If you type one of the following 'help words' as the first line 
+     of the 'flyer' then you will get help for that particular subject
+     about this script. So the script sort of documents itself which 
+     is sort of cool I think.
+
+     Type: 
+       'help/about' to see a general description of this script
+       'insert/ins' to see what symbols/images can be inserted in the flyer 
+       'helpwords' to see this message
+       'example/eg' to see an example plain text flyer  
+       'faq/trouble/debug' type one of these if things really look bad.
+
+      For more information about pep:nom scripts see www.nomlang.org
+     ";
+   }     
+   "help","about","?" {
+     swap; add "
+     Hi, this is the nomlang.org/eg/flyer.plain.tohtml.pss script
+     This script is supposed to turn a plain text 'flyer' into a printable 
+     html document in a 'type-writer' style with about 8 flyers per page.
+
+     <sig name sig> or <im file im> will be converted into an
+     image (useful for inserting handwritten signatures etc). The filename 
+     should be something like 'name.png or' 'file.png'
+
+       ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+
+   # special things that can be inserted in the flyer text.
+   "insert","ins" {
+     swap; add "
+       www.nomlang.org/eg/flyer.plain.tohtml.pss 
+        
+       <email> 
+         inserts an envelope unicode symbol 
+       <phone> 
+         inserts a unicode phone handset symbol 
+       <sig name sig> or <im name im>
+         maybe inserts the image 'name.png' into the letter with a width of
+         40% of the page width. 
+        
+     ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+   # faq 
+   "trouble","debug","faq" {
+     swap; add "
+        
+  www.nomlang.org/eg/flyer.plain.tohtml.pss
+
+  The (totally not) Frequently Asked Questions FAQ
+
+    Q: What is the purpose of this script?
+    A: Just to create a small 'flyer' using a plain font (which
+       is {Special Elite}). The flyer is formatted in columns, with the 
+       label in the first column and the information in the second, so
+       you could write telephone: 123456 etc. Also the flyer is repeated 
+       several times on the html page, so that when you print out the 
+       page most of the page is used up.
+
+     ";
+     print; clear; add "helpwords"; put; 
+     clear; add "help*"; push; .reparse
+   }
+
+   # example flyer 
+   "example","eg" {
+     swap; add "
+     An example 'flyer' text document, with comments
+     ----------------------------------------
+       . Text on a line after '.' is ignored (so it wont be 
+       . included in the flyer) and can be used to include comments, notes
+       . in the letter
+
+       . You can make the heading of the flyer with a line that starts 
+       . with one # 
+       # <app dev>
+       * Busco:
+           programadores {estudiantes, graduados, autodidactos, etc.}
+           para desarollo de apps
+       * Email: mjb@nomlang.org
+       * Whatsapp: +57 314 3233947
+
+       . include a signature (image) in the flyer as follows
+       . This will include the image file ../img/sophie.png in the html
+       <sig ../img/sophie sig>
+     ----------------------------------------
+       \n";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ push;
+ # End of error and help tokens
+ # ------------
+
+ # ----------
+ # 2 token parsing
+ pop; pop; 
+
+ "item*heading*","heading*item*","item*item*" {
+   clear; get; ++; get; --; put;
+   clear; add "item*"; push; .reparse
+ }
+ (eof) {
+   "item*" {
+     # create the initial table for each flyer
+     clear; add "<table class='flyer'>\n"; get; add "\n</table>\n"; put; clear; 
+     # create a table row with 2 flyers
+     add "<tr><td>\n"; get; add "\n</td><td>\n"; get;
+     add "</td></tr>"; put; clear;
+     # create a page table with 4 rows of flyers 
+     add "<table>\n"; get; get; get; get; add "\n</table>\n"; put;
+     
+     clear;
+     # now create the whole webpage to make the document look nicer
+     # use a google typewriter font
+     add '<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+<!--
+<dont use these typewriter and pixel fonts>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+-->
+
+ <meta charset="utf-8">
+ <title>Flyer</title>
+ <style>
+   body {
+     /* a typewriter font */
+     font-family: "Special Elite", sans-serif; 
+   }
+   tt {
+     /* This is a pixel game font */
+     font-family: "Press Start 2P"; 
+   }
+   table.flyer {
+     border: 3px dotted darkgray; 
+     border-radius: 15px;    
+     border-collapse: separate; /* Important for radius to work with cells */
+   }
+   table td:nth-child(1) {
+     text-align: right;
+   }
+   table td:nth-child(2) {
+     text-align: left;
+   }
+   table td {
+    padding: 2px 4px;
+    vertical-align:top;
+   }
+
+</style>
+  </head>
+  <body>
+    <!-- page content -->
+
+ ';
+     get;
+     add "\n</body>\n</html>\n"; put; print;
+     quit;
+   }
+ }
+ push; push; 
+

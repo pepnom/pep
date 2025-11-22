@@ -1,0 +1,5 @@
+
+read;
+add ".";
+print; print;
+clear;

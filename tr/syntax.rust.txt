@@ -1,0 +1,283 @@
+
+#*
+
+ABOUT 
+
+  Just has some examples of rust syntax to help with writing the translator
+
+RUST SYNTAX
+
+  * a technique to get out of immutable borrowing problems 
+  >> self.matchClass(&self.work.clone(), etc);
+  >> ie use .clone()
+
+  * A gotcha is std::mem::swap has 2 forms &str and String and it
+    works out which variant from the first parameter.
+
+  * write to stdout with lock
+  ----
+    let mut stdout = std::io::stdout().lock();
+    for i in 0..1000 {
+      writeln!(stdout, "{i}").unwrap();
+    }
+  ,,,,
+
+  * write to file with the write macro
+  -----
+  fn main() -> std::io::Result<()> {
+    let path = "results.txt";
+    let mut output = File::create(path)?;
+    let line = "hello";
+    write!(output, "{}", line)
+  }
+  ,,,,,
+
+
+  * check if any element of vector is "-i"
+  ------
+    let n= vec!["-i","mmmm"];
+    if n.iter().any(|&i| i=="-i") {
+        println!("Yes");
+    }
+  ,,,,
+
+  * search for pattern
+  ------
+   use regex::Regex;
+   let re = Regex::new(r"\d+").unwrap(); // Matches one or more digits
+   let text = "The number is 123";
+   if re.is_match(text) {
+       println!("Regex match found!");
+   }
+  ,,,,
+
+  * more unwrapping
+  ----
+  let file_stem = match source_path.file_stem() {
+    Some(x) => x,
+    None => continue,
+  };
+  ,,,,
+
+  * collect graphemes into vector and reverse
+  ------
+    unicode-segmentation
+    input.graphemes(true).rev().collect()
+  ,,,,,
+
+  * handling io errors in rust
+  -------
+    fn main() {
+      let greeting_file_result = File::open("hello.txt");
+      let greeting_file = match greeting_file_result {
+          Ok(file) => file,
+          Err(error) => match error.kind() {
+              ErrorKind::NotFound => match File::create("hello.txt") {
+                  Ok(fc) => fc,
+                  Err(e) => panic!("Problem creating the file: {e:?}"),
+              },
+              other_error => {
+                  panic!("Problem opening the file: {other_error:?}");
+              }
+          },
+      };
+    }
+  ,,,,
+  
+    * read a reader into a string
+    ------
+      fn main() -> io::Result<()> {
+        let stdin = io::read_to_string(io::stdin())?;
+        println!("Stdin was:");
+        println!("{stdin}");
+        Ok(())
+      }
+    ,,,,
+
+  The code below unwraps the optional that is returned by the iterator.
+
+  * another way to use iterators, consuming each element
+  -------
+   let iter = vec.iter(); // vec is &Vec, not mutable
+   let mut str = String::new();
+   str.push_str("[");
+   while let Some(v) = iter.next() {
+     str.push_str(&v.str());
+     str.push_str(", ");
+   }
+   str.push_str("]");
+ ,,,,
+
+ * you cant do this, ie chain methods in some cases.
+ >> self.work.clear().push_str(&s); //error
+
+ * remove first and last chars from string. handles unicode not graphemes
+ -------
+  fn rem_first_and_last(value: &str) -> &str {
+    let mut chars = value.chars();
+    chars.next();
+    chars.next_back();
+    chars.as_str()
+  }
+ ,,,,
+
+ Iterate over graphemes.
+ ----
+   use unicode_segmentation::UnicodeSegmentation;
+   for grapheme in my_str.graphemes(true) {
+       // ...
+   }
+ ,,,
+
+ * need to use this for string vectors & converts to &str
+ >> let inputString = &args[pos+1];
+
+ braces are obligatory. If brackets are not. 
+
+ * get command line args into a vector
+ ------
+    use std::env;
+    fn main() {
+      let args: Vec<String> = env::args().collect();
+      dbg!(args);
+    }
+ ,,,,
+
+ * print the last element of a vector.
+ ----
+   fn main() {
+     let v = vec![1.0, 1.9, 1.2];
+     if let Some(val) = v.last() { 
+         println!("Last element is {}", val);
+     } else {
+         println!("The vector is empty");
+     }
+   }
+ ,,,,
+
+ * update first element of mutable vector
+ ---
+   vec[0].some_value += 1;
+   vec.first_mut().unwrap().some_value += 1;
+ ,,,
+
+ * iterate over vector with mutable reference (change element
+ ----
+   let mut v = vec![100, 32, 57];
+   for i in &mut v {
+       *i += 50;
+   }
+ ,,,,
+ 
+  * split string and iterate or collect
+  -----
+    let parts = "some string 123 content".split("123");
+    for part in parts {
+        println!("{}", part)
+    }
+    //Or:
+    let collection = parts.collect::<Vec<&str>>();
+    dbg!(collection);
+ ,,,,
+
+  unicode_segmentation crate has .graphemes(true) conversion.
+  * iterate over graphemes, yes
+  -----
+   use unicode_segmentation::UnicodeSegmentation; // 1.5.0
+   fn main() {
+     for g in "नमस्ते".graphemes(true) {
+       println!("- {}", g);
+     }
+   }
+  ,,,,
+     
+  * read a line from stdin or a file
+  -----
+   let stdin = io::stdin();
+   for line in BufReader::new(stdin).lines() {
+   //the same way that one does:
+   let f = File::open(file)?;
+   for line in BufReader::new(f).lines() {
+  ,,,,
+
+  adding a crate for utf8 parsing.
+
+  * Add the following to your Cargo.toml:
+  ----
+   [dependencies]
+   utf8-chars = "1.0.0"
+  ,,,,
+
+  // read from stdin or from a file or a string.
+  ----- 
+   BufReader::new(io::stdin())
+   BufReader::new(fs::File::open(filename).unwrap())
+   let mut streader = StringReader::new("Line 1\\nLine 2");
+   let mut bufreader = BufReader::new(streader);
+  ,,,
+
+  * read char by char
+  ----
+   let mut f = io::BufReader::new(try!(fs::File::open("input.txt")));
+   for c in f.chars() {
+     println!("Character: {}", c.unwrap());
+   }
+  ,,,,
+  
+  Rust string docs which are important for pep/nom
+  https://doc.rust-lang.org/std/string/struct.String.html#method.trim_end
+
+  Rust says that its string handling is bi-direction aware.
+  Rust has labelled loops
+
+  * rust for loop
+  ------
+    let mut sum = 0;
+    for n in 1..11 {
+        sum += n;
+    }
+    assert_eq!(sum, 55);
+  ,,,,
+
+  * define a string
+  >> let s = String::from("hello");
+
+  * define a vector of unicode chars (4 bytes each)
+  >> let v = vec!['h', 'e', 'l', 'l', 'o'];
+
+  But rust chars dont include unicode grapheme clusters (which
+  are sequences of chars)
+
+  * chain methods together
+  -----
+    let s = "  English  ";
+    assert!(Some('h') == s.trim_end().chars().rev().next());
+  ,,,,
+
+  * trim whitespace from the end of a string
+  -----
+    let s = "\n Hello\tworld\t\n";
+    assert_eq!("\n Hello\tworld", s.trim_end());
+  ,,,
+
+  * create a mutable string and add (unicode) char and string
+  ----
+    let mut hello = String::from("Hello, ");
+    hello.push('w');
+    hello.push_str("orld!");
+  ,,,,
+  
+  * get the 3rd char, but not grapheme cluster.
+  ---
+   let s = "hello";
+   let third_character = s.chars().nth(2);
+   assert_eq!(third_character, Some('l'));
+  ,,,,
+
+  Rust strings are utf8 encoded but chars are 4 bytes.
+
+  * sparkle heart char
+  ------
+    let s = "💖💖💖💖💖";
+    assert_eq!(s.len(), 20);
+  ,,,,

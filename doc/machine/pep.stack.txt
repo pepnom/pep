@@ -1,0 +1,37 @@
+
+## THE PEP MACHINE "STACK"
+
+  The stack within the Pep machine (Parsing Engine for Patterns) is a stack of
+  strings which can be "pushed" nom://push and "popped" nom://pop
+  The *pep* stack is designed to work in conjuction with, and be synchronized
+  to the *pep* pep://tape (which is an array of strings with a pointer to 
+  the current tape-cell)
+
+  When a parse token is "popped" off the the stack, then the tape-pointer
+  (or *current tape-cell* ) is "decremented" nom://-- so that the tape-pointer
+  is pointing to the tape-cell which corresponds to the grammar 
+  token which is at the *start* of the pep://workspace buffer. This means
+  that as soon as you pop a grammar token off the stack, you can start
+  working with the token's associated "attribute" .
+
+  * add some fancy html quotes to a quoted word
+  -----+
+  # ... snippet
+  parse>
+    pop;
+    "quotedword*" {
+      clear; add "&ldquo;"; get; add "&rdquo;"; put; 
+      clear; add "text*"; push; .reparse
+    }
+    push;
+  ,,,,
+
+  The stack is what allows the Pep engine to cope with nesting 
+  patterns and other constructs of context-free and context-sensitive languages
+  and text patterns. Perhaps the simplest example of a *nesting* text
+  pattern are "palindromes" which are parsed in the example script
+  /eg/palindrome.pss  Another more complex example of nesting text structures
+  is found in XML text which is parsed in the example script
+  /eg/xml.parse.pss .
+
+   

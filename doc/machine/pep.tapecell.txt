@@ -1,0 +1,46 @@
+
+## THE CURRENT TAPE CELL IN THE PEP MACHINE
+
+ About the current tape-cell in the pep://tape array
+
+ I refer to the array of attributes that correspond to each 
+ parse-token on the parse pep://stack as a pep://tape . I think this 
+ is non-standard terminology. By a 'tape' I mean an (possibly infinite)
+ array of mutable strings that includes a current valid pointer to 
+ one of the array cells.
+ 
+ The tape-cell that is currently pointed to by the tape-pointer I 
+ refer to as the "tapecell" or "tape-cell" or "current cell" etc.
+ The current cell of the *tape* is decremented by the 
+ nom://pop command, incremented by the nom://push command and also
+ can be incremented and decremented with the nom://++ and nom://--
+ commands.
+
+ The pop and push commands are designed so that the current tape cell
+ is unchanged when a nom://pop is called on an empty parse stack,
+ and also unchanged when a nom://push is called on an empty 
+ pep://workspace buffer.
+
+ This behaviour is designed to keep the pep pep://machine stack and 
+ the tape "synchronised". That means that the tape-pointer should 
+ point to the last parse-token popped into the workspace buffer.
+
+ * the synchronised tape and stack
+ -------+
+   # nom fragment
+   pop;pop;pop;
+   "size*angle*end*" {
+     # The current tape cell points to the attribute 
+     # corresponding to the size* parse token
+     # do something with the attributes or parse tokens
+     nop;
+   }
+ ,,,,
+
+ The nom:++ and nom:-- commands are used to "compile" or translate
+ the parse token attributes when a shift-reduce rule is 
+ applied in a nomsyn://block  
+
+
+
+

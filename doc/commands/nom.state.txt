@@ -1,0 +1,50 @@
+
+## THE NOM STATE COMMAND
+
+ Show the internal *state* of the [pep] pep://machine at the time
+ that the command is issued.
+
+### ABOUT 
+
+ The *state* command displays the internal state of the pep virtual
+ machine at the time that the command is executed. This is extremely
+ useful for debugging and highly recommended. It even shows *coloured*
+ output when executed from the [pep] interpreter.
+
+ * a state command example
+ ------+
+   [:space:] { 
+     while [:space:]; put; 
+     clear; add "space*"; push; .reparse
+   }
+   ![:space:] { 
+     whilenot [:space:]; put; 
+     clear; add "word*"; push; .reparse 
+   }
+   clear;
+  parse>
+   pop;pop;pop;
+   "word*space*word*","words*space*word*" {
+     state; clear; add "words*"; push; .reparse
+   }
+   push;push;push;
+   (eof) { quit; }
+ ,,,,
+
+### NOTES
+
+ Using the *state* command is basically a speedy version of invoking a script
+ with the pep interactive debugger (using the '-I' switch) which is more
+ powerful but a more laborious way to find out what is wrong with your script
+ (or my coding). The interactive debugger allows you to step through the [nom]
+ program one instruction at a time and view the nom://state of the pep
+ pep://machine (it also has many other useful commands which may be useful for
+ learning about the [pep] virtual machine ).
+ 
+ * debug a script in interactive mode with the -I switch
+ >> pep -Ie 'r;add "/";print;clear;' -i 'abcdef'
+
+ The translation scripts at www.nomlang.org/tr implement the *state* command
+ with a method on the class which is usually called printState() . This 
+ is also a useful way to see if the translation scripts are working properly.
+

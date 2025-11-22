@@ -1,0 +1,32 @@
+#*
+  Attempting to solve the problem at rosetta code
+  where one must determine if brackets [] are properly
+  balanced and nested. Eg 
+    [[][]] good
+    [][]] wrong
+    [][[[][]]] good
+
+HISTORY
+  29 aug 2021 begun and working. This seems almost
+  as succinct as the ANTLR code
+*#
+
+read; "[","]" { add "*"; push; }
+!"" { 
+  clear; add "Sorry, only brackets [] allowed in this!\n";
+  print; quit;
+}
+parse>
+pop; pop;
+"[*]*","ob*ob*" { clear; add "ob*"; push; .reparse }
+pop;
+"[*ob*]*" { clear; add "ob*"; push; .reparse }
+
+(eof) { 
+  "ob*" { clear; add "good!\n"; print; quit; }
+  clear; add "wrong\n"; print; quit;
+}
+
+push; push; push;
+
+

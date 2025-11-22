@@ -1,0 +1,101 @@
+
+ ## Character classes in the pep/nom system
+
+ About the character classes that can be used in [nom] scripts.
+
+ The pep/nom system does not support "regular expressions" google://"regular
+ expressions" which may seem a very odd "feature", considering that its main
+ purpose in life is parsing and compiling *context-free* and *context-sensitive
+ languages which are a super-set of *regular languages* (which are the type of
+ patterns that regular expressions match). Now, not having *regexes* in pep/nom
+ is, admittedly, at times quite trying, because one is forced to actually
+ *parse* the input stream rather than just "matching and dispatching" .
+ 
+ But the lack of regular expressions has some big advantages. One is that you
+ wont be tempted to use them, or rather, you wont be tempted to try to
+ recognise context-free or context-sensitive patterns using regular expressions
+ (which is almost by definition impossible) which is a surprisingly common
+ foible amongst we urbandict://journeyman programmers. More-over, since
+ context-free patterns are a superset of regular languages you can definitely
+ match and transform regular expression patterns with nom - but it is *more*
+ work.
+
+ In addition not having regular expressions makes everything faster and simpler
+ and that is a good thing.
+
+### Back to character classes 
+
+ The closest thing that you have in *nom* to regular expression are 
+ *character classes* like these 
+
+   * some nom character classes
+   >> [:space:] [:alnum:] [:alpha:] [a-g] [5^&*(]
+
+ These may look very familiar but they are not regex elements, for 
+ example, be careful of the following:
+
+   * nom character class traps
+   ----+
+     [^abc]  # ^ doesn't have any special meaning in []
+     [xyza-z] # nope: can't combine a range and a list (the dash - 
+        # will just be regarded as an ordinary character by nom
+   ,,,,
+
+  In the pep interpreter these character classes are just *ctype.h* classes or
+  lists of (byte) characters and they know nothing about Unicode whatsoever.
+  But when you translate a [nom] script into another nice modern language like
+  go or java (with the nom translation scripts in the /tr/ folder) then
+  suddenly, for free, you get all the wonderful (or not-so-wonderful) [unicode]
+  support that that language supplies. So *[:alpha:]* should recognise any
+  alphabetic character anywhere in the Unicode character map.
+  Currently it is possible to translate nom scripts into [nom:translation.links]
+
+GRAPHEME CLUSTERS AND CLASSES
+
+  The notes above have not mentioned a particularly important concept
+  in Unicode and utf8, namely, *grapheme clusters* . These are series
+  of 2 or more unicode code points that combine into 1 visual character.
+  A simple example is an "a" with an acute accent. But grapheme clusters
+  are not limited to only 2 code points.
+
+  Some of the translators may or will support grapheme clusters, but 
+  at the moment only the "dart" /tr/nom.todart.pss translator supports 
+  grapheme clusters. 
+
+TODO EXTEND THE CHARACTER CLASS SYNTAX
+  
+  Allow conjunction classes in nom: for example the class
+  >> [:alpha:]+[#$%]
+  would match all unicode alphabetic characters plus the characters 
+  "#" or "$" or "%". This is actually quite important because it 
+  increases the power of the nom character classes.
+
+  One application would be when parsing XML identifiers which could be matched
+  with **[:alpha:]+[_-.]** Currently there is no simple way to do this in nom.
+  For example "[:alpha:],[-_.] {...}" does not work because the tests are
+  evaluated separately.
+
+  Allow user defined character classes in *nom* scripts since that will 
+  increase readability
+
+  * proposed syntax for user defined character classes
+  ----+
+    begin { 
+      class "keywordchar" [abcxyz];
+      # use logic or concatenation to create a set. This is quite 
+      # fancy and potentially difficult to implement in the interpreter
+      # but easier in the translation scripts.
+      class "keywordchar" [:space:],[a-x];
+    }
+    read;
+    [:keywordchar:] {
+      put; clear; add "Found keyword character (";get; add ")\n";
+      print; clear;
+    }
+    print; clear;
+  ,,,,
+
+ 
+ 
+
+ 

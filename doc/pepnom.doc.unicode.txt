@@ -1,0 +1,114 @@
+
+## Unicode and the pep/nom system
+
+  About how nom handles characters, unicode and "combining characters"
+  or "grapheme clusters". This document contains notes and a discussion about
+  how to deal with unicode and combining characters.
+
+  Unicode support is very very very important in the pep/nom system because
+  a language parsing and recognising system that doesn't do unicode is 
+  a bit silly. However, this is a work in progress.
+
+  The pep interpreter tool (written in plain c) reads and manipulates
+  byte characters, so if your script with unicode characters works 
+  (and it may) then it is more good luck than good management.
+
+  The translation scripts can translate into languages that have 
+  (good?) unicode support. This is probably the most difficult thing
+  about writing the translation scripts: that the nom://read function
+  should support reading one unicode character or grapheme cluster 
+  properly, which may not be trivial.
+
+### DIACRITICS
+
+  Diacritics are little symbols that may appear on top of characters
+  and often they are the dastardly cause of unicode grapheme clusters.
+  There are some writing systems (eg Lithuanian ?) where you can only
+  express the diacritics with a sequence of unicode code points. 
+  
+  In other languages there is a single code point for a character with
+  diacritic. In this case the UTF8 string etc can be "normalised"
+  (see the go code below).
+
+  * example of diacritic 
+  -----
+    For example, the letter é (e with acute accent) may be equivalently written
+    \u00E9 or with a combining accent as \u0065\u0301.
+  ,,,,
+  
+### GRAPHEME CLUSTERS
+
+  Grapheme clusters are sequences of unicode code points that combine
+  to form one visible character. I am only starting to give proper 
+  thought to these in the pep/nom system (2025). 
+
+  * an example of grapheme clusters
+  -----
+    In the following code, the ü is not the single Unicode character U+00FC but
+    is a single grapheme cluster composed of two Unicode characters, the plain
+    ASCII u U+0075 followed by the combining diaeresis U+0308.
+
+    fmt.Println("Jürgen ǅemal")
+    fmt.Println("Ju\u0308rgen \u01c5emel")
+  ,,,,
+
+  vim may not handle this correctly because the diaeresis does not 
+  appear over the 'u'. Or this could be a copy paste problem. 
+
+  * redgrittybrick on stackoverflow
+  """ 
+  There are visual-characters in use which can only be represented in
+  Unicode using combining characters. In other words for which there is no
+  precomposed character.  
+  """
+
+### GRAPHEME CLUSTERS AND GO
+
+  The Windows console (conhost.exe) doesn't support combining codes. You'll
+  have to first normalize to an equivalent string that uses precomposed
+  characters.  
+
+  you can use golang.org/x/text/unicode/norm to do the
+  normalization (e.g. norm.NFC.String("Jürgen ǅemal"))
+
+  * example code from stack overflow for normalising grapheme clusters
+  -----
+    s := "Ju\u0308rgen \u01c5emel"
+    fmt.Println(s)       // dieresis not combined with u by conhost.exe
+    s = norm.NFC.String(s)
+    fmt.Println(s)       // shows correctly
+  ,,,,,
+
+
+### GRAPHEME CLUSTERS AND JAVA
+
+ Apparently java uses something called ICU which solves some of these
+ grapheme cluster issues.
+
+ * iterating over grapheme clusters not code points
+ ------
+   BreakIterator boundary = BreakIterator.getCharacterInstance(Locale.WHATEVER);
+   boundary.setText(yourString);
+   for (int start = boundary.first(), end = boundary.next();
+           end != BreakIterator.DONE;
+           start = end, end = boundary.next()) {
+       String chunk = yourString.substring(start, end);
+   }
+ ,,,,
+
+### GRAPHEME CLUSTERS AND RUST
+
+  * split a string into unicode chars and diacritics
+  >> "नमस्ते".chars()
+
+  Need to use a rust crate to do this?
+
+  * rust code to get grapheme cluster into single value
+  -------
+    use unicode_segmentation::UnicodeSegmentation; // 1.5.0
+    fn main() {
+      for g in "नमस्ते".graphemes(true) {
+        println!("- {}", g);
+      }
+    }
+  ,,,,

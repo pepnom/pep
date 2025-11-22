@@ -1,0 +1,32 @@
+
+ == Test Document for the mark.html.pss script
+
+DIFFERENT FORMATS
+
+ >> pp -f eg/mark.html.pss -i "'hi' www.google.com" 
+
+SUBHEADING ....
+
+ * different link formats
+ http://www.google.com 
+ https://bumble.sf.net
+ "link display" www.bumble.sf.net/
+ 
+ PARSE this line www.sf.net/    
+ file 'machine.c' /books/gh/object/machine.c
+ and THIS line "within quotes"
+
+   * test the mark.html.pss script  
+   >> pp -f eg/mark.html.pss  
+
+ more text. A link "machine" http://bumble.sf.net/books/gh/ 
+ search with "google" www.google.com
+ words
+
+
+
+ 
+
+
+
+

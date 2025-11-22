@@ -1,0 +1,57 @@
+
+
+## THE NOM "COUNT" COMMAND
+
+ The count command adds the value of the counter variable to the end of the
+ workspace buffer.
+ 
+ For example, if the counter variable is 12 and the
+ workspace contains the text 'line:', then after the *count* command the
+ workspace will contain the text
+
+  * print line numbers before each line
+  >> read; [\n] { a+; count; add ": "; }  print; clear;
+
+  * run the line-numberer with the pep interpreter
+  >> pep -e "read; [\n] {a+; count; add ': '; } print;clear;" filename 
+
+  * the same line-numberer with cryptic single char commands
+  >> pep -e "r;[\n]{+;n;a': ';}t;d;" filename 
+
+  * translate this one-liner to java, compile and run 
+  -----
+    pep -f tr/translate.java.pss \
+      -e "read; [\n] {a+; count; add ': '; } print; clear;" > Machine.java
+    javac Machine.java
+    cat /usr/share/dict/words | java Machine
+  ,,,,
+
+  note: it would be simpler to use the nom://lines command in this example
+
+  * print line number before each line with "lines" command
+  >> read; [\n] { lines; add ": "; } print; clear;
+  
+  * count the number of dots in the input 
+  >> read; "." { a+; } clear; <eof> { count; print; }
+   
+ The count command only affects the 'workspace' buffer in the *Pep* virtual
+ "machine" pep://machine . The *pep* machine also maintains an automatic
+ count of the 
+ 
+ For counting lines and characters in the
+ input-stream, the commands nom://lines, chars", "nolines" and "nochars" exist.
+
+  * count blank lines in input
+  ----+
+    read; 
+    "\n" { 
+      while [ \t\r]; clear; 
+      !(eof) { read; "\n" { a+; }}
+    }
+    clear;
+    (eof) {
+      add "Blank lines: "; count; add "\n";
+      print; quit;
+    }
+  ,,,,
+

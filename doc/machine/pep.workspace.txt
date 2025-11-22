@@ -1,0 +1,33 @@
+
+## THE PEP/NOM WORKSPACE BUFFER
+
+  The *workspace* : a string manipulation buffer in the [pep] machine
+
+  The workspace buffer is the centre of the pep/nom virtual-machine and is 
+  analogous to an "accumulator" register in a cpu chip. All incoming
+  and outgoing text data is processed through the workspace. All machine
+  instructions either affect or are affected by the state of the 
+  workspace.
+
+  The workspace buffer is analogous to a processor register in a non-virtual
+  cpu. In order to manipulate a value, it is generally necessary to first load
+  that value into a cpu register. In the same way, in order to manipulate some
+  text in the pep machine, it is necessary to first load that text into the
+  workspace buffer. This can be achieved with the nom://get , nom://pop , 
+  and nom://read commands.
+
+### commands that manipulate text in the workspace
+
+  - nom://clear delete all text in the workspace
+  - nom://add append text to the workspace
+  - nom://replace replace text in the workspace
+  - nom://clip
+  - nom://clop
+
+### transfer text to and from the workspace
+
+  - nom://push and nom://pop
+  - nom://get and nom://put
+  - nom://read nom://until nom://while and nom://whilenot
+
+

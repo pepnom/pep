@@ -1,0 +1,1 @@
+add "ls | sed s/a/AAA/"; system; print; quit;

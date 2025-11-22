@@ -1,0 +1,25 @@
+
+#: Lines starting with #: will be removed by some preprocessor.
+
+#: This file is a type of template for using an AI engine to 
+#: translate the nom code to other languages. This file can be use in
+#: conjunction with the script /tr/make.translator.pss
+#: This code is in the perl language because that seems to be the 
+#: most complete hand-written nom translator at the moment (Sept 2025)
+
+#: "0" { clear; add "last LEX;"; }
+#: "1" { clear; add "next PARSE;"; }
+
+# reparse0-snippet: 
+last LEX;
+# reparse1-snippet: 
+next PARSE;
+
+#: add "(length("; get; add ") <= length($self->{work})) && ";
+#: add "(substr($self->{work}, -length("; get; add ")) eq "; get; add ")"; 
+
+# equoted-snippet:
+(length($getvar) <= length($self->{work})) && 
+(substr($self->{work}, -length($getvar)) eq $getvar)
+
+

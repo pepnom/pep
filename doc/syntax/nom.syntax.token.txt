@@ -1,0 +1,28 @@
+
+## GRAMMAR TOKENS IN THE NOM LANGUAGE
+
+ Grammar *parse* tokens in the [nom] language.
+
+ Actually there is no such thing as a *parse token* or *grammar token*
+ within the amazing Nom language. This is because in Nom everything is
+ just *text* (hopefully Unicode/UTF8/etc text). But the structure of a 
+ *nom* script is designed to reflect the structure of the grammar that 
+ you are parsing or translating or compiling. 
+
+ This is achieved with the pep://delimiter register which determines 
+ where the *pep* machine will see a parse token as starting or stopping.
+ An example should make this clearer than mud....
+
+ * three tokens in the workspace buffer
+ -----+
+   pop;pop;pop
+   "quotedword*url*dot*" {
+     # do something with the parse token quotedword, url and dot
+   }
+ ,,,,
+
+ As can be seen above, the parse-tokens are delimited by a single 
+ character, the "*" asterix. But this is just a matter of preference.
+ You can change the parse token delimiter to whatever you like
+ with the nom://delim
+ 

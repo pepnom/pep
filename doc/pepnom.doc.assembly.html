@@ -1,0 +1,438 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/teat.doodle.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   The cleverman spoke precisely, humanity he said was done
+   It’s creed of greed could not proceed if our struggle’s to be won.
+ 
+<cite>Kev Carmody </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/pepnom.doc.assembly.txt -->
+<p>
+ <!-- ------------------------------- -->
+<h2> the pep&nom assembly language</h2>
+
+<p>
+ About the assembly language used by the &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; system to compile
+ and run scripts in the <em>pep</em> interpreter.
+<p>
+ The <em>nom</em> system is a &ldquo;self-hosting compiling&rdquo; system but not just 
+ in the usual way that compilers can be self-hosting (that is: that 
+ the compiler for a language like java, go, dart, wren, lisp, forth 
+ can compile itself - once a <a href='https://www.urbandictionary.com/define.php?term=bootstrap' title='urban dictionary'>bootstrap</a> compiler has been
+ created ), but it is self hosting on multiple levels.
+<p>
+ That is a grandiose statement, and here is the explanation: The <em>nom</em>
+ language (which runs on top of the <em>pep</em> <a title='nom syntax reference: machine' href='http://nomlang.org/doc/machine/pep.machine.html'>machine</a> ) is self-hosting
+ because the <em>nom</em> <a href='https://bumble.sf.net/books/pars/compile.pss'>compiler </a> is written in nom. 
+ To update the compiler, we can modify <em>compile.pss</em> and then use it 
+ to compile itself as follows:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ compile the &Nopf;&oopf;&mopf; compiler
+ </figcaption>
+<pre class='codeline'>
+ pep -f compile.pss compile.pss &gt; asm.test.pp
+</pre>
+</figure>
+<p>
+ Apart from being a neat trick it also makes maintaining the compiler 
+ simpler. But what is this <em>asm.test.pp</em> ? It is a &ldquo;pep assembly&rdquo; file
+ and you can have a look at the gory details in the current assembler 
+ <a href='https://bumble.sf.net/books/pars/asm.pp'>bumble.sf.net/books/pars/asm.pp</a> Its probably a lot easier to understand than most assembly
+ languages because the instruction names are a bit longer and it is also
+ space indented to show conditional jumps. (the <em>nom</em> compiler does the indenting)
+ <p>
+ The file <a href='https://bumble.sf.net/books/pars/asm.pp'>bumble.sf.net/books/pars/asm.pp</a> is the <em>real</em> compiler and if you delete it 
+ the <em>pep</em> interpreter will suddenly and unceremoniously stop working. 
+ This is because the <em>asm.pp</em> compiler is also <em>self-hosting</em> which 
+ means that when you type 
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ run a &Nopf;&oopf;&mopf; script
+ </figcaption>
+<pre class='codeline'>
+ pep -f gargle.compiler.pss -i "/*test gargle comment*/ "
+</pre>
+</figure>
+<p>
+ The <em>pep</em> interpreter opens 'gargle.compiler.pss' (which would be a compiler for
+ the amazing <em>gargle</em> language) and which is a <em>nom</em> script and then it uses
+ <em>asm.pp</em> to compile this <em>nom</em> script into a ... <em>pep</em> assembly file. So now the
+ <em>pep</em> interpreter has an assembly file called something like &ldquo;script.pp&rdquo; or
+ probably &ldquo;sav.pp&rdquo; which it can load directly (into a Program object, which is
+ just a series of Instruction objects). Once it has loaded the assembly file
+ it runs the script using the input given to the <em>-i</em> switch.
+<p>
+ So that is another level on which &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; is a self-hosting compiling 
+ system. But there is another:
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ use a translation script to translate a translator
+ </figcaption>
+<pre class='codeline'>
+ pep -f tr/translate.go.pss tr/translate.go.pss &gt; nom.to.golang.go
+</pre>
+</figure>
+<p>
+ (this could be run from the <em>pepnom</em> base folder of the 
+ <a href='/download/download.pepnom.tar.gz'>downloaded </a> and unpacked &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf;
+ system)
+<p>
+ The incantation above takes the <em>nom</em> script which translates <em>nom</em> scripts 
+ into the <em>go</em> language (googles sort-of successor to c/c++ ) and uses it
+ to translate itself into &ldquo;go&rdquo; . All this can become a bit strange to 
+ think about. But it has a practical purpose: after compiling the 
+ go source code in &ldquo;nom.to.golang.go&rdquo; with something like 
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ compile go source code
+ </figcaption>
+<pre class='codeline'>
+ go build nom.to.golang.go
+</pre>
+</figure>
+<p>
+ we have an executable go program which will translate <em>nom</em> scripts into
+ go source code. This means that we can completely dispense with the 
+ <em>pep</em> interpreter, which may be a good thing since it is written in 
+ plain c with <em>byte char</em> characters and who knows what memory leaks 
+ and weird undiscoverable c-bugs it may have hidden under the proverbial 
+ bonnet.
+<p>
+ So this somewhat <a href='https://www.oed.com/search/dictionary/?scope=Entries&q=onanistic' title='oxford english dictionary'>onanistic</a> translation of <em>nom</em> translation scripts 
+ is another level at which the &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; system is a self-hosting compiling
+ system. 
+ <p>
+ As far as I know, there is no other language system which can do all this, and
+ especially not for a domain-specific language as simple and as (more or less)
+ readable as <em>nom</em> . 
+<p>
+ <p>
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

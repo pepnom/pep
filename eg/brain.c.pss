@@ -1,0 +1,266 @@
+#* 
+
+  A script to translate the "Brainf***" language into plain
+  c. This version will try to compact strings of +++--- and >>><<< etc
+  into 1 c statement, which should make the c code much more 
+  readable.
+
+  * Valid brainf commands
+  >> ">" p++ "<" p-- "+" data[pp]++ - data[pp]-- "[]" while data[pp] > 0 . putchar , getchar
+  >> "#" print state (optional command).
+
+
+STATUS
+ 
+   not working
+
+TESTING
+  
+  * translate a Brainf*** program to c, compile and execute
+  ----
+    pep -f ../brainf.toclang.pss -i ',.+.+.' > test.c; 
+    gcc test.c -o test; ./test
+  ,,,,
+
+NOTES
+
+  This implementation of the brain compiler still doesnt pass the test
+  completely in eg/brain/inout.b since it output "bL" instead of "LB". Not sure
+  why.
+
+  Other things to think about, include array bounds checking, and 
+  handling of EOF.
+
+  This script demonstrates pep/nom parsing and translating one of 
+  the simplest possible formal languages.
+
+  The script could be greatly reduced but some error messages are printed with
+  line and character number.
+
+  Hardly any parsing is required, just for "[" and "]" I put a line:char number
+  message into the attribute for each [ or ], and then use that message if the
+  brackets are unbalanced.  This technique could be useful for other languages.
+  This is because we dont need that tape-cell (token attribute) for anything
+  else.
+
+HISTORY
+
+  30 july 2022
+    Started to adapt from brain.1to1.c.pss
+*#
+
+  read;
+  #">","<","+","-" { put; add "*"; push; .reparse }
+
+  ",","." {
+    # if this is 1st ><+- of list, then zero the accumulator
+    ">" { clear; add "pp++;"; }
+    "<" { clear; add "pp--;"; }
+    "+" { 
+      clear; 
+      # do bounds checking here
+      add "if ((pp < 0) || (pp > SIZE)) {\n";
+      add '  printf("data pointer out of bounds\\n"); \n';
+      add "  exit(1);\n";
+      add "}\n";
+      add "data[pp] += 1;";
+    }
+    "-" { 
+      # also do bounds checking here
+      clear; add "data[pp]--;";
+    }
+    "." { clear; add "putc(data[pp], stdout);"; }
+    "," { 
+      clear; 
+      # also check for getc == EOF
+      # which can also mean an error
+      add "if (feof(stdin)) { exit(0); } \n";
+      add "if (data[pp] == EOF) { exit(1); } \n";
+      add "data[pp] = getc(stdin);";
+    }
+    put; clear;
+    add "com*"; push; .reparse
+  }
+
+  "[","]" { 
+    put; add "*"; push; 
+    add "unbalanced bracket '"; --; get; add "' ";
+    add "near line:char "; lines; add ":"; chars; put; ++; clear; 
+    .reparse
+  }
+
+  # ignore any other character but parse as a dummy command
+  # so that the ignored char will end up in the output.
+  !"" {  
+    #*
+    replace "\n" "\\n"; replace "\t" "\\t";
+    replace "\f" "\\f"; replace "\r" "\\r";
+    put; clear; add "// ignored character '"; get; add "'";
+    put; clear; add "com*"; push;
+    *#
+    clear;
+  } 
+
+parse>
+
+  # for debugging, add a c-style comment 
+  add "// line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  # ------------
+  # 2 tokens
+  pop; pop;
+
+  # brackets with nothing in them is really an error because 
+  # can create an infinite loop and does nothing anyway.
+  "[*]*" {
+    clear;
+    add "[Brainf syntax error]\n Empty bracket '[]' ";
+    add "near line:char "; lines; add ":"; chars; add "\n";
+    print; quit;
+  }
+
+  ">*<*","<*>*" { clear; .reparse }
+  "+*-*","-*+*" { clear; .reparse }
+
+  "+*+*" {
+    # use the accumulator to generate the pointer translation code
+    zero; a+; a+; clear; 
+    add "data[pp] += "; count; add ";";
+    add "ilist*"; push; .reparse
+  }
+
+  "-*-*" {
+    # use the accumulator to generate the pointer translation code
+    zero; a-; a-; clear; 
+    add "data[pp] += "; count; add ";"; put; clear;
+    add "ilist*"; push; .reparse
+  }
+
+  ">*>*" {
+    # use the accumulator to generate the pointer translation code
+    zero; a+; a+; clear; 
+    add "pp += "; count; add ";";
+    add "mlist*"; push; .reparse
+  }
+
+  "<*<*" {
+    # use the accumulator to generate the pointer translation code
+    zero; a-; a-; clear; 
+    add "pp += "; count; add ";"; put; clear;
+    add "mlist*"; push; .reparse
+  }
+
+  "mlist*>*" {
+    # use the accumulator to keep track of how many +s and -s
+    # and generate 1 c statement instead of multiple
+    a+; clear;
+    add "pp += "; count; add ";"; put; clear;
+    add "mlist*"; push; .reparse
+  }
+
+  "mlist*<*" {
+    a-; clear;
+    add "pp += "; count; add ";"; put; clear;
+    add "mlist*"; push; .reparse
+  }
+
+  "com*com*","comset*com*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comset*"; push; .reparse
+  }  
+
+  # change the ilist (+/-) token to ordinary command when it is
+  # not followed by +/-
+  B"ilist*".!"ilist*".!E"+*".!E"-*" {
+    replace "ilist*" "com*";
+    push; push; .reparse
+  }
+
+  # cannot resolve +/-/>/< until we have seen the last one
+  # in the series. So we need some kind of "look-ahead" parsing
+  B"-*".!"-*".!E"-*".!E"+*" {
+    replace "-*" "com*";
+    push; push; .reparse
+  }
+  B"+*".!"+*".!E"-*".!E"+*" {
+    replace "+*" "com*";
+    push; push; .reparse
+  }
+  B">*".!">*".!E">*".!E"<*" {
+    replace ">*" "com*";
+    push; push; .reparse
+  }
+  B"<*".!"<*".!E"<*".!E">*" {
+    replace "<*" "com*";
+    push; push; .reparse
+  }
+
+  # also handle (eof) cases 
+  (eof) {
+    # There may be 1 or 2 tokens, it doesnt matter.
+    E">*",E"<*",E"-*",E"+*" { 
+      replace ">" "com"; replace "<" "com";
+      replace "-" "com"; replace "+" "com";
+      push; push; .reparse
+    }
+  }
+
+  # same logic as ilist
+  B"mlist*".!"mlist*",!E">*".!E"<*" {
+    replace "mlist*" "com*";
+    push; push; .reparse
+  }
+
+  # ----------
+  # 3 tokens
+  pop;
+  "[*com*]*","[*comset*]*" {
+    # indent the braced code
+    clear; add "  "; ++; get; replace "\n" "\n  "; put;
+    clear; add "while (data[pp] > 0) {\n";
+    get; --; add "\n}"; put;
+    clear; add "com*"; push; .reparse
+  }
+
+  (eof) {
+    "com*","comset*" {
+      clear; 
+      # indent the generated code
+      add "  "; get; replace "\n" "\n  "; put; clear;
+      add "/* Code translated from the 'Brainf***' esoteric language \n";
+      add "   by the pep/nom parser with the script: \n";
+      add "   bumble.sf.net/books/pars/eg/brain.c.pss */\n\n";
+      add "#include <stdio.h>\n";
+      add "#include <stdlib.h>\n";
+      add "#define SIZE 65000 \n";
+      add "int main(int argc, char *argv[]) {\n";
+      add "  int data[SIZE] = {0};\n";
+      add "  int pp = 0;\n";
+      get; 
+      add "\n}\n"; print; quit;
+    }
+    "[*comset*","[*com*",B"[*" {
+      # get the saved error message from the [ token cell
+      clear; get; add "\n"; print; quit;
+    }
+    "comset*]*","com*]*",E"]*" {
+      # get the saved error message from the ] token cell
+      clear; ++; get; add "\n"; print; quit;
+    }
+    put;
+    add "
+   The 'Brainf' code didnt parse well:
+   Legal Brainf commands are 
+     > increment pointer 
+     < decrement pointer
+     + increment value at pointer
+     - [ ] . , 
+     (optional command) '#' print state
+   Everything else is ignored. 
+   The input parsed as tokens:\n  "; print; clear;
+   get; add "\n"; 
+    print; quit;
+  }
+  push; push; push;
+

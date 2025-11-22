@@ -1,0 +1,214 @@
+
+#*
+ 
+ABOUT 
+
+ Transpiles infix arithmetic integer expressions to lisp. See
+ file:///eg/exp.tolisp.pss for a version with decimal numbers
+ and a power ^ operator.
+
+ Parsing positive integer/variable arithmetic expressions and 
+ reformatting in a "lisp" (prefix/bracket syntax). This is a classic 
+ elementary parsing problem. We need to construct the grammar so
+ that it contains a "lookahead" token, in order to deal with the operator
+ precedence dilemma.
+ 
+ This was developed from the script books/pars/eg/exp.recogniser.pss
+
+ This script could be extended by adding a power "^" operator and 
+ some comparison operators (eg ==, <=, !=, >=, <, >). If we add
+ pascal-style operators, then this grammar could form the basis of 
+ a pl/0 implementation (although the actual grammar used would be 
+ very different from the one written by Niklaus Wirth, because he 
+ seemed more interested in LL parsers).
+
+GRAMMAR IMPLEMENTED
+
+ This script represents a LR (scan-from-left, parse-from-right)
+ bottom-up shift-reduce parse/translator.
+
+ The script implements the following grammar (described in Wirths EBNF syntax,
+ without the grouping (), optional [] or continuations {} symbols)
+
+ "exp" below means expression. EOF means end of file.
+
+ * script grammar
+ ---------
+   opmul = '*' | '/' .
+   opadd = '+' | '-' .
+   variable = 'a' | 'b' | ... | 'z' .
+   number = '0' | '1' | '2' | ... | '9' .
+   exp = number | variable .
+   exp = exp opmul exp .
+   exp = ( exp ) .
+   exp = exp opadd exp EOF .
+   exp opadd = exp opadd exp opadd .
+   exp ')' = exp opadd exp ')' .
+ ,,,,
+
+ Examining this grammar, its seems to violate the ebnf rule that 
+ rules can only have 1 identifier on the left-hand side. But in 
+ any case, this seems a useful technique for implementing operator
+ precedence with the parse machine.
+
+TESTING 
+
+  * demonstrate operator precedence. 
+  >> pep -f eg/exp.tolisp.pss -i "a+b*c*(d+e)"
+  output:  (+ a (* (* b c) (+ d e))) 
+
+  * test reformating of an arithmetic expression
+  >> pep -f eg/exp.tolisp.pss -i "6 + (6+7*8)*var"
+
+  * make a stand-alone executable of this expression parser/translator
+  --------
+    pep -f ../tr/translate.c.pss exp.tolisp.pss > exp.tolisp.c
+    gcc -o exp.tolisp.ex -Lbooks/pars/object -lmachine -Ibooks/gh/object
+    # not unicode aware
+  ,,,
+
+  * run the stand-alone executable with input from "stdin"
+  >> echo "a+b*c*(d+e)" | ./exp.tolisp.ex
+  output:  (+ a (* (* b c) (+ d e)))
+
+  * test with clisp, using numbers only
+  >> clisp -q -x "$(pep -f eg/exp.tolisp.pss -i '1+4*5')"
+
+LIMITATIONS
+
+  This doesnt currently handle negative variables or numbers
+  or non-integers. 
+  
+  If we include other operators with even higher precedence than
+  "*" or "/" (for example, a power operator "^") then the grammar
+  will become more complex.
+
+
+EXAMPLES 
+
+ eg: (9+count*4) + var * 2 
+ eg: (var + 88) + 4 * 2 
+
+HISTORY
+ 
+ 3 july 2022
+   Tested with clisp. Appears to work with numbers only.
+
+ 22 august 2019
+   Updating comments.
+
+ 14 august 2019
+   This appears to be working as a "recogniser" and translator of arithmetic
+   expressions, with operator precedance and formats output as a lisp
+   expression. Also, the code produced by translate.c.pss appears to be compile
+   and run correctly 
+
+*#
+
+  read;
+  "+","-" {
+    put; clear; add "opadd*"; push;  
+  }
+  "*","/" {
+    put; clear; add "opmul*"; push;  
+  }
+  "(",")" {
+    put; add "*"; push;
+  }
+  [0-9] {
+    while [0-9]; put; clear; add "number*"; push;
+  }
+  [a-z] {
+    while [a-z]; put; clear; add "variable*"; push;
+  }
+  [:space:] { clear; }
+
+  # a trick to catch bad characters. 
+  # better would be a !"text" test
+  "" { .reparse }
+  add " << incorrect character (at character "; cc; 
+  add " of input). \n"; print; quit; 
+
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  # add a preceding space to numbers and variables.
+  "number*","variable*" {
+     clear; add " "; get; put; clear;
+     add "exp*"; push; .reparse
+  }
+
+#-----------------
+# 3 tokens
+
+  pop; pop;
+  # we dont need any look ahead here because * and / have 
+  # precedence.
+  "exp*opmul*exp*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; clear; 
+     add "exp*"; push;
+     .reparse
+  }
+  
+  "(*exp*)*" {
+     clear; ++; get; --; put; clear;
+     add "exp*"; push;
+     .reparse
+  }
+
+  (eof) {
+    "exp*opadd*exp*" {
+       clear; 
+       add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+       --; --; put; clear; 
+       add "exp*"; push;
+       .reparse
+    }
+  } 
+
+#-----------------
+# 4 tokens
+
+  pop;
+
+  "exp*opadd*exp*opadd*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; 
+     clear; add "exp*opadd*"; push; push;
+     .reparse
+  }
+
+  "exp*opadd*exp*)*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; 
+     clear; add "exp*)*"; push; push;
+     .reparse
+  }
+
+  push; push; push; push;
+
+  (eof) {
+    pop; pop;
+    "exp*" {
+      clear;  
+      # add "Yes, its an expression! \n";
+      # add "lisp format: "; 
+      get; add "\n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "No, it doesn't look like a valid 'in-fix' expression. \n";
+    add "The parse stack was: ";
+    print; clear; unstack; add "\n"; print;
+    quit;
+  }

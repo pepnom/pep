@@ -1,0 +1,35 @@
+
+## HOW TO WRITE A NOM TRANSLATOR
+
+
+  This document is a set of tips for writing a new translator from
+  the nom language into a different language, either compiled or not.
+
+### STEPS 
+
+   First, make a copy of a "modern" nom translation script like
+   /tr/nom.tolua.pss This script pattern has lots of advantages over the older
+   translation scripts which are called *translate.<lang>.pss*
+   
+   I recommending basing the new translator on this script because it 
+   solves many small issues that can be tricky to remember.
+
+   The pep machine on which the nom language runs is a simple text machine
+   which can be implemented as a *Map* (Dictionary, Associative Array, etc)
+   or as a class/object or a data structure (eg in C or Go). The associative
+   array option is a particularly simple option. 
+
+   The pep machine consists essentially of an array of strings (the pep://tape
+   ) a stack of strings (the "stack") a text buffer for all manipulations (the
+   "workspace") and several other minor registers such as a numeric accumulator
+   and a one character "lookahead" (the pep://peep register)
+
+   Each of these registers is one field in the associative array or class 
+   or data structure. The trickiest method or function to write is the 
+   nom://read method which reads one character from the input stream or 
+   file or string. It will probably use a *line* buffer which it will
+   refill when empty. A line buffer makes handling unicode grapheme
+   clusters (diacritics, emojis etc) much easier or even possible.
+
+    
+

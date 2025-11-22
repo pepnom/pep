@@ -1,0 +1,52 @@
+
+
+## THE NOM "WHILE" COMMAND
+
+  Read the input stream *while* the peep register contains the given
+  *character class*
+
+  The 'while' command in the pattern-parse language reads the input stream
+  while the [pep] virtual machine pep://peep buffer is any one of the
+  characters or character sets mentioned in the argument.  The command is
+  written
+
+   * an example while command
+   >> while [cdef];
+
+  The command takes one argument. This argument may also include character
+  classes as well as literal characters.  From example,
+
+   >> while [:space:];
+
+  reads the input stream while the peep buffer is a space character
+  The read characters are appended to the 'workspace' buffer.
+  The while command cannot take a quoted argument ("xxx").
+
+  Negation for the character class is currently supported 
+  using the nom://whilenot command.
+
+### Notes
+
+  The while command is designed to be used mainly in the tokenising 
+  phase of the nom script: that is, it consumes the input stream
+  so that a new parse token can be created and nom://push ed onto 
+  the parse pep://stack . And the corresponding text is nom://put
+  into the pep://tape string array .
+
+
+  The [:space:] class will match all white space including newlines.
+  But [:blank:] should match all white-space except newlines. These
+  classes should follow the rules of the ctype.h classes. When a nom
+  script is translated to another language (for example: 
+  [nom:translation.links] ) then these character classes should become
+  *unicode-aware* if I dare use that term. But this may also depend 
+  on the target language and my implementation of the translator for 
+  that language.
+
+### See Also
+
+  - nom://until, a similar command for consuming the input-text-stream. 
+  - nom://whilenot the negated counterpart of the while command
+  - nomsyn://classes character classes
+
+

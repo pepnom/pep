@@ -1,0 +1,60 @@
+
+## THE PEP ACCUMULATOR REGISTER 
+
+  The *accumulator* : a [pep] register for simple counting.
+ 
+  The machine contains single integer accumulator register that can be
+  incremented (with the command nom://a+ ), decremented (with the command
+  nom://a- ) and set to also set to nom://zero . This register is useful for
+  counting occurrences of miscellaneous elements such as *keywords* brackets,
+  sentences, nouns or any other syntactical elements that may occur during
+  parsing and translating.
+
+  The *pep* virtual pep://machine accumulator register can be displayed 
+  with the nom://count command and it can be set to zero with
+  the nom://zero commands.
+
+  * using the accumulator to count words
+  ----+
+    while [:space:]; clear;
+    whilenot [:space:]; add "\n"; print; clear; a+;
+    (eof) { add "* found "; count; add " words.\n"; print; quit; }
+  ,,,,
+  
+  * translate the above script into the go language, compile and run
+  ------
+    # save the script above in 'wordcount.pss'
+    pep -f tr/translate.go.pss wordcount.pss > wordcount.go
+    go build wordcount.go
+    echo "how many words?" | ./wordcount
+    # go seems to find an extra word compared to the
+    # pep interpreter, which may be a translation bug
+  ,,,,
+
+  For counting characters and lines that have been nom://read from the 
+  "input-stream" pepnom.doc.inputstream.html the [pep] machine contains
+  automatic character-count and line-count registers that are updated
+  every time a character is read or a newline character is read. 
+  These automatic count registers can be displayed with the 
+  nom://chars and nom://lines commands and can be set to zero with the
+  nom://nochars and nom://nolines commands.
+
+  An example of the use of the accumulator register is given during the
+  parsing of "quotesets" in old versions of the "compile.pss" script.  The
+  accumulator in this case, keeps track of the target for true-jumps.
+
+  * count how many "x" characters occur in the input stream
+  >> r; 'x' {a+;} d; <eof> { add ' # of Xs == '; count; print; }
+  
+### THE ACCUMULATOR AND STATE
+
+  I quite often use the accumulator as a way to keep track of "state"
+  or more specifically, whether a nom script is currently parsing 
+  *within* a particular grammar structure or *outside* of the structure.
+  This was not the original purpose of the accumulator register but it
+  seems to work more or less well. 
+
+  Examples of this use are the scripts /eg/text.tohtml.pss or 
+  /eg/nom.syntax.reference.pss
+
+

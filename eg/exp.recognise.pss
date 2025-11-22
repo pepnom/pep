@@ -1,0 +1,123 @@
+
+#*
+
+ Recognises infix arithmetic (integer and variable-name) expressions.
+ This was an initial attempt. See file:///eg/exp.tolisp.pss for a 
+ more complete example with decimal numbers.
+
+ Parsing integer infix arithmetic expressions. This is a classic elementary
+ parsing problem. We need to construct the grammar so that it contains a
+ "lookahead" token, in order to deal with the operator precedence dilemma.
+ 
+ This is a "recogniser/syntax checker". See eg/parse.tolisp.pss 
+ for a "compiler/translator".
+
+EXAMPLES 
+
+  eg: (9 + 88) + -4 * 2 
+
+HISTORY
+ 
+ 14 august 2019
+
+   This appears to be working as a "recogniser" of arithmetic
+   expressions, with operator precedence. I abandoned the idea of a 
+   fake "eof*" token, because it is not necessary, but I did provide
+   one "look-ahead" token for grammar rules which involve +- 
+   expressions because they should not be resolved before */ expressions
+
+ 12 august 2019
+
+   Begun.
+
+*#
+
+  read;
+  "+","-" {
+    put; clear; add "opadd*"; push;  
+  }
+  "*","/" {
+    put; clear; add "opmul*"; push;  
+  }
+  "(",")" {
+    put; add "*"; push;
+  }
+  [0-9] {
+    while [0-9]; put; clear; add "number*"; push;
+  }
+  [a-z] {
+    while [a-z]; put; clear; add "variable*"; push;
+  }
+  [:space:] { clear; }
+
+parse>
+  # The parse/compile/translate/transform phase involves 
+  # recognising series of tokens on the stack and "reducing" them
+  # according to the required bnf grammar rules.
+
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  "number*","variable*" {
+     clear; add "exp*"; push; .reparse
+  }
+
+#-----------------
+# 2 tokens
+
+  pop; 
+  
+#-----------------
+# 3 tokens
+
+  pop;
+
+  # we dont need any look ahead here because * and / have 
+  # precedence.
+  "exp*opmul*exp*" {
+     clear; add "exp*"; push;
+     .reparse
+  }
+  
+  "(*exp*)*" {
+     clear; add "exp*"; push;
+     .reparse
+  }
+
+  (eof) {
+    "exp*opadd*exp*" {
+       clear; add "exp*"; push;
+       .reparse
+    }
+  } 
+
+#-----------------
+# 4 tokens
+
+  pop;
+
+  "exp*opadd*exp*opadd*" {
+     clear; add "exp*opadd*"; push; push;
+     .reparse
+  }
+
+  "exp*opadd*exp*)*" {
+     clear; add "exp*)*"; push; push;
+     .reparse
+  }
+
+  push; push; push; push;
+
+  (eof) {
+    pop; pop;
+    "exp*" {
+      push;
+      add "yes, its an expression! \n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "no, not an expression. \n";
+    print; clear;
+    quit;
+  }

@@ -1,0 +1,34 @@
+
+#*
+
+  This file is just supposed to test multiline quotes and commands as they are
+  parsed by the [nom] compiler.  It can be used with the [pep] engine or with
+  one of the generated engines (java, python, tcl etc) with the "translation"
+  file:///tr/ scripts.
+
+HISTORY 
+  
+  17 july 2021
+    revising. each language has a list of special chars
+    which may do funny things in a string, such as 
+    doing string interpolation. That needs to be disabled.
+    we can use the "replace" command. eg in ruby
+    replace "#{" "\#{". TCL also has special chars in strings.
+    
+*#
+
+r; add ":1st Line 
+2nd Line, no indent
+  \" we should be able to use double quotes \"
+  3rd Line, 2 char indent
+    4th Line, 4 char indent.\n"; 
+add 'multline 
+  with single quotes like this \'quote\'
+  "double quotes here "
+  will it work I wonder? ';
+add "different 
+ chars are special in different languages.
+ eg #{var} or %{var} or just {var} does 
+ variable interpolation in some languages
+ so we should disable it ";
+    t; d;

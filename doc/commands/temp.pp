@@ -1,0 +1,1 @@
+while [:space:]; clear; whilenot [:space:]; print; clear; (eof) { quit;} 

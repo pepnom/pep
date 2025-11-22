@@ -1,0 +1,226 @@
+
+#*
+
+# ABOUT
+  
+  This script is shows how to parse and render an 'index'
+  or table of contents and a footer (possible containing a built list 
+  of footnotes. The basic technique uses the nom://go and nom://mark
+  commands to reserve a cell for the index. This version converts to 
+  html.
+
+  This version reduces to series of text*foot*text*toc* tokens
+  This allows the table of contents and footnotes to be placed anywhere
+  in the source document with the markers [toc] and [foot]
+
+  working.
+
+# TOKENS
+
+  parse tokens used in this script
+
+  heading* a line starting with #
+  word*    one word
+  text*    everything
+  nl*      a newline so that we preserve the line-breaks in the text
+  space*   all whitespace
+  toc*     table of contents position marker
+  foot*    footer doc position marker
+
+# NOTES
+
+  I need to change the way newlines are handled, so  that I can detect
+  when a character is the first on the line (for example for headings)
+
+  This could include self-testing etc but for the time being I 
+  am keeping it simple
+
+# TESTING
+
+  sed -n '/#\*/,/\*#/{s/#\*//;s/\*#//;p}' toc.pss > toc.test.txt
+  pep -f tocfoot.tohtml.pss toc.test.txt
+  pep -If tocfoot.tohtml.pss toc.test.txt  # for debugging.
+ 
+# HISTORY
+
+  4 august 2025
+    wrote this script as a variation of /eg/toc.tohtml.pss and it appears
+    to be working with minimal testing. Need to add <ul></ul> and <ol> tags
+    to the table of contents and the footnotes. 
+
+*#
+ 
+ begin {
+   # reserve the 1st 2 tape cells to hold the index or table of contents.
+   # and the footnotes. The initial newline makes the html output more 
+   # readable.
+   add "\n";
+   mark "toc"; put; ++; 
+   mark "foot"; put; ++; 
+   clear;
+   # use the accumulator for footnote numbers
+   a+; 
+ }
+
+ read;
+
+ "\n" { nochars; put; clear; add "nl*"; push; .reparse }
+ "#" { 
+   while [#]; B"#" {
+     clear; pop; "nl*" {
+       push; until "\n"; put; 
+       # make link text and save in +1 cell
+       lower; replace " " ""; replace "\n" ""; ++; put; --;
+       # make html table of contents list. need to make a linkable
+       # version of the heading
+       clear; add "<li><a href='#"; ++; get; --; add "'>"; get; clip; 
+       add "</a></li>\n";
+       mark "here"; go "toc"; swap; get; put; go "here"; 
+       # now make the html heading
+       clear; add "<h3 id='"; ++; get; --; add "'>"; get; clip; 
+       add "</h3>\n"; put;
+       clear; add "heading*"; push; .reparse
+     }
+     # '##' doesnt start the line, so its just a normal word.
+     push; whilenot [:space:]; put;
+     clear; add "word*"; push; .reparse
+   }
+ }
+
+ ![:space:] { 
+    whilenot [:space:]; put; 
+    # these are the table-of-contents and footer markers that 
+    # position the tables in the document.
+    "[toc]" { clear; add "toc*"; push; .reparse }
+    "[foot]" { clear; add "foot*"; push; .reparse }
+    #  only do multiword footnotes, because a single word footnote is silly
+    B"foot(".!")" {
+      # this will eat the whole document if the footnote end bracket
+      # is not given
+      until ")"; clip; replace "foot(" ""; 
+      put; 
+      # make link text and save in +1 cell
+      lower; replace " " ""; replace "\n" ""; ++; put; --;
+      # make html footnote list. need to make a linkable
+      # version of the footnote. I could make a backlink here as 
+      # well but not now.
+      clear; add "<li><cite id='"; ++; get; --; add "'>"; get; 
+      add "</a></cite></li>\n";
+      mark "here"; go "foot"; swap; get; put; go "here"; 
+      # now make the reference to the footnote 
+      clear; add "<a href='#"; ++; get; --; add "'><sup>foot "; count; a+;
+      add "</sup></a>\n"; put;
+      clear; add "footnote*"; push; .reparse
+    }
+    clear; add "word*"; push; .reparse
+ }
+
+ # the [:space:] class includes newlines but I want to parse nl* tokens
+ # separately. The [:blank:] class may not work in pep.
+ [ \r\t\f] { 
+   while [ \r\t\f];
+   put; clear; add "space*"; push; .reparse
+ }
+
+parse>
+
+ # watch the parse stack reduce
+ add "<!-- "; lines; add ":"; chars; add " "; print; clear;
+ unstack; print; stack; add " -->\n"; print; clear;
+
+ # ---------
+ # 2 token grammar parsing
+ pop; pop;
+
+ "text*space*","word*space*" {
+   clear; get; ++; get; --; put; clear;
+   add "text*"; push; .reparse
+ }
+ 
+ # preserve some newline tokens for heading parsing.
+ "nl*nl*","nl*space*" {
+   clear; get; ++; get; --; put; clear;
+   add "nl*"; push; .reparse
+ }
+
+ # remove newline tokens before the footer or toc. 
+ # dont have to worry about the toc/foot attributes because the toc and 
+ # footnotes are actually stored in the marked tape cells.
+ "nl*toc*","nl*foot*" {
+   replace "nl*" ""; push; .reparse
+ }
+
+ # vanish all other nl* tokens because they are no longer needed
+ B"nl*".!"nl*".!E"nl*".!E"space*" {
+   clear; get; ++; get; --; put; clear;
+   add "text*"; push; .reparse
+ }
+
+ # resolve all text sequences except when followed by nl* 
+ B"text*".!"text*".!E"nl*".!E"toc*".!E"foot*" {
+   clear; get; ++; get; --; put; clear;
+   add "text*"; push; .reparse
+ }
+
+ # this code should allow multiple table-of-contents in one
+ # document.
+ (eof) {
+
+   #*
+   but need to think of a way to only add once, not on every reparse.
+   push;push;
+   # add a trailing newline to toc and footer for output readability
+   mark "here"; 
+   go "toc"; get; put; clear;
+   go "foot"; get; put; clear;
+   go "here";
+   pop;pop;
+   *#
+
+   # remove trailing newlines
+   E"*nl*" {
+     push; clear; .reparse
+   }
+
+   "text*toc*" {
+     clear; get; mark "here"; go "toc"; get; go "here"; put;
+     clear; add "text*"; push; .reparse
+   }
+   "toc*text*" { 
+     clear; mark "here"; go "toc"; get; go "here"; ++; get; --; put;
+     clear; add "text*"; push; .reparse
+   }
+   "text*foot*" {
+     clear; get; mark "here"; go "foot"; get; go "here"; put;
+     clear; add "text*"; push; .reparse
+   }
+   "foot*text*" { 
+     clear; mark "here"; go "foot"; get; go "here"; ++; get; --; put;
+     clear; add "text*"; push; .reparse
+   }
+   "foot*toc*" { 
+     clear; mark "here"; go "foot"; get; go "toc"; get; go "here"; put;
+     clear; add "text*"; push; .reparse
+   }
+   "toc*foot*" { 
+     clear; mark "here"; go "toc"; get; go "foot"; get; go "here"; put;
+     clear; add "text*"; push; .reparse
+   }
+ }
+
+ (eof) {
+   "text*","word*","heading*" {
+      clear; 
+      add "
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head><title>Pep:nom index/footer parsing: www.nomlang.org</title></head>
+    <body>\n";
+      add "\n<h2>DOCUMENT</h2>\n\n"; get; 
+      add "</body></html>\n";
+      print; quit;
+   }
+   add "\n[what?]\n"; print; quit;
+ }
+ push; push;
+

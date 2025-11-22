@@ -1,0 +1,80 @@
+
+
+## THE NOM "UNTIL" COMMAND 
+
+  Read the input stream *until* the given text is encountered, or until the end
+  of the input stream (EOF) is encountered. The until command will *not* stop
+  at an end delimiter which is 'escaped' meaning that it is preceded with the
+  current nom://escape character.
+  
+  The *until* command is an important "tokenising" command that converts blocks
+  of text in the "input-stream" pepnom.doc.inputstream.html into grammar or
+  parse tokens. Other tokenising commands are nom://while and nom://whilenot 
+
+  There are 2 formats of the *until* command 
+
+  * the 2 types of until
+  ------+
+   until 'abcd';
+   until;
+  ,,,,
+
+  In the 1st version of *until* the input stream is read until the
+  pep://workspace buffer *ends with* the text "abcd" . In the 2nd form of the
+  command, the input-stream is read until the *workspace* buffer ends with the
+  text that is in the current pep://tape cell.  
+  
+  The until command also ignores the *end-text* in the input stream if it is
+  'escaped' (that is preceded with '\\'). The following example 
+  illustrates parsing quoted text with the *until* command. 
+
+  * tokenise and count quoted text
+  ----+
+    read; 
+    '"' { 
+      a+; until '"'; put; clear; add "quoted*"; 
+      push; .reparse
+    }
+    clear;
+  parse>
+    pop; pop;
+    "quoted*quoted*" {
+      clear; get; add "\n"; ++; get; --; put; 
+      clear; add "quoted*"; push; .reparse
+    }
+    push; push;
+    (eof) { 
+      add "Found "; count; add " quoted text blocks \n"; print; clear;
+      pop; "quoted*" { clear; get; print; }
+      quit;
+    }
+  ,,,,
+
+### Examples
+
+  * print only text that occurs between '<' and '>' characters
+  >> read; "<" { until ">"; print; } clear;
+
+  * print only text between quote characters (excluding the quotes)
+  >> r; '"' { until '"'; clip; clop; print; } clear;
+
+  * create a parse token 'quoted' from quoted text
+  >> read; '"' { until '"'; clip; clop; put; clear; add 'quoted*'; push; } clear;
+
+  The "while" nom://while and "whilenot" nom://whilenot commands are similar to
+  the until command but they depend on the value of the 'peep' virtual machine
+  buffer (which is a single-character buffer) rather than on the contents of
+  the 'workspace' buffer like the until command.
+
+### notes
+
+  The 'until' command usually will form part of the 'lexing' phase
+  of a script. That is, the until command permits the script to 
+  turn text patterns into 'tokens'. While in traditional parsing tools
+  (such as Lex and Yacc) the lexing and parsing phases are carried out
+  by separate tools, with the 'pep' tool the two functions are combined.
+  
+  The until command essentially performs
+  multiple read operations or commands and after each read checks to see
+  whether the workspace meets the criteria specified in the argument.
+

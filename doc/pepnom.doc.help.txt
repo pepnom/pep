@@ -1,0 +1,56 @@
+
+## HELP WANTED
+
+ The pep/nom system is an open-source non-commercial project designed
+ to experiment with new ways of recognising, parsing, checking, translating,
+ transforming and compiling text patterns or context-free and context 
+ sensitive formal languages. As far as I know, nobody, except myself 
+ uses it or knows about it. 
+
+ The system has slowly developed into something that can be used for 
+ practical purposes. But it really needs helpers to experiment with it,
+ debug it, debug the translation scripts, write useful example scripts
+ and maybe even augment it.
+ 
+ Now that there are a considerable number of working translation scripts 
+ (that can translate to [nom:translation.links] )
+ in the /tr/ folder it is becoming a big job for me to maintain, debug
+ and update them all. For example there are currently 2 types of translation
+ scripts in the /tr/ folder: the older style ones that are called
+ for example /tr/translate.go.pss and the new style scripts that are 
+ called, for example /tr/nom.torust.pss
+
+ The new ones are *much* better, for all sorts of reasons, and have 
+ less bugs and are better considered in terms of unicode codepoints 
+ and grapheme clusters. But converting all the older scripts to the 
+ new organisation is a reasonably big job- at least a job that could take
+ several days, if not weeks. So feel free to help with that.
+
+ Another sort of help would be a simple appraisal of the potential of 
+ the system and how it might be improved. Since I have never found 
+ any domain-specific language (or text-register machine) that is similar
+ to pep/nom , I have nothing to compare it with. Really the system that
+ is most similar is the sed stream editor.
+
+ Some helpful tasks, thanks in advance:
+
+   - debug the example scripts, for example the /eg/xml.parse.pss script
+     is pretty naive at the moment or at least, not very *compliant* .
+   - debug the translation scripts in the /tr/ folder
+   - convert the pep interpreter, which is written in plain c and implemented
+     in the /object/ folder, to wchar wide characters, or write it in 
+     a completely different language like C++, rust, zig or something else.
+   - write new translators for different languages like zig, R, Julia, Lisp,
+     Haskell, etc.
+   - Write a translator for the Forth language, which is no easy task because
+     the translator will have to handle memory management for appending 
+     to the string array. But this translator could be very important because
+     it would allow complex language definitions on very small machines 
+     such as microcontrollers.
+   - improve the documentation in the /doc/ folder.  
+   - write a nom script that parses the YAML format.
+   - write a nom script that does type checking and type inference for 
+     some programming language (this is possible, trust me, and I will 
+     at some stage get around to doing this).
+
+

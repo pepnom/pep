@@ -1,0 +1,63 @@
+
+#*
+
+ABOUT
+
+  A [nom] script to print the first paragraph of a text file
+  but ignoring common "headings"  
+
+  This ignores "comment lines" that begin with "#" or the 
+  regex /^ *[#]/ or "&&" or "ABOUT" or "INTRO"
+
+  This is a good simple example of line by line parsing.
+
+HISTORY
+
+  23 Feb 2025 
+    Started this script. script is working (with minimal testing).
+    took about 15 minutes to write. 
+
+*#
+
+# The lexical analysis phase of the script
+
+  # ignore leading space/tab
+  while [ \t]; clear;
+  # read the whole line, including the file \n
+  whilenot [\n]; !(eof) { read; }
+  # add token for empty (space filled) lines
+  [:space:] { put; clear; add "blankline*"; push; .reparse }
+  # ignore comment lines
+  !B"#".!B"&&".!B"ABOUT".!"INTRO" { 
+     put; clear; add "text*"; push; .reparse
+  }
+  
+  clear;
+
+parse>
+
+# The token parsing phase of the nom script.
+
+  # a simple way to watch the parse stack as it grows and reduces.
+  # add "# line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+
+  pop; pop;
+  "text*text*" {
+    # concatenate the lines of text
+    clear; get; ++; get; --; put;
+    clear; add "text*"; 
+    push; .reparse
+  }
+  
+  "blankline*blankline*" { clear; }
+  "blankline*text*" { 
+    clear; ++; get; --; put; 
+    clear; add "text*"; push; .reparse
+  }
+  "text*blankline*" { clear; get; print; quit; }
+  (eof) { "text*" { clear; get; print; quit; } }
+
+  push; push;
+
+  

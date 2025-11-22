@@ -1,0 +1,102 @@
+
+## THE NOM "DELIM" COMMAND
+
+ The *delim* command changes the nom parse token delimiter 
+ to the given character. 
+ 
+ Any character can be used for the parse token delimiter including spaces
+ punctuation or any other character. It is a matter of personal preference.
+ I like '*' which is why is it the default. The "pep" pep://machine
+ virtual machine and the [nom] language are based on the idea that 
+ 
+ * mjb, the inventor of nom
+ """ Everything is text """
+
+ Even zeros and ones are probably text if you are looking at them...
+ But the significance of this is that *parse tokens* are also text, not
+ some mysterious wp://abstract.syntax.tree or some other fancy data
+ structure that I (and probably you) don't really understand. But you 
+ understand *text* , correct? Well at least we think we do: its some kind
+ of "ascii" https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
+ or "UTF8" wp://utf-8 or whatever encoding that is hopefully terribly
+ Unicode in the nicest way.
+
+ In *nom* you just build parse tokens like you would any other piece of 
+ text and then nom://push them onto the pep://stack and leave them there
+ until you need them again. Isn't that great? Its one of the strangely 
+ simple but revolutionary ideas of *nom*. But I am digressing; lets get
+ back to the *delim* command.
+
+ * change the pep/nom delimiter to '.'
+ ---+
+   delim ".";
+   delim '.';  # no difference
+ ,,,
+
+ The parse token delimiter governs how the nom://push and nom://pop
+ commands work. If the delimiter is ',' and the pep://workspace buffer is 
+ >> one,two,three,
+ then, after a *push* command, the workspace will be 
+ >> two,three,
+
+ However, if we change the delimiter to a "." dot and then issue another 
+ *push* command, then the whole workspace will be pushed onto the stack
+
+ * changing the delimiter and pushing
+ ------+
+   # workspace is now "two,three,"
+   delim "."; 
+   push;
+   # workspace is now "" (ie empty)
+ ,,,
+
+ The default (starting) parse token delimiter is '*' and normally you 
+ would only change the delimiter once at the start of the *nom* script
+ to suit your visual preference.
+
+ * change the delimiter for the whole script
+ -----+
+  begin { delim '#'; }
+  read;
+  # write your script here
+  (eof) {
+    # do something when the end of the input 
+    # stream is reached
+  }
+ ,,,,
+
+ There is only one practical exception to this rule-of-thumb that I know
+ of: To use the *delim* command as a hackish way to "split" the workspace
+ string. 
+
+ * a hack to split the workspace on a character using "delim"
+ -----+
+   "two words" {
+     delim " "; push; 
+     # workspace is now 'words'
+     add "\n"; print; clear; 
+     delim "*"; pop;
+     add "\n"; print; clear; 
+   }
+ ,,,,
+
+ The Nom language doesn't have any particularly fancy commands to work
+ on the workspace buffer (and this was a deliberate choice for the sake
+ of speed and simplicity), so sometimes it is necessary to resort 
+ to hacks like the one above.
+
+
+### NOTES 
+
+ The *delimiter* register combined with the *pop* and *push* commands is a
+ powerful way to manipulate grammar parse-tokens within a text-based virtual
+ machine. It means that the same engine (pep) that is used to manipulate the
+ token attributes is also used to manipulate the parse tokens, which results in
+ a fast, simple and transparent parsing system
+
+### SEE ALSO
+  
+  - nom://push push a token onto the pep://stack
+  - nom://pop pop a token. You can do it.
+  - /doc/commands/  documentation for all the pep/nom commands
+

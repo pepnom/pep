@@ -1,0 +1,26 @@
+
+#*
+  This is a script to naively remove the <script> tags from 
+  an html file. It will fail if one of the attribute in a tag
+  contains the character ">". and for other reasons. like case
+  If the end script tag or style tag is upper case this will not 
+  work. And there seems no easy way to solve this. 
+*#
+
+  read;
+  "<" {
+    while [:space:]; clear; add "<";
+    while [:alpha:]; lower;
+    "<script" {
+      until "</script>"; 
+      clear; .restart 
+    }
+    "<style" {
+      until "</style>"; 
+      clear; .restart 
+    }
+    print; clear;
+  }
+  whilenot "<";
+  print; clear;
+

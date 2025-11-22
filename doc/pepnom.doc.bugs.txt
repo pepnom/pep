@@ -1,0 +1,78 @@
+
+## KNOWN BUGS IN THE PEP NOM SYSTEM
+
+ A document listing the bugs that I know about in the [pep] / [nom]
+ system. This will include bugs in the pep interpreter and 
+ also translation scripts.
+
+ Unfortunately, since I have been working on this system by myself and
+ sometimes take big breaks from it, there will be a number of bugs in the c pep
+ interpreter and the translation scripts. Also, there are example scripts in
+ the /eg/ example folder. You can look at the *STATUS* heading in most scripts to
+ see if the script is in a working state.
+ 
+ But in general the system seems to work pretty well. If you get a segmentation
+ fault in the pep interpreter, it means there is something wrong with the
+ script (not clearing the pep://workspace and the parse pep://stack gets too
+ big etc).
+
+ [chess:queen]
+
+  - since I haven't tested this system of ms windows I havent put 
+    much thought into line-endings: so basically I assume that text
+    lines are ended with \n which is *not* true. To overcome this
+    the read() method in the translation scripts should translated 
+    strange line endings to \n 
+  - I have done minimal testing of unicode input into the example
+    and translation scripts.  
+
+### GENERAL BUGS
+
+  - there is still (2025) no way to change the escape character that 
+    is used by the commands nom://escape and nom://unescape and also
+    by the nom://until command ( *until* will read past an escaped 
+    end delimiter). I should add an *echar* command which will do this.
+
+### PEP INTERPRETER
+ 
+  - not sure if the nom://stack and nom://unstack commands actually
+    update the tape pointer. But they do in the translation scripts
+    because I implement stack and unstack as a *while pop()* or
+    *while push()* loop which is simple and good.
+  - I got a 'executing undefined instruction' recently when writing 
+    the /eg/brainfork.c.pss script: not sure why, but that should never
+    happen with a compiled script.
+  - ms windows line ending \r\n ? should be dealt with. 
+  - you have to have a parse> label in a script, which seems silly
+    but maybe not a bug.
+  - For historical reasons the pep interpreter tool (which is written
+    the c language uses 'byte' characters. So basically input-streams
+    or files may not work probably with nom scripts when they are interpreted
+    with 
+      >> pep -f script.pss input.txt
+  - when I wrote "#* disable:" in a nom script the interpreter thought
+    that disable was a command even though it is in a multiline comment.
+  - The 'D' abbreviation for nom://replace does not work because 'D' is 
+    not a valid command letter in nomsf://compile.pss . Compile.pss 
+    probably should be rewritten with a new grammar.
+  - classes like [.-] parse as ranges (i.e [a-z] ) not as lists 
+  - a big stack will cause a segfault in the c pep machine.
+
+### TRANSLATION SCRIPTS
+
+  - the old style translation scripts (translate.<lang>.pss) dont read unicode
+    grapheme clusters. At best they just read code points. Usually in a
+    language parser you would want to get the whole grapheme cluster
+    with each nom://read command
+  - the old translation scripts dont allow parse> labels in funny spots
+    See the /tr/nom.todart.pss grammar for a solution.
+  - mar 2025: the [perl] translation script has several bugs
+  - the python translator wasnt translating eg/text.tohtml.pss properly.
+  - Untested file reading code in /tr/nom.todart.pss probably doesnt 
+    work.
+
+### HOPEFULLY SOLVED BUGS
+ 
+  in the interpreter:
+  - didnt count escape chars when doing escape, unescape?
+    see the dart code for this.

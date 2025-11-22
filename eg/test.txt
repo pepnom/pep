@@ -1,0 +1,15 @@
+<!-- 1:3 help* -->
+
+    # an example of a document. Comments will not display
+    # in the final document, and can be included with a hash '#'
+    first name: greg
+    last name: cherry # the 2nd field value pair
+
+    age: 41
+
+    rating: 1542
+    <!-- html comments will also be 
+         deleted from the output -->
+
+     
+

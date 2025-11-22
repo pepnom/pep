@@ -1,0 +1,55 @@
+
+
+## THE NOM "WHILENOT" COMMAND
+  
+  The *whilenot* command reads into the pep://workspace buffer characters from
+  the input stream while the pep://peep buffer is *not* a certain character or
+  characters. This is a "tokenizing" or "lexing" command and allows the input
+  stream to be parsed up to a certain character without reading that character.
+
+  The *whilenot* command does not exit if it reaches the end of the
+  input-stream (unlike the nom://read command).
+
+  * print one word per line
+  >> r; [:space:] { d; } whilenot [:space:]; add "\n"; print; clear;
+
+  * another way to print one word per line
+  >> r; [ ] { while [ ]; clear; add "\n"; } print; clear;
+
+  The advantage of the first example is that it allows the 
+  script to tokenise the input stream into words
+
+### NOTES
+
+  The whilenot command cannot automatically ignore *escaped* characters
+  like nom://until does.
+
+  * a trap when parsing text with while
+  ----+
+    read;
+    "'" { 
+      # be aware that whilenot will stop at \\' and so
+      # may not parse the whole profound utterance.
+      whilenot "'"; put; clear;
+      add "profound.utterance*";
+      push; .reparse
+    }
+  ,,,
+
+  The while, whilenot and nom://until commands will *not* exit to the operating
+  system when they encounter the end-of-file or end-of-stream. This contrasts
+  with the behavior of nom://read , which will exit the script loop.
+  
+  It is possible that the until command should also be able to take a 
+  "class" nomsyn://classes argument so that multiple characters could be 
+  used as an stop-condition for until.
+
+### SEE ALSO 
+
+ The following are all commands that read the input-stream.
+
+  - nom://while read while the pep://peep register is the given class 
+  - nom://until read until the workspace ends with the given text
+  - nom://read read one character, codepoint or grapheme cluster.
+
+

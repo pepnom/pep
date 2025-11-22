@@ -1,0 +1,41 @@
+
+
+## THE NOM "CLIP" COMMAND 
+ 
+ *clip* one character from the **end** of the 'workspace' buffer
+ (and send it into the void).
+ 
+ It deletes it. The character is removed from the *end* of the workspace, and
+ so, it represents the last character which would have been added to the
+ workspace from a previous nom://read operation.
+
+ The command is useful, for example, when parsing quoted text, used in
+ conjunction with the 'until' command. The following script only prints
+ text which is contained within double quote characters, from the input.
+
+ * parse and print quoted text
+ -----+
+  read; '"' { clear; until '"'; clip; print; }
+  "\"" { clear; until "\""; clip; print; }
+ ,,,
+
+ If the above script receives the text 'this "big" and "small" things'
+ as its input, then the output will be 'big small' .That is, only
+ that which is within double quotes will be printed.
+
+The script above can be translated into plain English as follows
+
+ a- If the workspace is a " character then
+  - clear the workspace
+  - read the input stream until the workspace -ends- in "
+  - remove the last character from the workspace (the ")
+  - print the workspace to the console
+  - end if
+  -
+
+ The script should print the contents of the quoted text without the quote
+ characters because the 'clear' and the clip commands got rid of them. 
+
+###  SEE ALSO
+
+  nom://clop , nom://clear , nom://replace  

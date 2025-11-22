@@ -1,0 +1,18 @@
+
+ * mjb at nomlang dot org
+ """
+   Any nom translation script can translate itself to create
+   the same translator in a different language.
+ """
+
+## THE NOM TRANSLATION DOCUMENTATION FOLDER
+
+
+ This folder documents each of the nom translation scripts that 
+ are in the /tr/ folder. It also contains other documents about 
+ the translation process such as /doc/tr/nom.second.generation.doc.html  
+
+ I feel that the ease of translation of nom into other languages, and 
+ the idea that all nom translators can actually translate themselves 
+ and other translators is an important and unique part of the 
+ pep/nom system.

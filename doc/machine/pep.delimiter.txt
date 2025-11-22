@@ -1,0 +1,60 @@
+
+
+## THE NOM DELIMITER REGISTER
+
+  The (grammar) parse-token delimiter register in the [pep] machine
+
+  The delimiter register determines what character will be used for 
+  delimiting parse tokens on the stack when using the "push" and "pop"
+  commands. This can be set with the nom://delim command. The default
+  parse-token delimiter is the '*' asterisk character, but this really
+  a matter of personal preference.
+
+  * set the parse token delimiter to '/' if thats what you like.
+  -------+
+    # fragment
+    begin { delim '/'; }
+    read; "(",")" { put; d; add "bracket/"; push; }  
+  ,,,
+
+  The delimiter character will often (almost always) be set in a 'begin' block.
+  I normally use the "*" character, but "/" or ";" might be good options. Apart
+  from the parse-token delimiter character, any character (including spaces)
+  may be used in parse tokens.
+
+  * using spaces in parse tokens for readability
+  -----+
+    # script fragment
+    "noun phrase*verb phrase*" {
+      clear; add "sentence*"; push; .reparse 
+    }
+  ,,,,
+
+  The [nom] script below prints only capitalized words, one 
+  per line.
+
+  * parse tokens with spaces (and abbreviated commands)
+  ------+
+    # use [A-Z] instead of [:alpha:] for good old ascii
+    # [:upper:] should be nicely unicode when translated to 
+    # go, java, python, etc
+    r; [:upper:] { 
+      while [:upper:]; put; d; a "cap words*"; push; 
+    }
+    clear;
+  parse>
+    pop;pop; 
+    "cap words*cap words*" {
+      # compile (concatenate) the text attributes
+      clear; get; add "\n"; ++; get; --; put;
+      clear; add "cap words*"; push; .reparse
+    }
+    push; push;
+    (eof) {
+      pop; add "\n"; get; add "\n"; print; quit;
+    }
+  ,,,,
+
+### NOTES
+
+  

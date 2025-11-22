@@ -1,0 +1,11 @@
+
+## THE NOM "CAP" COMMAND 
+
+  The *cap* command makes the text in the workspace buffer
+  *capital case* 
+  
+  That means that the 1st letter is uppercase and the rest of the text 
+  is lowercase. No other registers in the pep://machine virtual machine
+  are affected by this command.
+
+  see also: nom://lower and nom://upper

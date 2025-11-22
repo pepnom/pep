@@ -1,0 +1,562 @@
+
+#*
+
+ABOUT 
+
+  A [nom] script that pretty prints a *nom* script listing.
+
+  I am going to remove all detailed error testing here.
+  Instead of error checking and halting compilation, I put the 
+  error message into the listing output.
+
+STATUS
+
+  10 mar 2025
+    began based on nom.reference.syntax.pss
+
+NOTES
+
+  This also demonstates the idea of a "pass-through" script which parses and
+  outputs without doing much.  I will probably remove all error checking code
+  from this and just make it a pretty printer.
+
+TOKENS 
+
+ This token list is pretty useful for thinking about 
+ sequences of tokens. Especially for error sequences.
+
+  Literal BE!<>{}(),.;
+  quoted*  text between "" or '' 
+  class*   eg [:space:] [abcd] [a-z] 
+  word*    eg: eof,reparse,==
+  begin*   the begin word
+  parselabel* 
+  command* eg: add clear print 
+  test*    eg: "x" [:space:] !B"a" B"a" E"a" !E"a"
+  ortest*  test*,*test*
+  andtest*  test*.*test*
+  statement* eg: clear; add "xx"; or "test" { ... }
+  statementset* a list of statements 
+
+  If the whole script parses as a statement* or a statementset*
+  or script then the syntax is correct.
+
+HISTORY
+
+  10 mar 2025
+    started.
+
+*#
+
+  read;
+
+  # line-relative character numbers 
+  [\n] { nochars; }
+  # ignore space except in quotes. but be careful about silent
+  # exit on read at eof
+  [:space:] { 
+     clear; (eof) { .reparse } !(eof) { .restart } 
+  }
+
+  # literal tokens, for readability maybe 'dot*' and 'comma*'
+  [<}(!BE,.] { put; add "*"; push; .reparse }
+  [;)>] { 
+    # add trailing space to attrib for formatting
+    add " "; put; clip; add "*"; push; .reparse
+  }
+
+  [{] { 
+    # line and char number to help with missing close brace 
+    # errors
+    clear;
+    add "{";
+    # add "line:"; lines; add " char:"; chars;
+    put; clear; add "{*"; push; .reparse
+  }
+
+  # parse (eof) etc as tokens? yes
+
+  # command names, need to do some tricks to parse ++ -- a+ etc
+  # here. This is because [:alpha:],[+-] etc is not a union set
+  # and while cannot do "while [:alpha:],[+-] etc
+
+  # subtle bug, [+-^0=] parses as a range!!! [a-z]
+  [:alpha:],[-+^0=] {
+    "0" {
+      clear; add "zero"; put; clear;
+      add "command*"; push; .reparse
+    }
+    "^" {
+      clear; add "escape"; put; clear;
+      add "command*"; push; .reparse
+    }
+    "+" {
+      while [+]; 
+      "++" { put; clear; add "command*"; push; .reparse }
+    }
+    "-" {
+      while [-]; 
+      "--" { put; clear; add "command*"; push; .reparse }
+    }
+    # becomes the 'workspace=tape' test
+    "=" {
+      while [=]; 
+      "==" { put; clear; add "word*"; push; .reparse }
+    }
+
+    while [:alpha:]; 
+
+    # parse a+ or a- for the accumulator
+    "a" { 
+      # while [+-] is bug because compile.pss thinks its a range class
+      # not a list class
+      while [-+]; 
+      "a+","a-" { put; clear; add "command*"; push; .reparse }
+      clear; add "add";
+    }
+
+    # one letter command abbreviations
+    # try #k and replace "#k" "clip";
+    "k" { clear; add "clip"; }
+    "K" { clear; add "clop"; }
+    "D" { clear; add "replace"; }
+    "d" { clear; add "clear"; }
+    "t" { clear; add "print"; }
+    "p" { clear; add "pop"; }
+    "P" { clear; add "push"; }
+    "u" { clear; add "unstack"; }
+    "U" { clear; add "stack"; }
+    "G" { clear; add "put"; }
+    "g" { clear; add "get"; }
+    "x" { clear; add "swap"; }
+    "m" { clear; add "mark"; }
+    "M" { clear; add "go"; }
+    "r" { clear; add "read"; }
+    "R" { clear; add "until"; }
+    "w" { clear; add "while"; }
+    "W" { clear; add "whilenot"; }
+    "n" { clear; add "count"; }
+    "c" { clear; add "chars"; }
+    "C" { clear; add "nochars"; }
+    "l" { clear; add "lines"; }
+    "L" { clear; add "nolines"; }
+    "v" { clear; add "unescape"; }
+    "z" { clear; add "delim"; }
+    "S" { clear; add "state"; }
+    "q" { clear; add "quit"; }
+    "s" { clear; add "write"; }
+    "o" { clear; add "nop"; }
+    "rs" { clear; add "restart"; }
+    "rp" { clear; add "reparse"; }
+
+    put;
+
+    # dont want to use this syntax anymore because we already have
+    # lines and 'l' or chars and 'c'
+    "ll","cc" { 
+      clear;
+      add '* The syntax "'; get; add '" for lines or chars';
+      add "  is no longer valid.\n";
+      add "  use 'chars' or 'c' for a character count \n";
+      add "  use 'lines' or 'l' for a line count \n";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    "+","-" { 
+      clear;
+      add '* This syntax "'; get; add '" which were 1 letter abbreviations\n';
+      add "  are no longer valid because.\n";
+      add "  it is silly to have 1 letter abbrevs for 2 letter commands.";
+      put; clear; add "nom.error*"; push; .reparse
+    }
+
+    # what about upper, lower and cap?
+
+    # writefile is also a command?
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","delim","quit", "write","nop" {
+      put; clear; 
+      add "command*"; push; .reparse
+    }
+
+    # words not commands
+    "parse","reparse","restart","eof","EOF" {
+      put; clear; add "word*"; push; .reparse
+    }
+
+    "begin" { put; add "*"; push; .reparse }
+
+    # lower case and check for command with error
+    lower; 
+    "add","clip","clop","replace","upper","lower","cap","clear",
+    "print","state","pop","push","unstack","stack","put","get","swap",
+    "mark","go","read","until","while","whilenot",
+    "count","zero","chars","lines","nochars","nolines",
+    "escape","unescape","delim","quit", "write",
+    "zero","++","--","a+","a-","nop",
+    "begin","parse","reparse","restart" {
+      clear; add "#* "; get; 
+      add '  (error: command case) *# ';
+      put; clear; add "comment*"; push; .reparse
+    }
+
+    clear; 
+    add "#* "; get; add ' (unknown word or command) *#'; 
+    put; clear; add "comment*"; push; .reparse
+  }
+
+  # single line comments
+  '#' {
+    (eof) { clear; .reparse }
+    read; 
+    # just delete empty comments
+    [#\n] { clear; .reparse }
+    "#*" {
+      until "*#"; 
+      !E"*#" { 
+        clear; add '# nom error: unterminated multiline comment '; 
+      }
+      put; clear;
+      add "comment*"; push; .reparse 
+    }
+    whilenot [\n]; 
+    
+    # just delete empty comments
+    [# \t\n] { clear; .reparse }
+    put; 
+    clear; add "comment*"; push; .reparse
+  }
+
+  # double quoted text
+  '"' {
+    # no error checking. 
+    # see nom.syntax.reference.pss for error checking
+    until '"'; put; clear;
+    add "quoted*"; push; .reparse 
+  }
+
+
+  # single quotes
+  "'" {
+    clear; 
+    # no error checking. see nom.syntax.reference.pss for error checking
+    until "'"; E"'" { clip; } unescape "'"; 
+    # convert to double quotes
+    escape '"'; put; clear;
+    add '"'; get; add '"'; put; clear;  
+    add "quoted*"; push; .reparse 
+  }
+
+
+  # classes like [:space:] or [abc] or [a-z] 
+  # these are used in tests and also in while/whilenot
+  # The *until* command will read past 'escaped' end characters eg \]
+  # 
+
+  "[" {
+    clear; 
+    # save start line/char of '[' for error messages
+    add "line:"; lines; add " char:"; chars; put; clear; 
+    until "]"; 
+    !E"]",(eof) { 
+      clear; 
+      add '* unterminated class [...] or incomplete command starting at '; 
+      put; clear; add "nom.error*"; push; .reparse
+    }
+    clip; unescape "]"; 
+    put; 
+    
+    B":".E":".!"::" { 
+      clip; clop; put;
+      # list of [:class:] classes here. The character classes also
+      # abbreviations in nom (which may be silly but anyway) 
+      "alnum","N","alpha","A","ascii","I","word","W","blank","B",
+      "cntrl","C","digit","D","graph","G","lower","L","print","P",
+      "punct","T","space","S","upper","U","xdigit","X" {
+        clear; add "[:"; get; add ":]"; put;
+        clear; add "class*"; push; .reparse 
+      }
+      clear; 
+      add "* Incorrect character class\n"; 
+      add ' 
+      Valid character classes are:
+        alnum,N,alpha,A,ascii,I,word,W,blank,B 
+        cntrl,C,digit,D,graph,G,lower,L,print,P
+        punct,T,space,S,upper,U,xdigit,X 
+
+      The second value is an abbreviation of the 1st
+        e.g: [:alpha:] or [:A:] are the same.  
+      Character classes are used in tests and the nom while 
+      and whilenot commands
+        e.g: [:space:] { while [:space:]; clear; } \n';
+      put;
+      clear; add "nom.error*"; push; .reparse
+    }
+    # now [a-z] classes. I will not permit [\n-\t] silly
+    # todo check this 
+    clear; add "["; get; add "]"; put;
+    clear; add "class*"; push; .reparse
+  }
+
+  !"" {
+    put; clear; 
+    add "# nom error: invalid character found '"; get; add "'\n";
+    put; clear; add "comment*"; push; .reparse
+  }
+
+ parse>
+  # debug code here
+  # add "# line "; lines; add " char "; chars; add ": "; print; clear; 
+  # unstack; print; stack; add "\n"; print; clear;
+   
+  # ----------------
+  # errors here
+  pop;
+
+  "nom.error*" {
+    clear;
+    add "! Nom syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; print; quit;
+  }
+
+  #----------------
+  # 2 parse token errors
+
+  #*
+  possible tokens: 
+  literal* BE!<>{}(),.;
+  quoted* class* word* command* test*
+  ortest* andtest* statement* statementset* 
+  *#
+
+  push;
+
+  # ----------------
+  # 2 grammar parse tokens 
+  pop;pop;
+  
+  #
+  (eof) {
+    # make a script token 
+    "beginblock*statement*", "beginblock*statementset*" {
+       clear; get; ++; get; --; put;
+       clear; add "script*"; push; 
+    }
+    "statement*","statementset*" {
+       clear; add "script*"; push; 
+    }
+    "beginblock*" {
+       clear; add "script*"; push; 
+    }
+    "comment*" {
+       clear; add "script*"; push; 
+    }
+    "parselabel*" {
+       clear; add "script*"; push; 
+    }
+  }
+
+  # permit comments anywhere in script
+  #
+  B"comment*".!"comment*" {
+    # A translator would try to conserve the comment.
+    replace "comment*" ""; push; 
+    --; get; add "\n"; ++; get; --; put; ++; clear;
+    .reparse
+  }
+
+  E"comment*".!"comment*" {
+    replace "comment*" ""; push; 
+    --; get; add "\n"; ++; get; --; add "\n"; put; ++; clear;
+    .reparse
+  }
+
+  ".*word*" {
+    clear; ++; get; --; 
+    "reparse","restart" {
+      put; clear; add "."; get; put; 
+      clear; add "statement*"; push; .reparse
+    }
+    clear; add "* invalid statement ."; put;
+    clear; add "nom.error*"; push; .reparse
+  }
+
+  "word*>*" {
+    clear; get; 
+    "parse" { 
+      clear; add "parse>"; put; 
+      clear; add "parselabel*"; push; .reparse
+    }
+    clear; add "word*>*";
+  }
+
+  "B*quoted*","E*quoted*" {
+    clear; get; ++; get; --; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  "!*test*","!*quoted*","!*class*" {
+    clear; get; ++; get; --; put;
+    clear; add "test*"; push; .reparse
+  }
+
+  "class*{*","quoted*{*","class*,*","quoted*,*","class*.*","quoted*.*",
+  ",*class*",",*quoted*",".*class*",".*quoted*" {
+    replace "quoted*" "test*"; replace "class*" "test*";
+    push; push; .reparse
+  }
+
+  "command*;*" {
+    clear; 
+    #add '<code style="color:purple">'; 
+    get; ++; get; --; 
+    # add "</code>";
+    put; clear;
+    add "statement*"; push; .reparse
+  }
+
+  "statement*statement*","statement*statementset*",
+  "statementset*statement*","statementset*statementset*" {
+    clear; get; add "\n"; ++; get; --; put;
+    clear; add "statementset*"; push; .reparse
+  }
+
+  # ----------------
+  # 3 grammar parse tokens 
+  pop;
+
+  (eof) {
+    # need to arrange the labelled loops or gotos here. Because the 
+    # loop cannot include the beginblock.
+
+    # maybe make an automatic empty statementset after the parselabel
+    "statementset*parselabel*statementset*",
+    "statement*parselabel*statementset*",
+    "statementset*parselabel*statement*",
+    "statement*parselabel*statement*" {
+       clear; get; ++; get; ++; get; --; --; put;
+       clear; add "statementset*"; push; .reparse
+    }
+    "statement*parselabel*","statementset*parselabel*" {
+       clear; get; ++; get; --; put;
+       clear; add "statementset*"; push; .reparse
+    }
+    "parselabel*statement*","parselabel*statementset*" {
+       clear; get; ++; get; --; put;
+       clear; add "statementset*"; push; .reparse
+    }
+  }
+
+  "(*word*)*","<*word*>*" {
+    clear; 
+    #"eof","==" { 
+    clear; get; ++; get; ++; get; 
+    !B"(==)".!B"<==>".!B"(eof)".!B"<eof>" {
+      add "#* error: invalid test *#";   
+    }
+    --; --; put;
+    clear; add "test*"; push; .reparse
+  }
+
+
+  "command*quoted*;*" {
+    clear; get; add " "; ++; get; ++; get; 
+    !B"add".!B"replace".!B"mark".!B"go".!B"until".
+    !B"delim".!B"escape".!B"unescape" {
+      add "# error! command doesn't take quoted arg";
+    } 
+    --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  "command*class*;*" {
+    clear; get; ++; get; ++; get; 
+    !B"while".!B"whilenot" {
+      add "# error! command does not take class arg";
+    }
+    --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+
+  "test*,*test*","ortest*,*test*" {
+    clear; get; ++; get; ++; get; --; --; put;
+    clear; add "ortest*"; push; .reparse
+  }
+  "test*.*test*","andtest*.*test*" {
+    clear; get; ++; get; ++; get; --; --; put;
+    clear; add "andtest*"; push; .reparse
+  }
+
+
+  # dont need to reparse 
+  "{*statement*}*" { replace "ment*" "mentset*"; }
+
+  # ----------------
+  # 4 grammar parse tokens 
+  pop;
+  "command*quoted*quoted*;*" {
+    clear; get; add " "; ++; get; add " "; ++; get; ++; get; 
+    --; --; --; put;
+    clear; add "statement*"; push; .reparse
+  }
+
+  # reducing blocks
+  "test*{*statementset*}*", 
+  "ortest*{*statementset*}*",
+  "andtest*{*statementset*}*" {
+    # indent and format
+    clear; ++; ++; 
+    add "\n"; get; replace "\n" "\n  "; add "\n"; put;
+    --; --;  
+
+    clear; get; ++; add " "; get; ++; get; ++; get; add "\n";
+    --; --; --; put;
+    clear; add "statementset*"; push; .reparse
+  }
+
+  "begin*{*statementset*}*" {
+    # indent and format
+    clear; ++; ++; 
+    add "\n"; get; replace "\n" "\n  "; add "\n"; put;
+    --; --;  
+
+    clear; get; ++; add " "; get; ++; get; ++; get; add "\n";
+    --; --; --; put;
+    clear; add "beginblock*"; push; .reparse
+  }
+
+  # end of input stream errors
+  (eof) {
+    "test*","ortest*","andtest*","begin*" {
+       clear; 
+       add "# Incomplete script.\n"; 
+       get; print; quit;
+    }
+  }
+
+  push;push;push;push;
+
+  (eof) {
+    pop;pop;
+    "" {
+      add "# nom: empty script.\n"; 
+      print; quit;
+    }
+    !"script*" {
+      push;push;
+      unstack; put; clear; 
+      add "# nom: script contains errors \n\n"; 
+      add "# Run pep -f eg/nom.reference.syntax.pss this.pss \n"; 
+      add "#   for details \n";
+      add "# The parse stack was: ";
+      get; add "\n";
+      print; quit;   
+    }
+    clear; add "# nom syntax seems ok. \n"; 
+    get; add "\n"; print; quit;
+  }

@@ -1,0 +1,27 @@
+
+## THE NOM TO LUA TRANSLATOR
+
+  About the nom to lua translator script.
+
+  The nom -> lua translator is called /tr/nom.tolua.pss
+
+### STATUS 
+
+  Currently (april 2025) it is not debugged and not really working.
+  Also, it is only accepting input from stdin (not files or string)
+  at the moment.
+  
+### NOTES
+ 
+  The nom to lua translator uses the new grammar and error checking 
+  format, as indicated by its name. 
+
+  * translate a nom script to lua and run with input
+  ----
+    pep -f tr/nom.tolua.pss eg/maths.parse.pss > test.lua
+    echo "4+5*sqrt(4/3)" | lua test.lua
+  ,,,,
+  
+  * test the nom to lua translator with a set of one-line scripts
+  >>  pep.tt lua 
+

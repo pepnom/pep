@@ -1,0 +1,422 @@
+
+#*
+~color{0 0 1}
+
+# exp.tolisp.pss
+
+ABOUT 
+
+ Parsing arithmetic expressions with numbers (decimals) and variables and
+ the operators "+,-,/,*,^" and converting to Lisp syntax. 
+
+ Based on older integer version at eg/exp.tolisp.integer.pss
+
+ This is a classic elementary parsing problem. We need to construct the grammar
+ so that it contains a "lookahead" token, in order to deal with the operator
+ precedence dilemma.
+ 
+STATUS 
+
+  feb 2025: working, needs more testing?
+
+GRAMMAR IMPLEMENTED
+
+ This script represents a LR (scan-from-left, parse-from-right)
+ bottom-up shift-reduce parse/translator.
+
+ The script implements the following grammar (described in Wirths EBNF syntax,
+ without the grouping (), optional [] or continuations {} symbols)
+
+
+ * script grammar, not complete
+ ---------
+   opmul := '*' | '/' .
+   opadd := '+' | '-' .
+   dot := '.' .
+   variable := [:alpha:]+ .
+   natnum := [0-9]+ . 
+   exp := number | variable .
+   exp := exp opmul exp .
+   exp := ( exp ) .
+   exp := exp opadd exp EOF .
+   exp opadd := exp opadd exp opadd .
+   exp ')' := exp opadd exp ')' .
+   .....
+ ,,,,
+
+ Examining this grammar, its seems to violate the ebnf rule that 
+ rules can only have 1 identifier on the left-hand side. But in 
+ any case, this seems a useful technique for implementing operator
+ precedence with the parse machine.
+
+TOKENS 
+
+  opmul* multiply or divide operator (what is the prcedence?)
+  opadd* addition and subtraction 
+  exp* an arithmetic expression
+  natnum* a natural number [0-9]
+  decnum* a positive decimal number
+  opmul* either * or / but what should be the precedence here?
+  opadd* either +/-
+  sign* either +/- but only preceeding an expression
+
+TESTING 
+
+  >> pep -f eg/exp.tolisp.pss -i "-.21*(0.33+e)"
+
+  * demonstrate operator precedence. 
+  >> pep -f eg/exp.tolisp.pss -i "a+b*c*(d+e)"
+  output:  (+ a (* (* b c) (+ d e))) 
+
+  * test reformating of an arithmetic expression
+  >> pep -f eg/exp.tolisp.pss -i "6 + (6+7*8)*var"
+
+  * make a stand-alone executable of this expression parser/translator
+  --------
+    pep -f ../tr/translate.c.pss exp.tolisp.pss > exp.tolisp.c
+    gcc -o exp.tolisp.ex -Lbooks/pars/object -lmachine -Ibooks/gh/object
+    # not unicode aware
+  ,,,
+
+  * run the stand-alone executable with input from "stdin"
+  >> echo "a+b*c*(d+e)" | ./exp.tolisp.ex
+  output:  (+ a (* (* b c) (+ d e)))
+
+  * test with clisp, using numbers only
+  >> clisp -q -x "$(pep -f eg/exp.tolisp.pss -i '1+4*5')"
+
+
+NOTES
+
+  This gives a cryptic error message in the pep interpreter.
+  Unbalanced brackets.
+    "exp*opadd*exp*","exp*opmul*exp*" {
+    "natnum*opadd*natnum*","natnum*opmul*natnum*" { }
+
+LIMITATIONS
+
+EXAMPLES 
+
+ eg: (4+3)*6/7
+ eg: (9+count*4) + var * 2 
+ eg: (var + 88) + 4 * 2 
+
+HISTORY
+ 
+ 10 feb 2025
+   starting to convert to +/- decimal numbers and add powers ^
+   seems to be working with limited testing. Need to convert power
+   operator to lisp ?
+
+ 3 july 2022
+   Tested with clisp. Appears to work with numbers only.
+
+ 22 august 2019
+   Updating comments.
+
+ 14 august 2019
+   This appears to be working as a "recogniser" and translator of arithmetic
+   expressions, with operator precedance and formats output as a lisp
+   expression. Also, the code produced by translate.c.pss appears to be compile
+   and run correctly 
+
+*#
+
+  # The script lexing phase
+
+  read;
+  # plus and minus
+  "+","-" { put; clear; add "opadd*"; push;  }
+  # multiply and divide
+  "*","/" { put; clear; add "opmul*"; push;  }
+  # to the power of, but what is the lisp power operator ???
+  "^" { clear; add "expt"; put; clear; add "power*"; push;  }
+  # for grouping
+  "(",")" { put; add "*"; push; }
+  # for decimal number
+  "." { put; clear; add "dot*"; push; }
+  [0-9] {
+    while [0-9]; put; 
+    # Add a preceding space, but this is a bit hackish for lisp
+    # syntax. must remove space when parsing decimal numbers
+    clear; add " "; get; put; 
+    clear; add "natnum*"; push;
+  }
+  # What characters are valid Lisp (clisp) variable names
+  [:alpha:] {
+    while [:alpha:]; put; clear; add "variable*"; push;
+  }
+
+  # spaces are actually significant because they cannot occur in
+  # decimal numbers, eg: '4. 03' is probably an error
+
+  # make character counter relative to each line for more helpful
+  # error messages
+  [:space:] { "\n" { nochars; } clear; }
+
+  # a trick to catch bad characters. 
+  # better would be a !"text" test
+  !"" { 
+    add " << incorrect character (at character "; chars; 
+    add " of input). \n"; print; quit; 
+  }
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.fk
+  add "* line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+
+  #---------------
+  # error analysis
+  # we can group all error analysis here to make the script more 
+  # organised. This section helps to provide good error messages to
+  # the user.
+
+  pop;
+  
+  (eof) {
+    "dot*" {
+      clear; 
+      add "* Misplaced dot '.' at end of expression. \n";
+      add "  Line "; lines; add " char "; chars; add "\n";
+      add "  The dot is only used in decimal numbers eg: 12.345 \n";
+      print; quit;
+    }
+    "opadd*","opmul*","power*" {
+      clear; 
+      add "* Misplaced operator at '"; get; add "' end of expression. \n";
+      add "  Line "; lines; add " char "; chars; add "\n";
+      add "  Operators must be between numbers or expressions \n";
+      add "  eg: 4^3*(3+1) \n";
+      print; quit;
+    }
+
+  }
+
+  # ----------------
+  # 2 token errors
+  pop;
+
+  "opadd*opmul*" {
+     clear; 
+     add "* Misplaced operator '"; get; add "' at \n";
+     add "  Line "; lines; add " char "; chars; add "\n";
+     add "  Operators must be between numbers or expressions \n";
+     add "  eg: 4^3*(3+1) \n";
+     print; quit;
+  }
+
+  "natnum*natnum*","exp*exp*" {
+     clear; 
+     add "* numbers/expressions not separated by an operator at \n";
+     add "  Line "; lines; add " char "; chars; add "\n";
+     add "  Operators must be between numbers or expressions \n";
+     add "  eg: 4^3*(3+1) \n";
+     print; quit;
+  }
+
+  "natnum*(*","exp*(*" {
+     clear; 
+     add "? Misplaced bracket '(' at ";
+     add "  Line "; lines; add " char "; chars; add "\n";
+     print; quit;
+  }
+
+
+  # etc etc. If you want the expression compiler/translator to provide
+  # helpful error messages, then include lots of errors here and 
+  # explanations of the syntax error.
+
+  # push everything back on the stack for parsing and translating to Lisp 
+  push; push;
+
+  # end of error analysis
+  # ---------------
+
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  # add a preceding space to numbers and variables. good idea?
+  "decnum*","variable*" {
+     clear; add " "; get; put; clear;
+     add "exp*"; push; .reparse
+  }
+
+  # reduce natnum to expression at end of file, no!!!
+  (eof) {
+    "natnum*" { 
+       # check not preceded by dot (could be decimal)
+       pop;
+       !"dot*natnum*" { 
+         replace "natnum*" "exp*"; push; push; .reparse 
+       }
+       push;
+     }
+  }
+
+  #-----------------
+  # 2 tokens
+  pop;
+
+  # reduce natnums to expressions if not followed by a dot
+  # this creatly reduces complexity of parsing rules later
+  # already ensured not "natnum*natnum*" in error checks above.
+  B"natnum*".!"natnum*".!E"dot*" {
+    replace "natnum*" "exp*"; push; push; .reparse
+  }
+
+  # clisp doesnt allow spaces between sign and number: (+ - 0.4 1) error
+  # but (- 3.2) is ok
+  # below produces slightly silly code, i.e will produce
+  # (* (+ 2) 3) for the code 3*+2 
+  # This could be reduced to (* 2 3) anyway ....
+  # The solution is to reduce decnum* and natnum* separately to exp*
+
+  "sign*exp*" {
+    clear; add " ("; get; ++; get; --; add ")"; put; clear;
+    add "exp*"; push; .reparse
+  }
+  
+  # There may be an issue with reducing sign*natnum in other
+  # cases
+  (eof) {
+    "sign*natnum*" {
+      clear; add " ("; get; ++; get; --; add ")"; put; clear;
+      add "exp*"; push; .reparse
+    }
+  }
+  #-----------------
+  # 3 tokens
+  pop;
+
+  # These are signs at the beginning of the expression
+  # only 2 tokens
+  "opadd*natnum*","opadd*exp*" {
+    replace "opadd*" "sign*"; push; push; .reparse
+  }
+
+  # +/- at beginning, 3 tokens
+  B"sign*exp*".!"sign*exp*" {
+    replace "sign*exp*" "exp*"; push; push;
+    # need to compose attributes and transfer other attributes
+    # compose sign/exp attribute in Lisp syntax
+    --; --; add " ("; get; ++; get; add ")"; --; put; clear; ++; ++;
+    # transfer invisible token attribute
+    get; --; put; clear; ++;  
+    clear; .reparse
+
+  }
+
+  # convert +/- oppadd* token to a sign* token where appropriate
+  # If only 2 tokens (not 3) then start of document
+  E"opadd*exp*".!B"exp*" {
+    replace "opadd*exp*" "sign*exp*";
+    push; push; push; .reparse
+  }
+  E"opadd*natnum*".!B"exp*" {
+    replace "opadd*natnum*" "sign*natnum*";
+    push; push; push; .reparse
+  }
+
+
+  # we dont need any look ahead here because '^' the power operator
+  # has precedence over multiply/divide/add/subtract.
+  # precedence.
+  "exp*power*exp*" {
+    clear; 
+    add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+    --; --; put; clear; 
+    add "exp*"; push;
+    .reparse
+  }
+  
+  # parse positive decimal numbers like 02.345
+  "natnum*dot*natnum*" {
+    clear; 
+    get; ++; get; ++; get; --; --; 
+    # remove spaces but add one at front, a bit hackish. It would
+    # be better to add the spaces when we construct the bracket
+    # expressions like (* (- 0.1) 4)
+    replace " " ""; put; clear; add " "; get;
+    # or parse to decnum* here to make negation better
+    put; clear; add "exp*"; push;
+    .reparse
+  }
+
+  "(*exp*)*" {
+     clear; ++; get; --; put; clear;
+     add "exp*"; push;
+     .reparse
+  }
+
+  (eof) {
+    # natnums have already been "reduced" to exp* at end of stream 
+    "exp*opadd*exp*","exp*opmul*exp*" {
+       clear; 
+       add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+       --; --; put; clear; 
+       add "exp*"; push;
+       .reparse
+    }
+  } 
+
+#-----------------
+# 4 tokens
+
+  pop;
+
+  # here could ellide using B"" { E"" tests
+  "exp*opadd*exp*opadd*","exp*opmul*exp*opadd*",
+  "exp*power*exp*opadd*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; clear;
+     # transfer 4th token attribute (opadd) 
+     ++; ++; ++; get; --; --; put; --;
+     clear; add "exp*opadd*"; push; push;
+     .reparse
+  }
+  "exp*opmul*exp*opmul*","exp*power*exp*opmul*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; clear;
+     # transfer 4th token attribute (opadd) 
+     ++; ++; ++; get; --; --; put; --;
+     clear; add "exp*opmul*"; push; push;
+     .reparse
+  }
+
+  
+  # natnum* have already been converted to exp*
+  "exp*opadd*exp*)*","exp*opmul*exp*)*" {
+     clear; 
+     add " ("; ++; get; --; get; ++; ++; get; add ")"; 
+     --; --; put; clear;
+     # transfer 4th token attribute ')' maybe not necessary 
+     ++; ++; ++; get; --; --; put; --;
+     clear; add "exp*)*"; push; push;
+     .reparse
+  }
+
+  push; push; push; push;
+
+  (eof) {
+    pop; pop;
+    "exp*" {
+      clear;  
+      # add "Yes, its an expression! \n";
+      # add "lisp format: "; 
+      get; add "\n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "No, it doesn't look like a single valid arithmetic \n";
+    add "'in-fix' expression. The parse stack was: ";
+    print; clear; unstack; add "\n"; print;
+    quit;
+  }

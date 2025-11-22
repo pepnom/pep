@@ -1,0 +1,28 @@
+
+
+## THE NOM "UNSTACK" COMMAND 
+
+  Pop the entire stack as a prefix into the workspace. This command
+  behaves exactly like multiple nom://pop commands until the pep://stack
+  is completely empty. This means that the tape pointer is 
+  decremented once for each parse-token that is popped off the stack.
+  This behaviour applies to the pep interpreter and also to the 
+  /tr/ "translation" scripts.
+  
+  This is useful for displaying the state of the stack at the end of
+  parsing or when an error has occurred. I also use this command for 
+  debugging after the nomsyn://parse> label.
+
+  The code below is very handy for debugging the "grammar" wp://grammar of a 
+  script because it shows you how that grammar tokens are reducing and 
+  when (by line and character number of the input stream).
+
+  * watch the parse stack reduce with line numbers 
+  ----+
+  parse>
+    add "line "; lines; add " char "; chars; add ": "; print; clear;
+    unstack; print; stack; print; clear;
+  ,,,,
+
+### NOTES
+

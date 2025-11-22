@@ -1,0 +1,22 @@
+#*
+
+  This script attempts to solve the following rosetta code problem
+  http://www.rosettacode.org/wiki/Count_occurrences_of_a_substring
+
+NOTES
+
+  needs thought
+
+TOKENS
+
+HISTORY 
+
+*#
+
+ begin { 
+   # the substring to seach for
+   add "tree"; put; clear; 
+ }
+
+ read;
+

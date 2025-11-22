@@ -1,0 +1,50 @@
+
+## THE NOM "LINES" COMMAND
+
+  Append the number of *lines* read to the workspace buffer
+
+  The *lines* (or *ll*, it's original, cryptic name) command appends to the
+  nom://workspace the current value of the line counter register. This is very
+  useful when writing compilers/transpilers/tranlators etc in order to produce
+  an error message with a line number when there is a syntax or format error in
+  the input stream.
+
+  * using "lines" in helpful error messages
+  -------+
+    read;
+    [#@&!*] {
+      clear; 
+      add "! Gurgle syntax error: "; lines; add "\n";
+      add "! The characters #,@,&,!,* are very bad. End of story.\n";
+      add "! Go back to the drawing board. Goodbye. \n"; 
+      print; quit;
+    }
+    clear;
+  ,,,
+
+### NOTES
+ 
+  You can set the pep://lines register in the [pep] virtual machine to *zero*
+  with the nom://nolines command but I dont use this very much.  The
+  nom://chars command is analogous to the *line* command but is an automatic
+  character counter. I find the nom://nochars command, which sets the
+  pep://chars register to zero, to be more useful because it allows you to make
+  the character counter relative to the start of the current line.
+
+  * make the character counter relative to the start of the line
+  -----+
+    read; [\n] { nochars; }
+    "&" {
+      put; clear; 
+      add "! on line "; lines; add " (char "; chars; add ")\n";
+      add "  you used an Ampersand(&). Please Dont. Thanks.\n";
+      print; clear; quit;
+    }
+    clear;
+  ,,,
+
+### SEE ALSO
+
+  nom://chars : just likes *lines* but for characters. >>
+  the pep://lines : register in the virtual pep://machine >>
+

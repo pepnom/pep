@@ -1,0 +1,39 @@
+
+ ## The Vim text editor and the Pep/nom system
+
+ Using vim with pep/nom.
+
+ I usually use the text editor *vim* to write text and code and this document
+ is a short list of vim commands, macros, tricks for using and running "nom"
+ scripts or other tasks.
+
+ These commands allow me to test nom code from within a document.
+
+ * an abbreviation to insert an explanation of how to translate  a nom script to go
+  >> abbrev nomtogo * translate script to go<cr>-----<cr>  pep -f tr/translate.go.pss script.pss > test.go<cr>go build test.go <cr>cat input.txt \| ./test<cr>,,,<cr>
+
+ * an abbreviation to insert an explanation of how to translate  a nom script to go using 2nd generation translation
+ >> abbrev nomtogo * translate script to go<cr>-----<cr>  pep -f tr/translate.go.pss tr/translate.go.pss > nom.togo.go<cr>go build nom.togo.go <cr>  cat script.pss \| ./nom.togo > script.go<cr>  go build script.go<cr>  cat input.txt | ./script<cr>,,,<cr>
+
+  * translate single line script in document to java and run 
+  -----
+    com! -nargs=1 Pplj .w !sed 's/^ *>>//' > test.pss; echo "[translating to java and compiling]"; pep -f tr/translate.java.pss test.pss > Machine.java; javac Machine.java; echo "[running code]"; echo "<args>" | java Machine
+  ,,,,
+
+  * translate multiline script in a doc (between --- and ,,,,) to java and run 
+  ------
+    com! -nargs=1 Ppmj ?^ *---?+1,/^ *,,\,/-1w !sed 's/^//' > test.pss; ~/sf/htdocs/books/pars/pep -f ~/sf/htdocs/books/pars/tr/translate.java.pss test.pss > Machine.java; javac Machine.java; echo "<args>" | java Machine
+  ,,,,
+
+  * test a single line nom script in a text document (can be after '>>' or not) 
+  -----
+    com! -nargs=1 Ppl .w !sed 's/^ *>>//' > test.pss; ~/sf/htdocs/books/pars/pep -f test.pss -i "<args>"
+  ,,,,
+
+  * test a multiline nom script in a text document (between --- and ,,,) 
+  -----
+    com! -nargs=1 Ppm ?^ *---?+1,/^ *,,\,/-1w !sed 's/^//' > test.pss; ~/sf/htdocs/books/pars/pep -f test.pss -i "<args>"
+  ,,,,
+
+  After typing ':Ppm' or ':Ppl' just type the text that the *nom* script will use
+  as input (dont type any quotes, it doesn't seem to work)

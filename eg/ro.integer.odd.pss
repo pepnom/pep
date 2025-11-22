@@ -1,0 +1,21 @@
+
+#*
+ ABOUT 
+   
+   print the word "odd" after odd integers in the input text.
+   Leave all other text unchanged.
+
+   This is an attempted answer to the rosetta code problem 
+   of recognising odd integers.
+*#
+
+  read; 
+  ![:space:] { 
+    whilenot [:space:]; 
+    [0-9] {
+      E"1",E"3",E"5",E"7",E"9" { add " *ODD!*"; }
+    }
+    print; clear;
+  }
+  [:space:] { while [:space:]; print; clear; }
+

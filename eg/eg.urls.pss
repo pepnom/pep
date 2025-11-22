@@ -1,0 +1,12 @@
+#*
+
+  Only print (some) urls in the input stream. A simple 
+  non-parsing see-and-print script.
+
+*#
+
+read;
+B"http://",B"https://",B"www.",B"ftp://" {
+  E" ",E"\n",(eof) { add "\n"; print; clear; }
+}
+E" ",E"\n",(eof) { clear; }

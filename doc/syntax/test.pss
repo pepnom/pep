@@ -1,0 +1,12 @@
+   read; 
+   [:alnum:] { 
+     while [:alnum:]; put; 
+     clear; add "word*"; push; .reparse
+   }
+  parse>
+   !"" { 
+     put; clear;
+     add "! Incorrect character : "; get; add "\n";
+     add "! (only alpha-numeric allowed) \n"; 
+     print; quit;
+   }

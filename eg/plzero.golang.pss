@@ -1,0 +1,562 @@
+#*
+
+  This script parses the teaching language pl/0 which was 
+  defined by N.Wirth (of pascal fame) for teaching compiler
+  construction ("Compilerbau"). The script demonstrates the potential
+  of the pep machine and language. pl/0 is so limited as not to 
+  be very useful for actual programming.
+
+  * the pl/0 grammar in wsn/ebnf form
+  -------
+   program = block "." .
+   block = [ "const" ident "=" number {"," ident "=" number} ";"]
+        [ "var" ident {"," ident} ";"]
+        { "procedure" ident ";" block ";" } statement .
+
+   statement = [ ident ":=" expression | "call" ident 
+              | "?" ident | "!" expression 
+              | "begin" statement {";" statement } "end" 
+              | "if" condition "then" statement 
+              | "while" condition "do" statement ].
+
+   condition = "odd" expression |
+               expression ("="|"#"|"<"|"<="|">"|">=") expression .
+   expression = [ "+"|"-"] term { ("+"|"-") term}.
+   term = factor {("*"|"/") factor}.
+   factor = ident | number | "(" expression ")".
+
+  ,,,
+
+STATUS
+
+  7 sept 2021
+    working, and translatable to golang (not pl/0, but the pep script)
+
+TESTING
+
+  * test program parsing and pretty printing
+  >> pep -f eg/plzero.pss -i 'const c=0; var a; proc x;var b; b:=1; !a ;'
+
+  * check if variable declarations are parsing
+  >> pep -f eg/plzero.pss -i "var a, b, c ;"
+
+  * translate to golang and run, using fn in helpers.pars.sh
+  >> pep.goff eg/plzero.pss test.plzero.primes.txt
+
+NOTES
+
+  A basic function of a compiler is to decide if a variable
+  or function has been defined before it is called. Pep seems 
+  to struggle with this at the moment.
+
+  This grammar doesnt do nested procedures at the moment, 
+  because they seem silly.
+
+  Maybe we can use the empty token trick for tokens that 
+  don't have to exist. Eg add an empty "procset*" token
+  after condec* and vardec*, and if there are no procedures
+  defined, it doesnt matter. No, not really
+  
+  The "block" rule contains a series of optional elements that 
+  must appear in order eg:
+   block := 
+     [constant.declarations] [var.declarations] [procedure.declarations]
+     [statement] .
+  all of these are optional. I we factor out the optionality we end
+  up with a large number of separate rules which is tedious to code.
+  But we can encode some state in a parse token.
+
+  statements have no end marker, so how do we know when the 
+  expression is finished in "statement = ident ':=' expression ." ?
+  So, the problem is, if we have an input stream:
+    >> a := b+c*d
+  That will parse to "ident ':=' expression" where expression == "b+c"
+  which will reduce to "statement", which ignores the "*d" suffix
+  and produces a parse error!
+
+  One solution is to look at Wirth's grammar and see that statements
+  must be terminated with either ";" or "end" or "." (in the case of 
+  a program block).
+
+  "a = 4" is a legal 'condition' in pl/0 but is also
+  part of a constant declaration. So I need to stop this parsing
+  as a condition if it is preceded by "const"
+
+  When parsing integer arithmetic expressions, we need to construct the
+  grammar so that it contains a "lookahead" token, in order to deal with the
+  operator precedence dilemma.
+  
+HISTORY
+
+  7 sept 2021
+    finishing pretty printing. Script appears to work well, if 
+    somewhat wordy. Can adapt this script to transpile to go etc.
+  6 sept 2021
+    more work. transmogrifying number* and ident* into exp* where
+    necessary. Basic syntax appears good, apart from nested 
+    procedures. Working on pretty printing output, as a prelude
+    to transpiling to another language.
+  5 sept 2021
+    rewriting, using "tail reduction"
+  30 august 2019
+    created a previous version 
+
+*#
+
+  read;
+  # make character numbers (for error messages) relative
+  # to line numbers
+  "\n" { clear; nochars; .reparse }
+  [:space:] { clear; .reparse }
+
+  "+","-" {
+    put; clear; add "opadd*"; push; .reparse
+  }
+  "*","/" {
+    put; clear; add "opmul*"; push; .reparse
+  }
+
+  # modern pascal style comments, but not (* ... *) because 
+  # they are tricky to parse.
+  "{" {
+
+    # save the line number for possible error message later
+    clear; lines; put; clear; 
+    add "{";
+    until "}"; 
+    E"}" {
+      # can convert to another format
+      put; clear; 
+      # create a "comment" parse token
+      # comment-out this line to remove multiline comments from the 
+      # translated code
+      # add "comment*"; push; 
+      .reparse  
+    }
+    # make an unterminated multiline comment an error
+    # to ease debugging of scripts.
+    clear; 
+    add "[pl/0 error] Unterminated pascal comment { ... } \n";
+    add "stating at line number "; get; add "\n";
+    print; clear;
+    quit;
+  }
+
+  "*","/" {
+    put; clear; add "opmul*"; push; .reparse
+  }
+
+  # literal tokens
+  # '!' is the print command in pl/0
+  # '?' is the read command in pl/0
+  # '#' means != 
+  # '.' marks the end of a program. 
+  ".",",","=",";","(",")" { 
+    put; add "*"; push; .reparse 
+  }
+  "!" { clear; add "write"; put; clear; add "!*"; push; .reparse }
+  "?" { clear; add "read"; put; clear; add "?*"; push; .reparse }
+
+  # also need to parse <= >= comparison operators
+  # '=' is comparison and also constant assignment.
+  "<",">","#" {
+    while [=]; 
+    !"<".!">".!">=".!"<=".!"#" {
+      # error, message and quit
+      put; clear; 
+      add "[pl/0 error] unrecognised operator "; get;
+      add " at line/char "; lines; add "/"; chars; add "\n";
+      print; quit;
+    }
+    "#" { clear; add "!="; }
+    put; clear; add "compare*"; push; 
+  }
+
+  ":" { 
+    read; 
+    ":=" { put; add "*"; push; .reparse }
+    put; clear; 
+    add "[pl/0 error] unrecognised operator "; get;
+    add " at line/char "; lines; add "/"; chars; add "\n";
+    print; quit;
+  }
+
+  [0-9] { 
+    while [0-9]; put; clear; add "number*"; 
+    push; .reparse 
+  }
+
+  [:alpha:] { 
+    while [:alpha:]; 
+    # make keywords case insensitive
+    put; lower;
+    # synonym with !
+    "write","writeln" {
+      put; clear; add "!*"; push; .reparse 
+    }
+    # keywords in pl/0
+    "const","var","if","then","while","do","begin","end",
+    "proc","procedure","call","odd" { 
+      # or add ".key*" to remind us that these are keywords,
+      # not parse tokens
+      # add a space here for pretty printing later
+      put; "procedure" { clear; add "proc"; }
+      add "*"; push; .reparse
+    }
+    # restore non-lower case identifier
+    clear; get; put; clear; add "ident*"; 
+    push; .reparse 
+  }
+
+  !"" { 
+    # error unrecognised character
+    put; clear; lines; add ":"; chars; 
+    add " [pl/0 error] incorrect character '"; get; add "'\n";
+    print; quit;
+  }
+
+parse>
+
+ # To visualise token reduction uncomment this below:
+ lines; add ":"; chars; add " "; print; clear; 
+ add "\n"; unstack; print; clip; stack; 
+
+#-----------------
+# 1 token
+  pop; 
+  
+#-----------------
+# 2 tokens
+  pop; 
+  
+# Some errors
+  "ident*ident*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] 2 variable names in a row (is there a \n";
+    add " missing operator?) \n"; print; quit;
+  }
+  "vardec*const*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] Constant declarations must precede variable \n";
+    add " declarations in pl/0 \n"; print; quit;
+  }
+  "condec*const*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] only 1 constant declaration block is allowed \n";
+    add " in each scope \n"; print; quit;
+  }
+  "vardec*var*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] only 1 variable declaration block is allowed \n";
+    add " in each scope \n"; print; quit;
+  }
+  ";*end*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] Last statement in block does not require \n";
+    add " a semi-colon ';' \n"; print; quit;
+  }
+
+  #*
+  B"const*".!"const*".!E"ident*" {
+    clear; lines; add ":"; chars; 
+    add " [pl/0 error] The 'const' keyword must be followed by \n";
+    add " a variable name. \n"; print; quit;
+  }
+  *#
+
+  # add an empty procset* (set of procedures) if there is
+  # not one already. This simplifies program reduction later
+  # it doesnt matter if there is 1 or 2 tokens here.
+  E"proc*".!B"procset*" {
+    !"proc*" { 
+      # need to conserve the preceding token
+      push; clear; get; ++; put; --; clear; put;
+      add "procset*proc*"; push; push; .reparse
+    }
+    # only 1 token
+    clear; get; ++; put; --; clear; put;
+    add "procset*proc*"; push; push; .reparse
+  }
+
+  # procedure headers (name etc)
+  "procset*proceed*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "procset*"; push; .reparse
+  }
+
+  # "=" can be used for constant assignment but also as
+  # a comparison operator
+  "=*ident*","=*exp*" { replace "=*" "compare*"; push; push; .reparse }
+  "exp*=*" { replace "=*" "compare*"; push; push; .reparse }
+
+  # expression transmog
+  "opmul*ident*","opadd*ident*","opmul*number*","opadd*number*",
+  "compare*ident*","compare*number*",":=*ident*",":=*number*",
+  "if*ident*","if*number*","while*ident*","while*number*",
+  "(*ident*","(*number*","!*ident*","!*number*" {
+    push; clear; add "exp*"; push; .reparse
+  }
+
+  # expression transmutation
+  "ident*opmul*","ident*opadd*","number*opmul*","number*opadd*",
+  "ident*compare*","number*compare*" {
+    replace "ident*" "exp*"; replace "number*" "exp*";
+    push; push; .reparse
+  }
+
+  "const*conlist*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "condec*"; push; .reparse
+  }
+
+  # non-tail reduction for variables
+  "var*ident*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "varlist*"; push; .reparse
+  }
+
+  # variable decs
+  "varlist*;*" {
+    clear; get; ++; get; --; put; clear;
+    add "vardec*"; push; .reparse
+  }
+
+  "block*.*" {
+    clear; add "program*"; push; .reparse
+  } 
+
+  "call*ident*" {
+    clear; get; add " "; ++; get; --; put; clear;
+    add "statement*"; push; .reparse
+  }
+
+  "?*ident*" {
+    clear; get; ++; get; --; put; clear;
+    add "statement*"; push; .reparse
+  }
+
+  # a multi statement block, between begin/end
+  "begin*statementset*" {
+    # ident statements,
+    clear; get; add "\n"; ++; get; --; replace "\n" "\n  "; 
+    add "\nend"; put; clear; add "statement*"; push; .reparse
+  }
+
+  # tail reduction for statementsets 
+  "statement*end*" {
+    clear; 
+    #get; ++; get; --; put; clear;
+    add "statementset*"; push; .reparse
+  }
+
+#-----------------
+# 3 tokens
+  pop;
+
+  # ! expression must be parsed while looked at the 
+  # trailing token, like all expression parsing
+  B"!*exp*".!"!*exp*".!E"opmul*".!E"opadd*" {
+    # need to conserve the "invisible" last token 
+    replace "!*exp*" "statement*"; push; push; 
+    # also transfer attributes 
+    --; --; get; add " "; ++; get; --; put; 
+    clear; ++; ++; get; --; put; ++;
+    .reparse
+  }
+
+  # procedure headers (name etc)
+  "proc*ident*;*" {
+    clear; get; add " "; ++; get; ++; get; --; --; put; clear;
+    add "prochead*"; push; .reparse
+  }
+
+  # procedure headers (name etc)
+  "prochead*statement*;*" {
+    # indent the statement if it is not a begin/end construct
+    clear; ++; get;
+    !B"begin" { clear; add "  "; get; replace "\n" "\n  "; put; }
+    --; 
+    clear; get; add "\n"; ++; get; ++; get; --; --; put; clear;
+    add "proceed*"; push; .reparse
+  }
+
+  # expressions, this could be the trickiest aspect of 
+  # the grammar. transmog ident/number to exp
+  "exp*opmul*exp*", "exp*opadd*exp*" {
+    clear; get; ++; get; ++; get; --; --; put; clear;
+    add "exp*"; push; .reparse
+  }
+
+  "(*exp*)*" {
+    clear; get; ++; get; ++; get; --; --; put; clear;
+    add "exp*"; push; .reparse
+  }
+
+  "statement*;*statementset*" {
+    clear; get; add ";\n"; ++; ++; get; --; --; put; clear;
+    add "statementset*"; push; .reparse
+  }
+
+  # variable decs 
+  "varlist*,*ident*" {
+    clear; get; ++; get; add " "; ++; get; --; --; put; clear;
+    add "varlist*"; push; .reparse
+  }
+
+#-----------------
+# 4 tokens
+  pop; 
+
+  # procedure headers (name etc). Need to indent the variable decs etc
+  "prochead*vardec*statement*;*","prochead*condec*statement*;*" {
+    # indent the variable/constant declaration
+    clear; add "  "; ++; get; replace "\n" "\n  "; put; --; 
+
+    clear; get; add "\n"; ++; get; add "\n"; ++; get; ++; get; 
+    --; --; --; put; clear; add "proceed*"; push; .reparse
+  }
+
+  # ident and number have already been transmog'ed into exp*
+  # and =* into compare*
+  B"exp*compare*exp*".!"exp*compare*exp*".!E"opmul*".!E"opadd*" {
+    # need to conserve the "invisible" last token 
+    replace "exp*compare*exp*" "condition*"; push; push; 
+    --; --; get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+    # transfer trailing token value
+    ++; ++; ++; get; --; --; put; ++; clear; 
+    .reparse
+  }
+
+  # also see the 5 token reduction, because of the trailing token
+  # required by exp*
+  "if*condition*then*statement*",
+  "while*condition*do*statement*" {
+    # indent the statement if it is not a begin/end construct
+    clear; ++; ++; ++; get;
+    !B"begin" { clear; add "  "; get; replace "\n" "\n  "; put; }
+    --; --; --; clear;
+
+    clear; get; add " "; ++; get; add " "; ++; get; add "\n"; ++; get;
+    --; --; --; put; clear;
+    add "statement*"; push; .reparse
+  }
+
+  # lookahead for expressions in statements 
+  # the problem is: x:=4*3+1 will be parsed at 
+  # statement*+1 if no lookahead.
+
+  # If the expression
+  # is not followed by a */+- then it is a complete statement
+  # and can be reduced. lets transmog ident and number to make simpler
+  B"ident*:=*exp*".!"ident*:=*exp*".!E"opmul*".!E"opadd*" {
+    # need to conserve the "invisible" last token 
+    replace "ident*:=*exp*" "statement*"; push; push;
+    --; --; get; add " "; ++; get; add " "; ++; get; --; --; put; clear;
+    ++; ++; .reparse
+  }
+
+  # tail reduction for constant decs
+  "ident*=*number*;*" {
+    clear; get; add " "; ++; get; add " "; ++; get; ++; get; 
+    --; --; --; put; clear;
+    add "conlist*"; push; .reparse
+  }
+
+  # 
+  "ident*;*" {
+    clear; get; ++; get; --; put; clear;
+    add "varlist*"; push; .reparse
+  }
+
+#-----------------
+# 5 tokens
+  pop; 
+
+  # procedure headers (name etc), need to indent condec vardec
+  "prochead*condec*vardec*statement*;*" {
+    # indent the variable and constant declarations
+    clear; add "  "; ++; get; replace "\n" "\n  "; put; 
+    clear; add "  "; ++; get; replace "\n" "\n  "; put; 
+    --; --; 
+
+    clear; get; add "\n"; ++; get; add "\n"; ++; 
+    get; add "\n"; ++; get; ++; get; --; --; --; --; put; clear;
+    add "proceed*"; push; .reparse
+  }
+
+  # sometimes statements are terminated by expressions, which
+  # in turn must be terminated by something else, so there is a 
+  # trailing token there
+  B"if*condition*then*statement*".!"if*condition*then*statement*" {
+    replace "if*condition*then*statement*" "statement*";
+    push; push; --; --;
+    get; add " "; ++; get; ++; add " "; get; add "\n"; ++; get;
+    --; --; --; put; clear;
+    # transfer invisible token value
+    ++; ++; ++; ++; get; --; --; --; put; --; clear; ++; ++;
+    .reparse
+  }
+  B"while*condition*do*statement*".!"while*condition*do*statement*" {
+    replace "while*condition*do*statement*" "statement*";
+    push; push; --; --;
+    get; add " "; ++; get; ++; add " "; get; add "\n"; ++; get;
+    --; --; --; put; clear;
+    # transfer invisible token value, and realign tape pointer
+    ++; ++; ++; ++; get; --; --; --; put; --; clear; ++; ++;
+    .reparse
+  }
+
+  # constant declarations, tail reduction, but tail redux not
+  # necessary
+  "ident*=*number*,*conlist*" {
+    clear; 
+    get; add " "; ++; get; add " "; ++; 
+    get; ++; get; add " "; ++; get;
+    --; --; --; --; put; clear;
+    add "conlist*"; push; .reparse
+  }
+
+  # program reduction
+  (eof) {
+    "statement*.*" {
+      clear; get; ++; get; --; put; clear; 
+      add "program*"; 
+    }
+    "vardec*statement*.*",
+    "condec*statement*.*",
+    "procset*statement*.*" {
+      clear; get; add "\n{ main program }\n"; 
+      ++; get; ++; get; --; --; put; 
+      clear; add "program*"; 
+    }
+
+    "condec*vardec*statement*.*",
+    "vardec*procset*statement*.*",
+    "condec*procset*statement*.*" {
+      clear; 
+      get; add "\n"; ++; get; add "\n{ main program }\n"; 
+      ++; get; ++; get; --; --; --; put; 
+      clear; add "program*";
+    }
+    "condec*vardec*procset*statement*.*" {
+      clear; get; add "\n"; ++; get; 
+      add "\n"; ++; get; add "\n{ main program }\n"; 
+      ++; get; ++; get; --; --; --; --; put; 
+      clear; add "program*"; 
+    }
+  }
+
+  (eof) {
+    unstack;
+    "program*" {
+      clear; 
+      add "{ ok pl/0 }\n";
+      add "{ code checked and formatted by eg/plzero.pss }\n";
+      get; add "\n"; print; quit;
+    }
+    put; clear; 
+    add "Pl/0 program did not parse well \n";
+    add "The final parse tokens were: "; get; add "\n";
+    print; quit;
+  }
+  push; push; push; push; push;

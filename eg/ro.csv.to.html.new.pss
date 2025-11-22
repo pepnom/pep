@@ -1,0 +1,131 @@
+#*
+ 
+ This script attempts to solve the rosettacode (www.rosettacode.org)
+ challenge of converting a basic CSV (comma separated values) file 
+ into an html table. The CSV is limited- no commas in field values
+ and a newline end the row. But this script allows a more realistic
+ CSV format.
+
+ The first row of the data is the field names of the data and should
+ be marked up with <thead> etc. The fields may contain special html 
+ chars such as < and > 
+
+NOTES
+
+  examples here have a file name prefix of "ro." if they are the 
+  solution to a rosetta code problem.
+
+  There is no start token for a record. 
+
+TOKENS
+  nl* - new line, end of line
+  field* - one csv field
+  fieldset* - a number of fields
+  record* - one record (line) or a set of csv fields
+  recordset* -
+
+HISTORY
+
+  2 sept 2021
+    continued developement. The script seems verbose but handles
+    quite a lot. eg quoted text as a csv field, escaped quotes,
+    empty fields.
+
+  31 aug 2021
+    script begun
+
+*#
+
+  # using the empty recordset trick
+  begin { 
+    add "recordset*"; push; 
+  }
+  read; 
+  # ignore whitespace outside of quotes
+  " " { while [ ]; clear; .restart }
+  "\n" { put; clear; add "nl*"; push; .reparse }
+  '"' { 
+    until '"'; clip; clop; unescape '"';
+    replace "<" "&lt;"; replace ">" "&gt;";
+    put; clear; add "<td>"; get; add "</td>"; put; clear;
+    add "field*"; push; 
+    while [ ]; clear; 
+    (eof) { .reparse }
+    read; 
+    !(eof).!",".!"\n" {
+      clear; 
+      add "CSV syntax error: quoted fields must be ended by \n";
+      add " either a ',' a newline, or the end-of-file";
+    }
+    clear; .reparse
+  }
+  "," { clear; }
+  # maybe there is a more elegant way to do this, which
+  # would also remove the need for the fieldset*field*nl* rule
+  # and the recordset*field*nl* rule.
+  whilenot [\n,];
+  replace "<" "&lt;"; replace ">" "&gt;";
+  put; clear; add "<td>"; get; add "</td>"; put; clear;
+  add "field*"; push; 
+  
+parse>
+  # useful for debugging
+  # add "line "; lines; add " char "; chars; add ": "; print; clear; 
+  # add "\n"; unstack; print; clip; stack; 
+
+  # 1 token
+  pop; 
+  # a record may be terminated by the end of input
+  (eof)."fieldset*" {
+    clear; add "<tr>"; get; add "</tr>\n"; put; clear;
+    add "record*"; push; .reparse
+  }
+  # 2 tokens
+  pop; 
+  "recordset*field*" {
+    replace "field" "fieldset"; push; push; .reparse 
+  }
+  # ignore blank lines
+  "recordset*nl*" {
+    clip; clip; clip; push; .reparse 
+  }
+  "fieldset*field*" {
+    clear; get; ++; get; --; put; clear;
+    add "fieldset*"; push; .reparse
+  }
+  "fieldset*nl*" {
+    clear; add "<tr>\n "; get; add "</tr>\n"; put; clear;
+    add "record*"; push; .reparse
+  }
+  "recordset*record*" {
+    clear; get; 
+    # if the recordset is empty, then this is the 1st 
+    # record and should be marked up as a table header.
+    ++; get; --; put; clear;
+    add "recordset*"; push; .reparse
+  }
+
+  # 3 tokens
+  pop;
+  "fieldset*field*nl*" {
+     clear; 
+     add "<tr>\n "; get; ++; get; --; add "</tr>\n"; put; clear;
+     add "record*"; push; .reparse
+  }
+
+  "recordset*field*nl*" {
+     clear; 
+     add "<tr>\n "; ++; get; add "</tr>\n"; put; clear; --;
+     add "recordset*record*"; push; push; .reparse
+  }
+
+  (eof) {
+    !"recordset*" {
+      clear; add "[invalid csv]\nThe parse stack was: "; print;
+      clear; unstack; add "\n"; print; quit;
+    }
+    clear; 
+    add "<table>\n"; get; add "</table>\n"; 
+    add "[valid csv!]\n"; print; quit;
+  }
+  push; push;

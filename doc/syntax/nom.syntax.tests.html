@@ -1,0 +1,743 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+       color: #202122;
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       /* color: #3399cc; */
+       color: #386acd;
+       /* color:blue; */
+     }
+     a:hover { 
+       /* color:darkblue; */
+       color: #3056ad;
+       border-bottom: 1px dashed blue; 
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-style: italic;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/figure.eight.600w.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   abundans cautela non nocet  
+ 
+<cite>Latin saying </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/syntax/nom.syntax.tests.txt -->
+<p>
+<p>
+<!-- ------------------------------- -->
+<h2> &Nopf;&oopf;&mopf; conditions and tests </h2>
+
+<p>
+ Information about block 'tests' in the <em>nom</em> language.
+<p>
+ The <em>nom</em> language uses <em>tests</em> to match grammar parse tokens that 
+ have been <a title='nom command reference: pop' href='http://nomlang.org/doc/commands/nom.pop.html'>popped </a> from the <em>pep</em> machine <a title='nom syntax reference: stack' href='http://nomlang.org/doc/machine/pep.stack.html'>stack</a> .
+ There are several different types of tests that can be combined together
+ with <em>AND</em> logic (the &ldquo;.&rdquo; dot operator) and <em>OR</em> logic (the &ldquo;,&rdquo; comma
+ operator as well as with the <a title='nom syntax reference: negation' href='http://nomlang.org/doc/syntax/nom.syntax.negation.html'>negation</a> operator.
+<p>
+<!-- ------------------------------- -->
+<h3> quoted tests</h3>
+
+<p>
+ Quoted text before a block {...} is an <em>workspace equals</em> test. 
+ This means that the test returns true if the <a title='nom syntax reference: workspace' href='http://nomlang.org/doc/machine/pep.workspace.html'>workspace</a> buffer 
+ is exactly the same as the quoted text at the time the script code
+ is executed.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a quoted test 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-string'>"a"</span> <span class='nom-punct'>{</span>  
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"The letter 'a' \n"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ Quoted tests can be combined with the <a title='nom syntax reference: negation' href='http://nomlang.org/doc/syntax/nom.syntax.negation.html'>negation</a> operator and 
+ the 'begins with' B and 'ends with' E operators. They can also be 
+ concatenated with the AND '.' and OR ',' operators.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a quoted test with OR logic and the "!" and "B" operators
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-string'>"a"</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"A"</span><span class='nom-punct'>,</span><span class='nom-punct'>!</span><span class='nom-punct'>B</span><span class='nom-string'>"z"</span> <span class='nom-punct'>{</span>  
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"The letter 'a' or 'A' or anything not 'z' \n"</span><span class='nom-punct'>;</span> 
+      <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> class tests</h3>
+
+<p>
+ The class test checks whether the workspace buffer matches any one of the
+ characters or character classes listing between the square braces. A class
+ test is written.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ the syntax of class commands
+ </figcaption>
+<pre class='codeline'>
+ [character-class] { &lt;commands&gt;  }
+</pre>
+</figure>
+<p>
+ There are 3 forms of the character class test:
+<p>
+ <!---- list ----->
+<ul>
+
+<li> a list of characters eg: [abcxyz.,;]
+ </li>
+<li> a range of characters eg: [A-M]
+ </li>
+<li> a named character class eg: [:space:]
+</li>
+</ul>
+ All tests, including <em>class</em> tests can be negated with the <em>bang</em>
+ <a title='nom syntax reference: negation' href='http://nomlang.org/doc/syntax/nom.syntax.negation.html'>negation</a> operator &ldquo;!". This negation operator always *precedes* the&rdquo; test which it is negating.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ delete all vowels from the input stream using a negated list class test
+ </figcaption>
+<pre class='codeline'>
+ read; ![aeiou] { print; } clear;
+</pre>
+</figure>
+<p>
+ All characters in the workspace must match given class, so 
+ that a class test is equivalent to the regular expression &ldquo;^[abcd]+$
+<p>
+&rdquo; As in the previous example, class tests, like all other type of tests, can
+ be negated with a prefixed &ldquo;!&rdquo; character. Double and multiple negation,
+ such as &ldquo;!!&rdquo; or &ldquo;!!!&rdquo; is a syntax error (since it doesn&apos;t have 
+ any purpose).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print certain sequences 
+ </figcaption>
+<pre class='codeline'>
+ r; [abc-,] { while [abc-,]; print; } clear;
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> eof end of stream test </h3>
+
+ <p>
+ This test returns true if the 'peep' look-ahead register currently contains
+ the &lt;EOF&gt; end of stream marker for the input stream. This test is equivalent
+ to the &ldquo;END { ... }&rdquo; block syntax in the AWK script language. The eof test is
+ written as follows
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ possible formats for the "end-of-stream" test
+ </figcaption>
+<pre class='codeline'>
+ &lt;eof&gt; &lt;EOF&gt; (eof) (EOF)
+</pre>
+</figure>
+<p>
+ <pre class='codeline'>
+ r; print; (eof) { add " &lt;&lt; end of stream!"; } clear;
+</pre>
+
+<p>
+ This test can be combined with other tests either with AND
+ logic or with OR logic
+ <p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if the input ends with "horse" when the end-of-stream is reached
+ </figcaption>
+<pre class='codeline'>
+ r; (eof).E"horse" { add ' and cart'; print; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if workspace ends with "horse" OR end-of-file has been reached 
+ </figcaption>
+<pre class='codeline'>
+ r; (eof),E"horse" { add " &lt;horse OR end-of-file&gt; "; print; } 
+</pre>
+</figure>
+ <p>
+ The &lt;eof&gt; test is important for checking if the script has
+ successfully parsed the input stream when the end of stream is
+ reached. Usually this means checking for the &ldquo;start token&rdquo; or tokens of the 
+ given grammar. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check for a start token
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span>
+    <span class='nom-comment'># ... more code</span>
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>pop</span><span class='nom-punct'>;</span> 
+      <span class='nom-string'>"statement*"</span> <span class='nom-punct'>{</span>
+         <span class='nom-comment'># successful parse</span>
+         <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>}</span>
+      <span class='nom-comment'># unsuccessful pase</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> the tape test</h3>
+
+<p>
+ <pre class='codeline'>
+ (==) { ...}
+</pre>
+
+<p>
+ This test determines if the current tape cell is equal to the 
+ contents of the workspace buffer.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if previous char the same as current
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-command'>read</span><span class='nom-punct'>;</span>  
+    <span class='nom-punct'>(</span><span class='nom-word'>==</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>".same."</span><span class='nom-punct'>;</span> 
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> begins with test</h3>
+
+<p>
+ Determines if the workspace buffer begins with the given 
+ text. It is written by preceding some <a title='nom syntax reference: quotes' href='http://nomlang.org/doc/syntax/nom.syntax.quotes.html'>quoted </a>
+ text with the capital letter <em>B</em> .
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print words beginning with "wh"
+ </figcaption>
+<pre class='codeline'>
+ read; E" ",E"\n",(eof) { B"wh" { print; } clear; } 
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> ends with test</h3>
+
+<p>
+ Tests if the workspace ends with the given text. The 'E'
+ (ends-with modifier) can only be used with quoted text but
+ not with class tests
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ a syntax error, using E with a class
+ </figcaption>
+<pre class='codeline'>
+ r; E[abcd] { print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ correct using the E modifier with quoted text
+ </figcaption>
+<pre class='codeline'>
+ r; E"less" { print; } clear;
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ only print words ending with "ess"
+ </figcaption>
+<pre class='codeline'>
+ read; E" ",E"\n" { clip; E"ess" { add " "; print; } clear; } 
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> concatenating tests with logical "and" and "or"</h3>
+
+<p>
+ Conditional tests can be chained together with OR (,) or AND (.)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ test if workspace starts with "http:" OR "ftp:"
+ </figcaption>
+<pre class='codeline'>
+ B"http:",B"ftp:" { print; }
+</pre>
+</figure>
+<p>
+ &ldquo;AND&rdquo; and &ldquo;OR&rdquo; test cannot be combined in the same test sequence.
+ <p>
+ But the combination of and, and or logic can be achieved by nesting tests in
+ braces. It may be useful to add logic grouping for tests, eg:
+ (B"a",B"b").E"z" { ... } however this is not currently supported.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ an incorrect test sequence (dots and commas)
+ </figcaption>
+<pre class='codeline'>
+ B"a".E"z",E"x" { print; }   # wrong!
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ using nesting of block to combine "AND" and "OR" tests
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"a"</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"b"</span> <span class='nom-punct'>{</span> 
+      <span class='nom-punct'>E</span><span class='nom-string'>"z"</span> <span class='nom-punct'>{</span> 
+        <span class='nom-comment'># execute this block if the workspace begins with </span>
+        <span class='nom-comment'># 'a' OR 'b' AND ends with 'z'</span>
+      <span class='nom-punct'>}</span>
+    <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ This line above is equivalent to the logic: 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-punct'>(</span><span class='nom-punct'>(</span><span class='nom-unknown'>workspace</span> <span class='nom-punct'>B</span><span class='nom-punct'>E</span><span class='nom-unknown'>GINS</span> <span class='nom-unknown'>WITH</span> <span class='nom-string'>"a"</span><span class='nom-punct'>)</span> <span class='nom-unknown'>OR</span> <span class='nom-punct'>(</span><span class='nom-unknown'>workspace</span> <span class='nom-punct'>B</span><span class='nom-punct'>E</span><span class='nom-unknown'>GINS</span> <span class='nom-unknown'>WITH</span> <span class='nom-string'>"b"</span><span class='nom-punct'>)</span><span class='nom-punct'>)</span>
+   <span class='nom-unknown'>AND</span> <span class='nom-punct'>(</span><span class='nom-unknown'>workspace</span> <span class='nom-punct'>E</span><span class='nom-unknown'>NDS</span> <span class='nom-unknown'>WITH</span> <span class='nom-string'>"z"</span><span class='nom-punct'>)</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print only certain URLs using an "or" concatenated test
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-command'>read</span><span class='nom-punct'>;</span> <span class='nom-punct'>B</span><span class='nom-string'>"http://"</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"https://"</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"www."</span><span class='nom-punct'>,</span><span class='nom-punct'>B</span><span class='nom-string'>"ftp:"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-punct'>E</span><span class='nom-string'>" "</span><span class='nom-punct'>,</span><span class='nom-punct'>E</span><span class='nom-string'>"\n"</span><span class='nom-punct'>,</span><span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+   <span class='nom-punct'>}</span>
+   <span class='nom-punct'>E</span><span class='nom-string'>" "</span><span class='nom-punct'>,</span><span class='nom-punct'>E</span><span class='nom-string'>"\n"</span><span class='nom-punct'>,</span><span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print names of animals using OR logic concatenation
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-command'>read</span><span class='nom-punct'>;</span> 
+   <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span><span class='nom-punct'>}</span> <span class='nom-command'>whilenot</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span>
+   <span class='nom-string'>"dog"</span><span class='nom-punct'>,</span><span class='nom-string'>"cat"</span><span class='nom-punct'>,</span><span class='nom-string'>"lion"</span><span class='nom-punct'>,</span><span class='nom-string'>"puma"</span><span class='nom-punct'>,</span><span class='nom-string'>"bear"</span><span class='nom-punct'>,</span><span class='nom-string'>"emu"</span> <span class='nom-punct'>{</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+   <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> and logic concatenation</h3>
+
+<p>
+ It possible to concatenate any type of test or negated 
+ test with the logical <em>AND</em> operator which is the dot &ldquo;.&rdquo; operator
+ in the 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr> language.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print the workspace if it starts with 'a' AND ends with 'z'
+ </figcaption>
+<pre class='codeline'>
+ r; B"a".E"z" { print; clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ check if workspace is a url but not a ".txt" text file 
+ </figcaption>
+<pre class='codeline'>
+ B"http://".!E".txt" { add "&lt;&lt; non-text url"; print; clear; }
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ workspace begins with # and only contains digits and # 
+ </figcaption>
+<pre class='codeline'>
+ B"#".[#0123456789] { add " (timestamp?)\n"; print; }
+</pre>
+</figure>
+<p>
+ &ldquo;AND&rdquo; logic can also be achieved by nesting brace blocks. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ and logic with nested braces
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+    <span class='nom-punct'>B</span><span class='nom-string'>"/"</span> <span class='nom-punct'>{</span> <span class='nom-punct'>E</span><span class='nom-string'>".txt"</span> <span class='nom-punct'>{</span> <span class='nom-punct'>.</span><span class='nom-punct'>.</span><span class='nom-punct'>.</span> <span class='nom-punct'>}</span> <span class='nom-punct'>}</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> negated tests </h3>
+
+<p>
+ A preceding &ldquo;!&rdquo; <em>not</em> operator is used for negating tests.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ examples of negated tests
+ </figcaption>
+<pre class='codeline'>
+ !B"abc", !E"xyz", ![a-z], !"abc" ...
+</pre>
+</figure>
+<p>
+ Unlike in the sed unix stream editor, the negation operator 
+ <em>precedes</em> the test.
+<p>
+<!-- ------------------------------- -->
+<h3> notes</h3>
+
+<p>
+ The tests in <em>nom</em> are similar in concept to the sed and awk 
+ tests or <em>line-matches</em> .
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+  </em></small></div></body></html>

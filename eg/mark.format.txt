@@ -1,0 +1,344 @@
+    
+   && Another Plaintext Document Format
+
+  The text format recognised and formatted by the scripts 
+  /eg/mark.html.pss and eg/mark.latex.pss But I am (and probably will)
+  use only /eg/text.tohtml.pss for formatting. 
+
+INTRODUCTION
+
+  This document is about a type of "markdown" format that I use for my own
+  documentation. This document also serves as a test document for the scripts
+  "mark.latex.pss" and "mark.html.pss" etc. Those 2 scripts use a word-by-word
+  parsing technique with the pep/nom pattern engine to recognise the patterns
+  in the document.
+
+  It is also important that this document should include "insignificant"
+  patterns in order to test the ability of the mark scripts to 
+  reduce tokens properly. Since this is a mark-down format, errors
+  in formatting should not cause the parser to crash or produce no output.
+  That means the parser should recover gracefully in all cases and at
+  least produce plain-text output (if not properly formatted).
+
+  This format is simply one that I enjoy using, and I don't claim that
+  it has any general merit or that it is in any way "better" than
+  the standard markdown or CommonMark format.
+
+IMAGES
+
+  Images can be inserted into documents starting with a double square
+  bracket [[ then followed by an image filename such as ../img/parsetree.png 
+
+  The image tokens like [[ ]] and ../image/parsetree.png need to be 
+  space delimited.  An example image: [[ ../img/parsetree.png ]]
+ 
+  Images can also have a caption quotation, a width specifier and a 
+  page position (float) indicator, in that order. Apart from the image
+  file name the other attributes are all optional, so we can specify
+  just the position indicator for example
+    [[ ../img/parsetree.png <<< ]]
+  The position indicators are currently >>> (float right) <<< (float left)
+  and ccc (center align).
+
+  Image widths can be measured in % pt cm mm or em
+
+  * an example image format.
+  >> [[ ../img/parsetree.png """a parsetree""" 30% >>> ]]
+
+  apple2e.png        logo.spirals.png    pp.interactive.screenshot.png
+  logo.circles.jpg   logo.tricircle.png
+  logo.lang.ibm.png  parsetree.png
+
+  * an image with 50% page width
+  [[ ../img/apple2e.png 50% ]]
+
+  (old versions) LaTeX doesn't always like dots in file names, but mark.latex.pss
+  should deal with this.
+
+  * a centered image at 20% width 
+  [[ 
+    ../img/logo.circles.jpg 
+    """A centered image""" 40% ccc 
+  ]]
+
+  * an image floating left at 20% width 
+  [[ ../img/logo.spirals.png """Spirals""" 20% <<< ]]
+
+  * an image floating right at 40% width 
+  [[ ../img/logo.lang.ibm.png 40% >>> ]]
+
+  * an image with width measured in 60pt points 
+  [[ ../img/apple2e.png 60pt ]]
+   
+  Whitespace in the image format should be ignored (except within quotes)
+  So the following is a valid image format.
+  -----
+    [[ 
+      ../img/logo.tricircle.png
+      >>> 
+    ]]
+  ,,,,
+
+  See if it works
+    [[ 
+      ../img/logo.tricircle.png >>>
+    ]]
+
+CAPTIONS FOR IMAGES ....
+  
+  Captions for an image can be provided after the file name
+  with text within 
+    >> """ (3 quotes). 
+  Only single line captions are 
+  allowed at the moment.
+
+  An example is [[ ../img/apple2e.png """The Apple 2e logo""" 4cm >>> ]]
+
+KEYBOARD KEYS
+
+  Typing [enter] or [insert] should render as some sort of 
+  keystroke. This is not very important.
+
+CODE LINES AND CODE BLOCKS
+
+  Code blocks are delimited by at least 3 '-' characters starting a line
+  and with at least 3 ',' characters. So ---- and ,,,,, do not delimit
+  a code block because the ---- does not start a line. 
+
+  Code lines are delimited by >> also starting a line. 
+  Code lines and code blocks can be preceded by a line starting with
+  an asterisk * . The asterisk line is considered to be the description
+  of the following code. Here are some examples:
+
+  * some logo code to make a square. 
+  >> repeat 4 [ fd 40 rt 90 ]
+
+  * logo code to make an octogon
+  -----
+    repeat 8 [ 
+      fd 40 rt 45 
+    ]
+  ,,,
+
+SECTION HEADINGS
+
+  Section headings consist of all upper-case lines. Quotes are 
+  also allowed in section headings like this
+  >> COMMAND "PUSH"
+
+"SUBSECTION" HEADINGS ....
+
+  Subsections have the same format as section headings but end
+  the line with 4 dots like this ....
+  Currently no sub-sub-section headings are supported, because I 
+  don't use them.
+
+LINKS AND FILE NAMES
+  
+  File names and folders should be automatically linked or formatted 
+  by looking at the file name extension and maybe a leading slash.
+  So /books/pars/index.txt should be marked up as a filename.
+  
+  Any text beginning with www. or http:// or https:// etc should 
+  probably be linked in HTML output or rendered differently
+  in other formats.
+
+  Source code for the pep/nom system is at http://bumble.sf.net/books/pars/
+  The site www.craftinginterpreters.com has links to a good book
+  about compiler and interpreter writing.
+
+LISTS
+
+  This "plain-text" format supports ordered, unordered and definition
+  lists, but not, currently nested lists. Ordered lists start with o/-
+  at the beginning of a line and each item starts with a - dash 
+  character. Unordered lists start with u/- and definition lists start 
+  with d/- The lists are terminated with a blank line. 
+  
+ORDERED LISTS ....
+
+   o/- First item in an ordered list
+     - second item
+     - within lists other markup should be rendered
+       like filenames such as file.png and even images
+
+  * empty items may make a list nest in LaTeX. 
+  >> need to investigate.
+
+   o/- A list item with a code block
+       -----
+         repeat 4 [ rt 90 ]
+       ,,,
+     - second item containing a code line and description
+       * markup in lists
+       >> continue; break;
+     - In the nomdoc format an emline* token is problematic
+       because it looks forward for the next token, which 
+       causes problems in lists
+       * here is trouble.
+     - within lists other markup should be rendered
+       like filenames such as file.png and even images
+
+UNORDERED LISTS ....
+
+   u/- unordered lists start with u/-
+     - each item has a "-" dash and 
+       can span multiple lines
+     - the list is terminated with a blank line.
+     - lists cannot be nested at the moment.
+     
+DEFINITION LISTS ....
+
+   d/- term: definition
+     - item: 
+         each item (term and definition) begins with a dash "-" character,
+         and can span multiple lines.
+     - colon: The ":" character is used to delimit the definition
+         term from the definition. The newline character also can be
+         used to start the definition. Definitions can contain other
+         markup like code definitions
+         >> repeat 8 [ rt 45 fd 20 ]
+         And also filenames like mark.format.txt
+     - no definition:
+     - delimiter: starts with a "d/-"
+     - the definition listends with: 
+         a blank line (a line consisting of only whitespace). 
+
+   if a list has nothing in it, it should produce and empty list 
+   u/-
+
+SPECIAL WORDS
+
+  It can be enjoyable to markup certain words like LaTeX with
+  special formatting, maybe even including a small icon. Candidates
+  would be Instagram, CommonMark, LaTeX, Pep
+
+DATE LISTS
+
+  Often I write a series of entries under dates in format
+  such as 12 aug 2022 on a line by itself. These can be parsed and
+  translated just like the ordered/unordered/definition lists
+  These need to end with a special token since they can contain
+  blank-lines. Also dates like jan 2000 on a new line should 
+  become dates. Month names can be a 3 letter abbreviation like:
+     Jan Feb Mar Apr may Jun jul aug sept oct nov DEC 
+  or else the full month name in English like:
+     January February March April may June July August 
+     September october november December
+  The recognition of the month name is case insensitive so:
+     JAN FEB marCH APRil MAY JUNE 
+  should all be seen as month names.
+
+  However, invalid dates like 33 jan 2001 should not be parsed as 
+  dates. A date list must begin with a blank line and end with
+  a special token like [/dates] or [/date] or maybe just a double
+  blankline.
+
+  The date must be in the order; day month year so
+  Mar 23 2000
+  is not considered a valid date, nor is
+  1999 Aug 20 35 Mar 2000
+  is also not a valid date, because the day number is out of range.
+
+ Following is a set of test lists, to ensure that the datelist* token
+ is parsing correctly.
+
+ * an completely empty datelist
+ 10 aug 2001  
+ [/date]
+
+ * a list with a single word 
+ 10 aug 2001  
+ test
+ [/date]
+
+ * a list with a single word and blank line
+ 10 aug 2001  
+ test
+
+ [/date]
+ * a list with 2 empty dates 
+ 10 aug 2001  
+ 11 aug 2001  
+ [/date]
+
+ * a date list with blank lines
+ 10 aug 2001  
+   blank lines  
+
+ 11 august 2001
+ 12 aug 2001
+  [/date]
+
+ * a list with a code line in it
+ 3 aug 2001  
+  >> include code in list
+  second list. see mark.format.txt for info. 
+  Maybe include lists in datelists. But not star lines 
+  at the moment.
+ 4 aug 2001
+  [/date]
+
+ * a datelist with a star line just before the end
+ 2 aug 2001
+ * news flash
+ [/date]
+
+ * datelist with a list in a date
+ * a datelist with star/code block
+ 2 aug 2001
+   u/- things done
+     - debug
+     - think
+
+ 3 aug 2001
+ >> sed s///g
+ [/date]
+
+ 1 Jan 2010
+  worked on this system. Blank lines should be allowed within
+  date lists. The date-list has no special start token, just 
+  a valid date. The first date in the list needs to be on
+  a line by itself and with a blank line above it. The next
+  date items can have text after them.
+
+  -----
+    some code
+  ,,,,
+
+ 24 August 2022
+  Thought about a logo language parser and drawing with it
+  in TCL/TK or java.
+ 25 aug 2022
+  worked on this file mark.format.txt to provide documentation
+  for the mark.latex.pss script.
+ AUG 2022
+  dates without a day number are not (currently) valid dates. 
+  But the date needs to start a line  so that:
+ 1 jan 2022 is valid e there is this text after it.
+ 31 DEC 2022
+  The date list has a special end token "[/dates]" 
+ 
+ [/dates]
+
+ 
+GLOSSARIES AND "FAQS"
+
+  Although I don't use these lists much it could be handy to 
+  have them in the format. The translation should be similar to
+  definition lists.
+   
+   see the "palindrome.pss" file or the /tr folder.
+   " multiword quoted text""and" 
+   " no end quote 
+   """"   
+   Open the document "mark.html.pss" or inspect pep.c 
+   <new>
+   www.glintbox.org /file.txt 
+   [[
+     /test.html 
+   ]]
+
+
+
+

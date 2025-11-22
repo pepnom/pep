@@ -1,0 +1,1773 @@
+#* 
+###   translate.tcl.pss 
+
+   A nom script which translates nom scripts into tcl code. The script creates
+   a standalone tcl program
+   
+   The virtual machine and engine is implemented in plain c at
+   http://bumble.sf.net/books/pars/pep.c. This implements a script
+   language with a syntax reminiscent of sed and awk (much simpler than
+   awk, but more complex than sed).
+   
+   This code was originally created by adapting the code in
+   'translate.java.pss' which compiles scripts to java
+
+STATUS
+
+   7 sept 2022
+     Most short tests working. 
+
+NOTES
+   
+   Tcl doesn't require a semicolon ; at the end of a 1 line
+   statement, but I will include it, in case I want to put more 
+   than one statement on a line. also for comments
+
+   In other translation scripts, we use labelled loops and
+   break/continue to implement the parse> label and .reparse .restart
+   commands. But tcl does not have these, nor a "goto" statement.
+   This is resolved using "run once" blocks and break and continue
+   statements: eg while true { read; break; }. The run once technique
+   is a better general solution and could be used in all the other
+   translation scripts (because it doesnt require goto or labelled
+   blocks)
+
+TODO
+
+   writefile; writefile "name"; readfile; readfile "name";
+   The version without a parameter gets the filename from the 
+   current tape cell.
+
+   Consolidate error checking after parse> label
+   Add script* token on succesfull parse at EOF
+
+   Add "until;"? (no-argument until). Add the "write <filename>;"
+   and "append <filename>;" commands.
+
+   Convert to a parse method, which will also allow this to 
+   act as an immediate interpreter of pep/nom scripts.
+   See tr/translate.perl.pss for a good example of a parse 
+   method, that can act as an interpreter.
+
+   Convert the grammar to the simpler version used in translate.perl.pss
+   (which also allows test-expressions like 
+     >> (B"xx",B"yy").!E"zz" { ... }
+
+SEE ALSO
+   
+   At http://bumble.sf.net/books/pars/
+   
+   d/- eg/: some example pep/nom scripts
+     - tr/: 
+       the folder contains other translation scripts. The scripts
+       for python/ruby/java/go/javascript/tcl etc are quite complete.
+     - translate.py.pss
+      A python translator in working order (june 2021).
+     - compile.pss
+     compiles a script into an "assembly" format that can be loaded
+     and run on the parse-machine with the -a  switch. This performs
+     the same function as "asm.pp" 
+
+TESTING
+
+  Comprehensive 1st and 2nd generation tests can be done with 
+  >> pep.tt tcl
+
+  This script tests every command in the pep/nom language with a 
+  simple script and tests its translation into TCL.
+
+  Also, use the helper functions in the peprc helpers.pars.sh such as
+  pep.ts pep.tss pep.tf and pep.tff
+
+  Remember "man 3tcl command" for documentation about tcl/tk on
+  Unix-like systems. I would like to make a similar doc system for
+  pep. Could split the pars-book.txt file into "man" pages for 
+  each pep command.
+
+   * a simple test procedure, working
+   ---------
+    pep -f translate.tcl.pss -i "r;t;t;d;" > test.tcl
+    chmod a+x test.tcl
+    echo "abc" | tclsh test.tcl # or
+    echo "abc" | ./test.tcl 
+    # should print 'aabbcc'
+   ,,,
+
+   Check multiline text with 'add' and 'until'
+
+   * one comprehensive test is to run the script on itself
+   >> pep -f translate.tcl.pss translate.tcl.pss > tran.tcl 
+
+   This is the "shangrilah" of pep scripts.
+
+   test 
+   -----
+     pep -f translate.tcl.pss translate.tcl.pss > eg/tcl/translate.tcl.tcl 
+     chmod a+x eg/tcl/translate.tcl.tcl 
+     echo "nop;r;t;t;d;" | eg/tcl/translate.tcl.tcl 
+   ,,,,
+
+   test eg/natural.language.pss 
+
+  * translate the doc formatter into tcl 
+  ----
+    pep -f translate.tcl.pss eg/mark.latex.pss > eg/tcl/mark.latex.tcl
+    cat pars-book.txt | eg/tcl/mark.latex.tcl 
+  ,,,,
+
+  * translate the translator into tcl 
+   -----
+     pep -f translate.tcl.pss translate.tcl.pss > test.tcl
+     cat eg/exp.tolisp.pss | ./test.tcl > exp.tolisp.tr.tcl 
+     echo "(a+2)*3+4" | ./exp.tolisp.tr.tcl 
+   ,,,
+
+   This is fairly complex. The script translates itself into
+   tcl, and then that translator is used to translate 
+   another script into tcl, which is then executed....
+
+   self referentiality cubed, not working yet
+   -----
+     pep -f translate.tcl.pss translate.tcl.pss > 1.tr.tcl.pss
+     chmod a+x 1.tr.tcl.pss
+     cat translate.tcl.pss | 1.tr.tcl.pss > 2.tr.tcl.pss
+     chmod a+x 2.tr.tcl.pss 
+     cat eg/exp.tolisp.pss | 2.tr.tcl.pss > test.tcl 
+     chmod a+x test.tcl 
+     echo "(a+2)*3+4" | ./test.tcl 
+   ,,,
+
+BUGS
+
+ image format not working in eg/mark.latex.pss eg [[ ... ]]
+
+ In second gen scripts \\ causes problems
+
+ No-argument until not implemented here.
+
+ unescape needs to walk the string, not just do \c -> c  
+
+ check until code for multiple escapes \\\\\\
+ parse> label cannot be at beginning or end of script.
+
+SOLVED BUGS TO WATCH FOR 
+
+  Need to escape *[]\? in begin and ends tests because this
+  uses string match.
+
+  In quotes interpolation will occur which is not good. We need to
+  stop it by escaping certain chars in the quote string.
+
+  With these scripting languages, arrays elements dont exist
+  unless created. so "++; put; " fails with a list index out 
+  of range error.
+
+  Need to double \\ backslash sometimes to get a single one in the output
+
+  found and fixed a bug in java whilenot/while. The code exits if the 
+  character is not found, which is not correct.
+
+  "until" bug where the code did not read at least one character.
+
+  Read must exit if at end of stream, but while/whilenot/until, no.
+
+TASKS 
+
+HISTORY
+    
+  21 mar 2025
+    added AddToMark function to resolve duplicate mark bug
+    untested.
+  18 feb 2022
+    Added go; syntax and mark; syntax
+  13 aug 2022
+    One year later, fixing some remaining bugs. Quoting of special
+    chars in "string match" and regex is not easy in tcl. 
+    When running eg/mark.latex.pss for some reason
+    "bl*uutext*4dots*nl*" does not reduce...
+  20 aug 2021
+    fixing escape code. Unescape still doesnt seem to work.
+  18 august 2021
+    seem to have fixed multiple escape bug.
+  18 june 2021
+    fixing the .restart bug before the parse label. just making .restart
+    do 'break;' instead of continue (which results in an infinite loop)
+    Added upper,lower and cap commands to this translator script.
+
+  7 june 2021
+    Reexamining. Escaped { and } in classes. Made an eg/tcl/ folder
+    where generated code can go. Made the pep.tcs bash function 
+    better for testing
+
+  7 august 2020
+    the eg/exp.tolisp.pss seems to be working under translation
+    to tcl.
+
+    testing and debugging. Init procedure.
+    reconfigured .reparse .restart as unlabelled run-once 
+    blocks. This is useful for any language that has no "goto"
+    and no labelled blocks (loops etc). Script is nearing a 
+    useable stage.
+
+  5 august 2020
+
+    tested print/clear/clop/clip/push/pop/stack/unstack
+      put/get/swap/ ...
+
+    First most basic script is working: "r;t;t;d;"
+
+  2 august 2020
+
+    Began to adapt this script from translate.py.pss, the 
+    python translator 
+
+*#
+
+  read;
+  #--------------
+  [:space:] {
+    clear; .reparse
+  }
+
+  #---------------
+  # We can ellide all these single character tests, because
+  # the stack token is just the character itself with a *
+  # Braces {} are used for blocks of commands, ',' and '.' for concatenating
+  # tests with OR or AND logic. 'B' and 'E' for begin and end
+  # tests, '!' is used for negation, ';' is used to terminate a 
+  # command.
+  "{", "}", ";", ",", ".", "!", "B", "E" {
+    put; add "*"; push; .reparse 
+  }
+
+  #---------------
+  # format: "text"
+  "\"" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    # safer to use braces for quotes??
+    put; clear; add '"';
+    until '"'; 
+    !E'"' { 
+      clear; add 'Unterminated quote character (") starting at ';
+      get; add ' !\n'; 
+      print; quit;
+    }
+    # just escape [ and $ because they cause string interpolation
+    # in tcl
+    clip; 
+    escape '['; escape ']'; escape '$'; 
+    escape '{'; escape '}'; 
+    escape '*'; escape '^'; escape '?';
+    add '"'; put; clear;
+    add "quote*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # format: 'text', single quotes are converted to double quotes
+ # but we must escape embedded double quotes.
+  "'" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear;
+    until "'"; 
+    !E"'" { 
+      clear; add "Unterminated quote (') starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    clip; 
+    # [ and $ cause interpolation in tcl so must be escaped
+    # escape other special chars. What about "\\"???
+    escape '['; escape ']'; escape '$'; 
+    escape '{'; escape '}'; escape '"';
+    escape '*'; escape '^'; escape '?';
+    put; clear;
+    add '"'; get; add '"';
+    put; clear; add "quote*";
+    push; .reparse 
+  }
+
+  #---------------
+  # formats: [:space:] [a-z] [abcd] [:alpha:] etc 
+  # should class tests really be multiline??!
+  "[" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating bracket character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear; add "[";
+    until "]"; 
+    "[]" {
+      clear; add "pep script error at line "; lines;
+      add " (character "; chars; add "): \n";
+      add "  empty character class [] \n";
+      print; quit;
+    }
+    !E"]" { 
+      clear; add "Unterminated class text ([...]) starting at "; get; 
+      add "
+      class text can be used in tests or with the 'while' and 
+      'whilenot' commands. For example: 
+        [:alpha:] { while [:alpha:]; print; clear; }
+      ";
+      print; quit;
+    }
+
+    # need to escape { and } so they dont interfere with the
+    # quote braces used for regexp. Dont need to escape [ and ] because 
+    # the script writer has to escape them any way. (but what about in quotes?)
+    escape "}"; escape "{";
+    # the caret is not a negation operator in pep scripts
+    escape "^";
+    # the line below also works
+    #replace "^" "\\^";
+
+    # save the class on the tape
+    put;
+    clop; clop;
+    !B"-" {
+      # not a range class, eg [a-z] so need to escape '-' chars. yes
+      clear; get; escape "-"; put;
+    }
+    B"-" {
+      # a range class, eg [a-z], check if it is correct
+      clip; clip; 
+      !"-" {
+        clear;
+        add "Error in pep script at line "; lines;
+        add " (character "; chars; add "): \n";
+        add " Incorrect character range class "; get;
+        add "
+   For example:
+     [a-g]  # correct
+     [f-gh] # error! \n";
+        print; clear; quit;
+
+      }
+    }
+    clear; get;  # restore class text
+    B"[:".!E":]" { 
+      clear; add "malformed character class starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    B"[:".!"[:]" {
+      clip; clip; clop; clop;
+      # unicode posix character classes in tcl
+      # Also, abbreviations (not implemented in gh.c yet.)
+      # abbreviations are written [:A:] etc
+      "alnum","N" { clear; add "[[:alnum:]]"; }
+      "alpha","A" { clear; add "[[:alpha:]]"; }
+      "ascii","I" { clear; add "[[:ascii:]]"; }
+      "blank","B" { clear; add "[[:blank:]]"; }
+      "cntrl","C" { clear; add "[[:cntrl:]]"; }
+      "digit","D" { clear; add "[[:digit:]]"; }
+      "graph","G" { clear; add "[[:graph:]]"; }
+      "lower","L" { clear; add "[[:lower:]]"; }
+      "print","P" { clear; add "[[:print:]]"; }
+      "punct","T" { clear; add "[[:punct:]]"; }
+      "space","S" { clear; add "[[:space:]]"; }
+      "upper","U" { clear; add "[[:upper:]]"; }
+      "xdigit","X" { clear; add "[[:xdigit:]]"; }
+    }
+    #*
+     alnum - alphanumeric like [0-9a-zA-Z] 
+     alpha - alphabetic like [a-zA-Z] 
+     blank - blank chars, space and tab 
+     cntrl - control chars, ascii 000 to 037 and 177 (del) 
+     digit - digits 0-9 
+     graph - graphical chars same as :alnum: and :punct: 
+     lower - lower case letters [a-z] 
+     print - printable chars ie :graph: + space 
+     punct - punctuation ie !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~. 
+     space - all whitespace, eg \n\r\t vert tab, space, \f 
+     upper - upper case letters [A-Z] 
+     xdigit - hexadecimal digit ie [0-9a-fA-F] 
+    *#
+
+    put; clear;
+    # add quotes around the class and limits around the 
+    # class so it can be used with the string.matches() method
+    # (must match the whole string, not just one character)
+    add '^'; get; add '+$'; put; clear;
+    add "class*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # formats: (eof) (EOF) (==) etc. 
+  "(" {
+    clear; until ")"; clip;
+    put; 
+    "eof","EOF" { clear; add "eof*"; push; .reparse } 
+    "==" { clear; add "tapetest*"; push; .reparse } 
+    add " << unknown test near line "; lines;
+    add " of script.\n";
+    add " bracket () tests are \n";
+    add "   (eof) test if end of stream reached. \n";
+    add "   (==)  test if workspace is same as current tape cell \n";
+    print; clear;
+    quit;
+  }
+
+  #---------------
+  # multiline and single line comments, eg #... and #* ... *#
+  "#" {
+    clear; read;
+    "\n" { clear; .reparse }
+
+    # checking for multiline comments of the form "#* \n\n\n *#"
+    # these are just ignored at the moment (deleted) 
+    "*" { 
+      # save the line number for possible error message later
+      clear; lines; put; clear;
+      until "*#"; 
+      E"*#" {
+        # no, need to convert to multiple single line comments
+        # or a if {0} { } block for tcl
+        clip; clip;
+        put; clear; add "if {0} {"; get; add "}";
+        # create a "comment" parse token
+        put; clear; 
+        # comment-out this line to remove multiline comments from the 
+        # compiled code 
+        # add "comment*"; push; 
+        .reparse  
+      }
+      # make an unterminated multiline comment an error
+      # to ease debugging of scripts.
+      clear; 
+      add "Unterminated multiline comment #* ... *# \n";
+      add "starting at line number "; get; add "\n";
+      print; clear;
+      quit;
+    }
+
+    # single line comments. some will get lost.
+    put; clear; add "#"; get; until "\n"; clip;
+    # escape special chars for tcl, since it looks for 
+    # these even in comments! (I know, strange but true)
+    escape '['; escape ']'; escape '$'; 
+    escape '{'; escape '}'; 
+    put; clear; 
+    # I am removing comments from translated scripts because
+    # tcl doesnt like unbalanced braces in comments!
+    add "comment*"; push; 
+    .reparse 
+  }
+
+ #----------------------------------
+ # parse command words (and abbreviations)
+
+ # legal characters for keywords (commands)
+ ![abcdefghijklmnopqrstuvwxyzBEKGPRUWS+-<>0^] {
+   # error message about a misplaced character
+   put; clear;
+   add "!! Misplaced character '";
+   get;
+   add "' in script near line "; lines;
+   add " (character "; chars; add ") \n";
+   print; clear; quit;
+ }
+
+   # my testclass implementation cannot handle complex lists
+   # eg [a-z+-] this is why I have to write out the whole alphabet
+
+   while [abcdefghijklmnopqrstuvwxyzBEOFKGPRUWS+-<>0^];
+   #----------------------------------
+   # KEYWORDS 
+   # here we can test for all the keywords (command words) and their
+   # abbreviated one letter versions (eg: clip k, clop K etc). Then
+   # we can print an error message and abort if the word is not a 
+   # legal keyword for the parse-edit language
+
+   # make ll an alias for "lines" and cc an alias for chars
+   "ll" { clear; add "lines"; }
+   "cc" { clear; add "chars"; }
+   # one letter command abbreviations
+   "a" { clear; add "add"; }
+   "k" { clear; add "clip"; }
+   "K" { clear; add "clop"; }
+   "D" { clear; add "replace"; }
+   "d" { clear; add "clear"; }
+   "t" { clear; add "print"; }
+   "p" { clear; add "pop"; }
+   "P" { clear; add "push"; }
+   "u" { clear; add "unstack"; }
+   "U" { clear; add "stack"; }
+   "G" { clear; add "put"; }
+   "g" { clear; add "get"; }
+   "x" { clear; add "swap"; }
+   ">" { clear; add "++"; }
+   "<" { clear; add "--"; }
+   "m" { clear; add "mark"; }
+   "M" { clear; add "go"; }
+   "r" { clear; add "read"; }
+   "R" { clear; add "until"; }
+   "w" { clear; add "while"; }
+   "W" { clear; add "whilenot"; }
+   "n" { clear; add "count"; }
+   "+" { clear; add "a+"; }
+   "-" { clear; add "a-"; }
+   "0" { clear; add "zero"; }
+   "c" { clear; add "chars"; }
+   "l" { clear; add "lines"; }
+   "^" { clear; add "escape"; }
+   "v" { clear; add "unescape"; }
+   "z" { clear; add "delim"; }
+   "S" { clear; add "state"; }
+   "q" { clear; add "quit"; }
+   "s" { clear; add "write"; }
+   "o" { clear; add "nop"; }
+   "rs" { clear; add "restart"; }
+   "rp" { clear; add "reparse"; }
+
+   # some extra syntax for testeof and testtape
+   "<eof>","<EOF>" { put; clear; add "eof*"; push; .reparse }
+   "<==>" { put; clear; add "tapetest*"; push; .reparse }
+
+   "jump","jumptrue","jumpfalse",
+   "testis","testclass","testbegins","testends",
+   "testeof","testtape" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "can be used in pep assembly code but not scripts. \n";
+     print; clear; quit;
+   }
+   
+   # show information if these "deprecated" commands are used
+   "Q","bail" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "is no longer part of the pep language (july 2020). \n";
+     add "use 'quit' instead of 'bail'\n";
+     print; clear; quit;
+   }
+   
+   "add","clip","clop","replace","upper","lower","cap","clear","print",
+   "pop","push","unstack","stack","put","get","swap",
+   "++","--","mark","go","read","until","while","whilenot",
+   "count","a+","a-","zero","chars","lines","nochars","nolines",
+   "escape","unescape","delim","quit","state",
+   "write","nop","reparse","restart" {
+     put; clear;
+     add "word*";
+     push; .reparse
+   }
+   
+   #------------ 
+   # the .reparse command and "parse label" is a simple way to 
+   # make sure that all shift-reductions occur. It should be used inside
+   # a block test, so as not to create an infinite loop. There is
+   # no "goto" in java so we need to use labelled loops to 
+   # implement .reparse/parse>
+
+   "parse>" {
+     clear; count;
+     !"0" {
+       clear; 
+       add "[error] pep script error:\n";
+       add "  extra parse> label at line "; lines; add ".\n";
+       print; quit;
+     }
+     clear; add "// parse>"; put;
+     clear; add "parse>*"; push;
+     # use accumulator to indicate after parse> label
+     a+; .reparse 
+   }
+
+   # --------------------
+   # implement "begin-blocks", which are only executed
+   # once, at the beginning of the script (similar to awk's BEGIN {} rules)
+   "begin" {
+     put; add "*"; push; .reparse 
+   }
+
+   add " << unknown command on line "; lines; 
+   add " (char "; chars; add ")"; 
+   add " of source file. \n"; 
+   add ' 
+   Valid commands are:
+     add,clip,clop,replace,upper,lower,cap,clear,print,
+     pop,push,unstack,stack,put,get,swap,
+     ++,--,mark,go,read,until,while,whilenot,
+     count,a+,a-,zero,chars,lines,nochars,nolines,
+     escape,unescape,delim,quit,state,
+     write,nop,.reparse,.restart \n';
+     
+   print; clear; quit;
+
+# ----------------------------------
+# PARSING PHASE:
+
+# Below is the parse/compile phase of the script. Here we pop tokens off the
+# stack and check for sequences of tokens eg "word*semicolon*". If we find a
+# valid series of tokens, we "shift-reduce" or "resolve" the token series eg
+# word*semicolon* --> command*
+#
+# At the same time, we manipulate (transform) the attributes on the tape, as
+# required. 
+#
+
+parse>
+
+#-------------------------------------
+# 2 tokens
+#-------------------------------------
+  pop; pop;
+
+  # All of the patterns below are currently errors, but may not
+  # be in the future if we expand the syntax of the parse
+  # language. Also consider:
+  #    begintext* endtext* quoteset* notclass*, !* ,* ;* B* E*
+  # It is nice to trap the errors here because we can emit some
+  # (hopefully not very cryptic) error messages with a line number.
+  # Otherwise the script writer has to debug with
+  #   pep -a asm.pp -I scriptfile 
+  #
+
+  "word*word*","word*}*","word*begintext*","word*endtext*", "word*!*",
+  "word*,*","quote*word*", "quote*class*", "quote*state*", "quote*}*",
+  "quote*begintext*", "quote*endtext*", "class*word*", "class*quote*",
+  "class*class*", "class*state*", "class*}*", "class*begintext*",
+  "class*endtext*", "class*!*", "notclass*word*", "notclass*quote*",
+  "notclass*class*", "notclass*state*", "notclass*}*" {
+    add " (Token stack) \nValue: \n"; get; 
+    add "\nValue: \n"; ++; get; --; add "\n";
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script (missing semicolon?) \n";
+    print; clear; 
+    quit;
+  }  
+
+  "{*;*", ";*;*", "}*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script: misplaced semi-colon? ; \n";
+    print; clear; quit;
+  }
+
+  ",*{*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra comma in list? \n";
+    print; clear; quit;
+  }
+
+  "command*;*","commandset*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra semi-colon? \n";
+    print; clear; quit;
+  }
+
+  "!*!*" {
+    push; push;
+    add "error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: \n double negation '!!' is not implemented \n";
+    add " and probably won't be, because what would be the point? \n";
+    print; clear; quit;
+  }
+
+  "!*{*","!*;*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced negation operator (!)? \n";
+    add " The negation operator precedes tests, for example: \n";
+    add "   !B'abc'{ ... } or !(eof),!'abc'{ ... } \n";
+    print; clear; quit;
+  }
+
+  ",*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced comma? \n";
+    print; clear; quit;
+  }
+
+  "!*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (at char "; chars; add ") \n"; 
+    add " The negation operator (!) cannot precede a command \n";
+    print; clear; quit;
+  }
+
+  ";*{*", "command*{*", "commandset*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: no test for brace block? \n";
+    print; clear; quit;
+  }
+
+  "{*}*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: empty braces {}. \n";
+    print; clear; quit;
+  }
+
+  "B*class*","E*class*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script:\n  classes ([a-z], [:space:] etc). \n";
+    add "  cannot use the 'begin' or 'end' modifiers (B/E) \n";
+    print; clear; quit;
+  }
+
+  "comment*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: comments cannot occur between \n";
+    add " a test and a brace ({). \n";
+    print; clear; quit;
+  }
+
+  "}*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: extra closing brace '}' ?. \n";
+    print; clear; quit;
+  }
+
+  #*
+  E"begin*".!"begin*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: Begin blocks must precede code \n";
+    print; clear; quit;
+  }
+  *#
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; count;
+      #"0" { clear; add "continue;   # .restart "; }
+      "0" { 
+        clear; 
+        # use the comment '# restart' so we can replace
+        # this with 'break' if the parse> label appears later
+        add "set restart true; continue; # restart"; 
+      }  
+      "1" { clear; add "break;   # .restart "; }
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    "reparse" {
+      clear; count; 
+      # no labelled loops in tcl
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      "0" { clear; add "break;  # .reparse "; }
+      "1" { clear; add "continue;   # .reparse "; }
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; add " of script:  \n";
+    add " misplaced dot '.' (use for AND logic or in .reparse/.restart \n";
+    print; clear; quit;
+  }
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the java 
+  "comment*command*","command*comment*","commandset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #
+  # This is a new more elegant way to negate a whole set of 
+  # tests (tokens) where the negation logic is stored on the 
+  # stack, not in the current tape cell. We just add "not" to 
+  # the stack token.
+
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+
+  "!*quote*","!*class*","!*begintext*", "!*endtext*",
+  "!*eof*","!*tapetest*" {
+    # a simplification: store the token name "quote*/class*/..."
+    # in the tape cell corresponding to the "!*" token. 
+    replace "!*" "not"; push;
+    # this was a bug?? a missing ++; ??
+    # now get the token-value
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  #-----------------------------------------
+  # format: E"text" or E'text'
+  #  This format is used to indicate a "workspace-ends-with" text before
+  #  a brace block.
+  "E*quote*" {
+     clear; add "endtext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for end-test (E"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #   A 'B' preceding some quoted text is used to indicate a 
+  #   'workspace-begins-with' test, before a brace block.
+  "B*quote*" {
+     clear; add "begintext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for begin-test (B"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #--------------------------------------------
+  # ebnf: command := word, ';' ;
+  # formats: "pop; push; clear; print; " etc
+  # all commands need to end with a semi-colon except for 
+  # .reparse and .restart
+  #
+  "word*;*" {
+     clear;
+     # check if command requires parameter
+     get;
+     "add","while","whilenot",
+     "escape","unescape","delim","replace" {
+       put; clear; add "'"; get; add "'";
+       add " << command needs an argument, on line "; lines; 
+       add " of script.\n";
+       print; clear; quit;
+     }
+
+     # the new until; read until workspace ends with tape-cell text
+     "until" { 
+       clear;
+       add "Until [lindex $mm(tape) $mm(cell)]; # until (tape-cell)"; 
+       put;
+     }
+     # the new go; go to mark named on tapecell 
+     "go" { 
+       clear;
+       add "GoToMark [lindex $mm(tape) $mm(cell)]; # go (tape-cell)"; 
+       put;
+     }
+     "mark" { 
+       clear;
+       add "AddMark [lindex $mm(tape) $mm(cell)]; # mark (tape-cell)"; 
+       put;
+     }
+     "clip" { 
+       clear; 
+       add 'if { $mm(work) ne "" } {\n';
+       add "  set mm(work) [string range $mm(work) 0 end-1]\n";
+       add "}; # clip";
+       put; 
+     }
+     "clop" { 
+       clear; 
+       add 'if { $mm(work) ne "" } { \n';
+       add "  set mm(work) [string range $mm(work) 1 end] } ; # clop";
+       put; 
+     }
+     "clear" { clear; add 'set mm(work) "";       # clear'; put; }
+     "upper" { 
+       clear; 
+       add 'set mm(work) [string toupper $mm(work)]; # upper'; put; }
+     "lower" { 
+       clear; 
+       add 'set mm(work) [string tolower $mm(work)]; # lower'; put; }
+     "cap" { 
+       clear; 
+       add 'set mm(work) [string totitle $mm(work)];   # cap'; put; }
+     "print" { 
+       clear; 
+       # flush doesnt seem necessary
+       #add "puts -nonewline $mm(work); flush stdout; # print"; 
+       add "puts -nonewline $mm(work);    # print"; 
+       put;
+     }
+     "pop" { clear; add "Pop;"; put; }
+     "push" { clear; add "Push;"; put; }
+     "unstack" { 
+       clear; 
+       add "while {[Pop]} {};           # unstack "; put; }
+     "stack" { 
+       clear; 
+       add "while {[Push]} {};          # stack "; put; }
+     "put" { 
+       clear; 
+       add "lset mm(tape) $mm(cell) $mm(work);  # put "; put; 
+     }
+     "get" { 
+       clear; add "append mm(work) [lindex $mm(tape) $mm(cell)]; # get"; 
+       put;
+     }
+     "swap" { clear; 
+       # other ways to swap 2 vars, but tricky with list
+       # lassign "$a $b $c $d" b a d c
+       # foreach {x y} [list $y $x] {break}
+       add "set s $mm(work); \n";
+       add "set mm(work) [lindex $mm(tape) $mm(cell)]; # swap \n";
+       add "lset mm(tape) $mm(cell) $s;                # swap "; 
+       put; 
+     }
+     "++" { 
+       clear; 
+       add "if { $mm(cell) >= $mm(size) } { MoreTape; }\n"; 
+       add "incr mm(cell);                             # ++"; put; 
+     }
+     "--" { 
+       clear; 
+       add "if { $mm(cell) > 0 } { incr mm(cell) -1 };  # --"; put;
+     }
+     "read" { clear; add "Read;           # read"; put; }
+     "count" { 
+       clear; add "append mm(work) $mm(counter); # count "; put; }
+     "a+" { clear; add "incr mm(counter);  # a+ "; put; }
+     "a-" { clear; add "incr mm(counter) -1;  # a- "; put; }
+     "zero" { clear; add "set mm(counter) 0; # zero "; put; }
+     "chars" { 
+       clear; add "append mm(work) $mm(charsRead); # chars "; put; }
+     "lines" { 
+       clear; add "append mm(work) $mm(linesRead); # lines "; put; }
+     "nochars" { clear; add "set mm(charsRead) 0; # nochars "; put; }
+     "nolines" { clear; add "set mm(linesRead) 0; # nolines "; put; }
+     # use a labelled loop to quit script.
+     "quit" { clear; add "exit $mm(counter);"; put; }
+     "state" { clear; add "State;  # state"; put; }
+     "write" { clear; add "WriteToFile;"; put; }
+     # just eliminate since it does nothing.
+     "nop" { clear; add "# nop: no operation "; put; }
+
+     clear; add "command*";
+     push; .reparse
+   }
+
+  #-----------------------------------------
+  # ebnf: commandset := command , command ;
+  "command*command*", "commandset*command*" {
+    clear;
+    add "commandset*"; push;
+    # format the tape attributes. Add the next command on a newline 
+    --; get; add "\n"; 
+    ++; get; --;
+    put; ++; clear; 
+    .reparse
+  } 
+
+  #-------------------
+  # here we begin to parse "test*" and "ortestset*" and "andtestset*"
+  # 
+
+  #-------------------
+  # eg: B"abc" {} or E"xyz" {}
+  # transform and markup the different test types
+  "begintext*,*","endtext*,*","quote*,*","class*,*",
+  "eof*,*","tapetest*,*",
+  "begintext*.*","endtext*.*","quote*.*","class*.*",
+  "eof*.*","tapetest*.*",
+  "begintext*{*","endtext*{*","quote*{*","class*{*",
+  "eof*{*","tapetest*{*" {
+
+    # use glob matching for begin and end tests
+    B"begin" { 
+      # remove quotes, add {}
+      clear; get; clip; clop; 
+      # todo: here escape {}*[]? which have a special meaning
+      # in "string match". No do it at quote stage
+      put; clear;
+      add "[string match {"; get; add "*} $mm(work)]";
+    }
+    B"end" { 
+      # remove quotes
+      clear; get; clip; clop; put; clear;
+      add "[string match {*"; get; add "} $mm(work)]"; 
+    }
+    B"quote" { clear; add "$mm(work) eq "; get; }
+    B"class" { 
+      # use tcl brace quotes to stop special character problems in patterns.
+      clear; add "[regexp {"; get; add "} $mm(work)]"; 
+    }
+    B"eof" { clear; add "$mm(eof)"; }
+    B"tapetest" { 
+      clear; add "$mm(work) eq [lindex $mm(tape) $mm(cell)]"; 
+    }
+    put; 
+    #*
+    #  maybe we could ellide the not tests by doing here
+    B"not" { clear; add "!"; get; put; }
+    *#
+    clear; add "test*"; push;
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # negated tests
+  # eg: !B"xyz {} !(eof) {} !(==) {}
+  #     !E"xyz" {} 
+  #     !"abc" {}
+  #     ![a-z] {}
+  "notbegintext*,*","notendtext*,*","notquote*,*","notclass*,*",
+  "noteof*,*","nottapetest*,*",
+  "notbegintext*.*","notendtext*.*","notquote*.*","notclass*.*",
+  "noteof*.*","nottapetest*.*",
+  "notbegintext*{*","notendtext*{*","notquote*{*","notclass*{*",
+  "noteof*{*","nottapetest*{*" {
+    B"notbegin" { 
+      # remove quotes, add {}
+      clear; get; clip; clop; put; clear;
+      add "![string match "; get; add "* $mm(work)] "; }
+    B"notend" { 
+      # remove quotes, add {}
+      clear; get; clip; clop; put; clear;
+      add "![string match *"; get; add " $mm(work)] "; 
+    }
+    B"notquote" { clear; add "$mm(work) ne "; get; }
+    B"notclass" { clear; add "![regexp {"; get; add "} $mm(work)]"; }
+    B"noteof" { clear; add "!$mm(eof)"; }
+    B"nottapetest" { 
+      clear; add "$mm(work) ne [lindex $mm(tape) $mm(cell)]"; 
+    }
+    put; clear; add "test*"; push; 
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # 3 tokens
+  #-------------------
+
+  pop;
+
+  #-----------------------------
+  # some 3 token errors!!!
+ 
+  # not a comprehensive list of 3 token errors
+  "{*quote*;*","{*begintext*;*","{*endtext*;*","{*class*;*",
+  "commandset*quote*;*", "command*quote*;*" {
+    push; push; push;
+    add "[pep error]\n invalid syntax near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script (misplaced semicolon?) \n";
+    print; clear; quit;
+  }  
+
+  # to simplify subsequent tests, transmogrify a single command
+  # to a commandset (multiple commands).
+  "{*command*}*" {
+    clear; add "{*commandset*}*"; push; push; push;
+    .reparse
+  }
+
+  # errors! mixing AND and OR concatenation
+  ",*andtestset*{*",
+  ".*ortestset*{*" {
+    # push the tokens back to make debugging easier
+    push; push; push; 
+    add " error: mixing AND (.) and OR (,) concatenation in \n";
+    add " in pep script near line "; lines;
+    add " (character "; chars; add ") \n";
+    add ' 
+  For example:
+     B".".!E"/".[abcd./] { print; }  # Correct!
+     B".".!E"/",[abcd./] { print; }  # Error! \n';
+    print; clear; quit;
+  }
+
+  #--------------------------------------------
+  # ebnf: command := keyword , quoted-text , ";" ;
+  # format: add "text";
+
+  "word*quote*;*" {
+    clear; get;
+    "replace" {
+       # error 
+       add "< command requires 2 parameters, not 1 \n";
+       add "near line "; lines;
+       add " of script. \n";
+       print; clear; quit;
+    }
+
+    # check whether argument is single character, otherwise
+    # throw and error
+    "escape", "unescape", "while", "whilenot" {
+      # This is trickier than I thought it would be.
+      clear; ++; get; --; 
+      # check that arg not empty, (but an empty quote is ok 
+      # for the second arg of 'replace'
+      '""' {
+        clear; 
+        add "[pep error] near line "; lines;
+        add " (or char "; chars; add "): \n"; 
+        add "  command '"; get; 
+        add '\' cannot have an empty argument ("") \n';
+        print; quit;
+      }
+
+      # quoted text has the quotes still around it.
+      # also handle escape characters like \n \r etc
+      clip; clop; clop; clop;
+      # B "\\" { clip; } 
+      clip; 
+      !"" {
+        clear; 
+        add "Pep script error near line "; lines;
+        add " (character "; chars; add "): \n"; 
+        add "  command '"; get; 
+        add "' takes only a single character argument. \n";
+        print; quit;
+      }
+      clear; get;
+    }
+
+    "mark" {
+      clear;
+      # add "lset mm(marks) $mm(cell) "; ++; get; --; add "; # mark";
+      add "AddMark "; ++; get; --; add " ";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "go" {
+      clear;
+      add "GoToMark "; ++; get; --; add " ";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "delim" {
+      clear;
+      # only the first character of the delimiter argument is used. 
+      add "set mm(delimiter) "; ++; get; --; add "; # delim ";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "add" {
+      clear;
+      add "append mm(work) "; ++; get; --; 
+      # handle multiline text
+      # tcl can handle multiline text but I will leave this
+      # anyway because of indenting issues.
+      replace "\n" '" \nappend mm(work) "\\n';
+      put; clear; add "command*"; push; .reparse
+    }
+
+   
+    "while" {
+      clear;
+      add "# while \n"; 
+      add "while {$mm(peep) eq "; ++; get; --; add "} {  \n"; 
+      add "  if {$mm(eof)} { break; } Read; } "; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "whilenot" {
+      clear;
+      add "# whilenot \n"; 
+      add "while {$mm(peep) ne "; ++; get; --; add "} {  \n"; 
+      add "  if {$mm(eof)} { break; } Read }"; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "until" {
+       clear; 
+       ++; get; --; 
+       # error until cannot have empty argument
+       '""' { 
+         clear; 
+         add "Pep script error near line "; lines;
+         add " (character "; chars; add "): \n";
+         add " empty argument for 'until' \n";
+         add " 
+   For example:
+     until '.txt'; until \">\";    # correct   
+     until '';  until \"\";        # errors! \n";
+         print; quit;
+       }
+       # remove quotes
+       clip; clop; put; clear;
+       add "Until {"; get; 
+       # handle multiline argument
+       replace "\n" "\\n";
+       add '};'; put; clear;
+       add "command*"; push; .reparse
+     }
+
+     # but hard code escape here!
+    "escape" {
+       clear; 
+       # use "string map"
+
+       # remove quotes from escape argument
+       ++; get; clip; clop; put; clear;
+       add 'set mm(work) [string map {"';
+       get; add '" "\\\\'; get; add '"} $mm(work)]';
+       --; put; clear;
+       add "command*"; push; .reparse
+
+     }
+
+    # could just use replace instead ?
+    # but unescape should probably 'walk the string' to 
+    # work out what is really escaped
+    "unescape" {
+       clear; 
+       # remove quotes from escape argument
+       ++; get; clip; clop; put; clear;
+       add 'set mm(work) [string map {"\\';
+       get; add '" "'; get; add '"} $mm(work)]';
+       --; put; clear;
+       add "command*"; push; .reparse
+     }
+
+     # error, superfluous argument
+     add ": command does not take an argument \n";
+     add "near line "; lines;
+     add " of script. \n";
+     print; clear;
+     #state
+     quit;
+   }
+
+   #----------------------------------
+   # format: "while [:alpha:] ;" or whilenot [a-z] ;
+
+   "word*class*;*" {
+     clear; get;
+
+     "while" {
+       clear;
+       add "# while  \n";
+       add "while {[regexp {"; ++; get; --;
+       add "} $mm(peep)]} { if {$mm(eof)} { break; } Read }"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     "whilenot" {
+       clear;
+       add "# whilenot  \n";
+       add "while {![regexp {"; ++; get; --;
+       add "} $mm(peep)]} { if {$mm(eof)} { break; } Read }"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     # error 
+     add " < command cannot have a class argument \n";
+     add "line "; lines; add ": error in script \n";
+     print; clear; quit;
+   }
+
+
+  # arrange the parse> label loops
+  (eof) {
+    "commandset*parse>*commandset*","command*parse>*commandset*",
+    "commandset*parse>*command*","command*parse>*command*" {
+      clear; 
+      # indent both code blocks
+      add "  "; get; replace "\n" "\n  "; 
+      # change .restart code before parse> label
+      # this make .restart work both before, after and without a 
+      # parse> label
+      replace "continue; # restart" "break; # restart"; 
+      put; clear; ++; ++;
+      add "  "; get; replace "\n" "\n  "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      # but no labelled loops in tcl
+      add "\n# lex block \n";
+      add "while true { \n";
+      get; add "\n  break;\n}\n"; ++; ++;
+      add "if {$restart == true} { set restart false; continue; }\n";
+      # indent code block
+      # add "  "; get; replace "\n" "\n  "; put; clear;
+      # tcl doesnt support labelled loops
+      # add "parse: \n";
+      add "\n# parse block \n";
+      add "while true {  \n"; get;
+      add "\n  break; \n"; 
+      add "}\n"; 
+      --; --; put; clear;
+      add "commandset*"; push; .reparse
+    }
+  }
+
+  # -------------------------------
+  # 4 tokens
+  # -------------------------------
+
+  pop;
+
+  #-------------------------------------
+  # bnf:     command := replace , quote , quote , ";" ;
+  # example:  replace "and" "AND" ; 
+
+  "word*quote*quote*;*" {
+    clear; get;
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      # the empty string test is not really necessary here.
+      # note!
+      clear; 
+      add "# replace \n";
+      add 'if {$mm(work) ne ""} { \n';
+      add "set mm(work) [string map {";
+      ++; get; add " "; ++; get; add "} $mm(work)] }\n"; 
+      --; --; put;
+      clear; add "command*"; push; .reparse
+    }
+
+    add "pep script error on line "; lines; 
+    add " (character "; chars; add "): \n";
+    add "  command does not take 2 quoted arguments. \n";
+    print; quit;
+  }
+
+  #-------------------------------------
+  # format: begin { #* commands *# }
+  # "begin" blocks which are only executed once (they
+  # will are assembled before the "start:" label. They must come before
+  # all other commands.
+
+  # "begin*{*command*}*",
+  "begin*{*commandset*}*" {
+     clear; 
+     ++; ++; get; --; --; put; clear;
+     add "beginblock*";
+     push; .reparse
+   }
+
+   # -------------
+   # parses and compiles concatenated tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+   # these 2 tests should be all that is necessary
+   "test*,*ortestset*{*",
+   "test*,*test*{*" {
+     clear; get; add " || ";
+     ++; ++; get; --; --; put; clear; 
+     add "ortestset*{*";
+     push; push;
+     .reparse
+   }
+
+   # dont mix AND and OR concatenations 
+
+   # -------------
+   # AND logic 
+   # parses and compiles concatenated AND tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+   # it is possible to elide this block with the negated block
+   # for compactness but maybe readability is not as good.
+
+   # negated tests can be chained with non negated tests.
+   # eg: B'http' . !E'.txt' { ... }
+
+   "test*.*andtestset*{*",
+   "test*.*test*{*" {
+     clear; get; add " && ";
+     ++; ++; get; --; --; put; clear; 
+     add "andtestset*{*";
+     push; push; .reparse
+   }
+
+  #-------------------------------------
+  # we should not have to check for the {*command*}* pattern
+  # because that has already been transformed to {*commandset*}*
+
+  "test*{*commandset*}*",
+  "andtestset*{*commandset*}*",
+  "ortestset*{*commandset*}*" { 
+     clear; 
+     # indent the java code for readability
+     ++; ++; add "  "; get; replace "\n" "\n  "; put; --; --; 
+     clear; add "if {"; get; add "} {\n";
+     ++; ++; get;
+     add "\n}"; 
+     --; --; put; clear;
+     add "command*";
+     push;
+     # always reparse/compile
+     .reparse
+   }
+
+  # -------------
+  # multi-token end-of-stream errors
+  # not a comprehensive list of errors...
+  (eof) {
+    E"begintext*",E"endtext*",E"test*",E"ortestset*",E"andtestset*" {
+      add "  Error near end of script at line "; lines;
+      add ". Test with no brace block? \n";
+      print; clear; quit;
+    }
+
+    E"quote*",E"class*",E"word*"{
+      put; clear; 
+      add "Error at end of pep script near line "; lines; 
+      add ": missing semi-colon? \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+
+    # A begin block with no other commands is not really an
+    # error...
+    "beginblock*" {
+      put; clear; 
+      add '
+   Pep script error: begin block with no other commands.
+   Follow the begin block with other script commands. Eg:
+     begin { add "starting script..."; print; clear; }
+     read; print; clear;
+   Or use "nop;" after the begin block \n';
+      print; clear; quit;
+    }
+
+    E"{*", E"}*", E";*", E",*", E".*", E"!*", E"B*", E"E*" {
+      put; clear; 
+      add "Error: misplaced terminal character at end of script! (line "; 
+      lines; add "). \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+  }
+
+  # put the 4 (or less) tokens back on the stack
+  push; push; push; push;
+
+  (eof) {
+    print; clear;
+
+    # create the virtual machine object code and save it
+    # somewhere on the tape.
+    add '#!/usr/bin/tclsh
+
+# code generated by "translate.tcl.pss" a pep script
+# see bumble.sf.net/books/pars/
+#import sys    # 
+
+  # make a new machine. Standard tcl doesnt have objects
+  # so I will use an associative array, instead.
+  #array set mm {
+  #  eof false     # end of stream reached?
+  #  charsRead 0   # how many chars already read
+  #  linesRead 1   # how many lines already read
+  #  escape "\\\\"
+  #  delimiter "*" # push/pop delimiter (default "*")
+  #  counter 0     # a counter for anything
+  #  work ""       # the workspace
+  #  stack {}    # stack for parse tokens 
+  #  cell 0      # current tape cell
+  #  size 100    # the initial tape/marks list size
+  #  tape {}     # a list of attribute for tokens 
+  #  marks {}    # marked tape cells
+  #  peep [read stdin 1] 
+  #}
+
+  # make a new machine. Standard tcl doesnt have objects
+  # so I will use an associative array, instead.
+  array set mm {
+    eof false     
+    charsRead 0  
+    linesRead 1 
+    escape "\\\\"
+    delimiter "*" 
+    counter 0    
+    work ""     
+    stack {}   
+    cell 0    
+    size 0 
+    tape {}  
+    marks {}
+    peep {} 
+  }
+
+  # Adds more elements to the tape and marks lists 
+  proc MoreTape {} { 
+    global mm
+    for {set ii 0} {$ii < 100} {incr ii} { 
+      lappend mm(tape) ""; lappend mm(marks) "";
+    }
+    incr mm(size) 100
+  }
+
+  # initialises a machine  
+  proc Init {} { 
+    global mm
+    set mm(peep) [ read stdin 1 ]
+    # or Read;
+    MoreTape;
+  }
+
+  # read one character from the input stream and 
+  #    update the machine.
+  proc Read {} { 
+    # use upvar eg
+    # upvar $machine mm
+    global mm
+    if { $mm(eof) } { exit }
+    incr mm(charsRead)
+    # increment lines
+    if { $mm(peep) eq "\\n" } { incr mm(linesRead) }
+    append mm(work) $mm(peep)
+    set mm(peep) [ read stdin 1 ]
+    if {[eof stdin]} { set mm(eof) true; set mm(peep) -1 }
+  } 
+
+  # increment tape pointer by one: trivial method? But need
+  # to increase tape/marks size if exceeded
+  proc Increment {} { global mm; incr mm(cell) } 
+
+  # remove escape character: trivial method ?
+  proc UnescapeChar {c} {
+    global mm
+    #if { $mm(work) ne "" } $mm(work = $mm(work.replace("\\\\"+c, c)
+  }
+
+  # add escape character : trivial
+  proc EscapeChar {c} {
+    global mm
+    #if { $mm(work) ne "" } { $mm(work = $mm(work.replace(c, "\\\\"+c) }
+  }
+
+  # pop the first token from the stack into the workspace */
+  proc Pop {} { 
+    global mm
+    if {[llength $mm(stack)] == 0} { return false }
+    # prepend last stack item, and delete the item
+    set mm(work) "[lindex $mm(stack) end]$mm(work)"
+    set mm(stack) [lrange $mm(stack) 0 [expr [llength $mm(stack)]-2]] 
+    if {$mm(cell) > 0} { incr mm(cell) -1 }
+    return true
+  }
+  
+  # push the first token from the workspace to the stack 
+  proc Push {} {
+    # lappend list $value
+    # dont increment the tape pointer on an empty push
+    global mm
+    if { $mm(work) eq "" } { return false }
+    # need to get this from the delimiter.
+    set firstdelim [string first $mm(delimiter) $mm(work)]
+    if {$firstdelim == -1} {
+      lappend mm(stack) $mm(work)
+      set mm(work) ""
+      incr mm(cell) 1
+      # a hack because "stack" hangs otherwise (never returns false)
+      return false
+      #return true
+    }
+    lappend mm(stack) [string range $mm(work) 0 $firstdelim]
+    set mm(work) [string range $mm(work) [expr {$firstdelim+1}] end]
+    incr mm(cell) 1
+    return true
+  }
+
+  # a helper function
+  proc IsEscaped {suffix} {
+    global mm
+    # remove suffix
+    set count 0
+    set last [expr {[string last $suffix $mm(work)]-1}]
+    set new [string range $mm(work) 0 $last]
+    # now count trailing escape chars
+    while {[string index $new end] eq $mm(escape)} {
+      set last [expr {[string last $mm(escape) $new]-1}]
+      set new [string range $new 0 $last]
+      incr count
+    }
+    # puts count=$count
+    if { $count == 1 } { return true }
+    if {[expr {($count % 2) == 0}]} { return false } else { return true }
+  }
+
+  # reads the input stream until the workspace end with text 
+  proc Until {suffix} { 
+    # read at least one character
+    global mm
+    if { $mm(eof) } { return }
+    Read;
+    while true { 
+      if {$mm(eof)} { return }
+      # this must count trailing escapes
+      if {[string match *$suffix $mm(work)] && ![IsEscaped $suffix]} { return }
+      Read;
+    }
+  }  
+
+  # maybe not required 
+  proc Swap {} { 
+    global mm
+    set s $mm(work)
+    set mm(work) $mm(tape)[$mm(cell)]
+    # could be a problem if $s has spaces in it. (becomes a list)
+    lset mm(tape) $mm(cell) $s
+  }
+
+  proc GoToMark {mark} { 
+    # or use tcls lsearch here.
+    global mm
+    set ii [lsearch -exact $mm(marks) $mark]
+    if {$ii >= 0} { set mm(cell) $ii 
+    } else { puts "badmark \'$mark\'!"; exit; }
+  }
+
+  proc AddMark {mark} { 
+    global mm
+    set ii [lsearch -exact $mm(marks) $mark]
+    if {$ii >= 0} { lset mm(marks) $ii ""; } 
+  }
+
+  # todo! add an argument to this.
+  proc WriteToFile {} { 
+    global mm
+    set f [open sav.pp w 0600]  
+    puts $f $mm(work)
+    close $f
+  }
+
+  # useful for debugging, the "state" command
+  proc State {} { 
+    global mm
+    puts "---------- Machine State --------------";
+    puts -nonewline " Stack\\[[join $mm(stack) {}]\\] Work\\[$mm(work)\\] ";
+    puts "Peep\\[$mm(peep)\\]";
+    puts -nonewline " Acc:$mm(counter) Esc:$mm(escape) ";
+    puts -nonewline "Delim:$mm(delimiter) Chars:$mm(charsRead) ";
+    puts "Lines:$mm(linesRead)";
+    puts "---------- Tape (size:$mm(size))  --------------";
+    set ii 0
+    while { $ii < 7 } {
+      puts -nonewline "  $ii";
+      if { $ii == $mm(cell) } { 
+        puts -nonewline "> "
+      } else { puts -nonewline "  " }
+      # display marks
+      if { [lindex $mm(marks) $ii] ne "" } { 
+        puts -nonewline "\\"[lindex $mm(marks) $ii]\\" "
+      } else { puts -nonewline ". " }
+
+      puts "\\[[lindex $mm(tape) $ii]\\]";
+      incr ii
+    }
+  }
+  # end of tcl pep Machine "class" (array) definition
+
+  # a flag var to make .restart work in run-once loops
+  set restart false
+  # initialise the machine
+  Init;
+ \n';
+
+  # save the code in the current tape cell
+    put; clear;
+
+    #---------------------
+    # check if the script correctly parsed (there should only
+    # be one or two tokens on the stack, namely "commandset*" or "command*").
+    # or beginblock commandset
+    pop; pop;
+
+    "commandset*", "command*" {
+      clear;
+      # indent generated code (6 spaces) for readability.
+      add "  "; get; 
+      replace "\n" "\n  "; put; clear;
+      # restore the java preamble from the tape
+      ++; get; --;
+      #add 'script: \n';
+      add 'while !$mm(eof) { \n'; get;
+      # end block marker 
+      add "\n}\n";
+      add "# end of generated code\n";
+      # put a copy of the final compilation into the tapecell
+      # so it can be inspected interactively.
+      put; print; clear; zero; quit;
+    }
+
+    "beginblock*commandset*", "beginblock*command*" {
+      clear; 
+      # indentation not needed here 
+      #add ""; get; 
+      #replace "\n" "\n"; put; clear; 
+
+      # indent main code for readability.
+      ++; add "  "; get; 
+      replace "\n" "\n  "; put; clear; --;
+      # get tcl preamble from tape
+      ++; ++; get; --; --;
+
+      get; add "\n"; ++; 
+      # a labelled loop for "quit" (but quit can just exit?)
+      #add "script: \n";
+      add "while !$mm(eof) { \n"; get;
+      # end block marker required 
+      add "\n}\n";
+      add "# end of generated code\n";
+      # put a copy of the final compilation into the tapecell
+      # for interactive debugging.
+      put; print; clear; zero; quit;
+    }
+
+    push; push;
+    
+    # try to explain some more errors
+    unstack;
+    B"parse>" {
+      put; 
+      clear; 
+      add "[error] pep syntax error:\n";
+      add "  The parse> label cannot be the 1st item \n"; 
+      add "  of a script \n"; 
+      print; quit;
+    }
+    put; clear;
+
+    add "After compiling with 'translate.tcl.pss' (at EOF): \n ";
+    add "  parse error in input script. \n ";
+    print; clear; 
+    # unstack; put; clear;
+    add "Parse stack: "; get; add "\n";
+    add "   * debug script ";
+    add "   >> pep -If script -i 'some input' \n ";
+    add "   *  debug compilation. \n ";
+    add "   >> pep -Ia asm.pp script' \n ";
+    print; clear; 
+    quit;
+
+  } # not eof
+
+  # there is an implicit .restart command here (jump start)

@@ -1,0 +1,3 @@
+    read; [\n] { nochars; } print; clear; 
+    chars; "60" { clear; add "\n"; print; }
+    clear;

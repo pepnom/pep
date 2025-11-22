@@ -1,0 +1,43 @@
+
+
+## THE NOM "READ" COMMAND
+  
+  *read* one character from the input-stream.
+
+  * the do-nothing nom script
+  >> read; print; clear;
+
+  The script above reads the "<stdin>" wp://standard.streams and prints each
+  character to <stdout> and then "deletes" nom://clear that character from the
+  pep://workspace text buffer and loops back to the first *read* command. This
+  very simple (the simplest) script demonstrates the implicit loop that the Nom
+  language employs, which is similar to [sed] and [awk]. In the case of [sed]
+  and [awk] however, the loop is a *line-by-line* loop, but in Nom the script
+  writer can determine if he or she wishes to parse character-by-character,
+  word-by-word, line-by-line (using nom://while nom://whilenot or nom://until )
+  or any other way that he or she sees fit.
+
+### NOTES
+
+  
+  This is potentially the most important "command" 
+  /doc/commands/doc.dir.index.html in the nom language. Without *read*
+  nom could do nothing. Read is also important because it makes 
+  the pep&nom system character-based rather than line-based. A lot 
+  of traditional [unix] tools use a line-based approach to filtering 
+  text. But reading a text-file line-by-line impedes the proper 
+  parsing of the context-free language structures in the text.
+
+
+  The read command reads one character from the input stream and places that
+  character in the 'peep' buffer.  The character which was in the peep
+  buffer is added to the end of the 'workspace' buffer. 
+
+  The read command is the fundamental mechanism by which the input stream is
+  "tokenized", which is also known as "lexical analysis". The commands which
+  also perform tokenisation are "until", "while" and "whilenot".  These
+  commands perform implicit "read" operations.
+
+  There is no implicit read command at the beginning of a script (unlike
+  "sed" ), so all scripts will probably need at least one read command.
+

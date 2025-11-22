@@ -1,0 +1,47 @@
+
+## THE NOM "RESTART" COMMAND 
+
+  *restart* the script from the beginning
+
+  The ".restart" command makes the interpreter jump beginning of of the script,
+  or just after the nomsyn://begin block if there is one.
+  
+  It is important to realise that the is 
+  *an implicit .restart at the end of all nom scripts* . This behaviour
+  mirrors the behaviour of [sed] and [awk] which also jump back to 
+  the beginning of the script while there is more input to be nom://read
+
+  The .restart command takes no arguments, and is **not** terminated with a
+  semi-colon. I chose this syntax for .restart and .reparse because it 
+  emphasises that the script execution does not continue past that point.
+
+### NOTES
+
+  In non parsing scripts such as the nom html pretty-printer 
+  /eg/nom.tohtml.pss and the snippet pretty-printer /eg/nom.snippet.tohtml.pss
+  this command is used instead of .reparse
+  
+  At the end of the input stream a .restart command will jump
+  straight back to the 1st command after the nomsyn://begin block which
+  is usually a nom://read command. In this case the script will 
+  just silently exit because nom://read at the [eof] automatically 
+  exits the script. This may not be what you want. The script below
+  shows a pattern for trapping .restart commands at the end of the 
+  input.
+
+  * trap a .restart at the end of the input 
+  -------+
+    begin { add "hello"; print; clear; }
+    (eof) {
+      add "goodbye!"; print; quit;
+    } 
+    read;
+    # ignore space and jump back to the start of the script
+    [:space:] { clear; .restart }
+    # do stuff here
+  ,,,,
+
+### SEE ALSO
+
+  nom://reparse
+

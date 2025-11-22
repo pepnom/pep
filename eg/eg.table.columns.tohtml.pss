@@ -1,0 +1,481 @@
+
+#*
+
+ABOUT
+  This script is supposed to demonstrate parsing a series of 'vertical'
+  field: value or name: value pairs and converting into an html table 
+  where the name is the header of a column and the value or values 
+  are below the header in the column
+
+  This may be interesting from a parsing and nom point of view because
+  the names and the values need to be produced or 'output' in a very
+  different order to the order in which they appear in the input text file.
+
+  * an example of the input format
+  ------
+    first name: greg
+    last name: cherry
+    age: 41
+  ,,,,
+
+  This should produce an html table like
+  ------
+    first name | last name | age
+    greg       | cherry    | 41
+  ,,,,,
+
+NOTES
+
+  nom scripts which are just designed to demonstrate parsing probably
+  should start with 'eg.' in their name, to distinguish from scripts that 
+  have some practical purpose. This is one of the former.
+
+TOKENS
+  name* The name of the field which will become the header of the 
+         column of the html table.
+  value* the value of the field
+  word* text* one white-space delimited word and accumulated words.
+
+HISTORY
+  23 Aug 2025
+    Began this. Wrote the script with a help system. The idea 
+    is more or less working but not very practical because only 
+    one row of data actually can be included with the header. 
+    Also, the rendering of the table is happening at EOF which is 
+    also not great.
+
+*#
+
+ begin {
+   # reserve tape cells to hold the header/values as they
+   # are parsed.
+   mark "header"; ++; mark "values"; ++;
+
+  # check for an empty doc and trigger help if true
+
+   while [:blank:]; clear;
+   (eof) {
+     # the category is help and the token too.
+     add "usage"; put; clear; 
+     add "help*"; push; .reparse
+   }
+   # a document starting with / or // etc will be considered a help request
+   while [/];
+   !"" {
+     # get 2 help words and save with no space 
+     clear; while [:space:]; clear; whilenot [:space:];
+     put; clear; while [:space:]; clear; whilenot [:space:];
+     swap; get; put; clear;
+     add "help*"; push; .reparse
+   }
+ } # end begin block
+
+ read; 
+
+ # implement comments, ignore text on line after # 
+ "#" {
+   whilenot [\n]; clear; !(eof) { .restart } .reparse
+ }
+
+ "\n" { put; clear; add "nl*"; push; .reparse }
+ # blank should mean any whitespace which is not "\n" but I am
+ # not sure if that is true especially for the pep interpreter.
+
+ # a literal token :* to separate the name from the value
+ ":" { put; add "*"; push; .reparse }
+
+ ![:space:] {
+   whilenot [ \r\f\t\n:]; put; 
+   # ignore html comments as well
+   B"<!--" { until "-->"; clear; (eof) { .reparse } .restart }
+   clear; add "word*"; push; .reparse
+ }
+ [:blank:] { 
+   while [:blank:]; clear; !(eof) { .restart } .reparse
+ }
+
+ parse>
+   # watch the parse stack reduce
+   add "<!-- "; lines; add ":"; chars; add " "; print; clear;
+   unstack; print; stack; add " -->\n"; print; clear;
+
+ # ----------------
+ # the error and help system
+ pop;
+
+ #*
+  error and help tokens which allows implementing a help system
+  that can be triggered by an empty document or by help keywords
+
+  A time-line text document should not really have 'errors'
+ *#
+ "error*" {
+   clear; 
+   add "--eg.table.columns.tohtml.pss-- (parsing example script) ";
+   add " near line:"; lines; add " char:"; chars; add "\n";
+   get; add "\n"; print;
+   clear; pop; "help*" { push; .reparse } 
+   # the help* token also quits but if there is no help token
+   # then just stop here.
+   quit;
+ }
+
+ #*
+   The help* parse token allows self-testing, self-translation and 
+   self-help, which is a good thing
+ *#
+
+ "help*" {
+   clear; swap; 
+   
+   # how to use this script
+   "usage","help","all" {
+     swap; add "
+   USAGE
+     pep -f eg.table.columns.tohtml.pss inputfile.txt
+     pep -f eg.table.columns.tohtml.pss -i 'field name : text of the field' 
+
+     A script to show parsing of text data where the output sequence is 
+     very different to the input (stream) sequence.
+     ";
+     swap;
+   }
+
+   # help about the help-system
+   "words","usage","help" {
+     swap; add "
+   HELP KEYWORDS
+
+     All documents/input which begin with '/' are considered to be help 
+     requests. See below for the list of valid help keywords.
+
+     pep -f eg.table.columns.tohtml.pss -i /<helpword> 
+       see some help for that topic or category
+
+     pep -f eg.table.columns.tohtml.pss -i /words
+       see what help topics and categories are available for this script.
+
+     pep -f eg.table.columns.tohtml.pss -i /help
+       see all the help.
+
+   ### General Help 
+     - /usage: show a usage message for this script 
+     - /words: show what help commands are available
+     - /faq: show an FAQ about this script.
+     - /nom: show information about the nom script language
+     - /flaws: known limitations 
+     - /eg: display an example  doc
+     - /test: test by creating an html file and opening with a browser 
+     - /format: show information about the  text format
+
+   ### About translating and testing this script
+     - /eg.lines: produce a few example lines for testing
+     - /eg: produce an example document
+     - /header: produce an html header with css for the  (todo)
+     - /test.line: test one one-line input
+     - /test: test the example doc. (todo)
+     - /test.open: test the example doc, make the page and open (todo)
+     - /to<lang>: translate this script to another language (need to 
+        implement - see /eg/eg.table.columns.tohtml.pss)
+
+     There are also help 'categories' which display several help
+     topics at once such as:
+
+     - /usage: script usage and helpwords
+     - /format: all information about the xml format 
+     - /help: show all available help topics.
+
+     ";
+     swap;
+   }
+
+   # the faq 
+   "FAQ","faq","help" {
+     swap; add "
+   FAQ
+     (not) frequently asked questions about /eg/eg.table.columns.tohtml.pss
+
+     Q: Another FAQ? Why?
+     A: I think it helps me to clarify my ideas about the script I am 
+        writing. In fact this FAQ is the first thing I write, even before the
+        script itself.
+
+     Q: So what does this script do?
+     A: It produces (or will) an html table with field names as the headers
+        of the columns and the values below each header
+
+     Q: Fascinating. Why did you bother?
+     A: Because the data format has a completely different sequence, meaning
+        that the input text data is in field/value pairs, each field name is 
+        followed by its value, but in the html table the field names all
+        have to be 'produced' at once, at the top of the table.
+     
+     Q: And?
+     A: Well that means that the order of the input data needs to be 
+        completely modified for the output sequence.
+
+     Q: Riveting. The crowds are crying out for more....
+     A: You are supposed to ask questions: But this script will try to use
+        the 'top' of the pep://tape (which is a string array) to store 
+        the field names and values.
+
+     Q: Is that terribly important?
+     A: Important in what sense? Maybe in the field of ideas it is important.
+        But in the context of the nom language and its bizarrely amazing 
+        capabilities, this is important, because I suspect that this sort 
+        of parsing/translating is important for doing 
+        *type-checking* or type-inference when one is constructing a 
+        programming language. And if nom (and pep)
+        can't do that, then it may not be a useful tool for language 
+        implementation.
+
+     Q: What else can the script do?
+     A: Well, I like to implement the entire self-testing framework for 
+        all scripts, because it is just a matter of copy-paste of a 
+        big block of text, and it makes the script easy to translate to 
+        other languages (with the /to<lang> help word)
+
+     Q: But a lot of those translators dont work. Why?
+     A: The older translators (with names like /tr/translate.java.pss) 
+        have a few 'issues' to put it politely and they don't currently 
+        even produce the help system. But they can (often) still be 
+        used for many scripts.
+
+     Q: That sounds dodgy. Why don't you fix them?
+     A: Because I need to update them to the new grammar which is contained
+        in translation scripts like /tr/nom.todart.pss or /tr/nom.toperl.pss
+        and that is a bit time-consuming (even with the help of LLM 
+        engines which are very helpful). And I seem to prefer to spend my
+        time writing FAQs to myself.
+
+     Q: That's odd. Will the pep/nom system ever be finished?
+     A: Probably only if I get some input from other enthusiastic people,
+        which so far has not happened at all.
+
+     Q: Maybe you should take a hint and take up cheese-making instead?
+     A: Cheese-making and nom are not mutually exclusive. Both activities
+        are interesting.
+
+     Q: But you have been working on nom for years and don't seem to be 
+        getting anywhere. Why not give it a rest?
+     A: There is nothing wrong with resting, but *nom* seems to be forging 
+        ahead in ways that I didn't actually imagine when I first started,
+        and it seems worth persuing.
+     
+     Q: I can see a massive amount of help text and self-testing stuff
+        for a script that is just a small demonstration. Isn't this 
+        over-the-top?
+     A: Not really, because the help and error system is quite separate 
+        to the parsing code and doesn't really make it any more complicated.
+
+     ";
+     swap;
+   }
+      
+   # more information about the nom language 
+   "nom","about","help" {
+     swap; add "
+       This script is written in pep:nom.
+       Nom is a scripting language for parsing/translating context-free and 
+       (some) context-sensitive patterns. Please see www.nomlang.org for
+       (much) more information.
+     ";
+     swap;
+   }
+
+   # one line documents
+   "eg.lines" {
+     swap; add "
+     # field value pairs
+     name: Oscar 
+     sur-name : Wilde
+     Forest area : 1000 hectares.
+     "; 
+     replace "\n    " "\n";
+     swap;
+   }
+
+   # an example of the input format
+   "eg","format","help" {
+     swap; add "
+    # an example of a document. Comments will not display
+    # in the final document, and can be included with a hash '#'
+    first name: greg
+    last name: cherry # the 2nd field value pair
+
+    age: 41
+
+    rating: 1542
+    <!-- html comments will also be 
+         deleted from the output -->
+
+     ";
+     swap;
+   }
+
+   # the format 
+   "format","help" {
+     swap; add "
+
+ THE TEXT DATA DOCUMENT FORMAT
+
+     - the data is in field-name/value pairs
+     - the name is separated from the value with a colon ':'
+     - currently on single line data is allowed (the field/value 
+       pair must be on a single line
+     - text on a line after a hash # will be ignored
+     - so will all html comments (which can be multiline) these are 
+       written <!-- comment -->
+    
+     ";
+     swap;
+   }
+
+   # tests one line with this script. 
+   "test.line" {
+     swap; add "
+       # TESTING ONE ONE-LINE INPUT STRING 
+       doc=$(pep -f $PEPNOM/eg/eg.table.columns.tohtml.pss -i /eg.lines | \\
+         sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+       echo \"<!-- input: $doc -->\"
+       pep -f $PEPNOM/eg/eg.table.columns.tohtml.pss -i \"$doc\" 
+       echo \"<!-- input: $doc -->\"
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f eg.table.columns.tohtml.pss -i /test.line | sed '/^</d' | bash
+       ";
+     replace "\n     " "\n";
+     print; quit;
+   }
+
+   # make and open the html file, not really useful
+   "test.line.open" {
+     swap; add "
+       # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+       pep -f eg.table.columns.tohtml.pss -i /test.line > test.html 
+       firefox test.html
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f eg.table.columns.tohtml.pss -i /test.line.open | sed '/^</d' | bash
+       ";
+     replace "\n     " "\n";
+     print; quit;
+   }
+
+   # just call the /eg/nom.to.pss script which does translation from
+   # a simple command like 'translate script.pss to ruby'
+   B"to" {
+     clop; clop; put; clear;
+     add '
+      translator=${PEPNOM}/eg/nom.to.pss
+      if [ -f $translator ]; then
+        echo -e "[ok] Found translator script: $translator"
+      else
+        echo -e "
+         [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+         (maybe) set the $PEPNOM environment var
+         (or)    download the translator from www.nomlang.org/eg/ 
+         ";
+        exit 1;
+      fi
+      pep -f $translator -i "eg.table.columns.tohtml.pss to '; get; add '" | bash
+      # RUN THIS WITH:  
+      #   pep -f eg.table.columns.tohtml.pss -i /to'; get; add ' | \\
+      #     sed "/^</d" | bash
+      ';
+      replace "\n    " "\n";
+      print;
+      quit;
+   }
+
+   # tests the example doc with this script
+   # make this test any input file and open with firefox
+   "test" {
+     swap; add "
+       # TESTING SCRIPT 
+       pep -f eg.table.columns.tohtml.pss -i /eg > test.txt
+       pep -f eg.table.columns.tohtml.pss test.txt 
+       # ------------------------
+       # RUN THIS WITH:
+       # pep -f eg.table.columns.tohtml.pss -i /test | sed '/^</d' | bash
+       ";
+     replace "\n    " "\n";
+     swap;
+   }
+
+   # Format can be regarded as a 'category'. So more than one help 
+   # topic will be printed
+   B"flaw",B"fault","help" {
+     swap; add '
+     FLAWS OR PROBLEMS WITH THIS SCRIPT
+       - just begun
+       - dont know
+
+     ';
+     swap;
+   }
+
+   swap;
+   "" {
+     add "Help topic '/"; get; add "' not known\n";  
+     add "Type: pep -f eg.table.columns.tohtml.pss -i /words \n";
+     add "  to see valid help keywords";
+   }
+   add "\n\n"; print; quit; 
+ }
+
+ push;
+ # end of the error and help system.
+ # -------------------
+
+ # ----------------------
+ # 2 tokens
+ pop; pop;
+
+ "nl*nl*" { clear; add "nl*"; push; .reparse }
+
+ "word*word*","text*word*" {
+   clear; get; add " "; ++; get; --; put; 
+   clear; add "text*"; push; .reparse 
+ }
+
+ "word*nl*","text*nl*" {
+   replace "word*" "value*";
+   replace "text*" "value*"; push; push; 
+   add "<td>"; --; --; get; ++; ++; add "</td>"; 
+   mark "here"; go "values"; swap; add "\n"; get; put; go "here";
+   clear; .reparse
+ }
+
+ # ----------------------
+ # 3 tokens
+ pop;
+
+ "nl*word*:*","nl*text*:*" {
+   clear; add "<th>"; ++; get; --; add "</th>"; put; 
+   mark "here"; go "header"; swap; add "\n"; get; put; go "here";
+   clear; add "name*"; push; .reparse 
+ }
+
+ # at the beginning of the file/input
+ "word*:*","text*:*" {
+   clear; add "name*"; push; .reparse 
+ }
+
+
+ # ----------------------
+ # 4 tokens
+ pop;
+
+ (eof) {
+   clear;
+   # make table, rows and indentation
+   go "header"; 
+   add "<table>";
+   add "<tr>\n"; get; add "\n</tr>\n";
+   go "values"; 
+   add "<tr>\n"; get; replace "\n" "\n  "; add "\n</tr>\n";
+   add "</table>\n";
+   print; quit;
+ }
+ push; push; push; push;

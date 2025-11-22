@@ -1,0 +1,438 @@
+
+#* 
+
+  This script is an attempt to parse and check the syntax of 
+  a 'sed' (the unix stream editor) script. If this is successful
+  we can modify the script to translate to other languages 
+  (including compilable languages)
+
+  The grammar in sed.tojava.pss is much more complete than this one.
+  Include a/c/i and 0~9 etc.
+
+NOTES
+  
+  the 0~8 gnu sed syntax (every 8th line) is not parsed at the moment.
+  The file 'sed1line.txt' can be used to test this script.
+
+  This script is only recognising a large subset of gnu sed commands
+  at the moment. Also, it does not parse the regular expressions.
+
+  Currently there is a difficulty for the pep machine in dealing
+  with the sed syntax 's#a#A#p'. That is, where alternative 
+  delimiters are used for substitutions. This could be solved with a 
+  new 'until' command that looks to the tapecell for the stop condition
+  (text).
+
+  Initially, I will only allow standard s/a/A/p syntax.
+
+  The strategy for translating sed scripts into other languages will
+  be very similar to the strategy for translating pep scripts. A 
+  simple, text-based virtual machine will be included in the generated
+  code, and each sed command will be an instruction or test on that 
+  virtual machine.
+ 
+HISTORY
+
+  30 june 2022
+    Did negation and $ lines. Only 'a', 'c', and 'i' need to 
+    be parsed now.  Big subset of sed commands recognised. 
+    Grammar is slightly more permissive than gnu sed 
+    (eg: spaces between s and /// )
+  29 june 2022
+    Basic parsing written, working but not all sed commands 
+    recognised yet.
+
+*#
+
+  read; 
+
+  # make char number relative to line, for error messages
+  [\n] { nochars; }
+
+  # newlines can separate commands in (gnu) sed so we will
+  # just add a dummy ';' here. Also, no trailing ; is required
+  [\n] { 
+    put; clear; add ";*"; push; .reparse
+  }
+
+  # ignore extraneous white-space?
+  [:space:] { clear; (eof) { .reparse } .restart }
+
+  # comments, 
+  "#" {
+    until "\n"; !E"\n" { add "\n"; } put; clear; 
+    # uncomment line below to include comments in output
+    # and make new reductions
+    # add "comment*"; push; .reparse
+  }
+
+  # literal tokens '{' and '}' are used to group commands in
+  # sed, ';' is used to separate commands and ',' to separate line
+  # ranges. ! is the postfix negation operator for ranges
+  ",","{","}",";","!" { put; add "*"; push; .reparse }
+
+  # various actions: print, delete, swap
+  "=","p","P","l","d","D","F","g","G","h","H",
+  "n","N","x","z" {
+    "=" { replace "=" "=;  # print line-number + \\n"; }
+    "d" { replace "d" "d;  # delete pattern-space, restart"; }
+    "D" { replace "D" "D;  # delete pattern-space to 1st \\n, restart"; }
+    "e" { replace "e" "e;  # exec patt-space command and replace"; }
+    "F" { replace "F" "F;  # print input filename + \\n"; }
+    "g" { replace "g" "g;  # replace patt-space with hold-space"; }
+    "G" { replace "G" "G;  # append hold-space to patt-space + \\n"; }
+    "h" { replace "h" "h;  # replace hold-space with patt-space"; }
+    "H" { replace "H" "H;  # append patt-space to hold-space + \\n"; }
+    "l" { replace "l" "l;  # print pattern-space unambiguously"; }
+    "n" { replace "n" "n;  # print patt-space, get next line into patt-space "; }
+    "N" { replace "N" "N;  # append next line to patt-space + \\n "; }
+    "p" { replace "p" "p;  # print pattern-space"; }
+    "P" { replace "P" "P;  # print pattern-space up to 1st newline"; }
+    "x" { replace "x" "x;  # swap pattern-space with hold-space"; }
+    "z" { replace "z" "z;  # delete pattern-space, NO restart"; }
+    put; clear; add "action*"; push; .reparse 
+  }
+
+  # line numbers are also selectors
+  [0-9] {
+    while [0-9]; put; clear; add "number*"; push; .reparse
+  }
+  # $ is the last line of the file
+  "$" {
+    put; clear; add "number*"; push; .reparse
+  }
+  # patterns - only execute commands if lines match 
+  "/" { 
+    # save line/char number for error message 
+    clear; add "near line "; lines; add ", char "; chars;
+    put; clear;
+    until "/"; 
+    !E"/" {
+      clear; add "Missing '/' to terminate "; 
+      get; add "?\n"; print; quit;   
+    }
+    clip; put; clear;
+    # add any delimiter for pattern here, or none
+    add "/"; get; add "/"; put;
+    clear;
+    add "pattern*"; push; .reparse
+  }
+
+
+  # read transliteration commands
+  "y" { 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     # allow spaces between 'y' and '/' although gnu set doesn't
+     until "/"; 
+     !E"/",![ /] { 
+       clear; 
+       add "Missing '/' after 'y' transliterate command\n"; 
+       add "Or trailing characters "; get; add "\n";
+       print; quit;
+     } 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 2nd '/' after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     "/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Empty regex after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     # replace pattern found
+     clip; put; 
+     clear; add "y/"; get; put;
+     clear;
+     # save line/char number for error message 
+     add "near line "; lines; add ", char "; chars; 
+     ++; put; --; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 3rd '/' after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     clip; swap; add "/"; get; add "/";
+     # y/// does not have modifiers (unlike s///)
+     put; clear;
+     add "action*"; push; .reparse
+   }
+  
+  # various commands that have an option word parameter 
+  "b","e","q","Q","t","T" {
+    # ignore intervening space if any
+    put; clear;
+    while [ ]; clear;
+    # A bit more permissive that gnu-sed which doesn't allow
+    # read to end in ';'.
+    whilenot [ ;}];
+    # word parameters are optional to these commands
+    # just add a space to separate command from parameter
+    !"" { swap; add " "; swap;}
+    swap; get; 
+    B"b"  { add ";  # branch to <label> or start"; }
+    B"e " { add ";  # exec <cmd> and insert into output"; }
+     "e"  { add ";  # exec patt-space command into patt-space"; }
+    B"q"  { add ";  # print + quit with optional exit code"; }
+    B"Q"  { add ";  # quit with optional exit code"; }
+    B"t"  { add ";  # branch to <label> if substitution made or start"; }
+    B"T" { add ";  # branch to <label> if NO substituion or start"; }
+    put; clear;
+    add "action*"; push; .reparse
+  }
+
+  # read 'read <filename>' and write commands
+  ":","r","R","w","W" {
+    # ignore intervening space if any
+    put; clear;
+    while [ ]; clear;
+    # A bit more permissive that gnu-sed which doesn't allow
+    # read to end in ';'.
+    whilenot [ ;}];
+    "" {
+      clear; 
+      add "Sed syntax error? (at line:char "; 
+      lines; add ":"; chars; add ")\n";
+      add "  no filename for read 'r' command. \n";
+      print; quit;
+    }
+    swap; add " "; get; 
+    B": " { add ";  # branch to <label>"; }
+    B"r " { add ";  # read file into patt-space"; }
+    B"R " { add ";  # insert file into output before next line"; }
+    B"w " { add ";  # write patt-space to file"; }
+    B"W " { add ";  # write 1st line of patt-space to file"; }
+    put; clear;
+    add "action*"; push; .reparse
+  }
+
+  # read substitution commands
+  "s" { 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     # allow spaces between 's' and '/'
+     until "/"; 
+     !E"/",![ /] { 
+       clear; 
+       add "Missing '/' after 's' substitute command\n"; 
+       add "Or trailing characters "; get; add "\n";
+       print; quit;
+     } 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Missing 2nd '/' after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     "/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Empty regex after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     # replace pattern found
+     clip; put; 
+     clear; add "s/"; get; put;
+     clear;
+     # save line/char number for error message 
+     add "near line "; lines; add ", char "; chars; 
+     ++; put; --; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 3rd '/' after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     clip; swap; add "/"; get; add "/";
+     # also need to read modifiers, eg g/i/p/[0-9] etc
+     # need better logic to process these modifiers.
+     while [gip]; put; clear;
+     add "action*"; push; .reparse
+   }
+  
+   "a","c","i" {
+     # label, append, branch, change, insert, quit, write, test, write, read
+     put; clear; 
+     add "Unimplemented command (near line:char "; 
+     lines; add ":"; chars; add ")\n";
+     add "  The script does not recognise '"; get; add "' yet.\n"; print; quit;
+   }
+
+   !"" {
+     put; clear; 
+     add "Sed syntax error? (near line:char "; lines; add ":"; chars; add ")\n";
+     add "  unrecognised command '"; get; add "'\n"; print; quit;
+   }
+
+# where token reduction begins
+parse>
+
+ # To visualise token reduction uncomment this below:
+ # lines; add ":"; chars; add " "; print; clear; 
+ # add "\n"; unstack; print; clip; stack; 
+
+ # commands do not have to be terminated with ';' at the end of a sed script.
+ (eof) { 
+   pop; "action*" { add ";*"; push; push; .reparse }
+   push;  
+ }
+
+ pop; pop; pop;
+ #---------------
+ # 3 tokens: 
+ #   we have to do this first before the action*;* rule 
+ #   is reduced.
+ 
+ "range*action*;*","number*action*;*",
+ "pattern*action*;*" {
+    clear; get; add " {\n  "; ++; get; add "\n}"; --; put;
+    clear; add "command*"; push; .reparse
+ }
+
+ # gnu sed allows empty braces, so we will too.
+ "range*{*}*","number*{*}*", "pattern*{*}*" {
+    clear; get; add " {}  # warning: empty braces- does nothing!"; put;
+    clear; add "command*"; push; .reparse
+ }
+
+ push; push; push;
+
+
+ pop; pop;
+ #---------------
+ # 2 token errors
+
+ "pattern*number*","pattern*pattern*",
+ "number*number*","number*pattern*",
+ "range*number*","range*pattern*",
+ "pattern*;*","number*;*","range*;*" {
+   clear; 
+   add "Sed syntax error? (near line:char "; lines; add ":"; chars; add ")\n";
+   add "  line selector/number/range with no action \n";
+   add "  (missing ',' or misplaced ';' ?) \n";
+   print; quit;
+ }
+
+ "action*action*","action*command*",
+ "action*number*","action*pattern*","action*range*","action*{*" {
+   clear; 
+   add "Sed error (line "; lines; add ", chars "; chars; add "):\n";
+   add "  Missing ';' after command?\n";
+   print; quit;
+ }
+
+ ",*}*", ",*{*", ",*;*", ",*,*",
+ ";*,*", ";*{*", "range*,*" {
+   clip; clop; clop; put;
+   clear; 
+   add "Sed error (line "; lines; add ", chars "; chars; add "):\n";
+   add "  Unexpected character '"; get; add "' \n";
+   print; quit;
+ }
+
+ #---------------
+ # 2 token reductions
+
+ # ignore empty commands (and multiple \n)
+ "command*;*","commandset*;*", ";*;*" { clip; clip; push; .reparse }
+
+ "action*;*" {
+   clear; add "command*"; push; .reparse
+ }
+
+ # maybe need a new token type for clarity here 
+ # eg: negated selector
+ "number*!*" {
+   clear; get; ++; get; --; put;
+   clear; add "number*"; push; .reparse
+ }
+ "pattern*!*" {
+   clear; get; ++; get; --; put;
+   clear; add "pattern*"; push; .reparse
+ }
+
+ "command*command*","commandset*command*" {
+   clear; get; ++; add "\n"; get; --; put;
+   clear; add "commandset*"; push; .reparse
+ }
+
+ pop;
+ #---------------
+ # 3 token errors
+ # eg: '/a/,/bb/p;' or '/[0-3]/,20p;' etc
+ "pattern*,*pattern*","pattern*,*number*",
+ "number*,*number*","number*,*pattern*" {
+   clear; get; add ","; ++; ++; get; --; --; put;
+   clear; add "range*"; push; .reparse
+ }
+
+ 
+ #---------------
+ # 3 token reductions
+
+ # commands dont need a ';' before a closing brace in gnu sed
+ # so transmogrify
+ "command*command*}*","command*action*}*",
+ "commandset*action*}*","commandset*command*}*" {
+   clear; get; ++; add "\n"; get; --; put;
+   clear; add "commandset*}*"; push; push; .reparse
+ }
+ "range*action*}*","number*action*}*","pattern*action*}*" {
+   clear; get; add "{\n  "; ++; get; add "\n}"; --; put;
+   clear; add "command*}*"; push; push; .reparse
+ }
+ "{*action*}*" {
+   clear; add "{*command*}*"; push; push; push; .reparse
+ }
+
+
+ pop;
+ #---------------
+ # 4 token errors
+
+ #---------------
+ # 4 token reductions
+ "range*{*command*}*","range*{*commandset*}*",
+ "pattern*{*command*}*","pattern*{*commandset*}*",
+ "number*{*command*}*","number*{*commandset*}*" {
+   # indent brace commands
+   clear; ++; ++; get; replace "\n" "\n  "; put; --; --;
+   clear; get; add " {\n  "; ++; ++; get; add "\n}"; --; --; put;
+   clear; add "command*"; push; .reparse  
+ }
+
+ push; push; push; push;
+ (eof) {
+   # check for valid sed script
+   add "Parse stack was:\n "; print; clear;
+   unstack; add "\n"; print; clip;
+   !"commandset*".!"command*" {
+     clear; 
+     add "# Sed syntax error? \n";
+     add "# ----------------- \n";
+     add "# Also, uncomment lines after parse> label in script\n";
+     add "# to see how the sed script is being parsed. \n";
+     print; quit;
+   }
+   "commandset*","command*" {
+     clear; 
+     add "# Sed syntax appears ok \n";
+     add "# --------------------- \n";
+     add "# [script explained]    \n";
+     get; add "\n"; print;
+   }
+   quit; 
+ }

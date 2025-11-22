@@ -1,0 +1,129 @@
+
+#*
+
+ This script attempts to convert filenames and urls into html links using some
+ simple word/line parsing. This could be expanded into recognising multiword
+ patterns. 
+
+NOTES
+  
+ "name.ext" [code|script|file|image|document]
+ name.ext [code|script|file|image|document]
+ [code|script|file|image|document] "name.ext"
+ [code|script|file|image|document] name.ext
+
+HISTORY
+
+ 19 june 2022
+  just begun, not complete. As usual this becomes trickier 
+  than one at first thinks. How to handle quotes, quotes with 
+  multiple words, quotes containing links etc.
+   
+*#
+
+  read;
+  # ignore \r
+  [\r] { clear; (eof) {.reparse} .restart }
+  
+  # dont tokenize non-leading space. One space will be printed
+  # between each word.
+  [ \t\f] { while [ \t\f]; clear; (eof) {.reparse} .restart }
+  
+  [\n] { 
+    # make character count relative to line.
+    nochars;
+    # save the leading space in the nl* token 
+    while [:space:];
+    put; clear; add "nl*"; push; .reparse
+  }
+
+  # how to parse single line quoted text.
+  '"' { 
+    whilenot ["\n]; 
+    (eof) { 
+      put; clear; add "word*"; push; .reparse
+    }
+    read; 
+    E'\n' {
+      nochars; put; clear; add "word*"; push; .reparse
+    }
+    '""' {
+      put; clear; add "word*"; push; .reparse
+    }
+    E'"' {
+      put; clear; add "word*"; push; .reparse 
+    }
+  }
+
+  # everything else is a word
+  !"" { 
+    whilenot [:space:]; 
+    put; clear;
+    add "word*"; push; .reparse 
+  }
+
+parse>
+  # to visualise parse token reductions
+   add "line "; lines; add " char "; chars; add ": "; print; clear; 
+   unstack; add "\n"; print; clip; stack; 
+
+  #-------
+  # 1 token
+  pop; 
+
+  "word*" {
+    # a trick!
+    clear; get;
+    # replace some html entities
+    replace ">" "&gt;";
+    replace "<" "&lt;";
+    put;
+    B"http://",B"https://",B"www." {
+      !"http://".!"https://".!"www." { 
+        clear; add "<a href='"; get; add ">"; get; add "</a>";
+      }
+    }
+    put; clear; add "word*"; 
+  }
+
+  # the last line of the file with no final newline char
+  (eof) {
+    "word*","text*" {
+      clear; add "line*"; push; .reparse
+    }
+  }
+
+  #-------
+  # 2 tokens
+  pop; 
+  # I want to recognise 2 word structures, so need to separate
+  # the text*word* reduction from the word*word* rule. 
+
+  # is there any need for a file* token, link token etc? 
+  "word*word*","text*word*" {
+     clear; get; add " "; ++; get; --; put; 
+     clear; add "text*"; push; .reparse
+  }
+
+  "word*nl*","text*nl*" {
+    clear; get; ++; get; --; put; clear;
+    add "line*"; push; .reparse
+  }
+
+  "line*line*","lineset*line*" {
+    clear; get; ++; get; --; put; clear;
+    add "lineset*"; push; .reparse
+  }
+
+  push; push;
+
+  (eof) {
+    pop;
+    "word*","text*","line*","lineset*" { 
+      clear; get; add "\n"; print; clear; quit;
+    }
+  }
+
+  
+  
+

@@ -1,0 +1,296 @@
+
+## GENERAL NOTES ABOUT GRAMMARS AND NOM
+
+ General notes about formal language grammars and nom.
+
+ In the Medieval period in Europe the four pillars of education were
+ Rhetoric, Logic, Theology and Grammar. Today this seems a strange 
+ classification of knowledge and study, but Logic and Grammar are 
+ the basis of computer science.
+
+ I should state here that I am not a great formal-language theorist
+ or high-level mathematician who can give insights into grammar 
+ theory. This page is just a set of heuristic notes about things I 
+ have discovered while parsing languages with the pep/nom system.
+
+### LOOK AHEAD
+
+  You can use the begins-with and ends-with modifiers to achieve token
+  lookahead in [nom]. The script /eg/maths.parse.pss and also
+  /eg/maths.tolatex.pss have good examples of using lookahead.
+
+  The document /doc/howto/nom.lookahead.html has detailed information
+  about how to write lookahead into a nom script .
+
+  There is also the pep://peep register which provide a single 
+  character look-ahead and which is not used directly by the script writer. 
+  This register is used by the nom://while and nom://whilenot commands
+  to read the input-stream only while the next character matches or 
+  does not match the criteria given.
+   
+### ASSOCIATIVITY
+
+  This is how we parse "a + b + c" ....
+  Do we parse this as "(a + b) + c" (left-associative) or
+  as "a + (b + c)" (right-associative)
+
+  With nom we need to build this associativity into the grammar.
+  See the "arithmetic parser" nomsf://eg/maths.parse.pss example for 
+  an example of associativity (with +/- signs which associate right) .
+
+### PRECEDENCE
+
+  This is how we parse for example "a + b * c" We say that certain operators
+  have *precedence* over others.  Do we parse this as "(a + b) * c" ( '+'
+  precedence ) or as "a + (b * c)" ( * precedence )
+
+  Again, this has to be factored into the nom grammar. Its not that 
+  difficult.
+
+### PARSER GENERATORS
+
+ A "parser generator" wp://comparison.of.parser.generators is basically
+ a way to avoid having to write a "recursive descent parser" 
+ wp://recursive.descent.parser (and compiler) or some other style of 
+ hand coded compiler. Lex, Yacc, Bison, Antlr and many others are 
+ examples of parser generators and they seem to be widely used for 
+ simple languages. An old example would be the *EQN* language for 
+ formatting mathematical expressions. 
+
+ 
+### KLEENE STAR
+
+  The *kleene star* is a grammar construct which basically means
+  "zero or more of something". This exists in regular expressions 
+
+  * example kleene star in a sed regular expression
+  >> s/ab*c//
+
+  This means: 'a' followed by zero or more 'b's followed by 'c'
+  The same construct is used in [ebnf] grammars (check!).
+
+  The rule below means that "A 'statement' is a 'keyword' followed
+  by zero or more 'parameters' followed by a semi colon. 
+
+  * kleene star in ebnf grammar rule
+  >> statement = keyword parameter* ';' ;
+   
+  How can we translate this into [nom] ? We cannot create a single 
+  nomsyn://block which represents the rule above but by using several
+  blocks we can create a *nom* fragment which represents it.
+
+  The code below represents a complete "lexer" and "recogniser" for
+  statements as shown below. Notice that white-space is completely 
+  ignored except in parameters. 
+  
+  * example of statements recognised below
+  ----
+     say 'good'; fizz; bang 'crash' ;
+     whirr 'ok' 'okay'; grow'big' 'small' 'tiny' ;
+     bird
+       'tweet' 'fly '
+       'nest' ;
+  ,,,,
+  
+  The script that follows is a *recogniser* because it doesn't actually
+  compile/transpile/transform the input text, it just determines if the input
+  text consists of valid "statements". Also notice, that the single [ebnf] rule
+  with a *kleene star* is broken up into 3 [nom] "blocks" nomsyn://block (
+  statements between braces ). 
+
+  * equivalent ebnf rules as used by nom
+  -----
+    statement = keyword ';' ;
+    statement = keyword parameter ';' ;
+    statement = keyword parameterset ';' ;
+    parameterset = parameter parameter ;
+    parameterset = parameterset parameter ;
+  ,,,,
+
+  Although their are 5 ebnf rules above, [nom] only requires 3 
+  blocks because it can use *OR logic* concatenation in the 
+  tests (using the ',' comma character)
+
+  * Ebnf rule with kleene star
+  -----
+  # "lexing"
+  
+  read; 
+  # literal token, the character is also the parse-token
+  ';' { add "*"; push; }
+  [:space:] { while [:space:]; clear; }  
+  [:alpha:] { while [:alpha:]; put; clear; add "keyword*"; push; }
+  "'" { until "'"; put; clear; add "parameter*"; push; }
+  !"" { 
+    put; clear; 
+    add "?? bad char ["; get; add "]\n";
+    print; quit;
+  }
+ 
+  # The nom version of the ebnf rule
+  #   statement = keyword parameter* ';' ;
+  parse>
+    # show the stack reductions for debugging
+    # add "line "; lines; add " char "; chars; add ": "; print; clear;
+    # unstack; print; stack; add "\n"; print; clear;
+    pop;
+    pop;
+    "keyword*;*" 
+      { clear; add "statement*"; push; .reparse }
+    "parameter*parameter*","paramset*parameter*" 
+      { clear; add "paramset*"; push; .reparse }
+    pop;
+    "keyword*parameter*;*","keyword*paramset*;*" { 
+      clear; add "statement!\n"; print;
+      clip; clip; add "*";
+      push; .reparse 
+    }
+    push;push;push;
+  ,,,,
+
+### MORE KLEENE STAR ANALYSIS
+
+  Take a simple regular expression and attempt to translate into nom
+
+  * a none,one,or many asterisk in a regular expression
+  >> ab*c
+
+  This needs to be recognised with a much more verbose nom script.
+  The script below will no doubt seem ridiculously verbose, but 
+  the strength of pep/nom is not in parsing regular languages.
+
+  * the equivalent in nom
+  -------+
+    read;
+    "a" { put; clear; add "A*"; push; }
+    "b" { put; clear; add "B*"; push; }
+    "c" { put; clear; add "C*"; push; }
+    !"" {
+      clear; add "no"; print; quit;
+    }
+  parse>
+    pop;pop;
+    "B*B*" { 
+      clear; get; ++; get; --; put; 
+      clear; add "B*"; push;
+    }
+    "A*C*" { 
+      clear; get; ++; get; --; put;
+      clear; add "pattern*"; push; .reparse
+    }
+    pop;
+    "A*B*C*" { 
+      clear; get; ++; get; ++; get; --; --; put;
+      clear; add "pattern*"; push; .reparse
+    }
+    
+    (eof) {
+      !"pattern*" {
+        clear; add "no"; print; quit;
+      }
+      "pattern*" {
+        clear; add "yes"; print; quit;
+      }
+    }
+    push;push;push;
+
+  ,,,,
+
+### PARSE TOKEN MATCHING OR RECOGNISING
+
+  Nom can only match or recognise a fixed number of parse-tokens
+  at any point in the script. This is because it needs to nom://pop
+  the parse tokens off the pep://stack before it can match
+  parse token sequences.
+
+  This is why ebnf rules in the form 
+  -----
+   a = b+ c ;
+   a = c b* ;
+  ,,,,
+
+  need to be broken up into several [nom] blocks, because b+ and b*
+  represent a variable number of parse tokens.
+
+### RECURSIVE DESCENT PARSING
+
+  LL grammars (same?)
+
+  Although grammar theorists talk about all sorts of different types of
+  parsing, in practice, the type of parsers that are written by jobbing
+  programmers seem to be *recursive descent* . There is a very surprising
+  statement on Robert Nystrom's blog that all compilers for modern languages in
+  common use are recursive descent. Mr. Nystrom is involved in creating
+  (designing?) the [dart] language and has written a great "book"
+  www.craftinginterpreters.com about parsing and compiling, so I am pretty
+  convinced he knows what he is talking about.  Recursive descent is also the
+  type of parser/compiler that seems to be taught in University Comp-Sci
+  courses.  Nicholas Wirth of Pascal fame was a strong proponent of this type of
+  parser/compiler.
+
+  I don't wish to criticise recursive descent parsers, because they obviously
+  work, but it does seem odd to me that this is still the main way to 
+  recognise and translate formal-languages.  
+
+  [nom] does not do recursive descent parsing: in fact I wrote *nom* because
+  I wanted a way to understand the grammars of language that was more 
+  "natural" for my way of thinking. The [pep] & [nom] system does 
+  google:"shift reduce parsing" but it does it purely as a (unix-style)
+  text-stream filter. 
+  
+  The pep/nom lexing/parsing/compiling process is as follows: 
+  In the *lexical analysis* phase of the nom script, pep/nom
+  "reads" nom://read the input stream (more or less) one Unicode character at a
+  time, and creates parse-tokens and their "attributes" in a "text buffer"
+  pep://workspace . The parse-tokens are "pushed" nom://push onto a pep://stack
+  and the "attributes" (the partially compiled/translated text) are nom://put
+  into the pep://tape . Then, during the parsing or "shift-reduce" phase 
+  of the script, the parse-tokens are "popped" nom://pop off the stack
+  back into the nom://workspace buffer. If a particular parse-token 
+  sequence is *matched* or recognised, then the *workspace* is 
+  "cleared" nom://clear and the token attributes are "got" nom://get from the 
+  pep://tape and compiled and then *put* again onto the *tape* .
+  Then the *workspace* (string) buffer is "cleared" nom://clear and the 
+  new parse-token is created in the workspace with the nom://add command.
+  Finally, the new parse-token or tokens is "pushed" nom://push onto 
+  the *stack* .  
+
+  This entire process is *text-oriented* meaning that everything is 
+  a "string" including the parse-tokens and the parse tokens and their
+  attributes are manipulated in the same virtual pep://machine with the 
+  same commands.
+
+### RECURSION IN GRAMMARS
+
+ * Left recursive grammars
+ ------
+   E := E + E
+   E := T
+ ,,,,
+
+### GRAMMAR AND SCRIPT CONSTRUCTION
+
+  My knowledge of formal language grammar theory is quite limited. I am more 
+  interested in practical techniques. But there is a reasonably close
+  correlation between bnf-type grammar rules and pep/nom script construction.
+  
+  The right-hand-side of a (E)BNF grammar rule is represented by the 
+  quoted text before a brace block, and the left-hand-side 
+  correlates to the new token pushed onto the stack.
+    
+   * the rule "<nounphrase> ::= <article> <noun> ;" in a parse script
+   >> "article*noun*" { clear; add "nounphrase*"; push; }
+
+### TERMINOLOGY
+
+ Terminology, 
+   productions (same as rules?)
+   terminals, non-terminals, tokens. Tokens are the same as 
+   terminals? BNF backus-naur form
+
+### AUTOMATONS
+
+  There is a relationship between virtual machines, automatons and 
+  grammars and formal languages.
+
+  wp://Deterministic_finite_automaton

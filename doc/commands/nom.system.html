@@ -1,0 +1,416 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+
+     /* used or 1st 2nd etc */
+
+     sup.ordinal {
+       text-decoration: underline;  
+       color: darkgray;
+       font-style: italic;
+       text-transform: uppercase; 
+     }
+
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* a list within a list */
+     ul.sublist {
+       list-style-type: none;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       *color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* used for parse tokens in documents (text ending in *) */
+     code.nom-token { 
+       color: gray;
+       font-size: 0.9em;
+       font-style: italic;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     figcaption.code-caption { 
+       color: white;
+       /* background-color: lightslategray; */
+       background-color: #DD8811; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> &Popf;&eopf;&popf; 🙴 &Nopf;&oopf;&mopf;</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/doc/pepnom.doc.journal.html'>journal </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  title='/image/hopscotch.bicycle.jpg' src='/image/hopscotch.bicycle.jpg'/>
+
+
+
+<p>
+
+
+<blockquote class="quotation">
+   Fortune is like a woman: if you reject her today, do not 
+   expect to meet with her tomorrow.
+ 
+<cite>Napoleon </cite>
+</blockquote>
+<p>
+
+<p>
+<p>
+
+<!-- doclist= -->
+<!-- doc=./doc/commands/nom.system.txt -->
+<!-- ------------------------------- -->
+<h2> the &Nopf;&oopf;&mopf; "system" command</h2>
+
+ <p>
+ Executes the system command in the workspace and <em>reads</em> the result 
+ into the workspace.
+<p>
+ This command can actually be used to implement interactive 
+ 'conversation' scripts, where the script prompts the user for 
+ some information and the user replies. 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ read the current $PATH variable into the workspace. 
+ </figcaption>
+<pre class='codeline'>
+  clear; add "echo $PATH"; system; print; clear;
+</pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> examples</h3>
+
+<p>
+ The <em>nom</em> fragment below responds to the sentence 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ get the 'this' state variable from a text file
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+
+    <span class='nom-comment'># fragment</span>
+
+    <span class='nom-comment'># read the input word-by-word</span>
+    <span class='nom-command'>while</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+    <span class='nom-command'>whilenot</span> <span class='nom-class'>[:space:]</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+    <span class='nom-string'>"this"</span><span class='nom-punct'>,</span><span class='nom-string'>"that"</span><span class='nom-punct'>,</span><span class='nom-string'>"it"</span> <span class='nom-punct'>{</span>
+      <span class='nom-string'>"that"</span><span class='nom-punct'>,</span><span class='nom-string'>"it"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"this"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"this*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+
+    <span class='nom-string'>"print"</span><span class='nom-punct'>,</span><span class='nom-string'>"type"</span><span class='nom-punct'>,</span><span class='nom-string'>"show"</span><span class='nom-punct'>,</span><span class='nom-string'>"delete"</span><span class='nom-punct'>,</span><span class='nom-string'>"del"</span><span class='nom-punct'>,</span><span class='nom-string'>"remove"</span><span class='nom-punct'>,</span><span class='nom-string'>"rm"</span> <span class='nom-punct'>{</span>
+      <span class='nom-comment'># make the actions canonical</span>
+      <span class='nom-string'>"type"</span><span class='nom-punct'>,</span><span class='nom-string'>"show"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"print"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+      <span class='nom-string'>"del"</span><span class='nom-punct'>,</span><span class='nom-string'>"remove"</span><span class='nom-punct'>,</span><span class='nom-string'>"rm"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"delete"</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+      <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"action*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"unknown word: "</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span>
+      <span class='nom-comment'># trigger the error/help system here.</span>
+    <span class='nom-punct'>}</span>
+
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+    <span class='nom-command'>pop</span><span class='nom-punct'>;</span> <span class='nom-command'>pop</span><span class='nom-punct'>;</span>
+    <span class='nom-string'>"action*this*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-string'>"print"</span> <span class='nom-punct'>{</span>
+        <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"sed -n '/^ *this:/{s/^ *this://;p}' state.txt"</span><span class='nom-punct'>;</span>
+        <span class='nom-unknown'>system</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+        <span class='nom-command'>add</span> <span class='nom-string'>"cat "</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+      <span class='nom-punct'>}</span>
+      <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"command*"</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span>
+      <span class='nom-string'>"command*"</span> <span class='nom-punct'>{</span>
+      <span class='nom-punct'>}</span>
+    <span class='nom-punct'>}</span>
+    <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span>
+  </code></pre>
+</figure>
+<p>
+<!-- ------------------------------- -->
+<h3> notes</h3>
+
+ <p>
+ This command is very powerful, and I hesitated before adding it to
+ the pep-nom system because I wanted to keep <em>pep</em> and <em>nom</em> as simple as 
+ possible, adhering to it&rsquo;s core tenet of being a language parser. But
+ I think this command does not deviate from nom's &ldquo;core mission&rdquo; because
+ it only reads text into the machine. It also should allow <em>nom</em> to be
+ used in my &ldquo;Tiny Language Model&rdquo; experiments, which is to create scripts
+ that accept simple plain English queries and actions and then 
+ execute them. 
+<p>
+<p>
+
+<div class='footer'><small><em>
+
+<img style='border-radius:50%;width:10em;' class='center'  title='/image/fig.deniliquin.jpg' src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb at nomlang dot org</em> 
+<p>
+
+  </em></small></div></body></html>

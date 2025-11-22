@@ -1,0 +1,315 @@
+
+#*
+# print in blue with enscript
+~color{0 0 1}
+
+## nom.template.pss 
+
+  A template for [nom] scripts, with an error token, a help token
+  and parse-stack watching.
+
+ABOUT 
+NOTES
+DONE
+TODO
+STATUS 
+
+  17 mar 2025: 
+    started this template
+
+TOKENS 
+
+  It is really useful to have a list of grammar tokens that are used
+  in the script. Also, a short list below (with no explanations) which
+  can be cut and paste into the script to remind yourself when error
+  checking or reducing what sequences of tokens are possible. These
+  are heuristics I have developed when writing [nom] scripts.
+
+  literal tokens: ( ) . ; =
+  tokenA*  explain what it is 
+  tokenB* 
+  
+  # short list of tokens:
+  # lits: ().; # tokenA* tokenB* 
+
+TESTING 
+NOTES
+EXAMPLES 
+HISTORY
+ 17 mar 2025
+   work done
+
+*#
+
+  # The script lexing phase
+
+  read;
+
+  # line-relative character numbers (but not completely accurate
+  # because until/while/whilenot will bypass this) 
+  [\n] { nochars; } 
+  # if space is significant in your pattern or language, change this.
+  [:space:] { 
+    clear;
+    !(eof) { .restart }
+    (eof) { .reparse }
+  }
+
+  # some example literal tokens. The character is the same as the 
+  # parse token (with the token delimiter): eg char '.' parse-token '.*'
+  [;.-] { put; add "*"; push; .reparse }
+  
+  # example multiple punctuation character token parsing eg '<=' '>='
+  [<>:!=|&] { 
+    while [<>:!=|&]; put; 
+    # this is used for 'assignment'
+    "=" { clear; add "=*"; push; .reparse }
+    "&&" { clear; add "AND"; put; clear; add "op.and*"; push; .reparse }
+    "||" { clear; add "OR"; put; clear; add "op.or*"; push; .reparse }
+
+    "<","<=",">",">=","==","!=","<>" {
+      # synonyms
+      "<>" { clear; add "!="; }
+      put; clear; add "op.compare*"; 
+      push; .reparse
+    }
+    # example error throw with error message and help text
+    clear; add "operators"; swap; ++; put; --;
+    clear; add "maths.help*"; push;
+    add "  unknown operator '"; get; add "'\n"; 
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  # simple character token lexing 
+  "+","-" { put; clear; add "op.add*"; push;  }
+
+  # example of putting line and character number into the 
+  # 'attribute' (tape-cell) for a token when the error may occur 
+  # much later in the script (eg unmatched braces or brackets or quotes)
+  "(" { 
+    clear; add " near line:"; lines; add " char:"; chars; put; 
+    clear; add "(*"; push; 
+  }
+
+  # example digit sequence lexing
+  [0-9] {
+    while [0-9]; put; 
+    clear; add "positive.integer*"; push;
+  }
+
+  # parsing unicode alphabetic character sequences (but only works
+  # when translated to go/java etc because the pep tool uses byte chars)
+  [:alpha:] {
+    while [:alpha:]; put; clear; add "word*"; push;
+  }
+
+  # a catch all in the lexing phase for 'bad' characters (characters
+  # which are not allowed in the syntax of the language.
+  !"" { 
+    put; 
+    # 'characters' is the topic or topic category in the help 
+    # system (see below)
+    clear; add "characters"; swap; ++; put; --;
+    clear; add "somelang.help*"; push;
+    add "  strange character '"; get; add "' encountered."; put; 
+    clear; add "somelang.error*"; push; .reparse
+  }
+
+parse>
+  # The parse phase of the script. All .reparse commands jump back 
+  # to this point.
+
+  # watch the stack as it parses: very helpful for debugging the script grammar
+  # Comment-out the next 2 lines when the grammar is working well.
+  # Also, it is possible to wrap these lines in whatever is the comment 
+  # character for the output language eg: in html <!-- ... -->
+  add "* line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+
+  #---------------
+  # error trapping, analysis and help system.
+  # most grammar and syntax error analysis and trapping is done 
+  # here, immediately after the parse> label. This keeps the 
+  # language or pattern parser/compiler organised.
+ 
+  pop;
+  
+  # the error token which traps all errors pushed onto the stack 
+  #*
+   the error token just prints a line and character number where 
+   the error occured and also prints the message which put into 
+   the error token. Then it calls .reparse so that the help* token
+   (if there is one) will print a general help message about the 
+   syntax of the language/pattern that relates to this error.
+   The error* and help* tokens here can be called anything but I usually
+   prefix the name of the language or pattern that is being parsed.
+  *#
+
+  "lang.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "! somelang syntax:";
+    add " near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; print;
+    # provide help from the help* token if one was put on the stack. 
+    clear; pop; "lang.help*" { push; .reparse } 
+    # but the help* token also quits
+    quit;
+  }
+
+  # using a parse help token to display help for a topic, category of 
+  # topics or everthing. This is a very useful system because it allows
+  # the language parser/compiler to document its own syntax, and also
+  # it allows the nom script to implement some "help" commands so
+  # that the language user can refresh his or her memory about how the 
+  # language works.
+
+  "help*" {
+    # the topic or category to display help for is in the attribute
+    clear; swap; 
+
+    # a basic usage message for the script. This can be triggered 
+    # when an empty input is given. The double swap is important be
+    # it allows the printing of multiple help topics.
+    "usage","about","all" {
+      swap; add "
+      USAGE
+        usage: pep -f this.script.pss -i 'input'
+        usage: pep -f this.script.pss -i '/helpword'
+      "; swap;
+    }
+
+    # what words are available to provide help
+    "helpwords","about","all" {
+      swap; add "
+     HELP WORDS
+        - usage: a usage method
+        - helpwords: what help keywords can be used
+        - all: show all help
+
+      "; swap;
+    }
+
+    # an example help topic or category
+    # 'brackets' is topic, 'punctuation' is a category, 'all' is everthing 
+    "brackets","punctuation","all" {
+      swap; add "
+      brackets () 
+        are used to group inter-stellar communications.
+        They should always be balanced (matched) and cannot follow
+        a quark burst.
+      Examples:
+         hyperspace ( accelerate @ speed.of.light )   # correct
+         enter ( blackhole ( again )                  # incorrect: unbalanced
+         quark red-dwarf ( dematerialize )            # incorrect ";
+      swap;
+    }
+
+    # another help example
+    # topic, category, all
+    "hyperspace","variables","all" {
+      swap; add "
+      variables are any alphabetic name that is not a function
+      such as x abc longVar etc
+      eg:
+         var        correct
+         var.var    incorrect ";
+      swap;
+    }
+
+    # This help system quits after showing the help message
+    # but you could keep parsing if there is any point. 
+    add "\n\n"; print; quit; 
+  }
+
+  # ----------------
+  # 2 token errors. 2 token error checking is possibly the most useful
+  pop;
+
+  # look for tokens that can't start a sequence. An important error 
+  # checking technique.
+  B"end*".!"end*" {
+    clear; add "syntax"; put; 
+    clear; add "lang.help*"; push;
+    add "  something went wrong. misplaced 'end' token?"; put; 
+    clear; add "lang.error*"; push; .reparse
+  }
+
+  # cut and paste the short list of grammar parse tokens here, 
+  # because it helps you to think about error token sequences
+  # lits: (). tokenA* tokenB* etc .... 
+
+  # a positive lookahead error check. 
+  # tok.a cannot be followed by tok.c tok.d nor tok.e
+  B"tok.a*".!"tok.a" {
+    E"tok.c*",E"tok.d",E"tok.e*" {
+      clear; add "operators"; put; clear; add "lang.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "lang.error*"; push; .reparse
+    }
+  }
+
+  # a negative token lookahead error check
+  # the fn* token must be followed by a bracket literal token 
+  B"fn*".!"fn*".!E"(*" {
+    clear; add "functions"; put; clear; add "lang.help*"; push;
+    clear; add "  incorrect function syntax?"; put;
+    put; clear; add "lang.error*"; push; .reparse
+  }
+
+  # end of stream 2 token error sequences
+  (eof) {
+    E"dot*" {
+      # provide dot help with a help parse token
+      # the 'dot' topic in the help system should provide information
+      # about where dots can and cannot appear in the syntax of the 
+      # language.
+      clear; add "dot"; put; clear; add "lang.help*"; push;
+      clear; add "  Misplaced dot '.' at end of script \n"; put;
+      clear; add "lang.error*"; push; .reparse
+    }
+  }
+
+  push; push;
+  # end of error analysis
+  # -------------------------
+  
+  #-----------------
+  # 1 token grammar reductions
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  "decnum*","variable*" {
+     clear; get; put; clear;
+     add "expr*"; push; .reparse
+  }
+
+  #-----------------
+  # 2 token grammar reductions
+  pop;
+
+  #-----------------
+  # 3 tokens parse token reductions
+  pop;
+  #-----------------
+  # 4 tokens parse token reductions
+  pop;
+  #-----------------
+  # 5 tokens parse token reductions
+  pop;
+
+  # balanced pushes
+  push;push;push;push;push;
+
+  # here check for the correct end token(s) for the grammar
+  (eof) {
+    pop; pop;
+    "expression*","equation*" {
+      clear;  # add "yes: lang syntax ok \n";
+      get; add "\n"; print; clear; quit;
+    }
+    push; push;
+    add "no: lang syntax not ok \n";
+    print; clear; unstack; add "\n"; print; quit;
+  }

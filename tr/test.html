@@ -1,0 +1,215 @@
+## THE TRANSLATION FOLDER FOR THE PEP/NOM SYSTEM
+<p>
+ This folder contains a number of <em>nom</em> <em>translation</em> scripts
+ which are also capable of translating themselves and other 
+ translation scripts as well.
+<p>
+ The scripts which are currently working and reasonably debugged
+ are 
+       <a href='/tr/nom.torust.pss' 
+          title='nom to rust translation script'>rust</a> |
+       <a href='/tr/nom.todart.pss' 
+          title='nom to dart translation script'>dart</a> |
+       <a href='/tr/nom.toperl.pss' 
+          title='nom to perl translation script'>perl</a> |
+       <a href='/tr/nom.tolua.pss' 
+          title='nom to lua translation script'>lua</a> |
+       <a href='/tr/translate.go.pss' 
+          title='nom to go translation script'>go</a> |
+       <a href='/tr/nom.tojava.doc.html' 
+          title='nom to java translation script'>java</a> |
+       <a href='/tr/translate.js.pss' 
+          title='nom to javascript translation script'>javascript</a> |
+       <a href='/tr/translate.ruby.pss' 
+          title='nom to ruby translation script'>ruby</a> |
+       <a href='/tr/translate.python.pss' 
+          title='nom to python translation script'>python</a> |
+       <a href='/tr/translate.tcl.pss' 
+          title='nom to python translation script'>tcl</a> |
+       <a href='/tr/translate.c.pss' 
+          title='nom to c translation script'>c</a>
+        
+<p>
+ Translation scripts which are <em>recent</em> (2025) have names like
+ <a href='/eg/nom.todart.pss'><code>/eg/nom.todart.pss</code></a> or <a href='/eg/nom.tolua.pss'><code>/eg/nom.tolua.pss</code></a> and they are much better than
+ the older scripts which have names like <a href='/eg/translate.java.pss'><code>/eg/translate.java.pss</code></a>
+ or <a href='/eg/translate.tcl.pss'><code>/eg/translate.tcl.pss</code></a> But the older ones should still work for 
+ translating many scripts.
+<p>
+ There is also a <em>helper</em> <em>nom</em> script called <a href='/eg/nom.to.pss'><code>/eg/nom.to.pss</code></a>
+ which can translate any script to any other available language.
+ This script accepts the command in 'english' such as 'translate
+ &lt;file&gt; to ruby' 
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate the palindrome example script to rust
+ </figcaption>
+<pre class='codeline'>
+ pep -f nom.to.pss -i 'palindrome.pss to rust' | bash
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate the translator to perl
+ </figcaption>
+<pre class='codeline'>
+ pep -f nom.to.pss -i 'nom.to.pss to perl' | bash
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ use the translated translator to translate a script to lua
+ </figcaption>
+<pre class='codeline'>
+ echo "palindrome.pss to lua" | ./nomto.pl 
+</pre>
+</figure>
+<p>
+ The <em>nom</em> scripts which I am currently writing (August 2025) all include 
+ their own help system (usually triggered by the '/help' keyword or 
+ some other help-word) and they also include self-translation which 
+ is provided by the helper <em>nom</em> script <a href='/eg/nom.to.pss'><code>/eg/nom.to.pss</code></a> 
+<p>
+<!-- ------------------------------- -->
+<h3> Translation Examples</h3>
+
+<p>
+ Here are some examples of how to translate a script into a target language
+ listed above.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate an inline script to lua and print to stdout 
+ </figcaption>
+<pre class='codeline'>
+ pep -f nom.tolua.pss -i "r;[\n]{lines;add ' ';}print;d;"
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate an inline script to lua and run with input
+ </figcaption>
+<pre class='codeblock'>
+
+    pep -f nom.tolua.pss -i "r;[\n]{lines;add ' ';}print;d;" &gt; test.lua
+    echo -e "leaf \nbranch\n twig" | lua test.lua
+    # This will print each line numbered, or run with a file at input
+    # (but won't number the first line!)
+    cat /usr/share/dict/words | lua test.lua
+  </pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate a &Nopf;&oopf;&mopf; script file to lua and run with input
+ </figcaption>
+<pre class='codeblock'>
+
+    pep -f tr/nom.tolua.pss eg/nom.syntax.reference.pss &gt; syntax.lua
+    echo  "read;add '/';print;clear;" | lua syntax.lua
+    # or run with a file at input
+    cat eg/palindrome.pss | lua syntax.lua
+    # or use the command line switches for input
+    # (but this is more for testing purposes)
+    lua syntax.lua --file eg/palindrome.pss 
+    # or 
+    lua syntax.lua --input "read;add '/';print;clear;" 
+  </pre>
+</figure>
+<p>
+<h2>BASH HELPER FUNCTIONS</h2>
+<p>
+ You can also use the bash functions in <a href='https://bumble.sf.net/books/pars/helpers.pars.sh'>bumble.sf.net/books/pars/helpers.pars.sh</a> to translate
+ into a particular language. There are functions for each of the translator
+ languages and they usually start with an abbreviation of the language
+ name. If the function name ends with an 's' then it is for testing
+ an in-line script in that language and if the fn name ends in 'f' then
+ it is for translating/testing a script file. A double 's' ending means
+ that <em>second-generation</em> testing will take place. 
+ <p>
+ &ldquo;Second-generation
+&rdquo; script translation is a fairly spiffing pep,nom concept that is documented
+ elsewhere but basically means translating the translator with itself 
+ and then translating the target script into the same language and then
+ testing it. It's sort of a way of testing the &ldquo;idem-potency&rdquo; of the 
+ translator. (There is an even more bizarrely amazing &Popf;&eopf;&popf; 🙵  &Nopf;&oopf;&mopf; concept
+ which is contained in the interpret() method of the new perl translator
+ at <a href='/tr/nom.toperl.pss'><code>/tr/nom.toperl.pss</code></a> . This concept involves translating the perl
+ translator with itself and then using the translated-translator to 
+ <em>interpret</em> <em>nom</em> scripts. But I digress... ).
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate an inline script into the Ruby language and run with input
+ </figcaption>
+<pre class='codeline'>
+ pep.rbs 'read;add".";print;clear;' 'abcd'
+</pre>
+</figure>
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate an inline script into rust, compile, and run with input
+ </figcaption>
+<pre class='codeline'>
+ pep.rus 'read;add".";print;clear;' 'abcd'
+</pre>
+</figure>
+<p>
+ (I goes without saying - but I will say it - that you need the Rust 
+ compiler <em>rustc</em> to be installed for this to work)
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ translate a script file into lua and run with input
+ </figcaption>
+<pre class='codeline'>
+ pep.luaf script.pss '[a[b[c]]]'
+</pre>
+</figure>
+<p>
+ <p>
+<h2>NOTES</h2>
+<p>
+ The Dart translator uses a library for grapheme-cluster parsing, and 
+ that library needs to be referenced in a pubspec.yaml file and downloaded
+ from the ether with 'pub get' or something similar. But actually the 
+ <em>nom</em> translation helper script <a href='/eg/nom.to.pss'><code>/eg/nom.to.pss</code></a> will try to do all that 
+ on your behalf (create the yaml file etc), but the bash helper scripts 
+ will not.
+<p>
+<h2>HISTORY</h2>
+<p>
+ In this section I annotate work carried out on, and updates to
+ the various translation scripts.
+<p>
+ 28 Aug 2025
+<p>
+ I am in the process of adding the <code class='nom-command'><a title='nom command reference: system' href='http://nomlang.org/doc/commands/nom.system.html'>system</a></code> command to each
+ translation script. Also, I added the <a title='nom syntax reference: accumulator' href='http://nomlang.org/doc/machine/pep.accumulator.html'>accumulator</a> as an exit 
+ code for the <code class='nom-command'><a title='nom command reference: quit' href='http://nomlang.org/doc/commands/nom.quit.html'>quit</a></code> command which seems a simple and elegant
+ solution to allowing scripts to be pure <em>recognisers</em> .
+<p>
+ June 2025
+ <p>
+ Created some new and much better translation scripts for 
+ dart <a href='/tr/nom.todart.pss'><code>/tr/nom.todart.pss</code></a> rust <a href='/tr/nom.torust.pss'><code>/tr/nom.torust.pss</code></a> perl <a href='/tr/nom.toperl.pss'><code>/tr/nom.toperl.pss</code></a>
+ and lua <a href='/tr/nom.tolua.pss'><code>/tr/nom.tolua.pss</code></a> These scripts have all parsing code in
+ a parse() method and accept command-line switches for parsing from
+ a file or from &lt;stdin&gt; They also have better debugged <code class='nom-command'><a title='nom command reference: escape' href='http://nomlang.org/doc/commands/nom.escape.html'>escape</a></code>
+ and <code class='nom-command'><a title='nom command reference: unescape' href='http://nomlang.org/doc/commands/nom.unescape.html'>unescape</a></code> commands and are much more <em>mindful</em> and 
+ <em>thoughtful</em> of Unicode and UTF8 and code-points and grapheme 
+ clusters. At the very least they are designed to acknowledge the 
+ problem of unicode code-points versus grapheme clusters. However
+ only the Dart translator currently actually parses grapheme clusters.
+ <p>
+ For much more information about work carried out on these amazing
+ translation scripts see the work journal at 
+ <a href='/doc/pepnom.doc.journal.html'><code>/doc/pepnom.doc.journal.html</code></a> 
+<p>
+<p>
+

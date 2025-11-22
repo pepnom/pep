@@ -1,0 +1,49 @@
+
+## THE INCREMENT COUNTER "A+" COMMAND
+
+ Increment the pep accumulator register by one.
+
+ This command increments the machine counter variable by
+ one. It is written *a+;* . The pep://accumulator register can also
+ be decremented (by one) with the nom://a- command. To display the 
+ current contents of the *accumulator* register, use the nom://count
+ command, which appends the value of the counter (as text) to the end
+ of the pep://workspace buffer. If you keep decrementing the counter 
+ it will become negative. That's OK.
+
+ The pep://tape commands nom://++ and nom://-- do not affect the 
+ accumulator register. They are for incrementing and decrementing the 
+ current tape cell.
+
+ * count empty lines in a text file
+ ----+
+   # like: grep -c '^[[:space:]]*$' file.txt
+
+   until "\n"; [:space:] { a+; }
+   clear;
+   (eof) {
+     add "* found "; count; add " blank lines in "; lines; 
+     add " lines of text.\n"; 
+     print; quit;
+   }
+ ,,,
+
+ The plus command takes no arguments. Its counter part is the
+ nom://a- command. 
+
+### NOTES
+
+ The [pep] virtual pep://machine was designed to be as simple 
+ as possible while being capable of parsing and transforming context
+ free languages. Also, I wanted, as far as possible to make the [pep]
+ machine completely *text-oriented* and **not** capable of performing
+ calculations and other code functions. The reason for this was to 
+ avoid embedding compilers and translators in code and thereby hide
+ the language-to-language map features of compilers.
+
+ However, it did seem useful to be able to count things, hence the 
+ accumulator.
+
+
+
+ 

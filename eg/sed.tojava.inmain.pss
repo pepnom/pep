@@ -1,0 +1,988 @@
+
+#* 
+
+  This script translates 'sed' (the unix stream editor) scripts
+  into java source code. This version has all the code in the 
+  'main' function.
+
+STATUS
+
+  3 july 2022
+    Syntax is parsing well, lots of functionality but still
+    missing all branching commands, also 'w' after s/// 
+    also missing <num> after s/// for nth substitution.
+    Also missing a/c/i commands.
+
+BUGS
+
+  The regex patterns are java's not gnu seds. eg $1 to
+  replace group, not \1
+
+NOTES
+  
+  string.matches and Pattern.matches matches all whole input! 
+  So need to add .* to regexs.
+
+  The script will use a similar strategy as tr/translate.java.pss
+  Each machine command will probably be a method, except trivial 
+  commands, for which 'in-line' code can be generated.
+
+  The 0~8 gnu sed syntax (every 8th line) is not parsed at the moment.
+  The file 'sed1line.txt' can be used to test this script.
+
+  This script is only recognising a large subset of gnu sed commands
+  at the moment. Also, it does not parse the regular expressions.
+  
+  Currently there is a difficulty for the pep machine in dealing
+  with the sed syntax 's#a#A#p'. That is, where alternative 
+  delimiters are used for substitutions. This could be solved with a 
+  new 'until' command that looks to the tapecell for the stop condition
+  (text).
+
+  Initially, I will only allow standard s/a/A/p syntax.
+
+  The strategy for translating sed scripts into other languages will
+  be very similar to the strategy for translating pep scripts. A 
+  simple, text-based virtual machine will be included in the generated
+  code, and each sed command will be an instruction or test on that 
+  virtual machine.
+ 
+  Grammar is slightly more permissive than gnu sed 
+  (eg: spaces between s and /// )
+
+GNU SED COMMANDS
+
+  'D' command
+    If pattern space contains newlines, delete text in the pattern space up to
+    the first newline, and restart cycle with the resultant pattern space,
+    without reading a new line of input.
+    If pattern space contains no newline, start a normal new cycle as if the d
+    command was issued.
+
+HISTORY
+
+  3 july 2022
+    Implemented lots of commands, but all branching commands are 
+    not implemented and may not be. Also a/c/i are not either but 
+    can be.
+    Did y/// command and read file command. There are a lot of details
+    to cover with this conversion, including seeing how gnu sed 
+    behaves. eg s/a/a/p does print the line twice.
+  1 july 2022
+    A lot of progress, need to do the rRwW commands. A big challenge
+    are the branching commands tTbB etc because java has no goto.
+    Also need to do the text insert command a/i/c.
+
+    Worked on ranges, which seem to be working now. 
+    The grammar is now a little different to eg/sed.parse.pss 
+    because of the necessity of generating java code.
+  30 june 2022
+    Started to adapt from sed.parse.pss 
+    Code is compiling with very simple commands. Use the 
+    pep.sedjas and pep.sedjaf helper functions to test this.
+
+*#
+
+  read; 
+
+  # make char number relative to line, for error messages
+  [\n] { nochars; }
+
+  # newlines can separate commands in (gnu) sed so we will
+  # just add a dummy ';' here. Also, no trailing ; is required
+  [\n] { 
+    put; clear; add ";*"; push; .reparse
+  }
+
+  # ignore extraneous white-space?
+  [:space:] { clear; (eof) { .reparse } .restart }
+
+  # comments, convert to java comments
+  "#" {
+    clear; add "/* "; until "\n";
+    E"\n" { clip; } add " */\n"; put; clear; 
+    # uncomment line below to include comments in output
+    # add "comment*"; push; .reparse
+  }
+
+  # literal tokens '{' and '}' are used to group commands in
+  # sed, ';' is used to separate commands and ',' to separate line
+  # ranges. ! is the postfix negation operator for ranges
+  ",","{","}",";","!" { put; add "*"; push; .reparse }
+
+  # various actions: print, delete, swap
+  "=","p","P","l","d","D","F","g","G","h","H",
+  "n","N","x","z" {
+    "=" { 
+      clear; 
+      # print line-number + newline
+      add "System.out.println(mm.linesRead);  /* '=' */"; 
+    }
+    "d" { 
+      clear; 
+      # 'd' delete pattern-space, restart 
+      # the if true trick is necessary to avoid 'unreachable statement'
+      # java compile errors (when multiple 'd' commands are given)
+      add "if (true) { mm.patternSpace.setLength(0); continue; } /* 'd' */";
+    }
+
+    "D" { 
+      clear; 
+      # add "/* 'D' delete pattern-space to 1st \\n, restart */";
+      add "if (mm.patternSpace.indexOf(\"\\n\") > -1) {\n";
+      add "  mm.patternSpace.delete(0, mm.patternSpace.indexOf(\"\\n\"));\n";
+      add "  mm.readNext = false; if (true) continue; \n";
+      add "} else { mm.patternSpace.setLength(0); continue; } /* 'd' */";
+    }
+    "F" { 
+      # F: print input filename + newline
+      # maybe unsupported in java
+      clear; add 'System.out.println("<unknown-file>");  /* F */';
+    }
+    "g" { 
+      # g: replace patt-space with hold-space
+      clear; 
+      add "mm.patternSpace.setLength(0); \n";
+      add "mm.patternSpace.append(mm.holdSpace);  /* 'g' */"; 
+    }
+    "G" { 
+      # G; append hold-space to patt-space + \\n"
+      clear; 
+      add "mm.patternSpace.append(\"\\n\" + mm.holdSpace);  /* 'G' */"; 
+    }
+    "h" { 
+      # h:  replace hold-space with patt-space
+      clear; 
+      add "mm.holdSpace.setLength(0); \n";
+      add "mm.holdSpace.append(mm.patternSpace);  /* 'h' */"; 
+    }
+    "H" { 
+      # H:  append patt-space to hold-space + newline
+      clear; 
+      add "mm.holdSpace.append(\"\\n\" + mm.patternSpace);  /* 'H' */"; 
+    }
+    "l" { 
+      # print pattern-space unambiguously, synonym for p ?
+      clear; add "System.out.println(mm.patternSpace); /* 'l' */";
+    }
+    "n" { 
+      # n: print patt-space, get next line into patt-space
+      clear;
+      add "if (mm.autoPrint) { System.out.println(mm.patternSpace); }\n";
+      add "mm.patternSpace.setLength(0);\n";
+      add "mm.readLine();   /* 'n' */";    
+
+    }
+    "N" { 
+      # N: append next line to patt-space + newline
+      clear; 
+      add "mm.patternSpace.append('\\n'); ";
+      add "mm.readLine();  /* 'N' */";
+    }
+    "p" { 
+      clear; add "System.out.println(mm.patternSpace); /* 'p' */";
+    }
+    "P" { 
+      # P: print pattern-space up to 1st newline"
+      clear;
+      add 'if (mm.patternSpace.indexOf("\\n") > -1) {\n';
+      add '  System.out.println(\n';
+      add '    mm.patternSpace.substring(0, mm.patternSpace.indexOf("\\n")));\n';
+      add "} else { System.out.println(mm.patternSpace); }";
+    }
+    "x" { 
+      # x:  # swap pattern-space with hold-space
+      clear; add "mm.swap();  /* x */";
+    }
+    "z" { 
+      # z:  delete pattern-space, NO restart
+      clear; add "mm.patternSpace.setLenth(0); /* z */";
+    }
+    put; clear; add "action*"; push; .reparse 
+  }
+
+  # line numbers are also selectors
+  [0-9] {
+    while [0-9]; put; clear; add "number*"; push; .reparse
+  }
+  # $ is the last line of the file
+  "$" {
+    put; clear; add "number*"; push; .reparse
+  }
+  # patterns - only execute commands if lines match 
+  "/" { 
+    # save line/char number for error message 
+    clear; add "near line/char "; lines; add ":"; chars;
+    put; clear;
+    until "/"; 
+    !E"/" {
+      clear; add "Missing '/' to terminate "; 
+      get; add "?\n"; print; quit;   
+    }
+    clip; 
+    # java .matches method matches whole string not substring
+    # so we need to add .* at beginning and end, but not if regex
+    # begins with ^ or ends with $. complicated hey
+    !E"$" { add ".*$"; }
+    !B"^" { put; clear; add "^.*"; get; }
+    put; clear;
+    # add any delimiter for pattern here, or none
+    add '"'; get; add '"'; put;
+    clear;
+    add "pattern*"; push; .reparse
+  }
+
+
+  # read transliteration commands
+  "y" { 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     # allow spaces between 'y' and '/' although gnu set doesn't
+     until "/"; 
+     !E"/",![ /] { 
+       clear; 
+       add "Missing '/' after 'y' transliterate command\n"; 
+       add "Or trailing characters "; get; add "\n";
+       print; quit;
+     } 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 2nd '/' after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     "/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Empty regex after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     # replace pattern found
+     clip; put; 
+     clear; 
+     add 'mm.transliterate("'; get; add '", "'; put;
+     clear;
+     # save line/char number for error message 
+     add "near line "; lines; add ", char "; chars; 
+     ++; put; --; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 3rd '/' after 'y' transliterate command "; get;
+       add "\n"; print; quit;
+     } 
+     clip; swap; get; 
+     add '");   /* y */ ';
+     # y/// does not have modifiers (unlike s///)
+     put; clear;
+     add "action*"; push; .reparse
+   }
+  
+  # various commands that have an option word parameter 
+  # e has two variants
+  #  "e" { replace "e" "e;  # exec patt-space command and replace"; }
+  "b","e","q","Q","t","T" {
+    # ignore intervening space if any
+    put; clear;
+    while [ ]; clear;
+    # A bit more permissive that gnu-sed which doesn't allow
+    # read to end in ';'.
+    whilenot [ ;}];
+    # word parameters are optional to these commands
+    # just add a space to separate command from parameter
+    !"" { swap; add " "; swap;}
+    swap; get; 
+    # hard to implement because java has no goto ?
+    B"b"  { 
+      clear;
+      # todo: 'b'  branch to <label> or start";
+      add 'mm.unsupported("b -branch ");\n';
+      put; clear;
+    }
+    B"e " { 
+      clear;
+      # 'e <cmd>' exec <cmd> and insert into outputfk
+      add 'System.out.print(mm.execute("'; get; add '"));  /* "e <cmd>" */';
+      put; clear;
+    }
+    "e"  { 
+      clear;
+      add "temp = mm.patternSpace.toString();\n";
+      add "mm.patternSpace.setLength(0);  /* 'e' */\n";
+      add 'mm.patternSpace.append(mm.execute(temp)); ';
+      put; clear;
+    }
+    "q"  { 
+      # q; print + quit
+      clear;
+      add "System.out.println(mm.patternSpace);\n";
+      add "System.exit(0);";
+      put; clear;
+    }
+    B"q "  { 
+      # q; print + quit with exit code
+      clop; clop; put; clear;
+      add "System.out.println(mm.patternSpace);\n";
+      add "System.exit("; get; add ");";
+      put; clear;
+    }
+    "Q"  { 
+      # Q; quit, dont print
+      clear; add "System.exit(0);";
+      put; clear;
+    }
+    B"Q "  { 
+      # Q; quit with exit code, dont print
+      clop; clop; put; clear;
+      add "System.exit("; get; add ");";
+      put; clear;
+    }
+    B"t"  { 
+      clear;
+      # 't' command not implemented yet! \n";
+      # (branch to <label> if substitution made or start)"; 
+      add 'mm.unsupported("t - branch ");\n';
+      put; clear;
+    }
+    B"T" { 
+      clear;
+      # 'T' command not implemented yet! \n";
+      # (branch to <label> if NO substitution made or start)"; 
+      add 'mm.unsupported("T - branch ");\n';
+      put; clear;
+    }
+    add "action*"; push; .reparse
+  }
+
+  # read 'read <filename>' and write commands
+  ":","r","R","w","W" {
+    # ignore intervening space if any
+    put; clear;
+    while [ ]; clear;
+    # A bit more permissive that gnu-sed which doesn't allow
+    # read to end in ';'. i.e. filename cant contain ; or } in
+    # this version.
+    whilenot [ ;}];
+    "" {
+      clear; 
+      add "Sed syntax error? (at line:char "; 
+      lines; add ":"; chars; add ")\n";
+      add "  no filename for read 'r' command. \n";
+      print; quit;
+    }
+    swap; add " "; get; 
+    B": " { 
+      clear;
+      # todo?: ':' branch to <label>\n"; 
+      # might be hard without 'goto' !";
+      add 'mm.unsupported(": - branchlabel ");\n';
+      put; clear;
+    }
+    B"r " { 
+      clear; 
+      # r' read file into patt-space
+      add '/* "r" */\n';
+      add 'Path path = Path.of("'; get; add '");\n';
+      add 'File f = new File("'; get; add '"); \n';
+      add 'if (f.isFile()) { \n';
+      add '  mm.patternSpace.append(Files.readString(path));\n';
+      add "}";
+      put; clear;
+    }
+    B"R " { 
+      clear; 
+      # 'R' insert file into output before next line"; 
+      # bug! inserts file immediately into output.
+      add '/* "R" */\n';
+      add 'Path path = Path.of("'; get; add '");\n';
+      add 'File f = new File("'; get; add '"); \n';
+      add 'if (f.isFile()) { \n';
+      add '  System.out.println(Files.readString(path));\n';
+      add "}";
+      put; clear;
+    }
+    B"w " { 
+      clear;
+      # 'w' write patt-space to file"; 
+      add 'mm.writeToFile("'; get; add '");';
+      put; clear;
+    }
+    # mm.writeToFile(name)
+    B"W " { 
+      clear;
+      # 'W' write 1st line of patt-space to file"; 
+      add 'mm.writeFirstToFile("'; get; add '");';
+      put; clear;
+    }
+    add "action*"; push; .reparse
+  }
+
+  # read substitution commands
+  "s" { 
+     # save line/char number for error message 
+     clear; add "near line/char "; lines; add ":"; chars; 
+     put; clear;
+     # allow spaces between 's' and '/' ??? 
+     until "/"; 
+     !E"/",![ /] { 
+       clear; 
+       add "Missing '/' after 's' substitute command\n"; 
+       add "Or trailing characters "; get; add "\n";
+       print; quit;
+     } 
+     # save line/char number for error message 
+     clear; add "near line "; lines; add ", char "; chars; 
+     put; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Missing 2nd '/' after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     "/" { 
+       clear; 
+       add "Sed syntax error? \n";
+       add "  Empty regex after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     # replace pattern found
+     clip; put; 
+     clear; 
+     add 'mm.substitute("'; get; add '", "'; put;
+     clear;
+     # save line/char number for error message 
+     add "near line/char "; lines; add ":"; chars; 
+     ++; put; --; clear;
+     until "/"; 
+     !E"/" { 
+       clear; 
+       add "Missing 3rd '/' after 's' substitute command "; get;
+       add "\n"; print; quit;
+     } 
+     clip; swap; get; add '", "';
+     # also need to read s/// modifiers, eg e/w/m/g/i/p/[0-9] etc
+     while [ewmgip0-9]; add '");   /* s */ '; put; clear;
+     add "action*"; push; .reparse
+   }
+  
+   "a","c","i" {
+     # label, append, branch, change, insert, quit, write, test, write, read
+     put; clear; 
+     add "Unimplemented command (near line:char "; 
+     lines; add ":"; chars; add ")\n";
+     add "  The script does not recognise '"; get; add "' yet.\n"; print; quit;
+   }
+
+   !"" {
+     put; clear; 
+     add "Sed syntax error? (near line:char "; lines; add ":"; chars; add ")\n";
+     add "  unrecognised command '"; get; add "'\n"; print; quit;
+   }
+
+# where token reduction begins
+parse>
+
+ # To visualise token reduction uncomment this below:
+  add "// "; lines; add ":"; chars; add " "; print; clear; 
+  add "\n"; unstack; print; clip; stack; 
+
+ # commands do not have to be terminated with ';' at the end of a sed script.
+ (eof) { 
+   pop; "action*" { add ";*"; push; push; .reparse }
+   push;  
+ }
+
+
+ pop; pop; pop; pop; pop; pop;
+ # ----------------
+ # 6 token reductions
+ # these must be done first, to take precedence over 
+ # eg pattern/{/commandset/}
+ "pattern*,*pattern*{*commandset*}*",
+ "pattern*,*number*{*commandset*}*",
+ "number*,*number*{*commandset*}*",
+ "number*,*pattern*{*commandset*}*" {
+   # also, need to indent the command set.
+   ++; ++; ++; ++; swap; 
+   replace "\n" "\n  ";
+   # use a brace token as temporary storage, so that we can
+   # indent the 1st line of the commandset
+   # should add 2 spaces but 1st line is getting an extra one.
+   --; put; clear; add " "; get; ++; swap;
+   --; --; --; --;
+
+   # using an array of boolean states to remember if a 
+   # pattern has been 'seen'
+   B"pattern*,*pattern*" {
+     clear;
+     add "if (mm.line.toString().matches("; get; 
+     add ") && (mm.states["; count; add "] == false))\n  {";
+     add " mm.states["; count; add "] = true; }\n"; 
+
+     add "if (mm.states["; count; add "] == true) {\n"; 
+     # get commandset at tape+4
+     ++; ++; ++; ++; get; --; --; --; --;
+     add "\n}\n";
+
+     # comes after so last line is matched 
+     add "if (mm.line.toString().matches("; ++; ++; get; --; --;
+     add ") && (mm.states["; count; add "] == true))\n  {";
+     add " mm.states["; count; add "] = false; }\n"; 
+     put;
+     a+;
+   }
+
+   B"pattern*,*number*" {
+     clear;
+     add "if (mm.line.toString()..matches("; get; 
+     add ") && (mm.states["; count; add "] == false))\n";
+     add "  { mm.states["; count; add "] = true; }\n"; 
+
+     add "if (mm.states["; count; add "] == true) {\n "; 
+     # get commandset at tape+4
+     ++; ++; ++; ++; get; --; --; --; --;
+     add "\n}\n";
+
+     # put here to match last line in range 
+     add "if ((mm.linesRead > "; ++; ++; get; --; --;
+     add ") && (mm.states["; count; add "] == true))\n";
+     add "  { mm.states["; count; add "] = false; }\n"; 
+
+     put;
+     a+;
+   }
+
+   B"number*,*pattern*" {
+     clear;
+     # but this logic doesn't include last line
+     add "if ((mm.linesRead == "; get; 
+     add ") && (mm.states["; count; add "] == false))\n";
+     add "  { mm.states["; count; add "] = true; }\n"; 
+
+     add "if (mm.states["; count; add "] == true) {\n "; 
+     # get commandset at tape+4
+     ++; ++; ++; ++; get; --; --; --; --;
+     add "\n}\n";
+
+     # after to match last line in range
+     add "if (mm.line.toString().matches("; ++; ++; get; --; --;
+     add ") && (mm.states["; count; add "] == true))\n";
+     add "  { mm.states["; count; add "] = false; }\n"; 
+     put;
+     a+;
+   }
+   B"number*,*number*" {
+     clear;
+     add "if ((mm.linesRead >= "; get; 
+     add ") && (mm.linesRead <= "; ++; ++; get; --; --; 
+     add ")) {\n"; 
+     # get commandset at tape+4
+     ++; ++; ++; ++; get; --; --; --; --;
+     add "\n}";
+     put;
+     a+;
+   }
+   clear; add "command*"; push; .reparse
+ }
+
+ push; push; push; push; push; push;
+
+ pop; pop; pop;
+ #---------------
+ # 3 tokens: 
+ #   we have to do this first before the action*;* rule 
+ #   is reduced.
+ 
+ # change to the equivalent eg: range*{*command*}*
+ # This avoids have to rewrite all the java code construction
+ "range*action*;*","number*action*;*",
+ "pattern*action*;*" {
+    # preserve range/number/pattern parse token
+    push; clear; 
+    # transfer action/command code to the correct tapecell
+    get; ++; put; --;
+    clear; add "{*commandset*}*"; push; push; push; .reparse
+    # now we have on the stack, for example
+    # range*{*commandset*}* which is already handled, and the 
+    # code attributes should be in the right tape cells.
+    # we could do: add "{*command*}*" but it doesnt matter....
+ }
+
+ # gnu sed allows empty braces, so we will too.
+ # Another trick: push an empty commandset onto the stack
+ # after a brace - that gets rid of this rule and also
+ # the : command/command/ -> commandset/ rule
+ "range*{*}*","number*{*}*", "pattern*{*}*" {
+    # preserve 1st 2 tokens
+    push; push; clear;
+    add "  // warning: empty braces {} - does nothing!"; put;
+    # add a 'dummy' commandset and reparse.
+    clear; add "commandset*}*"; push; push; .reparse
+ }
+
+ push; push; push;
+
+
+ pop; pop;
+ #---------------
+ # 2 token errors
+
+ "pattern*number*","pattern*pattern*",
+ "number*number*","number*pattern*",
+ "range*number*","range*pattern*",
+ "pattern*;*","number*;*","range*;*" {
+   clear; 
+   add "Sed syntax error? (near line:char "; lines; add ":"; chars; add ")\n";
+   add "  line selector/number/range with no action \n";
+   add "  (missing ',' or misplaced ';' ?) \n";
+   print; quit;
+ }
+
+ "action*action*","action*command*",
+ "action*number*","action*pattern*","action*range*","action*{*" {
+   clear; 
+   add "Sed error (line "; lines; add ", chars "; chars; add "):\n";
+   add "  Missing ';' after command?\n";
+   print; quit;
+ }
+
+ ",*}*", ",*{*", ",*;*", ",*,*",
+ ";*,*", ";*{*", "range*,*" {
+   clip; clop; clop; put;
+   clear; 
+   add "Sed error (line "; lines; add ", chars "; chars; add "):\n";
+   add "  Unexpected character '"; get; add "' \n";
+   print; quit;
+ }
+
+ #---------------
+ # 2 token reductions
+
+ # ignore empty commands (and multiple \n)
+ "command*;*","commandset*;*", ";*;*" { clip; clip; push; .reparse }
+
+ "action*;*" {
+   clear; add "command*"; push; .reparse
+ }
+
+ # maybe need a new token type for clarity here 
+ # eg: negated selector
+ "number*!*" {
+   clear; get; ++; get; --; put;
+   clear; add "number*"; push; .reparse
+ }
+ "pattern*!*" {
+   clear; get; ++; get; --; put;
+   clear; add "pattern*"; push; .reparse
+ }
+
+ "command*command*","commandset*command*" {
+   clear; get; ++; add "\n"; get; --; put;
+   clear; add "commandset*"; push; .reparse
+ }
+
+ pop;
+ #---------------
+ # 3 token errors
+ # eg: '/a/,/bb/p;' or '/[0-3]/,20p;' etc
+
+ #---------------
+ # 3 token reductions
+
+ # commands dont need a ';' before a closing brace in gnu sed
+ # so transmogrify
+ "command*command*}*","command*action*}*",
+ "commandset*action*}*","commandset*command*}*" {
+   clear; get; ++; add "\n"; get; --; put;
+   clear; add "commandset*}*"; push; push; .reparse
+ }
+ "range*action*}*","number*action*}*","pattern*action*}*" {
+   clear; get; add "{\n  "; ++; get; add "\n}"; --; put;
+   clear; add "command*}*"; push; push; .reparse
+ }
+ "{*action*}*" {
+   # make commandset not command for grammar simplicity
+   clear; add "{*commandset*}*"; push; push; push; .reparse
+ }
+
+ # a single command in braces can be just treated like a 
+ # set of commands in braces, so lets change to make other
+ # grammar rules simpler
+ "{*command*}*" {
+   # make commandset not command for grammar simplicity
+   clear; add "{*commandset*}*"; push; push; push; .reparse
+ }
+
+
+ pop;
+ #---------------
+ # 4 token errors
+
+ #---------------
+ # 4 token reductions
+ "pattern*{*commandset*}*","number*{*commandset*}*" {
+   # indent brace commands in tapecell+2
+   ++; ++; swap; replace "\n" "\n  "; 
+   # indent 1st line using { token as temporary storage
+   --; put; clear; add "  "; get; ++; swap;
+   --; --; 
+
+   "pattern*{*commandset*}*" {
+     clear; 
+     add "if (mm.line.toString().matches("; get; 
+     add ")) {\n"; ++; ++; get; --; --; add "\n}"; put;
+   }
+   "number*{*commandset*}*" {
+     clear; 
+     add "if (mm.linesRead == "; get; 
+     add ") {\n"; ++; ++; get; --; --; add "\n}"; put;
+   }
+   clear; add "command*"; push; .reparse  
+ }
+
+ pop; pop;
+ # ----------------
+ # 6 token reductions
+ # none because we have to do them first.
+
+ push; push; push; push; push; push;
+
+ (eof) {
+   # check for valid sed script
+   add "/* The token parse-stack was: "; print; clear;
+   unstack; add " */\n"; print; clip; clip; clip; clip;
+   !"commandset*".!"command*" {
+     clear; 
+     add "# [error] Sed syntax error? \n";
+     add "# ----------------- \n";
+     add "# Also, uncomment lines after parse> label in script\n";
+     add "# to see how the sed script is being parsed. \n";
+     print; quit;
+   }
+   "commandset*","command*" {
+     clear; 
+     # indent the generated code
+     add "\n"; get; replace "\n" "\n       "; put; clear;
+     # create the java preamble, with a 'sedmachine' having a 
+     # holdspace and patternspace
+     add '
+
+ /* [ok] Sed syntax appears ok */
+ /* ---------------------      */
+ /* Java code generated by "sed.tojava.pss" */
+ import java.io.*;
+ import java.nio.file.*;
+ import java.nio.charset.*;
+ import java.util.regex.*;
+ import java.util.*;   // contains stack
+
+ public class javased {
+   public StringBuffer patternSpace;
+   public StringBuffer holdSpace;
+   public StringBuffer line;         /* current line unmodified */
+   public int linesRead;
+   private boolean[] states;         /* pattern-seen state */
+   private Scanner input; 
+   private boolean eof;              /* end of file reached? */
+   private boolean hasSubstituted;   /* a sub on this cycle? */
+   private boolean lastLine;         /* last line of input (for $) */
+   private boolean readNext;         /* read next line or not */
+   private boolean autoPrint;        /* autoprint pattern space? */
+
+   /** make a new machine with a character stream reader */
+   public javased(Scanner scanner) {
+     this.patternSpace = new StringBuffer(""); 
+     this.holdSpace = new StringBuffer(""); 
+     this.line = new StringBuffer(""); 
+     this.linesRead = 0;
+     this.input = scanner;
+     this.eof = false;
+     this.hasSubstituted = false;
+     this.readNext = true;
+     this.autoPrint = true;
+     // assume that a sed script has no more than 1K range tests! */
+     this.states = new boolean[1000];
+     for (int ii = 0; ii < 1000; ii++) { this.states[ii] = false; }
+   }
+
+   /** read one line from the input stream and update the machine. */
+   public void readLine() {
+     int iChar;
+     if (this.eof) { System.exit(0); }
+     // increment lines
+     this.linesRead++;
+     if (this.input.hasNext()) {
+       this.line.setLength(0);
+       this.line.append(this.input.nextLine());
+       this.patternSpace.append(this.line);
+     } 
+     if (!this.input.hasNext()) { this.eof = true; }
+   }
+
+   /** command "x": swap the pattern-space with the hold-space */
+   public void swap() {
+     String s = new String(this.patternSpace);
+     this.patternSpace.setLength(0);
+     this.patternSpace.append(this.holdSpace.toString());
+     this.holdSpace.setLength(0);
+     this.holdSpace.append(s);
+   }
+
+   /** command "y/abc/xyz/": transliterate */
+   public void transliterate(String target, String replacement) {
+     // javacode for translit
+     //String target      = "ab";
+     //String replacement = "**";
+     //char[] array = "abcde".toString().toCharArray();
+     int ii = 0;
+     char[] array = this.patternSpace.toString().toCharArray();
+     for (ii = 0; ii < array.length; ii++) {
+       int index = target.indexOf(array[ii]);
+       if (index != -1) {
+         array[ii] = replacement.charAt(index);
+       }
+     }
+     this.patternSpace.setLength(0);
+     this.patternSpace.append(array);
+   }
+
+   /** command "s///x": make substitutions on the pattern-space */
+   public void substitute(String first, String second, String flags) {
+     // flags can be gip etc
+     // gnu sed modifiers M,<num>,e,w filename may be tricky here.
+
+     Process p;
+     BufferedReader stdin;
+     BufferedReader stderr;
+     String ss = null;
+     String temp = new String("");
+     String old = new String(this.patternSpace);
+     String opsys = System.getProperty("os.name").toLowerCase();
+ 
+     // case insensitive: add "(?i)" at beginning
+     if ((flags.indexOf(\'i\') > -1) ||
+         (flags.indexOf(\'I\') > -1)) { first = "(?i)" + first; }
+
+     // multiline matching, check!!
+     if ((flags.indexOf(\'m\') > -1) ||
+         (flags.indexOf(\'M\') > -1)) { first = "(?m)" + first; }
+
+     // <num>- replace only nth match
+     // todo
+
+     // gnu sed considers a sub has taken place even if the 
+     // pattern space is unchanged! ie if matches first pattern.
+
+     if (this.patternSpace.toString().matches(".*" + first + ".*")) {
+       this.hasSubstituted = true;
+     }
+
+     // g- global, replace all.
+     if (flags.indexOf(\'g\') == -1) {
+       temp = this.patternSpace.toString().replaceFirst(first, second);
+     } else {
+       temp = this.patternSpace.toString().replaceAll(first, second);
+     }
+     this.patternSpace.setLength(0);
+     this.patternSpace.append(temp);
+     if  (this.hasSubstituted) {
+       // only print if substitution made, patternspace different ?
+       if (flags.indexOf(\'p\') != -1) {
+         System.out.println(this.patternSpace);
+       }
+       // execute pattern space, gnu ext
+       if (flags.indexOf(\'e\') != -1) {
+         System.out.print(this.execute(this.patternSpace.toString()));
+       }
+
+       // write pattern space to file, gnu ext
+       // need to scan filename
+       if (flags.indexOf(\'w\') != -1) {
+       }
+     }
+   }
+
+   /** execute command/pattspace for s///e or e <arg> or "e" */
+   public String execute(String command) {
+     Process p;
+     BufferedReader stdin;
+     BufferedReader stderr;
+     String ss;
+     StringBuffer output = new StringBuffer("");
+     try {
+       if (System.getProperty("os.name").toLowerCase().contains("win")) {
+         p = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/c", command});
+       } else {
+         p = Runtime.getRuntime().exec(new String[]{"bash", "-c", command});
+       }
+       stdin = new BufferedReader(new InputStreamReader(p.getInputStream()));
+       stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+       while ((ss = stdin.readLine()) != null) { output.append(ss + \'\\n\'); }  
+       while ((ss = stderr.readLine()) != null) { output.append(ss + \'\\n\'); } 
+     } catch (IOException e) {
+       System.out.println("sed exec \'e\' failed: " + e);
+     }
+     return output.toString();
+   }
+
+   /** command "W": save 1st line of patternspace to filename */
+   public void writeFirstToFile(String fileName) {
+     try {
+       File file = new File(fileName);
+       Writer out = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(file), "UTF8"));
+       // get first line of ps
+       out.append(this.patternSpace.toString().split("\\\\R",2)[0]);
+       // yourString.split("\\R", 2);
+       out.flush(); out.close();
+     } catch (Exception e) {
+       System.out.println(e.getMessage());
+     }
+   }
+
+   /** command "w": save the patternspace to filename */
+   public void writeToFile(String fileName) {
+     try {
+       File file = new File(fileName);
+       Writer out = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(file), "UTF8"));
+       out.append(this.patternSpace.toString());
+       out.flush(); out.close();
+     } catch (Exception e) {
+       System.out.println(e.getMessage());
+     }
+   }
+
+   /** handle an unsupported command (message + abort) */
+   public void unsupported(String name) {
+     String ss =
+      "The " + name + "command has not yet been implemented\\n" +
+      "in this sed-to-java translator. Branching commands are hard in\\n" +
+      "in a language that doesn\'t have \'goto\'. Your script will not \\n" + 
+      "execute properly. Exiting now... \\n";
+      System.out.println(ss); System.exit(0);
+   }
+
+   public static void main(String[] args) throws Exception { 
+     String temp = "";    
+     javased mm = new javased(new Scanner(System.in)); 
+     while (!mm.eof) {
+       mm.hasSubstituted = false;
+       mm.patternSpace.setLength(0);
+       // some sed commands restart without reading a line...
+       // hence the use of a flag.
+       if (mm.readNext) { mm.readLine(); }
+       mm.readNext = true;
+';
+     get; 
+     add "\n       if (mm.autoPrint) { System.out.println(mm.patternSpace); }";
+     add "\n     }\n   }\n }\n";
+     print;
+   }
+   quit; 
+ }

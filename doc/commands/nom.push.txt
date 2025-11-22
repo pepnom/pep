@@ -1,0 +1,88 @@
+
+## NOM PUSH COMMAND
+
+  Push a grammar token onto the pep://stack
+
+  The *push* command is essential for managing the [pep] and [nom]
+  "parse-stack" pep://stack (which is a *lifo* stack of string items).
+  The push command also increments the pep://tape pointer. This means
+  that after a push, the tape will be pointing to the *next* tape cell.
+
+  However, if the pep://workspace buffer is empty at the time the 
+  push command is executed, then the pep pep://machine is unchanged:
+  the tape-pointer is not incremented. This behaviour is important for 
+  maintaining the tape and stack synchronised. The stack is designed
+  to contain the language (or pattern) grammar parse-tokens and the 
+  tape is designed to contain the "attributes" which correspond to 
+  each of those tokens.
+
+  It is very common for a push command to be followed by a 
+  nom://reparse command. This is to ensure that all grammar rule 
+  reductions take place. 
+
+  * typical usage of push with a 3 token reduction rule
+  -----+
+    # fragment
+    pop;pop;pop;
+    "direction*angle*newline*" {
+      clear; get; ++; get; --; put; 
+      clear; add "action*"; push; .reparse
+    }
+    push;push;push;
+  ,,,,
+
+  The [nom] fragment above corresponds to an [xbnf] rule 
+  >> action := direction angle newline ;
+   
+  The fragment doesn't really 'compile'; it just concatenates the 
+  2 attributes in direction* and angle* and puts them into the new 
+  action* parse-token (although sometimes this is all that is 
+  required).
+
+### PUSH AND THE PARSE TOKEN DELIMITER
+
+  The behaviour of *push* is that it reads the pep://workspace buffer
+  from the beginning until the 1st occurrence of the parse-token
+  pep://delimiter . The default delimiter is '*' but this can be changed
+  with the nom://delim command (usually in a nomsyn://begin block).  
+  
+  The parse token delimiter is a single character which separates the 
+  parse-tokens when they are in the workspace buffer and it can be set 
+  to any character (even a space or dot).
+
+  The script below is a fairly non-standard use of *push*  but illustrates
+  some capabilities of the [pep] machine. This prints one word per line
+  and prints words with a '.' character on 2 lines.
+
+  * use the 'delim' command and push to split a string 
+  -----+
+    read; 
+    ![:space:] { 
+      whilenot [:space:]; 
+      # split a word on the first '.' using push
+      delim '.'; push; 
+      !"" { 
+        --; put; ++; clear; delim '*'; pop; add "\n"; get; add "\n";
+        print; clear; .restart
+      } 
+      # change delim back before pop 
+      delim '*'; pop; add "\n"; print; clear;
+    }
+    [:space:] { while [:space:]; clear; }
+    !"" { clear; add "cryptic error message!\n"; print; quit; }
+  ,,,
+
+### NOTES 
+
+  [pep] is a (string-based) virtual-machine and you can use it anyway
+  that you would like. 
+
+  If the workspace starts with the delimiter, then only the delimiter
+  character will be pushed on the stack. This is not very useful because
+  it is an empty token.
+
+  * if the workspace starts with the delimiter 
+  ------+
+    read; clear; add "*a"; push; state; clear;
+  ,,,
+  

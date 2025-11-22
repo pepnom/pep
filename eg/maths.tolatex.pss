@@ -1,0 +1,1537 @@
+
+#*
+
+## maths.tolatex.pss
+
+ABOUT 
+
+ Translating arithmetic and logical numerical and symbolic expressions
+ to latex.
+
+ Parsing arithmetic and logical expressions and equations with numbers
+ (decimals) and variables and the operators "+,-,/,*,^" and comparison
+ operators <= >= == != <> 
+
+ This parser handles assignement with := , logical comparison and 
+ concatenation with && || AND and OR as well as numerical comparison
+ with < <= etc It also contains function names like sqrt(...). 
+ The script uses negative token lookahead, so that this script can 
+ more-or-less be cut and paste into a language parser/compiler to 
+ handle the parsing of expressions (although some modifications may
+ be necessary, depending on the syntax of the language).
+
+ This is a significant development and rewrite of the script eg/exp.tolisp.pss
+ where I parse the arithmetic and logical infix expression. I will try to add
+ functions like sqrt() for square-root and I will try to make the 'lookahead'
+ code better so that it can be used in any language expression parser.
+
+ The expression parser also includes its own error handling and help system
+ where each topic has a help text. These help texts can be combined 
+ with categories. (see the maths.help* token)
+
+NOTES
+
+ This script is now a template for how to write scripts. It has 
+ error token throwing with a built in help system.
+
+ numbers and variable names are resolving nicely to expressions
+ even before new tokens because I used a negative lookahead test.
+
+DONE
+
+  Made the lookahead code better. Ie use negative testing for 
+  operator precedence. eg if x+y not followed by * or / or ^ then 
+  reduce. See file:///doc/howto/nom.lookahead.html for an example
+  of this. This also simplified the code
+
+  Added "functions" like sqrt tan cos etc.  
+  eg: sqrt(x + y)
+
+  added :var for symbols like \\theta etc 
+
+  The sigma sum from 0 to infinity. 
+  Added symbols eg " :theta " ":infinity"
+
+  Added 2 arg functions like sum() eg sum(expr* , expr*);
+
+  make assignments reduce with look ahead (eg in brackets or ended 
+  with comma). need to preserve lookahead token.
+
+  A +/- symbol with ':plusminus'
+
+  removed brackets from fraction parts with nom://clip and nom://clop
+
+TODO
+
+  Allow compare and logical expression at eof (convert to equation?)
+
+  Allow 4*a*c to be rendered as '4ac'
+
+  decide how to render logical and/or
+
+  \[ e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!} \]
+  \[ \Gamma(x) = \int_0^\infty t^{x-1} e^{-t} \, dt \quad
+
+STATUS 
+
+  14 mar 2025: 
+    working quite well, has functions, symbols,
+    one bug with the new lookahead reductions of assignments
+    and maybe op.compare. This allows x:=3, or x:=4) to reduce
+
+TOKENS 
+
+  literal tokens: 
+    ( )  grouping
+    . 
+    ;    end of expression
+    = 
+    ,    for functions that need several tokens
+    :    :var for symbols like greek letters etc.
+
+  expr* an arithmetic expression
+  equation* an expression terminated with ';' 
+  equationset* just a list of equations. 
+  natnum* a natural number [0-9]
+  decnum* a positive decimal number
+  op.and* for logic '&&' or 'AND'
+  op.or* for logic '||' or 'OR'
+  op.compare < <= > >= == != <> comparison operators
+  op.power* '^'
+  op.mul* either * or / but what should be the precedence here?
+  op.add* either +/-
+  variable* any variable name
+  function* a function name like 'sqrt' or 'squareroot'
+            functions are written sqrt(...)
+  sign* either +/- but only preceeding an expression
+  #lits: ().;=,:
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+NOTES
+  
+  When implementing lookahead with pep/nom it is better to use 
+  a "negative" approach, i.e. say "if this sequence is NOT followed
+  by token x (which has higher precedence) then reduce, otherwise
+  dont.
+
+  
+  Negative variables I think are not implemented but this would
+  be trivial. 4x 10size (implicit multiplication of variable)
+  is also not implemented. Space is ignored so all expressions and 
+  equations can span multiple lines.
+
+TESTING 
+
+  * view latex output
+  >> pep -f eg/maths.tolatex.pss -i "-0.21*(0.33+e^(x+y))"
+
+  * render the quadratic formula into pdf
+  ------
+    pep -f eg/maths.tolatex.pss \
+        -i ' x==(-b :plusminus sqrt(b^2-4*a*c))/(2*a);' > test.tex
+    pdflatex test.tex; open test.pdf
+  ,,,
+
+  * generate pdf and view
+  -------
+    pep -f eg/maths.tolatex.pss -i "10^x/10^(x+1)*(3.15+e^3)" > test.tex
+    pdflatex test.tex; open test.pdf
+  ,,,
+
+  * demonstrate operator precedence. 
+  >> pep -f eg/maths.tolatex.pss -i "a+b*c*(d+e^2)"
+
+  * test reformating of an arithmetic expression
+  >> pep -f eg/maths.tolatex.pss -i "6 + (6+7*8)*var"
+
+EXAMPLES 
+
+ assignments, logic and/or, comparisons, functions, variables.
+
+ * negative and decimal number
+ >> (-4+3)*6.1/-0.77777
+
+ * logical expression and comparisons
+ >> (4+x^2 == y^3) AND (x != y);
+
+ * multiple equations and comparisons
+ >>  x+1 > sqrt(1*2*3); y^2+x^2 ; 
+
+ * variable names and functions
+ >> (9*count^4) + var * sqrt(123.456+x/3)
+
+ eg: (var + 88) + -44.33 * 2 
+ eg: x := (x^2 && (y^2 != 100));
+
+HISTORY
+ 
+ 11 aug 2025
+   adding self-help, self-translation (via /eg/nom.to.pss) and 
+   self-testing along with error* and help* parse tokens
+   I would also like to add a help word that outputs and expression
+   as pdf (i.e convert from latex to pdf) and then opens the pdf 
+   doc.
+ 17 mar 2025
+   added equationset* token for multiple equations. 
+ 14 mar 2025
+   added logic operators and parse tokens op.and* op.or* and 
+   comparison operators with op.compare* token. also ';' equation*
+   (which is expression terminated with ';') also added ',*' for 
+   functions like sum(0,x) sigma sum.
+ 13 mar 2025
+   converted from eg/exp.tolisp.pss
+
+*#
+
+
+  # check for an empty doc or help-word and trigger help if so
+  begin {
+    while [:space:]; clear;
+    (eof) {
+      # the category is help and the token too.
+      add "usage"; put; clear; 
+      add "maths.help*"; push; .reparse
+    }
+    # a document starting with / or // etc will be considered a help request
+    # a document starting with '/' would not be valid maths expression??
+    while [/];
+    !"" {
+      # get 2 help words and save with no space 
+      clear; while [:space:]; clear; whilenot [:space:];
+      put; clear; while [:space:]; clear; whilenot [:space:];
+      swap; get; put; clear;
+      add "maths.help*"; push; .reparse
+    }
+  } # end of beginblock
+
+  # The script lexing phase
+
+  read;
+
+  # spaces are actually significant because they cannot occur in
+  # decimal numbers, eg: '4. 03' is probably an error
+  # make character counter relative to each line for more helpful
+  # error messages
+  [\n] { nochars; } 
+  [:space:] { 
+    clear; !(eof) { .restart } (eof) { .reparse }
+  }
+
+  # literal token lexing
+
+  # ; is end of an expression/equation this is needed to reduce
+  #   comparison operators.
+  [;] { put; add "*"; push; .reparse }
+  # for functions, eg binomial
+  [,] { put; add "*"; push; .reparse }
+  
+  # todo add % as modulus
+  [<>:!=|&] { 
+    while [<>:!=|&]; put; 
+    # this is use for 'assignment'
+    ":=" { clear; add "="; put; clear; add "=*"; push; .reparse }
+    "&&" { clear; add " \\& "; put; clear; add "op.and*"; push; .reparse }
+    "||" { clear; add " | "; put; clear; add "op.and*"; push; .reparse }
+
+    # for symbols like theta
+    ":" { add "*"; push; .reparse }
+    #"&&" { clear; add " \\land "; put; clear; add "op.and*"; push; .reparse }
+    #"||" { clear; add " \\lor "; put; clear; add "op.and*"; push; .reparse }
+
+    "<","<=",">",">=","==","!=","<>" {
+      # synonyms
+      "==" { clear; add " = "; }
+      "<=" { clear; add " \\leq "; }
+      ">=" { clear; add " \\geq "; }
+      "<>","!=" { clear; add " \\neq "; }
+      put; clear; add "op.compare*"; 
+      push; .reparse
+    }
+    clear; add "operators"; swap; ++; put; --;
+    clear; add "maths.help*"; push;
+    add "  unknown operator '"; get; add "'\n"; 
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  # plus and minus
+  "+","-" { put; clear; add "op.add*"; push;  }
+  # multiply and divide
+  "*","/" { 
+    "*" { clear; add " \\times "; } 
+    put; 
+    clear; add "op.mul*"; push;
+  }
+
+  # to the power of, but what is the lisp power operator ???
+  "^" { clear; add "^"; put; clear; add "op.power*"; push;  }
+  # brackets for grouping
+  "(" { 
+    # it useful to have a line and char for extra
+    # opening brackets.
+    clear; add " near line:"; lines; add " char:"; chars; put; 
+    clear; add "(*"; push; 
+  }
+  ")" { put; add "*"; push; }
+  # for decimal number
+  "." { put; clear; add "dot*"; push; }
+  [0-9] {
+    while [0-9]; put; 
+    clear; add "natnum*"; push;
+  }
+  # What characters are variable names ?
+  [:alpha:] {
+    while [:alpha:]; put; 
+    # sum is a sigma sum eg \\sum{0,x}
+    #"AND" { clear; add " \\land "; put; clear; add "op.and*"; push; .reparse }
+    #"OR" { clear; add " \\lor "; put; clear; add "op.or*"; push; .reparse }
+    "AND" { clear; add " \\& "; put; clear; add "op.and*"; push; .reparse }
+    "OR" { clear; add " | "; put; clear; add "op.or*"; push; .reparse }
+    "sqrt","squareroot","cuberoot","4throot","5throot","nthroot",
+    "tan","cos","cosine","sin","sine","sec","cosec","cot",
+    "sum","binomial" {
+      # need to take care these replacements wont interfer with
+      # each other
+      replace "cosec" "csc"; 
+      replace "cosine" "cos"; replace "sine" "sin";
+      replace "squareroot" "sqrt"; replace "cuberoot" "sqrt[3]"; 
+      replace "4throot" "sqrt[4]"; replace "5throot" "sqrt[5]"; 
+      replace "nthroot" "sqrt[n]"; 
+      replace "sum" "sum_"; 
+      replace "binomial" "binom"; 
+      put; clear; add "\\"; get; put;
+      clear; add "function*"; push; .reparse
+    }
+    clear; add "variable*"; push;
+  }
+
+  # a trick to catch bad characters. 
+  # better would be a !"text" test
+  !"" { 
+    put; 
+    clear; add "characters"; swap; ++; put; --;
+    clear; add "maths.help*"; push;
+    add "  strange character '"; get; add "' encountered."; put; 
+    clear; add "maths.error*"; push; .reparse
+  }
+
+parse>
+  # The parse phase 
+
+  # watch the stack at is parses: very helpful for debugging.
+  # Comment out when the script works.fk
+  add "% line "; lines; add " char "; chars; add ": "; print; clear; 
+  unstack; print; stack; add "\n"; print; clear;
+
+  # ----------------
+  # the error and help system
+
+  # we can group all error analysis here to make the script more 
+  # organised. This section helps to provide good error messages to
+  # the user.
+
+  pop;
+
+  "maths.error*" {
+    # get the parse stack here as well
+    clear; 
+    add "--maths.tolatex.pss-- (convert maths expression to LaTeX)\n";
+    add "near line:"; lines; add " char:"; chars; add "\n";
+    get; add "\n"; 
+    # indent the error message 
+    replace "\n" "\n  "; add "\n"; print;
+    print;
+    # provide help from the maths.help* token if one was 
+    # put on the stack. 
+    clear; pop; "maths.help*" { push; .reparse } 
+    quit;
+  }
+
+  #*
+   Using a help* token to allow the script to document itself.
+   The swap commands below are used to save the help text in the tape
+   cell so that several or all help topics can be printed at once.
+
+  *#
+
+  "maths.help*" {
+    clear; swap; 
+    
+    # how to use this script
+    "usage","help","format","help" {
+      swap; add "
+    USAGE
+      pep -f maths.tolatex.pss maths.txt
+      pep -f maths.tolatex.pss -i '(x^2/(3*x+y)+sqrt(x+y)'
+
+      A nom script to format a plain-text maths expression as 
+      a printable *latex* document.
+      ";
+      swap;
+    }
+
+    # help about the help-system
+    "words","usage","help" {
+      swap; add "
+    HELP KEYWORDS
+
+      All documents/input which begin with '/' are considered to be help 
+      requests. See below for the list of valid help keywords.
+
+      pep -f maths.tolatex.pss -i /<helpword> 
+        see some help for that topic or category
+
+      pep -f maths.tolatex.pss -i /words
+        see what help topics and categories are available for this script.
+
+      pep -f maths.tolatex.pss -i /help
+        see all the help.
+
+      pep -f maths.tolatex.pss -i /toperl | bash
+        translate this script to perl 
+        
+    ### General Help 
+      - /usage: show a usage message for this script 
+      - /words: show what help commands are available
+      - /faq: show an FAQ about this script.
+      - /nom: show information about the nom script language
+    ### About the maths expression format 
+      - /flaws: known limitations with how this script parses expressions
+      - /format: show summary information about the math expressions 
+    ### About testing this script
+      - /eg.lines: prints a set of one line maths expressions that should 
+         be accepted by this recogniser script. These can be used by
+         other test words.
+      - /eg.bad.lines: a set of one-liners that should be rejected.
+      - /test.line: tests one random one-line maths expression 
+      - /test.line.pdf: make and open a pdf of a (random) one line expression 
+      - /test.line.png: make a png image of some random formula.
+      - /test.bad.line: tests one random one-line invalid maths expression 
+      - /test: test the script with a document
+
+      The 'test' and 'to' words need to be piped to bash to actually 
+      execute.
+
+    ### About translating this script
+
+      - /translate: show how to translate this script to another language
+      - /to<lang>: translate this script to some other language
+          using the nom translation scripts at www.nomlang.org/tr/ 
+           ( rust|dart|perl|lua|go|java|javascript|ruby|python|tcl|c) 
+           (eg: /toperl /tolua etc). Or latex/pdf/html 
+
+      Also see the /test.line help word for testing translated scripts
+
+      There are also help 'categories' which display several help
+      topics at once such as:
+
+      - /usage: script usage and helpwords
+      - /format: all information about acceptable maths expressions 
+      - /help: show all available help topics.
+
+      ";
+      swap;
+    }
+
+    # the faq 
+    "FAQ","faq","help" {
+      swap; add "
+    FAQ
+      (not) frequently asked questions about /eg/maths.tolatex.pss
+
+      Q: What does this script do?
+      A: It converts a 'simple' maths expression in ascii or unicode or 
+         something into a marvellously format LaTex Maths formula.
+
+      Q: What am I supposed to do with this LaTeX thingy?
+      A: Convert it to PDF and print it.
+
+      Q: Not PDF again, why does everything have to be pdf?
+      A: It doesn't but if you want to print something on actual paper
+         you sort of have to live with it.
+
+      Q: How do I convert it to pdf?
+      A: You have to install something like *pdflatex* or some variant 
+         thereof.
+
+      Q: Why LaTeX? And why does it have a silly name like that?
+      A: LaTeX is a document formatting system invented by somebody 
+         called Donald Knuth. Not sure about the name.
+
+      Q: Isn't LaTeX as old as the hills?
+      A: Yes, but I haven't found a good alternative, personally, despite
+         being constantly annoyed by it. There is a thing called 
+         *eqn* which is even older and invented by some other Unix boffin
+         but this aint that.
+
+      Q: Can I translate this nom script to some other language?
+      A: Of course! Just do: pep -f maths.tolatex.pss -i /torust to 
+         get a compiled rust version of this. This line uses all sorts of 
+         shenanigans, and needs another script called /eg/nom.to.pss and 
+         also the (nom) translation script for rust which should be in the 
+         /tr/ folder of where-ever you put you pep/nom stuff. 
+
+      Q: But none of this works?
+      A: Ooops. Well, try setting the $PEPNOM environment variable or making 
+         sure you have the translation scripts in the right spot, and 
+         the nom.to.pss script in the /eg/ folder. It works for me, and thats
+         the main thing.
+
+      Q: I got a segmentation fault when I tried to run 'pep'. What is going on?
+      A: Oh dear, yes that has been known to happen on very very very rare 
+         occasions. But that is the fault of 'C'. Not me. And I will get around
+         to cracking out valgrind or something else one of these days and 
+         fixing it. But don't worry. Just translate the script to some nice
+         memory safe language and then run it (as a filter of course).
+
+      Q: Great... but what is this 'nom' thing anyway?
+      A: Its a pretty amazing domain-specific-language that parses and 
+         compiles and chops and dices. Its sort of revolutionary and a 
+         totally spiffing new way of looking a (context-free/sensitive)
+         language and grammars and text patterns and pretty much the world
+         itself.
+
+      Q: Wow, so it must be pretty famous and lots of people must be over 
+         the moon about it?
+      A: Aaaahm, can we not go into that? As far as I know, its not 
+         widely known.
+
+      Q: So, its an obscure esoteric language that no-one uses and would be
+         a total waste of my time to learn?
+      A: Think of yourself as a pioneer, an astronaut in the space of knowledge.
+         You could be user number 3 (there was some other guy who said he
+         one used pep/nom ...) Think how people boast these days 
+         about being google employee number 7. 
+
+      Q: Whats more, you have written an entire FAQ in a formatting script 
+         for maths expressions? Thats fruity.
+      A: Ever heard of 'literate programming'? Nom is the queen of the 
+         self-reference. It compiles itself, translates itself, translates
+         the translated translator, and interprets the translated interpreter
+         (well it will do, when I get around to fixing the 'runParse()' 
+         method in the /eg/nom.toperl.pss translator script and the other 
+         interpreted language translator like ruby, tcl, python and whatnot)
+
+      Q: How does that help me?
+      A: Well, you can translate a nom script into whatever every-day 
+         programming language that someone told you was the bees-knees 
+         and then use any nom script from there. Or put it on a 
+         web-server.
+
+      Q: What is all this 'self-help' stuff?
+      A: Well, by adding a help* and error* token to the nom script, it 
+         is easy for the script to document itself with topics and 
+         subjects and also to translate itself and test itself. But 
+         adding a bit of boilerplate code to each script alot is achieved.
+
+      Q: Anyway, this has gone on for long enough. I have some actually 
+         work to get back to. Any more spurious non-answers?
+      A: Work is a form of play, and play is a form of work.
+
+
+      ";
+      swap;
+    }
+       
+    # more information about the nom language 
+    "nom","about","help" {
+      swap; add "
+        This script is written in the 'nom' language which is a 
+        manifestation of the pep:nom parsing system.
+
+        Nom is a scripting language for parsing/translating context-free and 
+        (some) context-sensitive patterns. Please see www.nomlang.org for
+        (much) more information.
+      ";
+      swap;
+    }
+
+    # standard help word. produce a set of valid maths expression which 
+    # can be used to test the script with /test
+    "eg" {
+      swap; add '
+      (x^2 + y^2)/2 ;
+      (x^(2+x) + y^(2+y))/2 ;
+      sqrt(x+y/2) ;
+      '; 
+      replace "\n  " "\n";
+      swap;
+    }
+
+    # This help word should be standard so that a script like 
+    # /eg/nom.to.pss can call it and test any script
+    "eg.lines" {
+      swap; add '
+        e^(:iota*:pi) = -1
+        a^2+b^2=c^2
+        E = mc^2
+        1/2+1/3+1/4+1/5
+        (x^2 + y^2)/2 
+        (x^(2+x) + y^(2+y))/2 
+        sqrt(x+y/2) 
+        ((5.1+3)*10.0)*6^2   
+        nthroot(3^4+sqrt(x^2+y^2)) 
+        x^(1/2) + y^(1/2) + cosine(x+y)
+      '; 
+      replace "\n       " "\n";
+      swap;
+    }
+
+    # Erroneous maths expr that should be caught be the amazingly 
+    # helpful parser/recogniser/translator
+    "eg.bad.lines" {
+      swap; add "
+        # open bracket 
+        ((x+y)+4
+        # duplicated divide
+        4//x
+        # incorrect (extra close bracket)
+        (5.1+3)*10.0)*6^2   
+      ";
+      swap;
+    }
+
+    # tests one one-line maths expression with this script
+    # we need a sed line to get rid of latex comments (starting with %)
+    "test.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+        doc=$(pep -f maths.tolatex.pss -i /eg.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"% test-line: $doc\"
+        pep -f maths.tolatex.pss -i \"$doc\" 
+        echo \"% test-line: $doc\"
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f maths.tolatex.pss -i /test.line | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # make and open the pdf 
+    "test.line.pdf" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+        pep -f maths.tolatex.pss -i /test.line | sed '/^ *%/d' | bash > test.tex
+        pdflatex test.tex
+        qpdfview test.pdf
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f maths.tolatex.pss -i /test.line.pdf | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # make a png image of some formula 
+    "test.line.png" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) MATHS EXPRESSION
+        pep -f maths.tolatex.pss -i /test.line.pdf | \
+          sed '/^ *%/d' | bash > test.tex
+        pdflatex test.tex
+        convert test.pdf test.png
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f maths.tolatex.pss -i /test.line.png | sed '/^ *%/d' | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+
+    # tests one one-line invalid expr with this script
+    "test.bad.line" {
+      swap; add "
+        # TESTING SOME RANDOM (one-line) BAD EXPRESSION
+        doc=$(pep -f maths.tolatex.pss -i /eg.bad.lines | \\
+          sed '/^ *#/d;/^ *$/d;' | shuf -n 1) 
+        echo \"test-line: $doc\"
+        pep -f maths.tolatex.pss -i \"$doc\" 
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f maths.tolatex.pss -i /test.line | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # tests maths input (multiline) with this script
+    "test" {
+      swap; add "
+        # TESTING MATHS INPUT from /eg
+        pep -f maths.tolatex.pss -i /eg | sed '/^ *#/d;' > test.txt
+        echo \"input: $doc\"
+        pep -f maths.tolatex.pss test.txt
+        # ------------------------
+        # RUN THIS WITH:
+        # pep -f maths.tolatex.pss -i /test | bash
+        ";
+      replace "\n     " "\n";
+      swap;
+    }
+
+    # just call the /eg/nom.to.pss script which does translation from
+    # a simple command like 'translate script.pss to ruby'
+    # >> pep -f maths.tolatex.pss -i /to<lang> | bash
+    B"to" {
+      clop; clop; put; clear;
+
+      add '
+       translator=${PEPNOM}/eg/nom.to.pss
+       if [ -f $translator ]; then
+         echo -e "[ok] Found translator script: $translator"
+       else
+         echo -e "
+          [error] did not find translator: \\${PEPNOM}/eg/nom.to.pss
+          (maybe) set the $PEPNOM environment var
+          (or)    download the translator from www.nomlang.org/eg/ 
+          ";
+         exit 1;
+       fi
+       pep -f $translator -i "translate maths.tolatex.pss to '; get; add '" | bash
+       # RUN THIS WITH:  
+       #   pep -f maths.tolatex.pss -i /to'; get; add ' | bash
+       ';
+       replace "\n    " "\n";
+       print;
+       quit;
+    }
+
+    # how to translate this script to another language, 
+    "translate","tr","about","help" {
+      swap; add "
+
+     HOW TO TRANSLATE THIS SCRIPT
+
+       This script can be translated to other languages using nom 
+       translation scripts which are available at www.nomlang.org/tr/
+
+       current (aug 2025) translation languages:
+         all languages: all
+         code languages: 
+           rust|dart|perl|lua|go|java|javascript|ruby|
+           python|tcl|c
+         formats: html|pdf|latex
+
+       * translate to ruby with /eg/nom.to.pss
+       >> pep -f /eg/nom.to.pss -i 'translate maths.tolatex.pss to ruby' | bash
+
+       * translate itself to java with the help word '/to' (needs /eg/nom.to.pss)
+       >> pep -f maths.tolatex.pss -i /tojava | bash
+
+       * format the script as colourised pdf (needs xelatex) 
+       >> pep -f maths.tolatex.pss -i /topdf | bash
+
+       * translate 'by-hand' to rust, compile and run (needs 'rustc')
+       ---
+         pep -f tr/nom.torust.pss maths.tolatex.pss > maths.tolatex.rs
+         rustc -o texttohtml.exe texttohtml.rs
+         echo ' some *strong* text ' | ./texttohtml.exe 
+       ,,,
+
+       * translate a script to perl, and run with 'doc.txt' as input
+       ---
+         pep -f nom.toperl.pss maths.tolatex.pss > test.pl 
+         chmod +x test.pl
+         cat doc.txt | ./test.pl
+       ,,,
+
+      ";
+      swap;
+    }
+
+    # the topic or category to display help for is in the
+    # attribute
+    # 'brackets' is topic, 'all' is a categories
+
+    "functions","format","help" {
+      swap; add '
+     FUNCTIONS
+     
+      functions are predefined words applied to an expression. 
+      eg:
+       "sqrt","squareroot","cuberoot","4throot","5throot","nthroot",
+       "tan","cos","cosine","sin","sine","sec","cosec","cot",
+       "sum","binomial" 
+      eg:
+         sqrt (3^4+1)    correct
+         sqrt 5          incorrect ';
+      swap;
+    }
+
+    "variables","format","help" {
+      swap; add "
+     VARIABLES
+      variables are any alphabetic name that is not a function
+      such as x abc longVar etc
+      eg:
+         var        correct
+         var.var    incorrect ";
+      swap;
+    }
+
+    "characters","format","help" {
+      swap; add "
+     CHARACTERS
+
+      legal characters for expressions 
+        arithmetic: ^+-*/
+        comparison: < <= > >= == != <>
+        logic: && || AND OR
+        grouping: ()
+        numbers: [-+0-9.]
+        equations: := ;  (assignment and termination)
+        names: any alphabetic character (for functions and variables)
+        whitespace: is ignored.
+      eg:
+         3*size+2^0.5;    correct
+         time := (sin(x) > sin(y));    correct
+         4#+3            incorrect (# is not a recognised operator) ";
+      swap;
+    }
+
+    "operators.summary","operators","format","help" {
+      swap; add "
+
+     OPERATORS
+
+      Recognised operators are:
+        comparison: <= < >= > == != <>
+        arithmetic: + - * / ^
+        logic: && || AND OR
+        grouping: ( ) ";
+      swap;
+    }
+
+    "assignment.operator","operators","format","help" {
+      swap; add "
+
+     ASSIGNMENT
+
+      The assignment operator is ':=' and the left-hand-side
+      must be a simple variable name. Assignments must end in a 
+      semicolon.
+      eg:
+         x := y^2+z^2;         correct";
+      swap;
+    }
+
+    "logic.operators","operators","format","help" {
+      swap; add "
+     LOGIC OPERATORS
+
+      The logic operators are && || 'AND' 'OR'
+      AND and OR (uppercase) are synonyms for && and ||
+      eg:
+         && 2*x          incorrect";
+      swap;
+    }
+
+    "compare.operators","operators","format","help" {
+      swap; add "
+     COMPARISON OPERATORS
+
+      The comparison operators are <= < >= > == != <>
+      != means not equal to and '<>' is a synonym for that
+      eg:
+         
+         (x==4) AND (x^2 != y)   correct (expression)
+         sqrt(x+y^2) == x+y*3;   correct (equation)
+         == 2*x                  incorrect";
+      swap;
+    }
+
+    "operators","format","help" {
+      swap; add "
+     OPERATORS
+
+      Operators must be between numbers or expressions. 
+      The exception to this are +/- signs which can precede
+      expressions
+      eg:
+         4^3*(3+1)       correct
+         -(4^2) + +3.1   correct
+         /4+3            incorrect ";
+      swap;
+    }
+
+    "multiply.and.divide","operators","format","help" {
+      swap; add "
+     MULTIPLY AND DIVIDE
+
+      Multiplication is indicated by the asterisk '*' and division
+      by the forward-slash '/' character. These characters must be 
+      placed between 2 'expressions' (any combination of operators,
+      variables and functions). The mathematical syntax 
+      '4x+3y' is not implemented so far - i.e implicit multiplication 
+      (but why not?)
+      eg:
+         4*3/(1.234 ^ 6)   correct
+         -(3+2/)         incorrect (divide with no right expression) ";
+      swap;
+    }
+
+    "power.operator","format","help" {
+      swap; add "
+     POWERS AND INDICES
+
+      The power operator is ^ and must occur between 2 numbers 
+      or expressions and has greater precedence than all other operators.
+      eg:
+         5/6^2+2 will parse as ((5/(6^2))+2) 
+         12.345^(1/2)    correct (square root)
+         ^4              incorrect ";
+      swap;
+    }
+
+    "brackets","format","help" {
+      swap; add "
+     BRACKETS
+
+      brackets () are used to group expressions and must be 
+      balanced
+      eg: 
+        ((5.1+3)*10.0)*6^2      correct 
+        (5.1+3)*10.0)*6^2       incorrect (extra close bracket) ";
+      swap;
+    }
+
+    "dots","format","help" {
+      swap; add "
+     DOTS
+
+        The dot (.) is only used in positive and negative decimal
+        numbers. I believe that decimals with no leading 0 are not permitted
+        I may change this.
+        egs: 5.13 -0.1234 +456.78 0.05";
+      swap;
+    }
+
+    B"flaw",B"fault",B"format","help" {
+      swap; add "
+     KNOWN MATHS SCRIPT FLAWS (aug 2025): 
+
+      - the generated equations are of different sizes/scales.
+      - latex doesnt put brackets around cos/cosine expressions
+        which seems odd to me.
+      - I probably should remove redundant brackets from around 
+        indices for readability, but this may be tricky.
+      - powers should be left associative?
+      - the parser doesn't understand the format '3x' or '3(x+y)'
+      -
+      ";
+      swap;
+    }
+
+    swap;
+    "" {
+      add "Help topic '/"; get; add "' not known\n";  
+      add "Type: pep -f maths.tolatex.pss -i /words \n";
+      add "  to see valid help keywords";
+    }
+
+    add "\n\n"; print; quit; 
+  }
+  # ----------------
+  # 2 token errors
+  pop;
+
+  # look for tokens that can't start a sequence
+  B")*".!")*" {
+    clear; add "brackets"; put;
+    clear; add "maths.help*"; push;
+    add "  extra close bracket ) in expression?"; put; 
+    clear; add "maths.error*"; push; .reparse
+  }
+
+  # literal token errors
+
+  B"dot*".!E"natnum*" {
+    clear; add "dots"; put;
+    clear; add "maths.help*"; push;
+    add "  Misplaced dot or incorrect decimal number ? ";
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  E"dot*".!B"natnum*" {
+    clear; add "dots"; put;
+    clear; add "maths.help*"; push;
+    add "  Misplaced dot (eg .123 is not implemented) ? ";
+    put; clear; add "maths.error*"; push; .reparse
+
+  }
+
+  # the not equals test is superfluous but here for clarity
+  B"(*".!"(*" {
+    E"op.mul*",E"op.power*",E")*" {
+      clear; add "brackets"; put;
+      clear; add "maths.help*"; push;
+      add "  misplaced bracket or operator? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  # lits: ().=;:
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+  # op.compare <= >= == != <> 
+  # needs more thought
+  B"op.compare*".!"op.compare" {
+    E"op.mul*",E"op.power",E")*",E".*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+
+  # look for sequences
+  B"op.add*".!"op.add" {
+    E"op.mul*",E"op.power",E")*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  # allow ** as power?
+  B"op.mul*".!"op.mul*" {
+    E"op.add",E"op.power",E")*" {
+      clear; add "operators"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator ? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"op.power*".!"op.power*" {
+    E"op.add",E"op.power*",E"op.power",E")*" {
+      clear; add "power.operator"; put;
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator or bracket? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  #lits: ().
+  # expr* natnum* decnum* op.compare* op.power* op.mul* op.add* sign* 
+  # variable* function*
+
+  B"natnum*".!"natnum*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"decnum*".!"decnum*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"expr*".!"expr*" {
+    E"expr*",E"natnum*",E"decnum*",E"(*" {
+      clear; add "  missing operator?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  #lits: ().
+  # expr* natnum* decnum* op.power* op.mul* op.add* sign* 
+  # variable function
+
+  B"variable*".!"variable*" {
+    E"variable*",E"function*",E"expr*",E"natnum*",E"decnum*",
+    E"(*",E".*" {
+      clear; add "variables"; put;
+      clear; add "maths.help*"; push;
+      clear; add "  misplaced variable name?"; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  B"function*".!"function*".!E"(*" {
+    clear; add "functions"; put;
+    clear; add "maths.help*"; push;
+    clear; add "  incorrect function syntax?"; put;
+    put; clear; add "maths.error*"; push; .reparse
+  }
+
+  (eof) {
+    # try to diagnose missing close bracket errors at end of script
+    # eg (*expr*
+    # we have a line/char number in the open bracket tape cell
+    B"(*" {
+      clear;
+      add "* missing close bracket ) ?\n";
+      add "  At "; get; add " there is an opening bracket which does \n";
+      add "  not seem to be matched with a closing bracket ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+
+    E"dot*" {
+      # provide dot help with a help parse token
+      clear; add "dot"; put; 
+      clear; add "maths.help*"; push;
+      clear; add "  Misplaced dot '.' at end of expression. \n"; put;
+      clear; add "maths.error*"; push; .reparse
+    }
+    E"op.add*",E"op.mul*",E"op.power*" {
+      clear; add "operators";
+      swap; ++; put; --; # preserve operator in tape.cell+1
+      clear; add "maths.help*"; push;
+      add "  Misplaced operator at '"; get; add "' end of expression.";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+  }
+
+  # ----------------
+  # 3 token errors
+  pop;
+
+  # todo expr op.compare followed by ; or ) are errors
+  # unterminated comparison 
+
+  push;push;push;
+
+  # end of error analysis
+  # ---------------
+
+  pop; 
+  
+  # resolve numbers to expressions to simplify grammar rules
+  "decnum*","variable*" {
+     clear; get; put; clear;
+     add "expr*"; push; .reparse
+  }
+
+  # reduce natnum to expression at end of file, no!!!
+  (eof) {
+    "natnum*" { 
+       # check not preceded by dot (could be decimal)
+       pop;
+       !"dot*natnum*" { 
+         replace "natnum*" "expr*"; push; push; .reparse 
+       }
+       push;
+     }
+  }
+
+  #-----------------
+  # 2 token reductions
+  pop;
+
+  # eg: (:pi + 2^:pi)/2
+  ":*expr*" {
+    clear; ++; get; --;
+    # mathemtical symbols and greek letters. where there is no capital
+    # the roman letter works. eg B Beta
+    "pi","Pi","alpha","beta","gamma","Gamma","delta","Delta",
+    "epsilon","eepsilon","zeta","eta","theta","Theta",
+    "iota","kappa","lambda","Lambda","mu","upsilon","Upsilon",
+    "chi","psi","Psi","omega","Omega","nu","xi","Xi",
+    "ro","rro","sigma","Sigma","tau","theta","infinity" {
+      replace "ro" "varro";  # a curly ro 
+      replace "eepsilon" "varepsilon";  # a curly e epsilon
+      replace "infinity" "infty"; put;  
+      clear; add " \\"; get; add " "; put;
+      clear; add "variable*"; push; .reparse
+    }
+    # a bit of a hack to include +/- as an addition subtraction
+    # operator.
+    "plusminus" {
+      clear; add " \\pm "; put;
+      clear; add "op.add*"; push; .reparse
+    }
+    # save the incorrect symbol name for the error
+    # message.
+    ++; put; --;
+    clear; add "symbols"; put; 
+    clear; add "maths.help*"; push;
+    clear; add "  unknown symbol '"; get; add "'"; put;
+    clear; add "maths.error*"; push; .reparse
+  }
+
+  # reduce natnums to expressions if not followed by a dot
+  # this creatly reduces complexity of parsing rules later
+  # already ensured not "natnum*natnum*" in error checks above.
+  B"natnum*".!"natnum*".!E"dot*" {
+    replace "natnum*" "expr*"; push; push; .reparse
+  }
+
+  "sign*expr*" {
+    clear; add " "; get; ++; get; --; add " "; put; clear;
+    add "expr*"; push; .reparse
+  }
+  
+  # a list of equations
+  "equation*equation*","equationset*equation*" {
+    clear; get ; 
+    add "\n"; 
+    add "\n \\noindent\\makebox[\\linewidth]{\\rule{\\paperwidth}{0.4pt}}\n";
+    ++; get; --; put; clear;
+    add "equationset*"; push; .reparse
+  }
+  
+  # There may be an issue with reducing sign*natnum in other
+  # cases
+  (eof) {
+    "sign*natnum*" {
+      clear; add " "; get; ++; get; --; add " "; put; clear;
+      add "expr*"; push; .reparse
+    }
+  }
+  #-----------------
+  # 3 tokens
+  pop;
+
+  # an equation is just an expression followed by ';'
+  # but we need 'lookbehind' here, otherwise partial expressions 
+  # will resolve to equations leaving the prefix orphaned so to speak.
+
+  # only 2 tokens, first equation
+  # discard the semicolon 
+  "expr*;*" {
+    clear;
+    add "\\[\n"; get; add "\n"; add "\\]"; put;
+    clear; add "equation*"; push; .reparse
+  }
+  E"expr*;*" {
+    B"equation*",B"equationset*" {
+      replace "expr*;*" "equation*"; push; push;
+      add "\\[\n"; --; get; add "\n"; add "\\]"; put;
+      # realign tape pointer
+      clear; ++; .reparse
+    }
+  }
+
+  # These are signs at the beginning of the expression
+  # only 2 tokens
+  "op.add*natnum*","op.add*expr*" {
+    replace "op.add*" "sign*"; push; push; .reparse
+  }
+
+  # +/- at beginning, 3 tokens
+  B"sign*expr*".!"sign*expr*" {
+    replace "sign*expr*" "expr*"; push; push;
+    # need to compose attributes and transfer other attributes
+    # compose sign/exp attribute in Lisp syntax
+    --; --; add " "; get; ++; get; add " "; --; put; clear; ++; ++;
+    # transfer invisible token attribute
+    get; --; put; clear; ++;  
+    clear; .reparse
+
+  }
+
+  # convert +/- oppadd* token to a sign* token where appropriate
+  # If only 2 tokens (not 3) then start of document
+  E"op.add*expr*".!B"expr*" {
+    replace "op.add*expr*" "sign*expr*";
+    push; push; push; .reparse
+  }
+  E"op.add*natnum*".!B"expr*" {
+    replace "op.add*natnum*" "sign*natnum*";
+    push; push; push; .reparse
+  }
+
+  # we dont need any look ahead here because '^' the power operator
+  # has precedence over multiply/divide/add/subtract.
+  # precedence. But natnum* only becomes and expr* when it sees 
+  # the following token. So need another 4 token rule
+  "expr*op.power*expr*" {
+    clear; 
+    # can also remove brackets here. see op.mul divide for example
+    add " "; get; ++; get; ++; add "{"; get; add "}"; add " "; 
+    --; --; put; clear; 
+    add "expr*"; push;
+    .reparse
+  }
+
+  # parse positive decimal numbers like 02.345
+  "natnum*dot*natnum*" {
+    clear; get; ++; get; ++; get; --; --; 
+    # or parse to decnum* here to make negation better
+    put; clear; add "expr*"; push;
+    .reparse
+  }
+
+  # an interesting trick to parse a 4 token pattern before
+  # a 3 token pattern. Be aware about popping nothing (empty stack) 
+  "(*expr*)*" {
+     pop;
+     # eg: sqrt(4+9)
+     "function*(*expr*)*" {
+       clear; get; add "{"; ++; ++; get; add "}"; --; --; put;
+       clear; add "expr*"; push; .reparse
+     }
+     # only push if something was popped
+     !"(*expr*)*" { push; }
+     clear; add "("; ++; get; add ")"; --; put; clear;
+     add "expr*"; push; .reparse
+  }
+
+  (eof) {
+    # natnums have already been "reduced" to expr* at end of stream 
+    "expr*op.add*expr*" {
+       clear; 
+       add " "; get; ++; get; ++; get; add " "; 
+       --; --; put; clear; 
+       add "expr*"; push;
+       .reparse
+    }
+    # make / into fractions because they look good.
+    "expr*op.mul*expr*" {
+       clear; ++; get; --;
+       "/" {
+         # remove brackets from fractions
+         clear; get; B"(".E")" { clip; clop; put; } 
+         clear; ++; ++; get; B"(".E")" { clip; clop; put; } --; --;
+         clear; add "\\frac{"; get; add "}"; ++; ++; add "{"; get; add "}"; 
+       }
+       " \\times " {
+         clear; add " "; get; ++; get; ++; get; add " "; 
+       }
+       --; --; put; clear; 
+       add "expr*"; push;
+       .reparse
+    }
+  } 
+
+  #-----------------
+  # 4 tokens parse token reductions
+
+  pop;
+ 
+  # a better lookahead, this will work within another language
+  # it only looks for operators with more precedence.
+
+  # reduce comparisons and logic concats to expression, 
+  # so we only reduce comparisons 
+  # when surrounded by brackets or terminated with ; or ,
+  # if this works we can remove several rules below
+  # eg: (x^2 != y)  
+  B"expr*op.compare*expr*",B"expr*op.and*expr*",B"expr*op.or*expr*" {
+    !"expr*op.compare*expr*".!"expr*op.and*expr*".!"expr*op.or*expr*" {
+      E")*",E",*",E";*" {
+        replace "expr*op.and*expr*" "expr*"; 
+        replace "expr*op.or*expr*" "expr*"; 
+        replace "expr*op.compare*expr*" "expr*"; 
+        push;push;
+        # assemble attribs for new exp token,
+        --; --; add " "; get; ++; get; ++; get; add " "; --; --; put;
+        # transfer unknown token attrib 
+        clear; ++; ++; ++; get; --; --; put; clear; 
+        # realign tape pointer 
+        ++; .reparse
+      }
+    }
+  }
+
+  # for latex eg in sigma sums
+  # eg:  ; 
+  B"expr*=*expr*".!"expr*=*expr*" {
+    E")*",E",*",E";*" {
+      # check that it is a simple variable name. Slightly tricky because
+      # variables are instantly reduced to expressions.
+      #clear; 
+      swap; 
+      ![:alpha:] {
+        clear; add "assignment.operator"; put;
+        clear; add "maths.help*"; push;
+        add "  Left-hand-side of equation not a variable? ";
+        put; clear; add "maths.error*"; push; .reparse
+      }
+      swap; replace "expr*=*expr*" "expr*"; push;push;
+      # assemble attribs for new exp token,
+      --; --; add " "; get; ++; get; ++; get; add " "; --; --; put;
+      # transfer unknown token attrib 
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    }
+  }
+
+  # op.mul (*/) and op.power (^) have more precedence that +/- 
+  B"expr*op.add*expr*".!"expr*op.add*expr*" {
+    !E"op.mul*".!E"op.power*" {
+      replace "expr*op.add*expr*" "expr*"; push;push;
+      # assemble attribs for new exp token,
+      --; --; add " "; get; ++; get; ++; get; add " "; --; --; put;
+      # transfer unknown token attrib 
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    }
+  }
+
+  # op.power (^) has more precedence that */
+  B"expr*op.mul*expr*".!"expr*op.mul*expr*" {
+    !E"op.power*" {
+      replace "expr*op.mul*expr*" "expr*"; push;push;
+      # assemble times or fraction
+      clear; --; get; --; 
+      "/" {
+        # remove brackets from fractions
+        clear; get; B"(".E")" { clip; clop; put; } 
+        clear; ++; ++; get; B"(".E")" { clip; clop; put; } --; --;
+        clear; add "\\frac{"; get; add "}"; ++; ++; add "{"; get; add "}"; 
+      }
+      " \\times " { clear; add " "; get; ++; get; ++; get; add " "; }
+      --; --; put;
+
+      clear; ++; ++; ++; get; --; --; put; clear; 
+      # realign tape pointer 
+      ++; .reparse
+    }
+  }
+
+  # natnum/var/decnum only become expressions when the following
+  # token is seen, this is why we need a 'lookahead' rule here. 
+  B"expr*op.power*expr*".!"expr*op.power*expr*" {
+    replace "expr*op.power*expr*" "expr*"; push;push;
+    --; --; add " "; get; ++; get; ++; get; add " "; --; --; put;
+    clear; ++; ++; ++; get; --; --; put; clear; 
+    # realign tape pointer 
+    ++; .reparse
+  
+  }
+
+  #*
+  # should not be necessary anymore see above for a lookahead rule
+  # eg: x^2 != y^3 ; 
+  "expr*op.compare*expr*;*" {
+    clear; get; ++; get; ++; get; add " "; --; --; put;
+    clear; add "equation*"; push; .reparse
+  }
+
+  # should not be necessary anymore see above for a lookahead rule
+  # reduce this to an equation only at EOF to allow assignments.
+  # eg: x^2 OR y^3 ; 
+  "expr*op.and*expr*;*","expr*op.or*expr*;*" {
+    clear; get; add " "; ++; get; add " "; ++; get; add " "; --; --; put;
+    clear; add "expr*;*"; push; push; .reparse
+  }
+
+  *#
+
+  #*
+  # should not be necessary anymore see above for a lookahead rule
+
+  # this is the only assignment rule. assignments are not allowed
+  # inside of other expressions (unlike c) actually, will change this
+  # for latex eg in sigma sums
+  # eg:  ; 
+  "expr*=*expr*;*" {
+    # check that it is a simple variable name. Slightly tricky because
+    # variables are instantly reduced to expressions.
+    clear; get; 
+    ![:alpha:] {
+      clear; add "assignment.operator"; put;
+      clear; add "maths.help*"; push;
+      add "  Left-hand-side of equation not a variable? ";
+      put; clear; add "maths.error*"; push; .reparse
+    }
+    clear; get; add " "; ++; get; add " "; ++; get; --; --; put;
+    clear; add "equation*"; push; .reparse
+  }
+  *#
+
+  #-----------------
+  # 5 tokens parse token reductions
+  pop;
+
+  #*
+
+  # should not be necessary anymore see above for a lookahead rule
+
+  # example to parse comparisons, so we only reduce comparisons 
+  # when surrounded by brackets or terminated with ; 
+  # eg: (x^2 != y) 
+  "(*expr*op.compare*expr*)*" {
+    clear; add "("; ++; get; ++; get; ++; get; add ")"; 
+    --; --; --; put;
+    clear; add "expr*"; push; .reparse
+  }
+
+  # should not be necessary anymore see above for a lookahead rule
+
+  # only reduce logic when terminated in ';' or in brackets
+  # (x==4) AND (x^2 != y);
+  "(*expr*op.and*expr*)*","(*expr*op.or*expr*)*" {
+    clear; add "("; ++; get; add " "; ++; get; add " "; ++; get; add ")"; 
+    --; --; --; put;
+    clear; add "expr*"; push; .reparse
+  }
+
+  *#
+
+  #-----------------
+  # 6 tokens parse token reductions
+  pop;
+
+  # todo: this should be 3 arguments eg sum(0,:infinity,x+y)
+  # eg: sum(x=0,100)
+  # need to make assignments reduce here
+  "function*(*expr*,*expr*)*" {
+    clear; get;
+    !"\\sum_".!"\\binom" {
+      clear; add "functions"; put;
+      clear; add "maths.help*"; push;
+      clear; add "  sum and binom take 2 arguments."; put;
+      put; clear; add "maths.error*"; push; .reparse
+    }
+    ++; ++; add "{"; get; add "}"; 
+    # sum has a funny syntax
+    B"\\sum" { add "^"; } add "{"; ++; ++; get; add "}"; 
+    --; --; --; --; put;
+    clear; add "expr*"; push; .reparse
+  }
+
+  
+  push; push; push; push; push; push;
+
+  
+  (eof) {
+    pop;
+    "expr*" {
+      clear; 
+      add "\\[\n"; get; add "\n"; add "\\]"; put;
+      clear; add "equation*"; push; .reparse 
+    }
+    push;
+  }
+
+
+  (eof) {
+    pop; pop;
+    "expr*","equation*","equationset*" {
+      clear;  
+      # create a latex document to display the equation
+      add "\\documentclass{article}\n";
+      add "\\usepackage{amsmath}\n";
+      add "% or \\usepackage{mathtools}\n";
+      add "\\usepackage{xcolor}\n";
+      add "\\usepackage{multicol}\n";
+      add "\\begin{document}\n";
+      # turn off page numbers
+      add "\\pagestyle{empty}\n";
+      add "\\Huge\n";
+      add "\\color{blue}\n\n";
+      get; add "\n";
+      add "\\end{document}\n";
+      print; clear; quit;
+    }
+
+    push; push;
+    add "No, it doesn't look like a single valid arithmetic \n";
+    add "'in-fix' expression. The parse stack was: ";
+    print; clear; unstack; add "\n"; print;
+    quit;
+  }

@@ -1,0 +1,1 @@
+until ":"; escape "\\"; print;d;(eof){q;} 

@@ -1,0 +1,9 @@
+
+## The pepnom /doc/scripts folder
+
+ Contains information about how to write *nom* scripts including 
+ debugging techniques, parsing techniques and so forth.
+
+ file://doc.dir.index.html contains a list of documents in 
+ this folder.
+

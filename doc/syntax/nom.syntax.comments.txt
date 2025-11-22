@@ -1,0 +1,62 @@
+
+## COMMENTS IN THE NOM LANGUAGE SYNTAX
+   
+  Including comments in [nom] scripts.
+
+  Both single line comments (line starting with "#"), or multi-line
+  comments (#* .... *#) are available.
+
+### MULTI-LINE COMMENTS
+
+ * how to write multi-line comments
+ -----+
+   read; 
+   #*
+     The nom code below uses the [:punct:] character class,
+     which hopefully, when translated to a nice modern 
+     Unicode sort of language (java, dart, go etc) will recognise
+     punctuation is all different exotic scripts
+   *#
+   [:punct:] { clear; add "Too much punctuation."; print; quit;}
+   clear;  
+ ,,,,
+
+ Multi-line comments start with "#*" and end with "*#", but they 
+ cannot be nested.
+
+ Multi-line comments are useful for disabling blocks of code
+ during script *development*, as well as for long comments at the 
+ beginning of a script. 
+
+ Using multi-line comments to disable "blocks" nomsyn://block of code is very
+ much as "last resort" type of debugging technique. Better debugging techniques
+ are to use the "parse-stack" pep://stack watch lines just after the *parse>*
+ label or use the nom://state command which shows the state of the pep
+ pep://machine at the time that the *state* command is issued.
+
+ See the document /doc/howto/nom.debug.html for more (and better) debugging
+ techniques.
+
+### SINGLE LINE COMMENTS
+
+ These are the classic [bash] [perl] unixy comments where the all text after
+ the hash # character is ignored until the end of the line (i.e \\n). There is
+ not much more to say about them. The translation scripts actually translate
+ [nom] comments into the target language, but this is not terribly useful.
+
+### NOTES
+
+ There are certain places in a nom script where comments cannot appear,
+ for example between tests in a list of tests before a block. This may
+ change in the future
+
+ * currently (2025) an error
+ ------+
+   read;
+   [:space:],
+   # or punctuation. No, error, comments cannot go here.
+   [:punct:] {
+     nop; # do nothing. This comment is ok. 
+   }
+ ,,,,
+

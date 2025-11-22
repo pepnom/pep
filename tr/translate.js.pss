@@ -1,0 +1,1677 @@
+#* 
+###   tr/translate.js.pss 
+
+   A [nom] script which translates nom scripts into a standalone javascript
+   program.
+   
+   JavaScript is an important language because it is so ubiquitous on the web
+   and on the server (with "node"). This script will be able to translate
+   itself into javascript (as can translate.go.pss, translate.java.pss
+   translate.py.pss etc)
+   
+   The virtual machine and engine is implemented in plain c at
+   http://bumble.sf.net/books/pars/pep.c. This implements a script
+   language with a syntax reminiscent of sed and awk (simpler than
+   awk, but more complex than sed).
+   
+STATUS
+
+   18 feb 2025
+     Added go; syntax. Inspected
+   21 july 2022
+     First gen tests working. 
+
+TODO
+
+  copy grammar in translate.perl.pss
+  organise error checking after parse> label
+  script* grammar token on successful parse
+  
+NOTES
+   
+   Consider if mark; and go; should use pep:workspace or pep:tapecell
+   as the indicator for what to mark and where to jump to. These 
+   commands are designed to facilitate type-checking with [nom] but
+   also, they greatly increase the power of these 2 commands.
+
+   <while [x]> we should translate as "for mm.peep=='x' { read }
+
+   We can use "run once" loops eg " for true do ... break; end " an 
+   example is in the translate.tcl.pss script. 
+
+SYNTAX
+
+   Here I keep some notes about Javascript syntax for incorporating
+   in this translator
+
+   * execute a system command 
+   --------
+    // at the top of file.
+    const { exec } = require('child_process');
+    exec('ls -lh', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+      console.error(`stderr: ${stderr}`);
+    });
+   ,,,,
+
+BUGS
+
+  pep.jsff eg/mark.latex.pss pars-book.txt
+
+SEE ALSO
+   
+   At http://bumble.sf.net/books/pars/
+
+   tr/translate.java.pss, tr/translate.py.pss tr/translate.rb.pss
+     very similar scripts for compiling scripts into java and python,
+     ruby and more
+
+   compile.pss
+     compiles a script into an "assembly" format that can be loaded
+     and run on the parse-machine with the -a  switch. This performs
+     the same function as "asm.pp" 
+
+TESTING
+
+   Comprehensive testing can be done with
+   >> pep.tt javascript
+
+   A simple "state" command maybe useful for debugging these 
+   translation scripts and the corresponding machines. 
+
+   * use a helper script to test begin blocks, stack delimiter, and pushing
+   >> pep.jss 'begin { delim "/";} r; add "/";push; state; d;' 
+   >> pep.jss 'begin { delim "/";} r; add "/";push; state; d;' "abcd"
+
+   check multiline text with 'add' and 'until'
+
+WATCH OUT FOR
+
+  treatment of regexes is different (for while whilenot etc). Eg in
+  ruby [[:space:]] is unicode aware but \s is not
+
+  make sure .reparse and .restart work before and after the 
+  parse> label.
+
+  Make sure escaping and multiline arguments work.
+
+BUGS
+   
+  will reparse or restart work in a begin block?
+
+  parse> label just after begin block or after all code.
+
+  multiline add not working?
+
+  mark code may not be correct
+
+SOLVED BUGS TO WATCH FOR 
+
+  * the line below was throwing an error, problem was in compile.pss 
+  >> add '", "\\'; get; add '")'; --; put; clear;
+
+  escape needs to use the machine escape char. 
+  found and fixed a bug in java whilenot/while. The code exits if the 
+  character is not found, which is not correct.
+
+  Found and fixed a bug in the (==) code ie in java (stringa == stringb)
+  doesnt work. 
+
+  "until" bug where the code did not read 
+  at least one character.
+
+  Read must exit if at end of stream, but while/whilenot/until, no.
+
+TASKS 
+
+HISTORY
+
+  2 August 2022
+    The dell xps is (hopefully) temporarily out of action. Using 
+    the macbook for dev. Found several bugs in this javascript 
+    translation script. seems to be working well now.
+  21 July 2022
+    A lot of work. First generation tests working with "pep.tt js"
+  21 June 2022
+    Just begun this javascript version, adapting from go and 
+    using the javascript code in object.js/Machine.js as a guide.
+
+*#
+
+  read;
+  #--------------
+  # make character number relative to line number for 
+  # syntax error messages
+  [\n] {
+    nochars; clear; .reparse
+  }
+  [:space:] {
+    clear; .reparse
+  }
+
+  #---------------
+  # We can ellide all these single character tests, because
+  # the stack token is just the character itself with a *
+  # Braces {} are used for blocks of commands, ',' and '.' for concatenating
+  # tests with OR or AND logic. 'B' and 'E' for begin and end
+  # tests, '!' is used for negation, ';' is used to terminate a 
+  # command.
+  "{", "}", ";", ",", ".", "!", "B", "E" {
+    put; add "*"; push; .reparse 
+  }
+
+  #---------------
+  # format: "text"
+  "\"" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear; add '"';
+    until '"'; 
+    !E'"' { 
+      clear; add 'Unterminated quote character (") starting at ';
+      get; add ' !\n'; 
+      print; 
+      zero; a+; quit;
+    }
+    put; clear;
+    add "quote*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # format: 'text', single quotes are converted to double quotes
+ # but we must escape embedded double quotes.
+  "'" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating quote character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear;
+    until "'"; 
+    !E"'" { 
+      clear; add "Unterminated quote (') starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    # empty quotes '' may be legal, for example as the second arg
+    # to replace.
+    clip; escape '"'; unescape "'"; put; clear;
+    add "\""; get; add "\"";
+    put; clear; add "quote*";
+    push; .reparse 
+  }
+
+  #---------------
+  # formats: [:space:] [a-z] [abcd] [:alpha:] etc 
+  # should class tests really be multiline??!
+  # Single characters can be treated as a quote test no?
+  # i.e [:] is just the same as ":"
+  "[" {
+    # save the start line number (for error messages) in case 
+    # there is no terminating bracket character.
+    clear; add "line "; lines; add " (character "; chars; add ") ";
+    put; clear; add "[";
+    until "]"; 
+    "[]" {
+      clear; add "pep script error at line "; lines;
+      add " (character "; chars; add "): \n";
+      add "  empty character class [] \n";
+      print; quit;
+    }
+    !E"]" { 
+      clear; add "Unterminated class text ([...]) starting at "; get; 
+      add "
+      class text can be used in tests or with the 'while' and 
+      'whilenot' commands. For example: 
+        [:alpha:] { while [:alpha:]; print; clear; }
+      ";
+      print; quit;
+    }
+
+    # save the class on the tape
+    put;
+    # check if class is a single character ie [:] or [x]
+    # if so, reparse as a quoted string, for simplicity
+    # NOOOOO!!!! because its not equivalent in tests (but is
+    # in while and whilenot), could do this in the while/while not
+    # rules.
+    #*
+    ------
+    clip; clip; clip;
+    "" {
+      get; escape '"';
+      replace "[" '"'; replace "]" '"';
+      put; clear; add "quote*"; push; .reparse
+    }
+    clear; get;
+    -------
+    *#
+
+    # need to escape quotes? 
+    escape '"';
+    # the caret is not a negation operator in pep char classes
+    # but dont have to escape caret if not using regexs
+    replace "^" "\\^";
+    clop; clop;
+    !B"-" {
+      # not a range class, eg [a-z], need to escape '-' chars
+      clear; get; replace '-' '\\-'; put;
+    }
+    B"-" {
+      # a range class, eg [a-z], check if it is correct
+      # but what about a range like [\t-\n]. I dont think we will
+      # worry about it.
+      clip; clip; 
+      !"-" {
+        clear;
+        add "Error in pep script at line "; lines;
+        add " (character "; chars; add "): \n";
+        add " Incorrect character range class "; get;
+        add "
+   For example:
+     [a-g]  # correct
+     [f-gh] # error! \n";
+        print; clear; quit;
+
+      }
+      # correct format, eg: [a-z] now translate to a 
+      # format that can be used by a javascript function
+      clear; get;
+      put; clear; add "/^"; get; add "+$/";
+      put; clear; add "class*"; push; .reparse 
+    }
+    clear; get;  # restore class text
+    B"[:".!E":]" { 
+      clear; add "malformed character class starting at ";
+      get; add '!\n'; 
+      print; quit;
+    }
+    # class in the form [:digit:]
+    B"[:".!"[:]" {
+      clip; clip; clop; clop;
+      # unicode posix character classes 
+      # Also, abbreviations (not implemented in pep.c yet.)
+      # classes like [[:alpha:]] are only ascii in 
+
+      # this is not accurate, ascii only and also matches _
+      # not sure how to do in unicode
+      "alnum","N" { clear; add "\\w"; }
+      # not working
+      "alpha","A" { clear; add "\\p{Alpha}"; }
+      # check! 
+      # non-standard posix class 'word' and ascii
+      # check!
+      "ascii","I" { clear; add "\\p{ASCII}"; }
+      "word","W" { clear; add "\\p{Letter}"; }
+      # fix!
+      "blank","B" { clear; add "\\p{Zs}"; }
+      "cntrl","C" { clear; add '\\p{Control}'; }
+      "digit","D" { clear; add "\\p{Nd}"; }
+      # not really accurate, this means anything except a 
+      # control character.
+      "graph","G" { clear; add '\\P{C}'; }
+      "lower","L" { clear; add '\\p{Lower}'; }
+      # not accurate.
+      "print","P" { clear; add "\\P{Zs}"; }
+      "punct","T" { clear; add '\\p{P}'; }
+      #"space","S" { clear; add "\\p{Zs}"; }
+      "space","S" { clear; add "[ \\n\\r\\t\\f]"; }
+      "upper","U" { clear; add '\\p{Upper}'; }
+      "xdigit","X" { clear; add '\\p{Hex}'; }
+      !B"\\".!B"[" {
+        put; clear;
+        add "pep script error at line "; lines;
+        add " (character "; chars; add "): \n";
+        add "Unknown character class '"; get; add "'\n";
+        print; clear; quit;
+      }
+      put; clear;
+      # need the u switch for unicode matches
+      add "/^"; get; add "+$/u"; 
+      put; clear; add "class*"; push; .reparse 
+    }
+    #*
+     alnum - alphanumeric like [0-9a-zA-Z] 
+     alpha - alphabetic like [a-zA-Z] 
+     blank - blank chars, space and tab 
+     cntrl - control chars, ascii 000 to 037 and 177 (del) 
+     digit - digits 0-9 
+     graph - graphical chars same as :alnum: and :punct: 
+     lower - lower case letters [a-z] 
+     print - printable chars ie :graph: + space 
+     punct - punctuation ie !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~. 
+     space - all whitespace, eg \n\r\t vert tab, space, \f 
+     upper - upper case letters [A-Z] 
+     xdigit - hexadecimal digit ie [0-9a-fA-F] 
+    *#
+
+    # must be a list eg [abcdefg]
+    # make into a good regular expression
+    clear; get;
+    # escape special regex characters, but within [] not
+    # so necessary, I think only ^ and maybe / is special 
+    B"^" { replace "^" "\\^"; } put; clear; 
+    add "/^"; get; add "+$/"; put;
+    clear; add "class*"; push;
+    .reparse 
+  }
+
+ #---------------
+ # formats: (eof) (EOF) (==) etc. 
+  "(" {
+    clear; until ")"; clip;
+    put; 
+    "eof","EOF" { clear; add "eof*"; push; .reparse } 
+    "==" { clear; add "tapetest*"; push; .reparse } 
+    add " << unknown test near line "; lines;
+    add " of script.\n";
+    add " bracket () tests are \n";
+    add "   (eof) test if end of stream reached. \n";
+    add "   (==)  test if workspace is same as current tape cell \n";
+    print; clear;
+    quit;
+  }
+
+  #---------------
+  # multiline and single line comments, eg #... and #* ... *#
+  "#" {
+    clear; read;
+    "\n" { nochars; clear; .reparse }
+
+    # checking for multiline comments of the form "#* \n\n\n *#"
+    # these are just ignored at the moment (deleted) 
+    "*" { 
+      # save the line number for possible error message later
+      clear; lines; put; clear;
+      until "*#"; 
+      E"*#" {
+        # convert to go comments (/*...*/ and //)
+        # or just one multiline
+        clip; clip; replace "\n" "\n//"; 
+        put; clear; 
+        # create a "comment" parse token
+        # comment-out this line to remove multiline comments from the 
+        # translated golang code 
+        # add "comment*"; push; 
+        .reparse  
+      }
+      # make an unterminated multiline comment an error
+      # to ease debugging of scripts.
+      clear; 
+      add "unterminated multiline comment #* ... *# \n";
+      add "stating at line number "; get; add "\n";
+      print; clear;
+      quit;
+    }
+
+    # single line comments. some will get lost.
+    put; clear; add "//"; get; until "\n"; clip;
+    put; clear; 
+    # comment out this below to remove single line comments
+    # from the output
+    add "comment*"; push; 
+    .reparse 
+  }
+
+ #----------------------------------
+ # parse command words (and abbreviations)
+
+ # legal characters for keywords (commands)
+ ![abcdefghijklmnopqrstuvwxyzBEKGPRUWS+-<>0^] {
+   # error message about a misplaced character
+   put; clear;
+   add "!! Misplaced character '";
+   get;
+   add "' in script near line "; lines;
+   add " (character "; chars; add ") \n";
+   print; clear; quit;
+ }
+
+   # my testclass implementation cannot handle complex lists
+   # eg [a-z+-] this is why I have to write out the whole alphabet
+
+   while [abcdefghijklmnopqrstuvwxyzBEOFKGPRUWS+-<>0^];
+   #----------------------------------
+   # KEYWORDS 
+   # here we can test for all the keywords (command words) and their
+   # abbreviated one letter versions (eg: clip k, clop K etc). Then
+   # we can print an error message and abort if the word is not a 
+   # legal keyword for the parse-edit language
+
+   # make ll an alias for "lines" and cc an alias for chars
+   "ll" { clear; add "lines"; }
+   "cc" { clear; add "chars"; }
+   # one letter command abbreviations
+   "a" { clear; add "add"; }
+   "k" { clear; add "clip"; }
+   "K" { clear; add "clop"; }
+   "D" { clear; add "replace"; }
+   "d" { clear; add "clear"; }
+   "t" { clear; add "print"; }
+   "p" { clear; add "pop"; }
+   "P" { clear; add "push"; }
+   "u" { clear; add "unstack"; }
+   "U" { clear; add "stack"; }
+   "G" { clear; add "put"; }
+   "g" { clear; add "get"; }
+   "x" { clear; add "swap"; }
+   ">" { clear; add "++"; }
+   "<" { clear; add "--"; }
+   "m" { clear; add "mark"; }
+   "M" { clear; add "go"; }
+   "r" { clear; add "read"; }
+   "R" { clear; add "until"; }
+   "w" { clear; add "while"; }
+   "W" { clear; add "whilenot"; }
+   "n" { clear; add "count"; }
+   "+" { clear; add "a+"; }
+   "-" { clear; add "a-"; }
+   "0" { clear; add "zero"; }
+   "c" { clear; add "chars"; }
+   "l" { clear; add "lines"; }
+   "^" { clear; add "escape"; }
+   "v" { clear; add "unescape"; }
+   "z" { clear; add "delim"; }
+   "S" { clear; add "state"; }
+   "q" { clear; add "quit"; }
+   "s" { clear; add "write"; }
+   "o" { clear; add "nop"; }
+   "rs" { clear; add "restart"; }
+   "rp" { clear; add "reparse"; }
+
+   # some extra syntax for testeof and testtape
+   "<eof>","<EOF>" { put; clear; add "eof*"; push; .reparse }
+   "<==>" { put; clear; add "tapetest*"; push; .reparse }
+
+   "jump","jumptrue","jumpfalse",
+   "testis","testclass","testbegins","testends",
+   "testeof","testtape" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "can be used in pep assembly code but not scripts. \n";
+     print; clear; quit;
+   }
+   
+   # show information if these "deprecated" commands are used
+   "Q","bail" {
+     put; clear;
+     add "The instruction '"; get; add "' near line "; lines; 
+     add " (character "; chars; add ")\n";
+     add "is no longer part of the pep language. \n";
+     add "use 'quit' instead of 'bail'' \n";
+     print; clear; quit;
+   }
+   
+   "add","clip","clop","replace","upper","lower","cap","clear","print","state",
+   "pop","push","unstack","stack","put","get","swap",
+   "++","--","mark","go","read","until","while","whilenot",
+   "count","a+","a-","zero","chars","lines","nochars","nolines",
+   "escape","unescape","delim","quit",
+   "write","nop","reparse","restart" {
+     put; clear;
+     add "word*";
+     push; .reparse
+   }
+   
+   #------------ 
+   # the .reparse command and "parse label" is a simple way to 
+   # make sure that all shift-reductions occur. It should be used inside
+   # a block test, so as not to create an infinite loop. There may not be
+   # any "goto" in js so we need to use labelled loops or runonce loops to 
+   # implement .reparse/parse>
+
+   "parse>" {
+     clear; count;
+     !"0" {
+       clear; 
+       add "script error:\n";
+       add "  extra parse> label at line "; lines; add ".\n";
+       print;
+       quit;
+     }
+     clear; add "# parse> parse label"; put;
+     clear; add "parse>*"; push;
+     # use accumulator to indicate after parse> label
+     a+; .reparse 
+   }
+
+   # --------------------
+   # implement "begin-blocks", which are only executed
+   # once, at the beginning of the script (similar to awk's BEGIN {} rules)
+   "begin" {
+     put; add "*"; push; .reparse 
+   }
+
+   add " << unknown command on line "; lines; 
+   add " (char "; chars; add ")"; 
+   add " of source file. \n"; 
+   print; clear; quit;
+
+# ----------------------------------
+# PARSING PHASE:
+
+# Below is the parse/compile phase of the script. Here we pop tokens off the
+# stack and check for sequences of tokens eg "word*semicolon*". If we find a
+# valid series of tokens, we "shift-reduce" or "resolve" the token series eg
+# word*semicolon* --> command*
+#
+# At the same time, we manipulate (transform) the attributes on the tape, as
+# required. 
+#
+
+parse>
+
+#-------------------------------------
+# 2 tokens
+#-------------------------------------
+  pop; pop;
+
+  # All of the patterns below are currently errors, but may not
+  # be in the future if we expand the syntax of the parse
+  # language. Also consider:
+  #    begintext* endtext* quoteset* notclass*, !* ,* ;* B* E*
+  # It is nice to trap the errors here because we can emit some
+  # (hopefully not very cryptic) error messages with a line number.
+  # Otherwise the script writer has to debug with
+  #   pep -a asm.pp -I scriptfile 
+  #
+
+  "word*word*","word*}*","word*begintext*","word*endtext*", "word*!*",
+  "word*,*","quote*word*", "quote*class*", "quote*state*", "quote*}*",
+  "quote*begintext*", "quote*endtext*", "class*word*", "class*quote*",
+  "class*class*", "class*state*", "class*}*", "class*begintext*",
+  "class*endtext*", "class*!*", "notclass*word*", "notclass*quote*",
+  "notclass*class*", "notclass*state*", "notclass*}*" {
+    add " (Token stack) \nValue: \n"; get; 
+    add "\nValue: \n"; ++; get; --; add "\n";
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script (missing semicolon?) \n";
+    print; clear; 
+    quit;
+  }  
+
+  "{*;*", ";*;*", "}*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of pep script: misplaced semi-colon? ; \n";
+    print; clear; quit;
+  }
+
+  ",*{*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra comma in list? \n";
+    print; clear; quit;
+  }
+
+  "command*;*","commandset*;*" {
+    push; push;
+    add "Error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: extra semi-colon? \n";
+    print; clear; quit;
+  }
+
+  "!*!*" {
+    push; push;
+    add "error near line "; lines; add " (char "; chars; add ")"; 
+    add " of script: \n double negation '!!' is not implemented \n";
+    add " and probably won't be, because what would be the point? \n";
+    print; clear; quit;
+  }
+
+  "!*{*","!*;*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced negation operator (!)? \n";
+    add " The negation operator precedes tests, for example: \n";
+    add "   !B'abc'{ ... } or !(eof),!'abc'{ ... } \n";
+    print; clear; quit;
+  }
+
+  ",*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: misplaced comma? \n";
+    print; clear; quit;
+  }
+
+  "!*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " (at char "; chars; add ") \n"; 
+    add " The negation operator (!) cannot precede a command \n";
+    print; clear; quit;
+  }
+
+  ";*{*", "command*{*", "commandset*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script: no test for brace block? \n";
+    print; clear; quit;
+  }
+
+  "{*}*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: empty braces {}. \n";
+    print; clear; quit;
+  }
+
+  "B*class*","E*class*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script:\n  classes ([a-z], [:space:] etc). \n";
+    add "  cannot use the 'begin' or 'end' modifiers (B/E) \n";
+    print; clear; quit;
+  }
+
+  "comment*{*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: comments cannot occur between \n";
+    add " a test and a brace ({). \n";
+    print; clear; quit;
+  }
+
+  "}*command*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: extra closing brace '}' ?. \n";
+    print; clear; quit;
+  }
+
+  #*
+  E"begin*".!"begin*" {
+    push; push;
+    add "error near line "; lines;
+    add " of script: Begin blocks must precede code \n";
+    print; clear; quit;
+  }
+  *#
+
+  #------------ 
+  # The .restart command jumps to the first instruction after the
+  # begin block (if there is a begin block), or the first instruction
+  # of the script.
+  ".*word*" {
+    clear; ++; get; --;
+    "restart" {
+      clear; count;
+      # this is the opposite of .reparse, using run-once loops
+      # cant do next before label, infinite loop
+      # need to set flag variable. I think go has labelled loops
+
+      # before the parse> label
+      "0" { clear; add "restart = true; continue; // restart"; }   
+      "1" { clear; add "break;"; }      # after the parse> label
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    "reparse" {
+      clear; count; 
+      # check accumulator to see if we are in the "lex" block
+      # or the "parse" block and adjust the .reparse compilation
+      # accordingly.
+      "0" { clear; add "break;"; }
+      "1" { clear; add "continue;"; }
+      put; clear;
+      add "command*";
+      push; .reparse 
+    }
+    push; push;
+    add "error near line "; lines;
+    add " (char "; chars; add ")"; add " of script:  \n";
+    add " misplaced dot '.' (use for AND logic or in .reparse/.restart \n";
+    print; clear; quit;
+  }
+
+  #---------------------------------
+  # Compiling comments so as to transfer them to the java 
+  "comment*command*","command*comment*","commandset*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "command*"; push; .reparse
+  }
+
+  "comment*comment*" {
+    clear; get; add "\n"; ++; get; --; put; clear;
+    add "comment*"; push; .reparse
+  }
+
+  # -----------------------
+  # negated tokens.
+  #
+  # This is a new more elegant way to negate a whole set of 
+  # tests (tokens) where the negation logic is stored on the 
+  # stack, not in the current tape cell. We just add "not" to 
+  # the stack token.
+
+  # eg: ![:alpha:] ![a-z] ![abcd] !"abc" !B"abc" !E"xyz"
+  #  This format is used to indicate a negative test for 
+  #  a brace block. eg: ![aeiou] { add "< not a vowel"; print; clear; }
+
+  "!*quote*","!*class*","!*begintext*", "!*endtext*",
+  "!*eof*","!*tapetest*" {
+    # a simplification: store the token name "quote*/class*/..."
+    # in the tape cell corresponding to the "!*" token. 
+    replace "!*" "not"; push;
+    # this was a bug?? a missing ++; ??
+    # now get the token-value
+    get; --; put; ++; clear;
+    .reparse
+  }
+
+  #-----------------------------------------
+  # format: E"text" or E'text'
+  #  This format is used to indicate a "workspace-ends-with" text before
+  #  a brace block.
+  "E*quote*" {
+     clear; add "endtext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for end-test (E"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #-----------------------------------------
+  # format: B"sometext" or B'sometext' 
+  #   A 'B' preceding some quoted text is used to indicate a 
+  #   'workspace-begins-with' test, before a brace block.
+  "B*quote*" {
+     clear; add "begintext*"; push; get; 
+     '""' {
+       # empty argument is an error
+       clear;
+       add "pep script error near line "; lines;
+       add " (character "; chars; add "): \n";
+       add '  empty argument for begin-test (B"") \n';
+       print; quit;
+     }
+     --; put; ++;
+     clear; .reparse
+  } 
+
+  #--------------------------------------------
+  # ebnf: command := word, ';' ;
+  # formats: "pop; push; clear; print; " etc
+  # all commands need to end with a semi-colon except for 
+  # .reparse and .restart
+  #
+  "word*;*" {
+     clear;
+     # check if command requires parameter
+     get;
+     "add","while","whilenot","mark",
+     "escape", "unescape", "delim", "replace" {
+       put; clear; add "'"; get; add "'";
+       add " << command needs an argument, on line "; lines; 
+       add " of script.\n";
+       print; clear; quit;
+     }
+
+     # the new until; syntax, read until work ends with current tape cell
+     "until" { 
+       clear; add "mm.until(mm.tape[mm.cell]);  /* until; (tape) */"; put;
+     }
+     # the new go; syntax,  
+     "go" { 
+       clear; add "mm.goToMark(mm.tape[mm.cell]);  /* go; (tape) */"; put;
+     }
+     # the new mark; syntax, mark cell with contents of current
+     # tape cell. But maybe it should be contents of workspace ??
+     "mark" { 
+       clear; add "mm.addMark(mm.tape[mm.cell]);  /* mark; (tape) */"; put;
+     }
+     "clip" { clear; add "mm.clip();"; put; }
+     "clop" { clear; add "mm.clop();"; put; }
+     "clear" { clear; add 'mm.work = "";          /* clear */'; put; }
+     # go code
+     "upper" { clear; add "mm.work = mm.work.toUpperCase();/* upper */"; put; }
+     "lower" { clear; add "mm.work = mm.work.toLowerCase();/* lower */"; put; }
+     "cap" { 
+       clear; 
+       add 'if (mm.work.length > 0) { \n';
+       add "  mm.work = mm.work.charAt(0).toUpperCase() + ";
+       add "  mm.work.substring(1).toLowerCase(); /* cap */ \n";
+       add "}";
+       put; 
+     }
+     "print" { clear; add 'process.stdout.write(mm.work);   /* print */'; put; }
+     "state" { clear; add 'mm.printState();       // state'; put; }
+     "pop" { clear; add "mm.pop();"; put; }
+     "push" { clear; add "mm.push();"; put; }
+     "unstack" { 
+       clear; add "while (mm.pop()) {}   /* unstack */ "; put; }
+     "stack" { 
+       clear; add "while (mm.push()) {}  /* stack */"; put; }
+     "put" { 
+       clear; add "mm.tape[mm.cell] = mm.work;  /* put */"; put; 
+     }
+     "get" { 
+       clear; add "mm.work += mm.tape[mm.cell]; /* get */"; put;
+     }
+     "swap" { clear; 
+       add "temp = mm.work; mm.work = mm.tape[mm.cell]; /* swap */\n";
+       add "mm.tape[mm.cell] = temp; ";
+       put; }
+     "++" { clear; add "mm.increment();     /* ++ */ \n"; put; }
+     "--" { clear; add "if (mm.cell > 0) { mm.cell--; }  /* -- */"; put;
+     }
+     "read" { clear;  add "mm.readChar();           /* read */"; put; }
+     "count" { 
+       clear; add "mm.work += mm.counter; /* count */ "; put;
+     }
+     "a+" { clear;    add "mm.counter++;    /* a+ */"; put; }
+     "a-" { clear;    add "mm.counter--;    /* a- */"; put; }
+     "zero" { clear;  add "mm.counter = 0;  /* zero */"; put; }
+     "chars" { 
+       clear; add "mm.work += mm.charsRead; /* chars */"; put; 
+     }
+     "lines" { 
+       clear; add "mm.work += mm.linesRead; /* lines */"; put; 
+     }
+     "nochars" { clear; add "mm.charsRead = 0; /* nochars */"; put; }
+     "nolines" { clear; add "mm.linesRead = 0; /* nolines */"; put; }
+     # use a labelled loop to quit script.
+     "quit" { clear; add "break script;"; put; }
+     # inline this?
+     "write" { 
+       clear; 
+       # go syntax
+       add "/* write to file todo! */\n";
+       put;
+     }
+     
+     "nop" { clear; add "/* nop eliminated */"; put; }
+     clear; add "command*";
+     push; .reparse
+   }
+
+  #-----------------------------------------
+  # ebnf: commandset := command , command ;
+  "command*command*", "commandset*command*" {
+    clear;
+    add "commandset*"; push;
+    # format the tape attributes. Add the next command on a newline 
+    --; get; add "\n"; 
+    ++; get; --;
+    put; ++; clear; 
+    .reparse
+  } 
+
+  #-------------------
+  # here we begin to parse "test*" and "ortestset*" and "andtestset*"
+  # 
+
+  #-------------------
+  # eg: B"abc" {} or E"xyz" {}
+  # transform and markup the different test types
+  "begintext*,*","endtext*,*","quote*,*","class*,*",
+  "eof*,*","tapetest*,*",
+  "begintext*.*","endtext*.*","quote*.*","class*.*",
+  "eof*.*","tapetest*.*",
+  "begintext*{*","endtext*{*","quote*{*","class*{*",
+  "eof*{*","tapetest*{*" {
+
+    B"begin" { 
+      clear; add "mm.work.startsWith("; get; add ")"; }
+    B"end" { clear; add "mm.work.endsWith("; get; add ")"; }
+    B"quote" { clear; add "mm.work == "; get; }
+    B"class" { 
+      # use regex  
+      clear; add "mm.work.match("; get; add ")"; 
+    } 
+    # clear the tapecell for testeof and testtape because
+    # they take no arguments. 
+    B"eof" { clear; put; add "mm.eof"; }
+    B"tapetest" { 
+      clear; put; 
+      add "mm.work == mm.tape[mm.cell]"; 
+    }
+    put; 
+    #*
+    #  maybe we could ellide the not tests by doing here
+    B"not" { clear; add "!"; get; put; }
+    *#
+    clear; add "test*"; push;
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # negated tests
+  # eg: !B"xyz {} !(eof) {} !(==) {}
+  #     !E"xyz" {} 
+  #     !"abc" {}
+  #     ![a-z] {}
+  "notbegintext*,*","notendtext*,*","notquote*,*","notclass*,*",
+  "noteof*,*","nottapetest*,*",
+  "notbegintext*.*","notendtext*.*","notquote*.*","notclass*.*",
+  "noteof*.*","nottapetest*.*",
+  "notbegintext*{*","notendtext*{*","notquote*{*","notclass*{*",
+  "noteof*{*","nottapetest*{*" {
+    B"notbegin" { clear; add "!mm.work.startsWith("; get; add ")"; }
+    B"notend" { clear; add "!mm.work.endsWith("; get; add ")"; }
+    B"notquote" { clear; add "mm.work != "; get; }
+    B"notclass" { 
+      # produces a regex match(..
+      clear; add "!mm.work.match("; get; add ")"; 
+    }
+    # clear the tapecell for testeof and testtape because
+    # they take no arguments. 
+    B"noteof" { clear; put; add "!mm.eof"; }
+    B"nottapetest" { 
+      clear; put; add "mm.work != mm.tape[mm.cell]"; 
+    }
+    put; clear; add "test*"; push; 
+    # the trick below pushes the right token back on the stack.
+    get; add "*"; push; .reparse
+  }
+
+  #-------------------
+  # 3 tokens
+  #-------------------
+
+  pop;
+
+  #-----------------------------
+  # some 3 token errors!!!
+ 
+  # not a comprehensive list
+  "{*quote*;*","{*begintext*;*","{*endtext*;*","{*class*;*",
+  "commandset*quote*;*", "command*quote*;*" {
+    push; push; push;
+    add "[pep error]\n invalid syntax near line "; lines;
+    add " (char "; chars; add ")"; 
+    add " of script (misplaced semicolon?) \n";
+    print; clear; quit;
+  }  
+
+  # to simplify subsequent tests, transmogrify a single command
+  # to a commandset (multiple commands).
+  "{*command*}*" {
+    clear; add "{*commandset*}*"; push; push; push;
+    .reparse
+  }
+
+  # errors! mixing AND and OR concatenation
+  ",*andtestset*{*",
+  ".*ortestset*{*" {
+    # push the tokens back to make debugging easier
+    push; push; push; 
+    add " error: mixing AND (.) and OR (,) concatenation in \n";
+    add " in pep script near line "; lines;
+    add " (character "; chars; add ") \n";
+    add ' 
+  For example:
+     B".".!E"/".[abcd./] { print; }  # Correct!
+     B".".!E"/",[abcd./] { print; }  # Error! \n';
+    print; clear; quit;
+  }
+
+  #--------------------------------------------
+  # ebnf: command := keyword , quoted-text , ";" ;
+  # format: add "text";
+
+  "word*quote*;*" {
+    clear; get;
+    "replace" {
+       # error 
+       add "< command requires 2 parameters, not 1 \n";
+       add "near line "; lines;
+       add " of script. \n";
+       print; clear; quit;
+    }
+
+    # check whether argument is single character, otherwise
+    # throw an error. Also, convert to single quotes for go
+    # which is
+    "delim", "escape", "unescape" {
+      # This is trickier than I thought it would be.
+      clear; ++; get;
+      # check that arg not empty, (but an empty quote is ok 
+      # for the second arg of 'replace'
+      '""' {
+        clear; 
+        add "[pep error] near line "; lines;
+        add " (or char "; chars; add "): \n"; 
+        add "  command '"; --; get; ++; add "' ";
+        add 'cannot have an empty argument ("") \n';
+        print; quit;
+      }
+
+      # quoted text has the quotes still around it.
+      # also handle escape characters like \n \r etc
+      # Also, unicode escape sequences like \u0x2222
+      clip; clop; clip;
+      !"".!B"\\" {
+        clear; 
+        add "[pep error] Pep script error near line "; lines;
+        add " (character "; chars; add "): \n"; 
+        add "  command '"; get; 
+        add "' takes only a single character argument. \n";
+        print; quit;
+      }
+      B"\\" {
+        clip; !"" {
+          clear; 
+          add "[pep error] Pep script error near line "; lines;
+          add " (character "; chars; add "): \n"; 
+          add "  command '"; --; get; 
+          add "' takes only a single character argument or \n";
+          add " and escaped single char eg: \n \t \f etc";
+          print; quit;
+        }
+      }
+      # replace double quotes with single for argument
+      clear; get; escape "'"; unescape '"';
+      clip; clop; put; clear; add "'"; get; add "'";
+      put; 
+      # re-get the command name
+      --; clear; get;
+    }
+
+    "mark" {
+      clear;
+      add 'mm.addMark('; ++; get; --; add ')  /* mark */\n';
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "go" {
+      clear;
+      add 'mm.goToMark('; ++; get; --; add ')  /* go to mark */\n';
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "delim" {
+      clear;
+      # the delimiter should be a single character, no?
+      add "mm.delimiter = "; ++; get; --; add " /* delim */ ";
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "add" {
+      clear;
+      # add trailing ";"
+      add "mm.work += "; ++; get; --; add ";";
+      # handle multiline text check this! \\n or \n
+      replace "\n" '"\nmm.work += "\\n';
+      put; clear; add "command*"; push; .reparse
+    }
+
+    # maybe used to simplify logic for eg while [:] etc
+    "while" {
+      clear;
+      add "/* while */\n";
+      add "while (mm.peep == "; ++; get; --; add ".charAt(0)) {\n"; 
+      add "  if (mm.eof) { break; }\n  mm.readChar();\n"; 
+      add "}"; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    # maybe used to simplify logic for eg while [:] etc
+    "whilenot" {
+      clear;
+      add "/* whilenot */\n";
+      add "while (mm.peep != "; ++; get; --; add ".charAt(0)) {\n"; 
+      add "  if (mm.eof) { break; }\n  mm.readChar();\n}"; 
+      put; clear; add "command*"; push; .reparse
+    }
+
+    "until" {
+       clear; add "mm.until("; 
+       ++; get; --; 
+       # error until cannot have empty argument
+       'mm.until(""' { 
+         clear; 
+         add "Pep script error near line "; lines;
+         add " (character "; chars; add "): \n";
+         add " empty argument for 'until' \n";
+         add " 
+   For example:
+     until '.txt'; until \">\";    # correct   
+     until '';  until \"\";        # errors! \n";
+         print; quit;
+       }
+       # handle multiline argument
+       replace "\n" "\\n";
+       add ');'; put; clear;
+       add "command*"; push; .reparse
+     }
+
+    "escape" {
+       clear; ++;
+       # argument still has quotes around it
+       # it should be a single character since this has been previously
+       # checked.
+       add 'mm.work = mm.work.replace('; get; 
+       add ', mm.escape+'; get; add ')'; --; put; clear;
+       add "command*"; push; .reparse
+     }
+
+    # replace \n with n for example (only 1 character)
+    "unescape" {
+       clear; ++;
+       # use the machine escape char
+       add 'mm.work = mm.work.replace(mm.escape+'; get; 
+       add ', '; get; add ')'; --; put; clear;
+       add "command*"; push; .reparse
+     }
+
+     # error, superfluous argument
+     add ": command does not take an argument \n";
+     add "near line "; lines;
+     add " of script. \n";
+     print; clear;
+     #state
+     quit;
+   }
+
+   #----------------------------------
+   # format: "while [:alpha:] ;" or whilenot [a-z] ;
+
+   "word*class*;*" {
+     clear; get;
+
+     "while" {
+       clear;
+       add "/* while */\n";
+       add "while ((mm.peep != null) && mm.peep.match("; 
+       ++; get; --; add ")) {\n";
+       add "  if (mm.eof) { break; }\n  mm.readChar();\n}"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     "whilenot" {
+       clear;
+       add "/* whilenot */\n";
+       add "while ((mm.peep != null) && !mm.peep.match("; 
+       ++; get; --; add ")) {\n";
+       add "  if (mm.eof) { break; }\n";
+       add "  mm.readChar();\n}"; 
+       put; clear; add "command*"; push; .reparse
+     }
+
+     # error 
+     add " < command cannot have a class argument \n";
+     add "line "; lines; add ": error in script \n";
+     print; clear; quit;
+   }
+
+
+  # arrange the parse> label loops
+  (eof) {
+    "commandset*parse>*commandset*","command*parse>*commandset*",
+    "commandset*parse>*command*","command*parse>*command*" {
+      clear; 
+      # indent both code blocks
+      add "  "; get; replace "\n" "\n  "; 
+      # go has labelled loops, but complains if the label
+      # is not used. So we have to use the flag technique
+      # to make restart with before/after/without the parse> label
+      replace "continue; // restart" "break; // restart"; 
+      put; clear; ++; ++;
+      add "  "; get; replace "\n" "\n  "; put; clear; --; --;
+      # add a block so that .reparse works before the parse> label.
+      # it appears that go has labelled loops
+      add "\n/* lex block */\n";
+      add "while (true) { \n";
+      get; add "\n  break; \n}\n"; ++; ++;
+      add "if (restart) { restart = false; continue; }";
+      # indent code block
+      # add "  "; get; replace "\n" "\n  "; put; clear;
+      # using flag technique 
+      add "\n/* parse block */ \n";
+      add "while (true) {\n"; get;
+      add "\n  break; \n} /* parse */\n"; 
+      --; --; put; clear;
+      add "commandset*"; push; .reparse
+    }
+  }
+
+  # -------------------------------
+  # 4 tokens
+  # -------------------------------
+
+  pop;
+
+  #-------------------------------------
+  # bnf:     command := replace , quote , quote , ";" ;
+  # example:  replace "and" "AND" ; 
+
+  "word*quote*quote*;*" {
+    clear; get;
+    # check! go replace syntax
+    # not used here
+    # match1, err := regexp.MatchString("geeks", str)
+    "replace" {
+      #---------------------------
+      # a command plus 2 arguments, eg replace "this" "that"
+      clear; 
+      add "/* replace */\n";
+      # add 'if mm.work != "" { \n';
+      add "mm.work = mm.work.replace(";
+      ++; get; add ", "; ++; get; add ");\n"; 
+      --; --; put;
+      clear; add "command*"; push; .reparse
+    }
+
+    add "Pep script error on line "; lines; 
+    add " (character "; chars; add "): \n";
+    add "  command does not take 2 quoted arguments. \n";
+    print; quit;
+  }
+
+  #-------------------------------------
+  # format: begin { #* commands *# }
+  # "begin" blocks which are only executed once (they
+  # will are assembled before the "start:" label. They must come before
+  # all other commands.
+
+  # "begin*{*command*}*",
+  "begin*{*commandset*}*" {
+     clear; 
+     ++; ++; get; --; --; put; clear;
+     add "beginblock*";
+     push; .reparse
+   }
+
+   # -------------
+   # parses and compiles concatenated tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+
+   # these 2 tests should be all that is necessary
+   "test*,*ortestset*{*",
+   "test*,*test*{*" {
+     clear; get; add " || ";
+     ++; ++; get; --; --; put; clear; 
+     add "ortestset*{*";
+     push; push;
+     .reparse
+   }
+
+   # dont mix AND and OR concatenations 
+
+   # -------------
+   # AND logic 
+   # parses and compiles concatenated AND tests
+   # eg: 'a',B'b',E'c',[def],[:space:],[g-k] { ...
+   # it is possible to elide this block with the negated block
+   # for compactness but maybe readability is not as good.
+
+   # negated tests can be chained with non negated tests.
+   # eg: B'http' . !E'.txt' { ... }
+
+   "test*.*andtestset*{*",
+   "test*.*test*{*" {
+     clear; get; add " && ";
+     ++; ++; get; --; --; put; clear; 
+     add "andtestset*{*";
+     push; push; .reparse
+   }
+
+  #-------------------------------------
+  # we should not have to check for the {*command*}* pattern
+  # because that has already been transformed to {*commandset*}*
+
+  "test*{*commandset*}*",
+  "andtestset*{*commandset*}*",
+  "ortestset*{*commandset*}*" { 
+     clear; 
+     # indent the code for readability
+     ++; ++; add "  "; get; replace "\n" "\n  "; put; --; --; 
+     clear; add "if ("; get; add ") {\n";
+     ++; ++; get;
+     # block end required
+     add "\n}"; 
+     --; --; put; clear;
+     add "command*";
+     push;
+     # always reparse/compile
+     .reparse
+   }
+
+  # -------------
+  # multi-token end-of-stream errors
+  # not a comprehensive list of errors...
+  (eof) {
+    E"begintext*",E"endtext*",E"test*",E"ortestset*",E"andtestset*" {
+      add "  Error near end of script at line "; lines;
+      add ". Test with no brace block? \n";
+      print; clear; quit;
+    }
+
+    E"quote*",E"class*",E"word*"{
+      put; clear; 
+      add "Error at end of pep script near line "; lines; 
+      add ": missing semi-colon? \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+
+    E"{*", E"}*", E";*", E",*", E".*", E"!*", E"B*", E"E*" {
+      put; clear; 
+      add "Error: misplaced terminal character at end of script! (line "; 
+      lines; add "). \n";
+      add "Parse stack: "; get; add "\n";
+      print; clear; quit;
+    }
+  }
+
+  # put the 4 (or less) tokens back on the stack
+  push; push; push; push;
+
+  (eof) {
+    print; clear;
+
+    # create the virtual machine object code and save it
+    # somewhere on the tape.
+    add '#!/usr/bin/env node
+// code generated by "translate.js.pss" a pep script
+// http://bumble.sf.net/books/pars/tr/
+
+  var fs = require("fs");
+
+  function visible(text) {
+    if (text == null) return "EOF=null";
+    text = text.replace(/\\n/g, "\\n");
+    text = text.replace(/\\t/g, "\\t");
+    text = text.replace(/\\r/g, "\\r");
+    text = text.replace(/\\f/g, "\\f");
+    return text
+  }
+
+  // this returns 0 when end of stream reached!!!
+  console.read = len => {
+    var read;
+    var buff = Buffer.alloc(len);
+    read = fs.readSync(process.stdin.fd, buff, 0, len);
+    if (read == 0) { return null; } 
+    return buff.toString();
+  };
+
+  function Machine()  {
+   //FILE * inputstream;   //source of characters
+   this.peep = "";         // next char in the stream, may have EOF
+   this.stack = [];        // stack to hold parse tokens
+   this.work = "";  // 
+   this.tape = [];       // array of strings for token values 
+   this.tape[0] = "";    // init first element of tape array 
+   this.marks = [];      // array of marks on the tape (mark/go)
+   this.cell = 0; // integer pointer to current tape cell
+   this.counter = 0; // used for counting
+   this.charsRead = 0;   // how many characters read from input stream
+   this.linesRead = 1;   // how many lines already read from input stream 
+   this.flag = false;    // used for tests (not here).
+   this.delimiter = "*"; // to separate tokens on the stack
+   this.escape = "\\\\"; // escape character, default "\"
+
+   this.peep = console.read(1);
+   process.stdin.setEncoding("utf8");
+
+   this.setInput = function(newInput) {
+     process.stdout.write("to be implemented")
+   };
+
+   /* read one utf8 character from the input stream and 
+      update the machine. */
+   this.readChar = function() {
+     if (this.eof) { process.exit(mm.counter); }
+     // increment line and char counters
+     this.charsRead++;
+     if (this.peep == "\\n") { this.linesRead++; }
+     this.work += this.peep;
+     // read next char from stream
+     this.peep = console.read(1);
+     if (this.peep == null) { this.eof = true; }
+   }
+
+   // remove escape character: trivial method ?
+   // check the python code for this, and the c code in machine.interp.c
+   this.unescapeChar = function(char) {
+     // if this.work = "" { return }
+     this.work = this.work.replace(this.work, "\\\\"+c, c, -1)
+   }
+
+   // add escape character : trivial?
+   this.escapeChar = function(char) {
+     this.work = this.work.replace(c, "\\\\"+c, -1)
+   }
+
+  /** a helper function to count trailing escapes */
+  this.countEscapes = function(suffix) {
+    var count = 0;
+    var ss = "";
+    if (this.work.endsWith(suffix)) {
+      ss = this.work.substring(0, this.work.lastIndexOf(suffix));
+    }
+    while (ss.endsWith(this.escape)) {
+      ss = ss.substring(0, ss.lastIndexOf(this.escape));
+      count++;
+    }
+    return count
+  }
+
+
+  // reads the input stream until the work ends with the
+  // given character or text, ignoring escaped characters
+  this.until = function(suffix) {
+    if (this.eof) { return; }
+    // read at least one character
+    this.readChar();
+    while (true) { 
+      if (this.eof) { return; }
+      // we need to count the this.Escape chars preceding suffix
+      // if odd, keep reading, if even, stop
+      if (this.work.endsWith(suffix)) {
+        if (this.countEscapes(suffix) % 2 == 0) { return; }
+      }
+      this.readChar();
+    }
+  }  
+
+  // BUT we can just call this.until(this.tape[this.cell]) ??
+
+  /* increment the tape pointer (command ++) and grow the 
+     tape and marks arrays if necessary */
+  this.increment = function() { 
+    this.cell++;
+    if (this.cell >= this.tape.length) {
+      // grow the marks/tape arrays by 20 when the 
+      // tape size is exceeded.
+      for (ii=0; ii++; ii<20) {
+        this.tape[this.tape.length+ii] = ""; 
+        this.marks[this.marks.length+ii] = "";
+      }
+      this.size = this.tape.length;
+    }
+  }
+
+  /* pop the top token on the stack onto the beginning of the 
+     workspace buffer */
+  this.pop = function() {
+    if (this.stack.length == 0) return false;
+    this.work = this.stack.pop() + this.work;
+    if (this.cell > 0) this.cell--;
+    return true;
+  }
+
+  this.push = function() {
+    if (this.work == "") return false;
+    var first = this.work.indexOf(this.delimiter);
+    if (first > -1) {
+      this.stack.push(this.work.slice(0, first+1));
+      this.work = this.work.slice(first+1);
+    } else {
+      this.stack.push(this.work);
+      this.work = "";
+    }
+    // use increment to handle growing the tape and marks
+    // arrays if required
+    this.increment();
+    return true;
+  }
+
+  this.printState = function() { 
+    process.stdout.write(
+      "Stack " + this.stack + " Work[" + this.work + 
+      "] Peep[" + this.peep + "] \\n");
+    process.stdout.write(
+      "Acc:" + this.counter + " Esc:" + this.escape + 
+      " Delim:" + this.delimiter + " Chars:" + this.charsRead);
+    process.stdout.write(
+      " Lines:" + this.linesRead + " Cell:" + this.cell + 
+      " EOF:" + this.eof + " \\n");
+    for (ii = 0; ii < this.tape.length; ii++) {
+      process.stdout.write(ii + " [" + this.tape[ii] + "] \\n");
+      if (ii > 4) { return; }
+    }
+  } 
+
+  this.goToMark = function(mark) {
+    for (ii = 0; ii < this.marks.length; ii++) {
+      if (this.marks[ii] == mark) {
+        this.cell = ii; return;
+      }
+    }
+    process.stdout.write("badmark \'" + mark + "\'!");
+    process.exit(1);
+  }
+
+  this.addMark = function(mark) {
+    for (ii = 0; ii < this.marks.length; ii++) {
+      if (this.marks[ii] == mark) {
+        this.marks[ii] = ""; 
+      }
+    }
+    mm.marks[mm.cell] = mark;
+  }
+
+  this.clip = function() {
+    if (this.work == "") return;
+    this.work = this.work.substring(0, this.work.length-1);
+  }
+
+  this.clop = function() {
+    if (this.work == "") return;
+    this.work = this.work.substring(1);
+  }
+
+  /* This function is not used in translation, the code is 
+     placed "in-line" */
+  this.swap = function() {
+    var text = this.work;
+    this.work = this.tape[this.cell];
+    this.tape[this.cell] = text;
+  }
+
+  // this is where the actual parsing/compiling code should go
+  // so that it can be used by other go classes/objects. Also
+  // should have a stream argument.
+  this.parse = function(reader, writer) {
+  } 
+
+ } /* machine */
+
+
+  var mm = new Machine();
+  var restart = false; 
+  ';
+
+  
+  # save the code in the current tape cell
+    put; clear;
+
+    #---------------------
+    # check if the script correctly parsed (there should only
+    # be one token on the stack, namely "commandset*" or "command*").
+    pop; pop;
+
+    "commandset*", "command*" {
+      clear;
+      # indent generated code for readability.
+      add "    "; get; 
+      replace "\n" "\n    "; put; clear;
+      # restore the go preamble from the tape
+      ++; get; --;
+      add 'script: \n';
+      add '  while (mm.peep != null) { \n'; get;
+      add "\n  }\n";
+      add "process.exit(mm.counter);\n";
+      #add "\n} // exports \n";
+      add "\n\n/* end of generated javascript code */\n";
+      # put a copy of the final compilation into the tapecell
+      # so it can be inspected interactively.
+      put; print; clear; zero; quit;
+    }
+
+    "beginblock*commandset*", "beginblock*command*" {
+      clear; 
+      # indentation not needed here 
+      #add ""; get; 
+      #replace "\n" "\n"; put; clear; 
+
+      # indent main code for readability.
+      ++; add "    "; get; 
+      replace "\n" "\n    "; put; clear; --;
+      # get js preamble (Machine object definition) from tape
+      ++; ++; get; --; --;
+
+      get; add "\n"; ++; 
+      # a labelled loop for "quit" (but quit can just exit?)
+      add "script: \n";
+      add "  while (mm.peep != null) { \n"; get;
+      # end block marker required in 'go'
+      add "\n  }\n";
+      add "process.exit(mm.counter);\n";
+      #add "\n} // exports \n";
+      add "\n\n/* end of translated javascript code */\n";
+      # put a copy of the final compilation into the tapecell
+      # to help in interactive debugging with "pep -I ..."
+      put; print; clear; zero; quit;
+    }
+
+    push; push;
+    # try to explain some more errors
+    unstack;
+    B"parse>" {
+      put; 
+      clear; 
+      add "[error] pep syntax error:\n";
+      add "  The parse> label cannot be the 1st item \n"; 
+      add "  of a script \n"; 
+      zero; a+; print; quit;
+    }
+    put; clear;
+
+    clear;
+    add "[error] After compiling with 'translate.js.pss' (at EOF): \n ";
+    add "  parse error in input script. \n ";
+    print; clear; 
+    unstack; put; clear;
+    add "Parse stack: "; get; add "\n";
+    add "   * debug script ";
+    add "   >> pep -If script -i 'some input' \n ";
+    add "   *  debug compilation. \n ";
+    add "   >> pep -Ia asm.pp script' \n ";
+    # non zero error exit code.
+    zero; a+; print; clear; 
+    quit;
+
+  } # not eof
+
+  # there is an implicit .restart command here (jump start)

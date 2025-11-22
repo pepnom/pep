@@ -1,0 +1,431 @@
+ 
+
+   <!DOCTYPE html>
+   <html><head>
+   <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
+   <link rel='alternate' type='application/rss+xml'
+     title='RSS Feed for Pep And Nom Blog' href='/rss.xml' />
+   <title>Pep And Nom Blog</title>
+   <!-- I will try to read this in with sed -->
+   <style type='text/css'>
+     
+
+
+     body { 
+       margin-left:5%; margin-right:5%; 
+       padding:0; 
+
+       /* need a darker grey color:gray; */
+     }
+     a { 
+       text-decoration:none; 
+       /* the wren.io link color */
+       color: #3399cc;
+       /* color:blue; */
+     }
+     a:hover { 
+       color:darkblue; 
+       border-bottom: 1px dashed blue; 
+       /* border-top: 1px dashed blue; */
+     }
+
+     p { 
+       margin-left:2em; margin-right:2em; 
+       padding:0; 
+     }
+     h1.page-title { 
+       text-align: center;
+       color: peru; 
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+          
+     }
+     /* tan: a light brown */
+     h1 { color: lightslategray; }
+     /* make these headings capital case */
+     h2 { 
+       text-transform: capitalize; 
+       color: lightslategray;
+     }
+     h3 { 
+       text-transform: capitalize; 
+       color: lightslategray; 
+     }
+     
+     h3.blog-index-title { color: chocolate; }
+
+     /* the date that is at the top of each blog post */
+     h3.blog-post-date { color: darkkhaki; }
+     
+     div.footer { 
+       text-align: center;
+       color: goldenrod; 
+       width: 100%;
+       /* brown colours: 
+          siena,maroon,peru,goldenrod,chocolate,
+          burlywood */
+     }
+
+     /* a list of blog posts */
+     dl.blog-index {
+       margin-left: 2em;
+     }
+
+     /* a list of documents in a folder */
+     dl.doc-index {
+       margin-left: 2em;
+     }
+ 
+     /* an abbreviation like html, ast, xml */ 
+     abbr.tek-acronym {
+       border-bottom: 1px dashed purple; 
+       text-decoration: none;
+       text-transform: uppercase;
+       /* font-style: italic; */
+       font-size: 0.8em;
+       color: purple;
+     }
+
+     /* a one line description of a document  */
+     em.doc-description {
+       margin-left: 2em;
+       color: lightslategray;
+     }
+
+     /* this is for pretty printing nom code. But I need lots 
+        of span tags in the code. I copied this from the wren.io
+        inspect element code snippet. <code> wrapped in <pre>
+        in the html there is lots of 
+          <span class="punctuation">.</span> etc
+          and in the css .punctuation { color: #999; }
+
+        Normal text is black/grey
+
+        the pre has background color #f5f2f0 which is an offwhite
+        here are the colours: 
+          punctuation: #999 (grey)
+          function eg 'print': #DD4A68 (red)
+          string: #690 (green)
+          keyword: #07A (aqua)
+          operator eg '=' : #9a6e3a (brown)
+        */
+
+     /* start of pretty print css */
+
+     pre.nom-code { 
+       background-color: #f5f2f0;
+       border-radius: 10px;
+     }
+     code.language-nom {
+       font-family: Consolas, Monaco, monospace;
+       text-align: left;
+       white-space: pre;
+       word-spacing: normal;
+       word-break: normal;
+       word-wrap: normal;
+       line-height: 1.5;
+     }
+
+     span.nom-command { color: #9a6e3a;  /* brown */ }
+     /* displaying unknown commands */
+     span.nom-unknown { color: orange; }
+     span.nom-error { color: red; } 
+     span.nom-word { color: #09C; }
+     span.nom-keyword { color: #07A; }
+     span.nom-string { color: #690; }
+     span.nom-class { color: #2A0; }
+     span.nom-punct { color: #AAA; }
+     span.nom-comment { color: gray; }
+     
+     /* end of pretty print css */
+
+     /* displaying commands */
+     code.nom-command {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+     /* This is used for file names as well */
+     code {
+       font-family: Consolas, Monaco, monospace;
+       font-size: 0.9em;
+     }
+
+     /* a single line of code */
+     pre.codeline { 
+       margin-left:2em; 
+       padding:0; 
+     }
+
+     
+     figcaption.code-caption { 
+       color: white;
+       background-color: lightslategray; 
+       #background-color: tan; 
+       # background-color: sienna; 
+       border-radius: 4px;
+       padding-left: 1em; padding-bottom: 4px; padding-top: 4px;
+       font-weight: normal; 
+       width: 90% 
+       /* border-bottom: 1px solid lightgrey; */
+     }
+
+     /* a centred element or image */
+     .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+     }
+
+     /* an element which floats to the left */
+     .float-left {
+       float: left; 
+       /*width: 10%; */
+       text-align: center;
+       font-style: italic;
+       font-size: smaller;
+       text-indent: 0;
+       border-none;
+       /* border: thin silver solid; */
+       margin: 0.5em;
+       padding: 0.5em;
+     }
+
+     /* an element which floats to the right */
+    .float-right {
+      float: right; 
+      /*width: 10%; */
+      text-align: center;
+      font-style: italic;
+      font-size: smaller;
+      text-indent: 0;
+      border: none;
+      /* border: thin silver solid; */
+      margin: 0.5em;
+      margin-right: 3em;
+      padding: 0.5em;
+    }
+
+    img.image-right {
+      width: 100px;
+    }
+    img.image-left {
+      width: 100px;
+    }
+
+    .chess-piece {
+      /* background-color:#fff; */
+      border:1px solid black;    
+      border-radius:50%;
+      font-size: 1.5em;
+      padding: 5px;
+    }
+
+    /* this is for the big curly quotes before a <blockquote> quotation 
+       html is <blockquote>text<cite>person</cite></blockquote> */
+    blockquote.quotation {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+      width: 500px;
+      margin: 0.25em 0;
+      padding: 0.35em 40px;
+      line-height: 1.45;
+      position: relative;
+      color: #383838;
+    }
+
+    blockquote.quotation:before {
+      display: block;
+      padding-left: 10px;
+      content: "\201C";
+      font-size: 80px;
+      position: absolute;
+      left: -20px;
+      top: -20px;
+      color: #7a7a7a;
+    }
+
+    blockquote.quotation cite {
+      color: #999999;
+      font-size: 14px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    blockquote.quotation cite:before {
+      content: "\2014 \2009";
+    }
+   </style></head>
+   <body>
+
+    
+<p>
+<p>
+
+
+<p>
+<!-- ------------ page title -------------------- -->
+<h1 class='page-title'> Pep and Nom</h1>
+
+<a href='http://www.nomlang.org/'>home </a> |
+<a href='/doc/'>documentation </a> |
+<a href='/eg/'>examples </a> |
+<a href='/tr/'>translators </a> |
+<a href='/download/'>download </a> |
+<a href='/post/index.html'>blog </a> |
+<a href='/post/posts.html'>all blog posts </a> 
+<img style='border-radius:50%;width:10em;' class='float-right'  src='/image/doodle/doodle.ink.ripples.300.square.jpg'/>
+
+<p>
+
+
+<p>
+
+<p>
+<p>
+<!-- doclist= -->
+<!-- doc=./doc/howto/nom.linebyline.txt -->
+<p>
+<!-- ------------------------------- -->
+<h2> line by line parsing with nom</h2>
+
+<p>
+ About parsing a file <em>one line at a time</em> with 
+<abbr class='tek-acronym' 
+      title='Nom Parsing Language'>&Nopf;&oopf;&mopf;</abbr>
+<p>
+ Nom is designed to be flexible with how it tokenises the input-stream,
+ despite the fact that it does not support <a href='http://nomlang.org/doc/syntax/nom.syntax.regex.html'>regular expressions
+ </a> (on purpose). It is also not difficult to parse a 
+ file one line at a time. As follows
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print the only first line after a blank line
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-command'>until</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span>
+   <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"blankline*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+   <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"line*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+   <span class='nom-comment'># for debugging</span>
+   <span class='nom-comment'># unstack; print; stack; add "\n"; print; clear;</span>
+   <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span> 
+   <span class='nom-string'>"blankline*line*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>}</span>
+   <span class='nom-string'>"line*blankline*"</span><span class='nom-punct'>,</span><span class='nom-string'>"blankline*blankline*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"blankline*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> 
+   <span class='nom-punct'>}</span>
+   <span class='nom-string'>"line*line*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+   <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+ </code></pre>
+</figure>
+ <p>
+<p>
+<!-- ------------------------------- -->
+<h3> a slightly useful example</h3>
+
+<p>
+ I often write comments above bash functions to explain what they do.
+ These can be multiple lines and may even have blank lines in them
+ of before the function name. The following script uses a line-by-line
+ parsing technique with the nom <code class='nom-command'><a href='http://nomlang.org/doc/commands/nom.until.html'>until</a></code> command to concatenate the 
+ comments and associate them with the bash function name which follows
+ them. This is the sort of example that becomes tricky with 
+<abbr class='tek-acronym' 
+      title='Text Stream Editor'>SED</abbr> 
+ because there is multiline recognition taking place.
+<p>
+ Adding the line* parse token below (which is any not 'function' bash
+ statement) complicates the grammar but is necessary because other 
+ wise every comment above a function name will be regarded as pertaining
+ to that function.
+<p>
+ <figure class='code-with-caption'>
+<figcaption class='code-caption'>
+ print bash function names and comments above them 
+ </figcaption>
+<pre class='nom-code'><code class='language-nom'>
+
+   <span class='nom-comment'># just ignore empty lines</span>
+   <span class='nom-command'>until</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> 
+   <span class='nom-class'>[:space:]</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+   <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+     <span class='nom-comment'># remove upto 5 leading/trailing spaces, a bit primitive, </span>
+     <span class='nom-comment'># or parse with whilenot [\n] etc</span>
+     <span class='nom-punct'>B</span><span class='nom-string'>"  "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> <span class='nom-punct'>B</span><span class='nom-string'>"  "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-command'>clop</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> <span class='nom-punct'>B</span><span class='nom-string'>" "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+     <span class='nom-punct'>E</span><span class='nom-string'>"  "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> <span class='nom-punct'>E</span><span class='nom-string'>"  "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span> <span class='nom-punct'>E</span><span class='nom-string'>" "</span> <span class='nom-punct'>{</span> <span class='nom-command'>clip</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+     <span class='nom-punct'>B</span><span class='nom-string'>"#"</span> <span class='nom-punct'>{</span> 
+       <span class='nom-command'>replace</span> <span class='nom-string'>"#"</span> <span class='nom-string'>" "</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span>
+       <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"comment*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+     <span class='nom-punct'>}</span>
+     <span class='nom-punct'>B</span><span class='nom-string'>"function"</span><span class='nom-punct'>,</span> <span class='nom-punct'>E</span><span class='nom-string'>"()  {"</span><span class='nom-punct'>,</span> <span class='nom-punct'>E</span><span class='nom-string'>"() {"</span><span class='nom-punct'>,</span> <span class='nom-punct'>E</span><span class='nom-string'>"(){"</span> <span class='nom-punct'>{</span> 
+       <span class='nom-command'>replace</span> <span class='nom-string'>"function "</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>replace</span> <span class='nom-string'>"{"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>replace</span> <span class='nom-string'>"()"</span> <span class='nom-string'>""</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+       <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"function*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+     <span class='nom-punct'>}</span>
+     <span class='nom-comment'># comments above none function lines should be ignored</span>
+     <span class='nom-punct'>!</span><span class='nom-string'>""</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"line*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span> <span class='nom-punct'>}</span>
+   <span class='nom-punct'>}</span>
+  <span class='nom-word'>parse</span><span class='nom-punct'>></span>
+   <span class='nom-comment'># for debugging</span>
+   <span class='nom-comment'># unstack; print; stack; add "\n"; print; clear;</span>
+   <span class='nom-command'>pop</span><span class='nom-punct'>;</span><span class='nom-command'>pop</span><span class='nom-punct'>;</span> 
+
+   <span class='nom-comment'># ignore comments before non-function bash statement </span>
+   <span class='nom-string'>"comment*line*"</span><span class='nom-punct'>,</span><span class='nom-string'>"line*line*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+   <span class='nom-comment'># concatenate comment lines</span>
+   <span class='nom-string'>"comment*comment*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"comment*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+   <span class='nom-punct'>}</span>
+
+   <span class='nom-comment'># print and delete function token </span>
+   <span class='nom-string'>"*function*comment*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> 
+     <span class='nom-comment'># transfer comment text</span>
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>put</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>add</span> <span class='nom-string'>"comment*"</span><span class='nom-punct'>;</span> <span class='nom-command'>push</span><span class='nom-punct'>;</span> <span class='nom-punct'>.</span><span class='nom-command'>reparse</span>
+   <span class='nom-punct'>}</span>
+
+   <span class='nom-comment'># just print, no need to reduce</span>
+   <span class='nom-string'>"function*function*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>}</span>
+
+   <span class='nom-string'>"function*line*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+   <span class='nom-string'>"line*function*"</span> <span class='nom-punct'>{</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> <span class='nom-command'>clear</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+
+   <span class='nom-comment'># just print, no need to reduce? but print in order </span>
+   <span class='nom-comment'># function name with comment as description after (indented)</span>
+   <span class='nom-string'>"comment*function*"</span> <span class='nom-punct'>{</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span> 
+     <span class='nom-comment'># a swap trick to indent the (mulitline) comment and then</span>
+     <span class='nom-comment'># prepend the function name.</span>
+     <span class='nom-comment'>#add "  "; get; replace "\n" "\n  ";</span>
+     <span class='nom-comment'>#++; swap; get; --; print; </span>
+     <span class='nom-command'>add</span> <span class='nom-string'>"\n"</span><span class='nom-punct'>;</span> <span class='nom-command'>++</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>--</span><span class='nom-punct'>;</span> <span class='nom-command'>get</span><span class='nom-punct'>;</span> <span class='nom-command'>print</span><span class='nom-punct'>;</span> 
+     <span class='nom-command'>clear</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>}</span>
+
+   <span class='nom-command'>push</span><span class='nom-punct'>;</span><span class='nom-command'>push</span><span class='nom-punct'>;</span>
+   <span class='nom-punct'>(</span><span class='nom-word'>eof</span><span class='nom-punct'>)</span> <span class='nom-punct'>{</span> <span class='nom-command'>quit</span><span class='nom-punct'>;</span> <span class='nom-punct'>}</span>
+ </code></pre>
+</figure>
+<p>
+<div class='footer'><small><em>
+<p>
+
+<img style='border-radius:50%;width:10em;' class='center'  src='/image/fig.deniliquin.jpg'/>
+
+retro html <a href='/eg/text.tohtml.format.html'>formatted </a> by <a href='/eg/text.tohtml.pss'>nom </a>
+comments/suggestions to: <em>mjb &lt;at&gt; nomlang.org</em> 
+<p>
+  </em></small></div></body></html>

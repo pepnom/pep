@@ -1,0 +1,95 @@
+
+#*
+
+  An attempt to solve newspaper style word puzzles where there is 1
+  essential letter and 8 possible letters which can only be used once each. 
+  Incomplete.
+  
+  The idea is to 'cat' a dictionary to this pep script, and determine if the
+  word conforms. It is necessary to hard-code the letters into the script.
+  The accumulator is used for *state*: if the essential letter is 
+  found then accumulator is incremented.
+  
+NOTES 
+
+  This is not the strength of the [nom] language, but I am just curious if it
+  is possible.
+
+  It is proving quite tricky to do this, especially to debug the script.
+  also there is a bug in the mark/go code in the pep interpreter.
+  what happens when several cells are marked with the same tag????
+
+HISTORY
+
+  7 mar 2025 
+    I think this is possible
+  5 July 2022
+    1st attempt 
+
+*#
+ 
+  begin { mark "top"; add ":"; put; clear; }
+  read;
+  [:alpha:] {
+    ![fgnpxsate] { d; add "next*"; push; .reparse }
+    [fgnpxsate] { 
+      ++; put;  
+      mark "here";
+      # add the letter to the 1st tape cell
+      go "top"; swap; get; swap; go "here";
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+      --; (==) { d; a+; a+; }
+
+      go "here";
+    }
+    # the essential letter
+    "e" { 
+      clear; count; 
+      !"0" { clear; add "next*"; push; .reparse }
+      "0" { a+; } 
+      clear;
+    }
+  }
+  [:space:],(eof) {
+    clear; count; 
+    !"1" { 
+      clear; add "clear*"; push; .reparse 
+    }
+    clear; go "top"; get; add "\n"; print; while [:space:];
+    clear; add "clear*"; push; .reparse
+  }
+
+  # ignore all other characters.
+  clear;
+parse>
+
+  pop;
+  # reject this word, reset state.
+  "clear*" {
+    clear; zero; 
+    ++; ++; ++; ++; ++; ++; ++; ++; ++;
+    put; --; put; --; put;
+    --; put; --; put; --; put;
+    --; put; --; put; --; put; --; put; --; put;
+    go "top";
+  }
+  push;
+
+  #!"f".!"g".!"n".!"p".!"x".!"s".!"a".!"t".!"e" {
+  #  whilenot [:space:]; while [:space:]; clear; 
+  #}
+
+  # essential letter
+  #"e" {
+  #  clear; add "essential*"; push;
+  #}
+
+
+

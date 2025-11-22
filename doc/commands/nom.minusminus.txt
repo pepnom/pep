@@ -1,0 +1,64 @@
+
+
+## THE NOM "DECREMENT" OR "--" COMMAND
+
+ *Decrement* the tape pointer by one.
+
+ The *--* command and the nom://++ (increment-tape-pointer) command are 
+ very important for accessing the attributes associated with a particular
+ parse token. A standard procedure during parsing is to "match" a 
+ particular sequence of tokens, then access the text *attributes* for 
+ each token to build a new text attribute (which will be associated with
+ the new parse token that we are about to build) and then nom://put 
+ the new attribute into the tape at the correct location.
+
+ * standard parsing fragment with pep&nom
+ ----+
+  (eof) { quit; }
+  while [:space:]; clear; whilenot [:space:]; 
+  "a","an","the", { put; clear; add "article*"; push; }
+  "big","blue","small" { put; clear; add "adjective*"; push; }
+  "cloud","tree","idea" { put; clear; add "noun*"; push; }
+  clear;
+  parse>
+  pop;
+  "nounphrase*" { swap; add ": is a "; get; print; clear; }
+  pop;pop;
+  "article*adjective*noun*" {
+    # build the new attribute from the old attributes
+    clear; get; add " "; ++; get; add " "; ++; get; --; --; put;
+    # create the new parse token and push onto the stack.
+    clear; add "nounphrase*"; push; .reparse
+  }
+  push;push;push;
+ ,,,,
+
+ The single character (cryptic) version of the *--* command is 
+ *<* but you would only use it if you have some strange quota on 
+ the number of characters you are allowed to use.
+
+ If the current tape element is the first element of the tape then the tape
+ pointer is not changed and the command has no effect. The tape pointer
+ is also decremented by the "pop" command (if it is greater than zero).
+
+### POP AND DECREMENT TAPE POINTER
+
+ The nom://pop command performs an implicit *--* operation, *usually*
+ (see below for the important oed://caveat ). This means that when you
+ perform a *pop* on the [pep] machine pep://stack the pep://tape pointer 
+ will be urbandict://automagically decremented and this is a marvellous
+ thing, because it means that the *tape* and the *stack* tend to stay
+ "in sync" with each other.
+
+ The caveat which I mentioned above is that when the stack is empty, that
+ is, it contains *no* parse tokens, then a pop operation will do 
+ nothing. Since there is nothing to *pop* out of the stack, nothing will
+ come out, but what is more, the tape pointer to the current tape cell
+ will **not** be decremented (and this is also a stroke-of-genius if 
+ I may say so myself).
+
+ You will have already guessed that a very similar behaviour applies 
+ to the nom://push command and the nom://++ (increment tape pointer) 
+ command.
+
+

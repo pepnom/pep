@@ -1,0 +1,241 @@
+
+## (Definitely not) Frequently asked questions about Pep & Nom
+
+  A set of questions and answers about the [pep] virtual machine 
+  and the [nom] scripting language.
+
+### How do you know that nom can parse context-sensitive languages?
+
+  Because it can recognise and parse the language {a^n b^n c^n}
+
+### Can pep/nom do indent parsing like in Python?
+
+  Yes, but I haven't actually written an "example" /eg/ script which
+  demonstrates this.
+
+### Can pep/nom do type checking and type inference?
+
+  Yes, I think so, but the type checking or inference needs to be in
+  a separate "pass" of the compiler or translator. I haven't yet written
+  an example script for this, but it is on my list of priorities. 
+  The technique for type checking is to store the type of the variable
+  or expression in a "marked" nom://mark tape cell, where the mark is 
+  the name of the variable (with, perhaps the scope of the variable as 
+  a prefix). One challenge with this approach is to allocate sufficient
+  pep://tape cells (at the top of the tape) to accommodate all the 
+  variables that will be encountered. It occurred to me to implement
+  a "reserve" nom command that will reserve a number of cells at the 
+  top of the tape and set a *base* variable which will ensure that 
+  a nom://pop command will not decrement the tape pointer when the 
+  tape pointer is at the base.
+
+### Why is there no "contains" test in the nom language?
+
+  The nom language contains *begins-with* (eg B"abc") and *ends-with* (eg
+  E"abc") tests that check if the pep://workspace text buffer ends with or
+  starts with the given text (see nomsyn://tests ). So why is there no
+  *contains* test?
+  
+  Well, to answer in a round-about way, there are many functions to 
+  manipulate the workspace buffer that may be useful. And a contains test
+  would be handy in some circumstances, but my aim in designing the 
+  pep/nom system was to keep the virtual machine and language as simple
+  and essential as possible.
+
+  The pep/nom system is based on the Unix filter model which means 
+  that a nom script is designed to "edit" a text stream (or parse 
+  and translate it). This means that it should (almost) always be 
+  possible to catch language patterns with the begins-with and ends-with
+  tests.
+
+### Can I use Nom to write a "pretty printer" for a language ?
+
+  Yes, its simple because pretty-printers (or source code colourisers)
+  dont (normally) actually parse the source code. They only 
+  tokenise which is to say, they recognise pattern like quoted text,
+  command names, punctuation etc and format them. An example of a
+  pretty printer in Nom is /eg/nom.tohtml.pss or /eg/nom.tolatex.pss which
+  does the same thing but into [latex] not [html] . 
+
+  If you want to write something that properly indents and formats the
+  source code then you will need to actually parse the language
+  ( [nom] can do that too). Possibly the most difficult task is then 
+  deciding where to *split* lines that are too long. But you are 
+  not flying an aeroplane, just do something that doesnt look too bad.
+
+### How do I install pep/nom ?
+
+  Follow the instructions at www.nomlang.org/download.
+
+### Can Nom be used to create a modern programming language?
+
+ I believe so. It can certainly be used to oed://parse and compile
+ context-free languages but I have not yet written a successful
+ "type checker" wp://type.system using nom. But it is definitely
+ possible, especially using the nom commands nom://mark and nom://go
+ in their non-parameter versions (this essentially allows the [pep]
+ pep://tape structure to be used as an wp://associative.array )
+
+### Is pep/nom in active development?
+
+ I have been developing, or trying to develop pep/nom for a long time.
+ I 1st thought of the idea several decades ago, but judging by my
+ notes and work-diaries I didn't really achieve a decent interpreting
+ implementation until around 2019. Since then I have worked off and on
+ on the system. Sometimes I take long breaks from it to do other things
+ but when I come back to it, it always seems very interesting and powerful.
+ 
+ So the answer is "yes" (as of 2025).
+
+### Is the pep/nom system widely used?
+
+ No, it isn't. I believe that almost nobody knows about it, which is 
+ why I am writing this "website" www.nomlang.org and also this [faq] .
+ I believe the system is extremely interesting and potentially very
+ useful and what is more, *its free and open source*
+
+### What can I use the Nom language for?
+
+ You can use it for parsing, translating, compiling or transpiling context-free
+ (and some context-sensitive) languages such as Lisp, JSON data, CSS code,
+ palindromes, regular expressions, CSV data, XML and so on and so forth. You
+ can use it to create your own mini-languages. You can use it to explore and
+ understand the grammar of languages and patterns without having to *code* in a
+ full computer language.  Nom and Pep can also handle certain types of
+ context-sensitive languages or patterns ( [XML] maybe context-sensitive)
+
+### Who is Noam Chomsky?
+
+ A linguist who came up with an interesting classification of formal
+ languages.
+
+### Why is the Nom Language So Cryptic?
+
+ The *Nom* language closely reflects the "virtual machine" wp://virtual.machine 
+ which it manipulates. This machine has a pep://stack a pep://tape (an
+ array with a pointer) and a pep://workspace buffer as well as some other 
+ minor registers. So, for example, the nom://++ command increments the 
+ pointer to the *tape* element and the nom://push command pushes one 
+ parse token from the (beginning of) the pep://workspace onto the 
+ (top of the ) stack. So once you are familiar with the virtual 
+ pep://machine you will find the language not so cryptic.
+
+ Having said that, it was actually my intention, when I first thought of 
+ pep&nom that I would write a more expressive and natural language 
+ "on top" of it. In other words, I would use nom to write a compiler for 
+ a language which would reflect more closely a kind of [bnf] grammar.
+
+ The page file:///doc/syntax/nom.syntax.html contains an example of 
+ compiling a simple (toy) BNF format into [nom] which can be used as 
+ the basic of a more expressive language that compiles *into* the 
+ nom script language.
+
+ In my defence, I could say that all languages or mini-languages that 
+ are based on virtual machines tend to be cryptic, for example 
+ [sed] [awk] [forth] etc.
+
+### What tools did you use to develop pep/nom?
+
+ I work mostly on Linux or MacOS so the tools I use are available on 
+ those machines such as [sed] [vim] the c language and the [gcc] 
+ compiler (for the pep "interpreter" file:///doc/peptool/ ) although
+ the [pep] interpreter also compiles with [tcc] and should compile
+ with any standard c compiler.
+
+### There are already too many computer languages. Why another one?
+
+ Nom is not a general purpose computer language, it is a "domain-specific"
+ computer language designed to recognise and 'translate' text 
+ *patterns* (more formally called context-free languages).
+
+ Nom is also important because it highlights that a compiler it really
+ just a map function from one 'language' to another. A formal language 
+ is a set of strings in a given alphabet. So a compiler (if we ignore
+ the final stage of converting to binary code) is a map function
+ from one set of strings to another.
+
+ * a compiler as a map
+ -----
+  language A: { 'and','with','for','to','from' }
+    --> (maps to)
+  language B: { 'y','con','para','a','de' }
+ ,,,,
+ 
+ But, of course the language map function does not have to be one-to-one. 
+ When compilers are written as computer code, this map function is 
+ hidden or urbandict://obfuscated . But when the compiler is written as 
+ a text-based map function, we are able to "multiply" map functions
+ (that is "chain" compilers together to create new compilers). 
+ Nom already does this chaining with its translation "scripts" nomsf://tr
+
+ The nom language is still *code-oriented* rather than *data-oriented* but
+ it is an important step towards regarding compilers as language map
+ functions.
+
+### How many people use nom?
+
+ As far as I know, in February 2025, only me.  
+
+### Is nom a commercial project?
+
+ No, it is an idea, that I feel could be useful and interesting in
+ many software circumstances. I believe, for example, that it could be 
+ used to write very small simple compilers for microcontrollers (or 
+ other 'small' machines) that would be capable of running *on* the 
+ microcontroller like [forth] or micro-python.
+
+### What is the "workspace* ?
+
+ This is the central text buffer of the [pep] virtual pep://machine 
+ Each part of the machine is documented in file:///doc/machine/
+ and the workspace buffer is documented at pep://workspace and the 
+ parse-token stack is documented at pep://stack 
+
+### Why is the "workspace" called the "workspace"?
+
+ Because, like a number of things in the pep/nom system, it was 
+ influenced by the [sed] stream editor and I believe that the 
+ [gnu] sed program uses similar terminology.
+
+### How is pep/nom different from sed ?
+
+ Sed reads the text input-stream line by line and uses regular 
+ expression patterns to transform (or *edit* ) the text stream. 
+ [nom] can read the input stream character-by-character or any other
+ way you wish and uses grammar rules to transform (compile/transpile/translate)
+ the input-stream.
+
+### Can Linguists use nom? 
+
+ I think so, but it is not really designed (at the moment) for 
+ translating human languages. But it may be useful for linguists to 
+ understand how formal grammars function (and their limitations).
+
+ There are many complexities to parsing human languages (for example
+ the nexus between semantic considerations and grammatical rules) but 
+ one of the more obvious ones is the "ambiguity" of certain sentences:
+ that is, one sentence may have several different possible ways to 
+ parse, or initial parsings. Since pep/nom cannot "backtrack" in the 
+ input stream it cannot choose between multiple parsings.
+
+### are there any bugs in pep/nom?
+
+ Yes, unfortunately there will be. This is also because I have been working on
+ this by myself off and on. I just found a bug in the nom://mark and nom://go
+ code where more than one tape cell is marked with the same 'tag' . But
+ generally the system works remarkably well. For a list of known bugs, see the
+ document /doc/pepnom.doc.bugs.html
+
+### Why is writing Nom like playing blindfold chess?
+
+ The reason is that you need to maintain the *state* of the [pep]
+ machine in your head as you are manipulating it. That is similar to
+ the way that I blindfold chess player maintains the position of 
+ the board in his or her head during the game. But with nom you 
+ have several tools to 'peek' into the state of the pep://machine 
+ during the development and execution of a script. These tools are 
+ outlined in the document /doc/howto/nom.debug.html . One simple one 
+ is the nom://state command which "prints" nom://print the state of 
+ the machine at the time that the command is executed.
+
+ 
